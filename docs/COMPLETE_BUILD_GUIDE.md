@@ -1749,6 +1749,53 @@ export default defineConfig({
 
 > **原理**：浏览器请求 `http://localhost:3000/api/v1/drones` → Vite 服务器转发到 `http://localhost:8088/v1/drones` → API Gateway 路由到对应微服务
 
+#### 3.8.6 Cesium 3D 地图配置（智能驾驶舱所需，可选）
+
+> **注意**：Cesium 仅用于智能驾驶舱（`/smart-cockpit`）的 3D AR 数字地图功能。如果不需要 3D 地图，可跳过本节。
+
+**第一步：获取 Cesium Ion Access Token**
+
+Cesium 的全球影像底图和 3D Tiles 地形服务需要 Access Token（免费注册即可）：
+
+1. 浏览器打开 https://ion.cesium.com/signin ，用 GitHub/Google 账号注册
+2. 登录后进入 **Access Tokens** 页面，复制默认 Token
+3. 打开项目中的 `.env` 文件，将 Token 粘贴进去：
+
+```bash
+# uav-path-planning-system/frontend-vue/.env
+VITE_CESIUM_ION_TOKEN=eyJhbGciOiJIUzI1NiIs...你的真实Token
+```
+
+```bash
+# uav-path-planning-system/frontend-vue/.env.production
+VITE_CESIUM_ION_TOKEN=eyJhbGciOiJIUzI1NiIs...你的真实Token
+```
+
+**第二步：安装依赖**（若此前已执行则跳过）
+
+```bash
+cd uav-path-planning-system/frontend-vue
+npm install
+```
+
+**第三步：启动开发服务器**
+
+```bash
+npm run dev
+```
+
+首次启动时会自动执行 `scripts/copy-cesium-assets.cjs` 脚本，将 Cesium 的 `Workers/`、`Assets/`、`Widgets/`、`ThirdParty/` 复制到 `public/cesium/` 目录。之后访问 `http://localhost:3000/smart-cockpit` 即可看到 3D 驾驶舱。
+
+**若 Cesium 未正常加载：**
+
+| 现象 | 原因 | 解决 |
+|------|------|------|
+| 3D 地球无法显示 | Token 未配置或无效 | 检查 `.env` 中的 `VITE_CESIUM_ION_TOKEN` |
+| 页面报错 "Cesium is not defined" | 静态资源未复制 | 手动执行 `npm run copy-cesium` |
+| 生产构建后 3D 空白 | Token 仅配了 `.env` 未配 `.env.production` | 将 Token 同步到 `.env.production` |
+
+> **构建优化说明**：Cesium 库体积较大（~30MB），Vite 配置中已将 Cesium 单独分离为 `cesium` chunk、关闭 sourcemap、提高 chunk 体积警告阈值到 1500KB，确保生产构建高效稳定。详细配置见 `frontend-vue/README.md` 的"Cesium 3D 地图配置"章节。
+
 ---
 
 ### 3.9 Flutter 移动端开发指南

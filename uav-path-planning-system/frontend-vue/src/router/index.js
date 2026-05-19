@@ -54,6 +54,12 @@ const routes = [
     name: 'example',
     component: () => import('../views/ExampleView.vue'),
     meta: { title: '示例页面' }
+  },
+  {
+    path: '/smart-cockpit',
+    name: 'smartCockpit',
+    component: () => import('../views/SmartCockpit.vue'),
+    meta: { title: '智能驾驶舱' }
   }
 ]
 

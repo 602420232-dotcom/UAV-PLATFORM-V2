@@ -14,6 +14,12 @@
           </template>
           首页
         </a-menu-item>
+        <a-menu-item key="/smart-cockpit">
+          <template #icon>
+            <RadarChartOutlined />
+          </template>
+          智能驾驶舱
+        </a-menu-item>
         <a-menu-item key="/path-planning">
           <template #icon>
             <OrderedListOutlined />
@@ -93,7 +99,8 @@ import {
   HistoryOutlined,
   DatabaseOutlined,
   DashboardOutlined,
-  BookOutlined
+  BookOutlined,
+  RadarChartOutlined
 } from '@ant-design/icons-vue'
 
 const route = useRoute()

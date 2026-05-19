@@ -88,12 +88,11 @@
 
 以下测试失败在升级前即已存在，非本次升级导致：
 
-1. **PythonAlgorithmUtilTest** (7个) - 安全验证逻辑测试预期与实现不符
-2. **AuthControllerTest** (3个) - Mock参数匹配不正确
-3. **UserControllerTest** (11个) - `initDefaultUsers` 字段类型注入错误
-4. **SecurityAuditConfigTest** (2个) - `HttpServletRequest` Mock未正确配置
-5. **DataSourceControllerTest** (10个) - `SecurityAuditConfig` 未在测试中注入
-6. **SecurityConfigTest** (1个) - AuthenticationManager Bean注入问题
+1. **AuthControllerTest** (3个) - Mock参数匹配不正确
+2. **UserControllerTest** (11个) - `initDefaultUsers` 字段类型注入错误
+3. **SecurityAuditConfigTest** (2个) - `HttpServletRequest` Mock未正确配置
+4. **DataSourceControllerTest** (10个) - `SecurityAuditConfig` 未在测试中注入
+5. **SecurityConfigTest** (1个) - AuthenticationManager Bean注入问题
 
 ## 总结
 

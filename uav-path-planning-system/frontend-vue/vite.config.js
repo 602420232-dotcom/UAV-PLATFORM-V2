@@ -1,9 +1,17 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
+import { fileURLToPath, URL } from 'node:url'
 
-// https://vitejs.dev/config/
 export default defineConfig({
   plugins: [vue()],
+  resolve: {
+    alias: {
+      '@': fileURLToPath(new URL('./src', import.meta.url))
+    }
+  },
+  define: {
+    CESIUM_BASE_URL: JSON.stringify('/cesium/')
+  },
   server: {
     port: 3000,
     proxy: {
@@ -16,7 +24,7 @@ export default defineConfig({
   },
   build: {
     minify: 'esbuild',
-    chunkSizeWarningLimit: 1000,
+    chunkSizeWarningLimit: 1500,
     target: ['es2020', 'edge88', 'firefox78', 'chrome87', 'safari14'],
     rollupOptions: {
       output: {
@@ -24,14 +32,20 @@ export default defineConfig({
           vendor: ['vue', 'vue-router', 'pinia', 'axios'],
           ui: ['ant-design-vue'],
           chart: ['echarts'],
-          map: ['leaflet']
+          map: ['leaflet'],
+          cesium: ['cesium']
         }
       }
     },
-    cacheDir: './node_modules/.vite-cache'
+    cacheDir: './node_modules/.vite-cache',
+    sourcemap: false
   },
   optimizeDeps: {
-    include: ['vue', 'vue-router', 'pinia', 'axios', 'leaflet', 'echarts', 'ant-design-vue'],
+    include: [
+      'vue', 'vue-router', 'pinia', 'axios',
+      'leaflet', 'echarts', 'ant-design-vue',
+      'cesium'
+    ],
     exclude: []
   }
 })

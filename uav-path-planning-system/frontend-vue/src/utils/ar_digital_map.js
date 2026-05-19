@@ -16,7 +16,7 @@ export class ARDigitalMap {
   }
 
   init() {
-    Cesium.Ion.defaultAccessToken = 'your-cesium-token';
+    Cesium.Ion.defaultAccessToken = import.meta.env.VITE_CESIUM_ION_TOKEN || '';
     this.viewer = new Cesium.Viewer(this.container, {
       terrain: Cesium.Terrain.fromWorldTerrain(),
       animation: false,

@@ -136,7 +136,7 @@
 ### 已修复（本次评估发现）
 | 编号 | 问题 | 位置 | 修复方式 |
 |------|------|------|----------|
-| ERR-01 | 无界线程池 | `PythonAlgorithmUtil.java:59` | `ThreadPoolExecutor(2,10)` |
+| ERR-01 | 无界线程池 | `PythonAlgorithmUtil.java:59`（⚠️ 已统一至 feign/PythonScriptInvoker，原类已删除） | `ThreadPoolExecutor(2,10)` |
 | ERR-02 | 无界线程池 | `WrfController.java:39` | `ThreadPoolExecutor(2,10)` |
 
 ### 建议修复（低优先级）

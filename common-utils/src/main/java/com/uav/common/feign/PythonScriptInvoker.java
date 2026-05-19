@@ -56,7 +56,12 @@ public class PythonScriptInvoker {
             "advanced_planners.py",
             "wrf_processor.py",
             "data_assimilation.py",
-            "reinforcement_learning.py"
+            "reinforcement_learning.py",
+            "wrf/wrf_parser.py",
+            "assimilation/bayesian_assimilation.py",
+            "prediction/meteor_forecast.py",
+            "path-planning/three_layer_planner.py",
+            "vrp/optimize_routes.py"
     );
 
     // 允许执行的操作白名单
@@ -260,8 +265,8 @@ public class PythonScriptInvoker {
             throw new SecurityException("Script name cannot be null or empty");
         }
         
-        // 检查路径遍历
-        if (scriptName.contains("..") || scriptName.contains("/") || scriptName.contains("\\")) {
+        // 检查路径遍历（允许子目录，通过getSecureScriptPath的归一化进行防护）
+        if (scriptName.contains("..") || scriptName.contains("\\")) {
             throw new SecurityException("Invalid script name: path traversal detected");
         }
         

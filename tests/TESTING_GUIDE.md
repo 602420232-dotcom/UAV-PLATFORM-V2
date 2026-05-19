@@ -82,7 +82,6 @@ src/test/java/com/uav/controller/PlatformControllerTests.java
 src/test/java/com/uav/config/JwtUtilTest.java
 src/test/java/com/uav/config/SecurityConfigTest.java
 src/test/java/com/uav/model/ModelTests.java
-src/test/java/com/uav/utils/PythonAlgorithmUtilTest.java
 src/test/java/com/uav/gateway/GatewayTests.java
 src/test/java/com/uav/weather/WeatherCollectorTests.java
 src/test/java/com/bayesian/DataAssimilationModelTests.java

@@ -1,7 +1,7 @@
 package com.uav.controller;
 
+import com.uav.common.feign.PythonScriptInvoker;
 import com.uav.model.PathPlan;
-import com.uav.utils.PythonAlgorithmUtil;
 import lombok.extern.slf4j.Slf4j;
 import java.util.List;
 import java.util.Map;
@@ -17,10 +17,10 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/path-planning")
 public class PathPlanningController {
 
-    private final PythonAlgorithmUtil pythonAlgorithmUtil;
+    private final PythonScriptInvoker pythonScriptInvoker;
 
-    public PathPlanningController(PythonAlgorithmUtil pythonAlgorithmUtil) {
-        this.pythonAlgorithmUtil = pythonAlgorithmUtil;
+    public PathPlanningController(PythonScriptInvoker pythonScriptInvoker) {
+        this.pythonScriptInvoker = pythonScriptInvoker;
     }
     
     @PostMapping("/plan")
@@ -28,11 +28,14 @@ public class PathPlanningController {
         try {
             log.info("收到路径规划请求: {}", request);
             
-            String tasks = request.getOrDefault("tasks", "").toString();
-            String drones = request.getOrDefault("drones", "").toString();
-            String weatherData = request.getOrDefault("weatherData", "").toString();
+            Map<String, Object> params = Map.of(
+                "tasks", request.getOrDefault("tasks", ""),
+                "drones", request.getOrDefault("drones", ""),
+                "weather_data", request.getOrDefault("weatherData", "")
+            );
             
-            String result = pythonAlgorithmUtil.planPath(tasks, drones, weatherData);
+            Map<String, Object> result = pythonScriptInvoker.executeAsMap(
+                "path-planning/three_layer_planner.py", "plan", params);
             
             log.info("路径规划完成，结果: {}", result);
             

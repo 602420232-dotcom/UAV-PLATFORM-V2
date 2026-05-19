@@ -32,10 +32,10 @@
 | CR-3 | CORS allowedHeaders="*" + credentials (CommonSecurityConfig) | ✅ | 显式头列表 |
 | CR-4 | JwtProperties secret="" 空默认值 | ✅ | 强制 JWT_SECRET 环境变量，启动时校验 |
 | CR-5 | JwtKeyRotationService KeyStore密码 String→char[] | ✅ | char[] + @PostConstruct 后清零 |
-| CR-6 | PythonAlgorithmUtil 进程泄漏 | ✅ | Process 移到 Future 外 + exitCode 检查 |
+| CR-6 | PythonAlgorithmUtil 进程泄漏 | ✅ → 🗑️ | 已统一至 feign/PythonScriptInvoker，原类已删除 |
 | CR-7 | 4D-VAR subprocess 命令注入 | ✅ | 环境变量 WRF_EXE_PATH/RUN_DIR + 路径白名单 |
 | CR-8 | AuthController 注册/Token 刷新 Stub | ✅ | 完整实现 + JPA 持久化 + DTO |
-| CR-9 | 4个重复 Python 执行器 | ✅ | 删除 2 个，统一为 feign/PythonScriptInvoker |
+| CR-9 | 4个重复 Python 执行器 | ✅ | 删除 2 个，统一为 feign/PythonScriptInvoker；PythonAlgorithmUtil 亦已删除，全部统一 |
 | CR-10 | UserController 默认管理员密码 | ✅ | 环境变量 APP_DEFAULT_ADMIN_PASSWORD 优先 |
 | CR-11 | SpringBoot 注解误导 | ✅ | @EnableDiscoveryClient 已移除 |
 

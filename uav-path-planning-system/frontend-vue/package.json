@@ -4,9 +4,10 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
+    "dev": "node scripts/copy-cesium-assets.cjs && vite",
+    "build": "node scripts/copy-cesium-assets.cjs && vite build",
+    "preview": "vite preview",
+    "copy-cesium": "node scripts/copy-cesium-assets.cjs"
   },
   "dependencies": {
     "vue": "^3.4.0",
