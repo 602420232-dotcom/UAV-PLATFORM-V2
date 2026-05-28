@@ -6,7 +6,7 @@ spring:
   datasource:
     url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:uav_path_planning}?useSSL=true&requireSSL=true&serverTimezone=UTC
     username: ${DB_USER:root}
-    password: ${DB_PASSWORD}
+    password: ${DB_PASSWORD:***
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       maximum-pool-size: ${DB_POOL_MAX_SIZE:20}
@@ -58,11 +58,11 @@ jwt:
 # 自定义配置
 uav:
   python:
-    script-path: ${user.dir}/algorithm-core
+    script-path: /app/algorithm-core
     timeout: 30000
 
   wrf:
-    data-path: ${user.dir}/data/wrf
+    data-path: /app/data/wrf
     update-interval: 300
 
   path-planning:

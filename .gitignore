@@ -101,6 +101,13 @@ desktop.ini/
 .cursor/
 .observatory/
 
+# Eclipse IDE
+.classpath
+.project
+.metadata
+.factorypath
+
+
 # -----------------
 # Project Specific
 # -----------------
