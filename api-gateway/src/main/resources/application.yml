@@ -2,9 +2,18 @@ server:
   port: 8088
 
 spring:
+  main:
+    allow-bean-definition-overriding: true
   application:
     name: api-gateway
   cloud:
+    openfeign:
+      lazy-attributes-resolution: true
+      client:
+        config:
+          default:
+            connectTimeout: 30000
+            readTimeout: 30000
     gateway:
       default-filters:
         - name: RequestRateLimiter
@@ -98,7 +107,7 @@ management:
         include: health,info,gateway,metrics,prometheus
   observations:
     key-values:
-      application: ${spring.application.name}
+      application: ${spring.application.name:api-gateway}
 
 logging:
   level:

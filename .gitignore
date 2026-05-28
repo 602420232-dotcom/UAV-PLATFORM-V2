@@ -154,3 +154,4 @@ site/
 # Output directories
 data-assimilation-platform/algorithm_core/examples/output/
 data-assimilation-platform/algorithm_core/examples/test_output/
+tools/mypanel/node_modules

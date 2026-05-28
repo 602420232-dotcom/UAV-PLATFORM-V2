@@ -9,7 +9,7 @@ from enum import Enum
 
 # 第三方库
 try:
-    from fastapi import FastAPI, HTTPException, BackgroundTasks
+    from fastapi import FastAPI, HTTPException, BackgroundTasks, Query
     from fastapi.middleware.cors import CORSMiddleware
     from pydantic import BaseModel, Field
     HAS_FASTAPI = True
@@ -239,7 +239,7 @@ if HAS_FASTAPI:
     @app.get("/tasks", response_model=List[TaskStatusResponse], tags=["Tasks"])
     async def list_tasks(
         status: Optional[str] = None,
-        limit: int = Field(default=10, le=100)
+        limit: int = Query(default=10, le=100)
     ):
         """获取任务列表"""
         tasks = coordinator.task_queue[:limit]

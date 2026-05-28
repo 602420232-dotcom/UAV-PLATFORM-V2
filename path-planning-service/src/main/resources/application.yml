@@ -1,4 +1,14 @@
 spring:
+  cloud:
+    openfeign:
+      lazy-attributes-resolution: true
+      client:
+        config:
+          default:
+            connectTimeout: 30000
+            readTimeout: 30000
+  main:
+    allow-bean-definition-overriding: true
   application:
     name: path-planning-service
   
@@ -6,7 +16,7 @@ spring:
   datasource:
     url: jdbc:mysql://${DB_HOST:localhost}:3306/path_planning?useSSL=true&requireSSL=true&serverTimezone=UTC
     username: ${DB_USER:root}
-    password: ${DB_PASSWORD}
+    password: ${DB_PASSWORD:***
     driver-class-name: com.mysql.cj.jdbc.Driver
   
   # JPA配置
@@ -37,7 +47,7 @@ management:
 # 路径规划配置
 planning:
   # Python脚本路径
-  python-script: ${user.dir}/src/main/python/three_layer_planner.py
+  python-script: /app/src/main/python/three_layer_planner.py
   # 处理超时时间
   timeout: 60000
   # 算法参数

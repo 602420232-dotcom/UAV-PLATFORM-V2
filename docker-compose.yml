@@ -33,10 +33,8 @@ services:
       resources:
         limits:
           memory: 1G
-          cpus: '1.0'
         reservations:
           memory: 512M
-          cpus: '0.5'
     security_opt:
       - no-new-privileges:true
     networks:
@@ -61,10 +59,8 @@ services:
       resources:
         limits:
           memory: 512M
-          cpus: '0.5'
         reservations:
           memory: 256M
-          cpus: '0.2'
     security_opt:
       - no-new-privileges:true
     networks:
@@ -91,10 +87,8 @@ services:
       resources:
         limits:
           memory: 1G
-          cpus: '1.0'
         reservations:
           memory: 512M
-          cpus: '0.5'
     security_opt:
       - no-new-privileges:true
     networks:
@@ -104,7 +98,9 @@ services:
 
   # API Gateway - 高并发入口
   api-gateway:
-    build: ./api-gateway
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile.runtime
     container_name: uav-gateway
     ports:
       - "8088:8088"
@@ -127,10 +123,8 @@ services:
       resources:
         limits:
           memory: 768M
-          cpus: '1.0'
         reservations:
           memory: 384M
-          cpus: '0.5'
     security_opt:
       - no-new-privileges:true
     networks:
@@ -138,7 +132,9 @@ services:
 
   # WRF Processor - 气象数据处理 (CPU密集型)
   wrf-processor:
-    build: ./wrf-processor-service
+    build:
+      context: ./wrf-processor-service
+      dockerfile: Dockerfile.runtime
     container_name: wrf-processor
     ports:
       - "8081:8081"
@@ -152,6 +148,11 @@ services:
       NACOS_SERVER: nacos:8848
       PYTHON_TIMEOUT: 60000
       JAVA_OPTS: -Xms512m -Xmx1g -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+UseStringDeduplication -XX:+ParallelRefProcEnabled
+      SPRING_MAIN_ALLOW_BEAN_DEFINITION_OVERRIDING: "true"
+      JWT_SECRET: "uav-jwt-production-secret-change-me"
+      ENCRYPTION_KEY: "uav-aes256-encryption-key-change-me"
+      SECURITY_USER_PASSWORD: "admin123"
+      DB_PASSWORD: "uav_ploy_2026_secure"
     restart: always
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
@@ -163,10 +164,8 @@ services:
       resources:
         limits:
           memory: 1.5G
-          cpus: '2.0'
         reservations:
           memory: 768M
-          cpus: '1.0'
     security_opt:
       - no-new-privileges:true
     networks:
@@ -174,7 +173,9 @@ services:
 
   # Data Assimilation - 数据同化服务 (计算密集型)
   data-assimilation:
-    build: ./data-assimilation-service
+    build:
+      context: ./data-assimilation-service
+      dockerfile: Dockerfile.runtime
     container_name: data-assimilation
     ports:
       - "8084:8084"
@@ -188,6 +189,11 @@ services:
       NACOS_SERVER: nacos:8848
       PYTHON_TIMEOUT: 300000
       JAVA_OPTS: -Xms512m -Xmx1g -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+ParallelRefProcEnabled -Djava.security.egd=file:/dev/./urandom
+      SPRING_MAIN_ALLOW_BEAN_DEFINITION_OVERRIDING: "true"
+      JWT_SECRET: "uav-jwt-production-secret-change-me"
+      ENCRYPTION_KEY: "uav-aes256-encryption-key-change-me"
+      SECURITY_USER_PASSWORD: "admin123"
+      DB_PASSWORD: "uav_ploy_2026_secure"
     restart: always
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8084/actuator/health"]
@@ -199,10 +205,8 @@ services:
       resources:
         limits:
           memory: 2G
-          cpus: '2.0'
         reservations:
           memory: 1G
-          cpus: '1.0'
     security_opt:
       - no-new-privileges:true
     networks:
@@ -210,7 +214,9 @@ services:
 
   # Meteor Forecast - 气象预测服务 (内存密集型)
   meteor-forecast:
-    build: ./meteor-forecast-service
+    build:
+      context: ./meteor-forecast-service
+      dockerfile: Dockerfile.runtime
     container_name: meteor-forecast
     ports:
       - "8082:8082"
@@ -224,6 +230,11 @@ services:
       NACOS_SERVER: nacos:8848
       PYTHON_TIMEOUT: 120000
       JAVA_OPTS: -Xms512m -Xmx1g -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+UseStringDeduplication
+      SPRING_MAIN_ALLOW_BEAN_DEFINITION_OVERRIDING: "true"
+      JWT_SECRET: "uav-jwt-production-secret-change-me"
+      ENCRYPTION_KEY: "uav-aes256-encryption-key-change-me"
+      SECURITY_USER_PASSWORD: "admin123"
+      DB_PASSWORD: "uav_ploy_2026_secure"
     restart: always
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
@@ -235,10 +246,8 @@ services:
       resources:
         limits:
           memory: 1.5G
-          cpus: '1.5'
         reservations:
           memory: 768M
-          cpus: '0.75'
     security_opt:
       - no-new-privileges:true
     networks:
@@ -246,7 +255,9 @@ services:
 
   # Path Planning - 路径规划服务 (实时性要求高)
   path-planning:
-    build: ./path-planning-service
+    build:
+      context: ./path-planning-service
+      dockerfile: Dockerfile.runtime
     container_name: path-planning
     ports:
       - "8083:8083"
@@ -260,6 +271,11 @@ services:
       NACOS_SERVER: nacos:8848
       PYTHON_TIMEOUT: 60000
       JAVA_OPTS: -Xms512m -Xmx1g -XX:+UseG1GC -XX:MaxGCPauseMillis=100 -XX:+UseStringDeduplication -XX:+ParallelRefProcEnabled
+      SPRING_MAIN_ALLOW_BEAN_DEFINITION_OVERRIDING: "true"
+      JWT_SECRET: "uav-jwt-production-secret-change-me"
+      ENCRYPTION_KEY: "uav-aes256-encryption-key-change-me"
+      SECURITY_USER_PASSWORD: "admin123"
+      DB_PASSWORD: "uav_ploy_2026_secure"
     restart: always
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8083/actuator/health"]
@@ -271,10 +287,8 @@ services:
       resources:
         limits:
           memory: 1.5G
-          cpus: '1.5'
         reservations:
           memory: 768M
-          cpus: '0.75'
     security_opt:
       - no-new-privileges:true
     networks:
@@ -282,7 +296,9 @@ services:
 
   # UAV Platform - 主平台服务 (综合型)
   uav-platform:
-    build: ./uav-platform-service
+    build:
+      context: ./uav-platform-service
+      dockerfile: Dockerfile.runtime
     container_name: uav-platform
     ports:
       - "8080:8080"
@@ -306,6 +322,11 @@ services:
       SERVICES_METEOR_FORECAST_URL: http://meteor-forecast:8082/api/forecast
       SERVICES_PATH_PLANNING_URL: http://path-planning:8083/api/planning
       JAVA_OPTS: -Xms512m -Xmx1g -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+UseStringDeduplication
+      SPRING_MAIN_ALLOW_BEAN_DEFINITION_OVERRIDING: "true"
+      JWT_SECRET: "uav-jwt-production-secret-change-me"
+      ENCRYPTION_KEY: "uav-aes256-encryption-key-change-me"
+      SECURITY_USER_PASSWORD: "admin123"
+      DB_PASSWORD: "uav_ploy_2026_secure"
     restart: always
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
@@ -317,10 +338,8 @@ services:
       resources:
         limits:
           memory: 1.5G
-          cpus: '1.5'
         reservations:
           memory: 768M
-          cpus: '0.75'
     security_opt:
       - no-new-privileges:true
     networks:
@@ -328,7 +347,9 @@ services:
 
   # UAV Weather Collector - 气象采集服务 (IO密集型)
   uav-weather-collector:
-    build: ./uav-weather-collector
+    build:
+      context: ./uav-weather-collector
+      dockerfile: Dockerfile.runtime
     container_name: uav-weather
     ports:
       - "8086:8086"
@@ -343,6 +364,11 @@ services:
       SPRING_REDIS_HOST: redis
       NACOS_SERVER: nacos:8848
       JAVA_OPTS: -Xms256m -Xmx512m -XX:+UseG1GC -XX:MaxGCPauseMillis=200
+      SPRING_MAIN_ALLOW_BEAN_DEFINITION_OVERRIDING: "true"
+      JWT_SECRET: "uav-jwt-production-secret-change-me"
+      ENCRYPTION_KEY: "uav-aes256-encryption-key-change-me"
+      SECURITY_USER_PASSWORD: "admin123"
+      DB_PASSWORD: "uav_ploy_2026_secure"
     restart: always
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8086/actuator/health"]
@@ -354,10 +380,8 @@ services:
       resources:
         limits:
           memory: 768M
-          cpus: '0.75'
         reservations:
           memory: 384M
-          cpus: '0.25'
     security_opt:
       - no-new-privileges:true
     networks:
@@ -381,10 +405,8 @@ services:
       resources:
         limits:
           memory: 512M
-          cpus: '0.5'
         reservations:
           memory: 256M
-          cpus: '0.2'
     security_opt:
       - no-new-privileges:true
     networks:
@@ -413,10 +435,8 @@ services:
       resources:
         limits:
           memory: 1.5G
-          cpus: '1.0'
         reservations:
           memory: 768M
-          cpus: '0.5'
     networks:
       - uav-network
 
@@ -432,10 +452,8 @@ services:
       resources:
         limits:
           memory: 256M
-          cpus: '0.25'
         reservations:
           memory: 128M
-          cpus: '0.1'
     networks:
       - uav-network
 
