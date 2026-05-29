@@ -4,16 +4,10 @@ server:
 spring:
   main:
     allow-bean-definition-overriding: true
+    web-application-type: reactive
   application:
     name: api-gateway
   cloud:
-    openfeign:
-      lazy-attributes-resolution: true
-      client:
-        config:
-          default:
-            connectTimeout: 30000
-            readTimeout: 30000
     gateway:
       globalcors:
         cors-configurations:
@@ -46,9 +40,6 @@ spring:
           uri: http://localhost:8080
           predicates:
             - Path=/api/assimilation/**
-      discovery:
-        locator:
-          enabled: false
 
   data:
     redis:
