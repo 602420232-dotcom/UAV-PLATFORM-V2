@@ -13,12 +13,9 @@ class DronesPage extends ConsumerStatefulWidget {
 }
 
 class _DronesPageState extends ConsumerState<DronesPage> {
-  int get onlineCount =>
-      drones.where((d) => d.status == '在线').length;
-  int get taskingCount =>
-      drones.where((d) => d.status == '执行任务').length;
-  int get idleCount =>
-      drones.where((d) => d.status == '待命').length;
+  int get onlineCount => drones.where((d) => d.status == '在线').length;
+  int get taskingCount => drones.where((d) => d.status == '执行任务').length;
+  int get idleCount => drones.where((d) => d.status == '待命').length;
 
   List<DroneModel> get drones {
     final asyncVal = ref.watch(dronesProvider);
@@ -76,17 +73,20 @@ class _DronesPageState extends ConsumerState<DronesPage> {
             children: [
               TextField(
                 controller: nameCtrl,
-                decoration: const InputDecoration(labelText: '名称', hintText: '例: 猎鹰-1号'),
+                decoration: const InputDecoration(
+                    labelText: '名称', hintText: '例: 猎鹰-1号',),
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: modelCtrl,
-                decoration: const InputDecoration(labelText: '型号', hintText: '例: DJI-M300'),
+                decoration: const InputDecoration(
+                    labelText: '型号', hintText: '例: DJI-M300',),
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: typeCtrl,
-                decoration: const InputDecoration(labelText: '类型', hintText: '多旋翼 / 固定翼 / 混合动力'),
+                decoration: const InputDecoration(
+                    labelText: '类型', hintText: '多旋翼 / 固定翼 / 混合动力',),
               ),
               const SizedBox(height: 12),
               Row(
@@ -118,7 +118,9 @@ class _DronesPageState extends ConsumerState<DronesPage> {
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('取消')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('取消'),),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
             child: Text(existing != null ? '保存' : '添加'),
@@ -150,7 +152,8 @@ class _DronesPageState extends ConsumerState<DronesPage> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('操作失败: $e'), backgroundColor: AppConfig.errorColor),
+          SnackBar(
+              content: Text('操作失败: $e'), backgroundColor: AppConfig.errorColor,),
         );
       }
     }
@@ -163,10 +166,13 @@ class _DronesPageState extends ConsumerState<DronesPage> {
         title: const Text('确认删除'),
         content: Text('确定要删除 "${drone.name}" 吗？'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('取消')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('取消'),),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
-            style: FilledButton.styleFrom(backgroundColor: AppConfig.errorColor),
+            style:
+                FilledButton.styleFrom(backgroundColor: AppConfig.errorColor),
             child: const Text('删除'),
           ),
         ],
@@ -180,7 +186,8 @@ class _DronesPageState extends ConsumerState<DronesPage> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('删除失败: $e'), backgroundColor: AppConfig.errorColor),
+          SnackBar(
+              content: Text('删除失败: $e'), backgroundColor: AppConfig.errorColor,),
         );
       }
     }
@@ -231,9 +238,11 @@ class _DronesPageState extends ConsumerState<DronesPage> {
                 children: [
                   const Icon(Icons.rocket_launch, size: 64, color: Colors.grey),
                   const SizedBox(height: 16),
-                  const Text('暂无无人机', style: TextStyle(fontSize: 18, color: Colors.grey)),
+                  const Text('暂无无人机',
+                      style: TextStyle(fontSize: 18, color: Colors.grey),),
                   const SizedBox(height: 8),
-                  const Text('点击右下角 + 添加第一架无人机', style: TextStyle(color: Colors.grey)),
+                  const Text('点击右下角 + 添加第一架无人机',
+                      style: TextStyle(color: Colors.grey),),
                   const SizedBox(height: 16),
                   FilledButton.icon(
                     onPressed: () => _showAddEditDialog(),
@@ -267,16 +276,20 @@ class _DronesPageState extends ConsumerState<DronesPage> {
       child: Row(
         children: [
           Expanded(
-            child: _statCard('总数', '${d.length}', Icons.rocket_launch, AppConfig.primaryColor),
+            child: _statCard('总数', '${d.length}', Icons.rocket_launch,
+                AppConfig.primaryColor,),
           ),
           Expanded(
-            child: _statCard('待命', '$idleCount', Icons.check_circle, AppConfig.successColor),
+            child: _statCard(
+                '待命', '$idleCount', Icons.check_circle, AppConfig.successColor,),
           ),
           Expanded(
-            child: _statCard('任务中', '$taskingCount', Icons.flight, AppConfig.infoColor),
+            child: _statCard(
+                '任务中', '$taskingCount', Icons.flight, AppConfig.infoColor,),
           ),
           Expanded(
-            child: _statCard('在线', '$onlineCount', Icons.wifi, AppConfig.successColor),
+            child: _statCard(
+                '在线', '$onlineCount', Icons.wifi, AppConfig.successColor,),
           ),
         ],
       ),
@@ -291,8 +304,11 @@ class _DronesPageState extends ConsumerState<DronesPage> {
           children: [
             Icon(icon, color: color, size: 20),
             const SizedBox(height: 4),
-            Text(value, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: color)),
-            Text(label, style: const TextStyle(fontSize: 11, color: Colors.grey)),
+            Text(value,
+                style: TextStyle(
+                    fontSize: 18, fontWeight: FontWeight.bold, color: color,),),
+            Text(label,
+                style: const TextStyle(fontSize: 11, color: Colors.grey),),
           ],
         ),
       ),
@@ -333,16 +349,21 @@ class _DronesPageState extends ConsumerState<DronesPage> {
                       color: const Color(0x1A1677FF),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Icon(Icons.rocket, color: _statusColor(drone.status)),
+                    child:
+                        Icon(Icons.rocket, color: _statusColor(drone.status)),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(drone.name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                        Text(drone.name,
+                            style: const TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.bold,),),
                         const SizedBox(height: 2),
-                        Text('${drone.model} · ${drone.type}', style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                        Text('${drone.model} · ${drone.type}',
+                            style: const TextStyle(
+                                color: Colors.grey, fontSize: 12,),),
                       ],
                     ),
                   ),
@@ -350,23 +371,28 @@ class _DronesPageState extends ConsumerState<DronesPage> {
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 2,),
                         decoration: BoxDecoration(
                           color: const Color(0x261677FF),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
                           drone.status,
-                          style: TextStyle(color: _statusColor(drone.status), fontSize: 12),
+                          style: TextStyle(
+                              color: _statusColor(drone.status), fontSize: 12,),
                         ),
                       ),
                       const SizedBox(height: 4),
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(_batteryIcon(drone.battery), size: 14, color: _batteryColor(drone.battery)),
+                          Icon(_batteryIcon(drone.battery),
+                              size: 14, color: _batteryColor(drone.battery),),
                           Text(' ${drone.battery.toStringAsFixed(0)}%',
-                              style: TextStyle(color: _batteryColor(drone.battery), fontSize: 12)),
+                              style: TextStyle(
+                                  color: _batteryColor(drone.battery),
+                                  fontSize: 12,),),
                         ],
                       ),
                     ],
@@ -397,7 +423,8 @@ class _DronesPageState extends ConsumerState<DronesPage> {
         color: const Color.fromARGB(25, 158, 158, 158),
         borderRadius: BorderRadius.circular(4),
       ),
-      child: Text('$label: $value', style: const TextStyle(color: Colors.grey, fontSize: 11)),
+      child: Text('$label: $value',
+          style: const TextStyle(color: Colors.grey, fontSize: 11),),
     );
   }
 
@@ -418,7 +445,8 @@ class _DronesPageState extends ConsumerState<DronesPage> {
             ),
             ListTile(
               leading: const Icon(Icons.delete, color: AppConfig.errorColor),
-              title: const Text('删除', style: TextStyle(color: AppConfig.errorColor)),
+              title: const Text('删除',
+                  style: TextStyle(color: AppConfig.errorColor),),
               onTap: () {
                 Navigator.pop(ctx);
                 _deleteDrone(drone);
@@ -434,7 +462,8 @@ class _DronesPageState extends ConsumerState<DronesPage> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),),
       builder: (context) {
         return DraggableScrollableSheet(
           initialChildSize: 0.55,
@@ -452,26 +481,36 @@ class _DronesPageState extends ConsumerState<DronesPage> {
                     child: Container(
                       width: 40,
                       height: 4,
-                      decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2)),
+                      decoration: BoxDecoration(
+                          color: Colors.grey[300],
+                          borderRadius: BorderRadius.circular(2),),
                     ),
                   ),
                   const SizedBox(height: 16),
                   Center(
                     child: Column(
                       children: [
-                        Icon(Icons.rocket, size: 48, color: _statusColor(drone.status)),
+                        Icon(Icons.rocket,
+                            size: 48, color: _statusColor(drone.status),),
                         const SizedBox(height: 8),
-                        Text(drone.name, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                        Text(drone.name,
+                            style: const TextStyle(
+                                fontSize: 22, fontWeight: FontWeight.bold,),),
                         const SizedBox(height: 4),
-                        Text('${drone.model} · ${drone.type}', style: const TextStyle(color: Colors.grey)),
+                        Text('${drone.model} · ${drone.type}',
+                            style: const TextStyle(color: Colors.grey),),
                       ],
                     ),
                   ),
                   const SizedBox(height: 20),
                   Row(
                     children: [
-                      Expanded(child: _detailCard('状态', drone.status, _statusColor(drone.status))),
-                      Expanded(child: _detailCard('电量', '${drone.battery}%', _batteryColor(drone.battery))),
+                      Expanded(
+                          child: _detailCard(
+                              '状态', drone.status, _statusColor(drone.status),),),
+                      Expanded(
+                          child: _detailCard('电量', '${drone.battery}%',
+                              _batteryColor(drone.battery),),),
                     ],
                   ),
                   const SizedBox(height: 12),
@@ -501,9 +540,12 @@ class _DronesPageState extends ConsumerState<DronesPage> {
                             Navigator.pop(context);
                             _deleteDrone(drone);
                           },
-                          icon: const Icon(Icons.delete, color: AppConfig.errorColor),
-                          label: const Text('删除', style: TextStyle(color: AppConfig.errorColor)),
-                          style: OutlinedButton.styleFrom(foregroundColor: AppConfig.errorColor),
+                          icon: const Icon(Icons.delete,
+                              color: AppConfig.errorColor,),
+                          label: const Text('删除',
+                              style: TextStyle(color: AppConfig.errorColor),),
+                          style: OutlinedButton.styleFrom(
+                              foregroundColor: AppConfig.errorColor,),
                         ),
                       ),
                     ],
@@ -524,8 +566,11 @@ class _DronesPageState extends ConsumerState<DronesPage> {
         padding: const EdgeInsets.all(12),
         child: Column(
           children: [
-            Text(value, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: color)),
-            Text(label, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+            Text(value,
+                style: TextStyle(
+                    fontSize: 20, fontWeight: FontWeight.bold, color: color,),),
+            Text(label,
+                style: const TextStyle(color: Colors.grey, fontSize: 12),),
           ],
         ),
       ),
@@ -537,8 +582,12 @@ class _DronesPageState extends ConsumerState<DronesPage> {
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         children: [
-          SizedBox(width: 80, child: Text(label, style: const TextStyle(color: Colors.grey))),
-          Expanded(child: Text(value, style: const TextStyle(fontWeight: FontWeight.w500))),
+          SizedBox(
+              width: 80,
+              child: Text(label, style: const TextStyle(color: Colors.grey)),),
+          Expanded(
+              child: Text(value,
+                  style: const TextStyle(fontWeight: FontWeight.w500),),),
         ],
       ),
     );

@@ -45,18 +45,21 @@ class _PlanningPageState extends ConsumerState<PlanningPage> {
             TextField(
               controller: latCtrl,
               decoration: const InputDecoration(labelText: '纬度 (latitude)'),
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: lngCtrl,
               decoration: const InputDecoration(labelText: '经度 (longitude)'),
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
             ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('取消')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx), child: const Text('取消'),),
           FilledButton(
             onPressed: () {
               final lat = double.tryParse(latCtrl.text);
@@ -78,7 +81,9 @@ class _PlanningPageState extends ConsumerState<PlanningPage> {
   Future<void> _executePlanning() async {
     if (_waypoints.length < 2) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('至少需要 2 个任务点'), backgroundColor: AppConfig.warningColor),
+        const SnackBar(
+            content: Text('至少需要 2 个任务点'),
+            backgroundColor: AppConfig.warningColor,),
       );
       return;
     }
@@ -129,14 +134,17 @@ class _PlanningPageState extends ConsumerState<PlanningPage> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('路径规划完成！'), backgroundColor: AppConfig.successColor),
+          const SnackBar(
+              content: Text('路径规划完成！'),
+              backgroundColor: AppConfig.successColor,),
         );
       }
     } catch (e) {
       setState(() => _isPlanning = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('规划失败: $e'), backgroundColor: AppConfig.errorColor),
+          SnackBar(
+              content: Text('规划失败: $e'), backgroundColor: AppConfig.errorColor,),
         );
       }
     }
@@ -203,7 +211,7 @@ class _PlanningPageState extends ConsumerState<PlanningPage> {
         children: [
           const SectionTitle(title: '任务点列表'),
           const Text('点击地图添加任务点，或点击上方 ✏️ 手动输入坐标',
-              style: TextStyle(fontSize: 12, color: Colors.grey)),
+              style: TextStyle(fontSize: 12, color: Colors.grey),),
           const SizedBox(height: 8),
           ..._waypoints.asMap().entries.map((entry) {
             final idx = entry.key;
@@ -214,13 +222,16 @@ class _PlanningPageState extends ConsumerState<PlanningPage> {
                 dense: true,
                 leading: CircleAvatar(
                   radius: 14,
-                  backgroundColor: idx == 0 ? AppConfig.successColor : AppConfig.warningColor,
+                  backgroundColor: idx == 0
+                      ? AppConfig.successColor
+                      : AppConfig.warningColor,
                   child: Text(
                     idx == 0 ? '起' : '$idx',
                     style: const TextStyle(color: Colors.white, fontSize: 12),
                   ),
                 ),
-                title: Text(idx == 0 ? '起点' : '任务点 $idx', style: const TextStyle(fontSize: 14)),
+                title: Text(idx == 0 ? '起点' : '任务点 $idx',
+                    style: const TextStyle(fontSize: 14),),
                 subtitle: Text(
                   '${wp.latitude.toStringAsFixed(4)}, ${wp.longitude.toStringAsFixed(4)}',
                   style: const TextStyle(fontSize: 11),
@@ -236,20 +247,27 @@ class _PlanningPageState extends ConsumerState<PlanningPage> {
           }),
           const SizedBox(height: 16),
           ElevatedButton.icon(
-            onPressed: _waypoints.length < 2 || _isPlanning ? null : _executePlanning,
+            onPressed:
+                _waypoints.length < 2 || _isPlanning ? null : _executePlanning,
             icon: _isPlanning
-                ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),)
                 : const Icon(Icons.route),
             label: Text(_isPlanning ? '规划中...' : '执行路径规划'),
-            style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14)),
+            style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 14),),
           ),
           if (_showResults && _planResult != null) ...[
             const SizedBox(height: 16),
             const Divider(),
             const SectionTitle(title: '规划结果'),
             _buildResultItem('任务点数量', '${_waypoints.length} 个'),
-            _buildResultItem('总距离', '${(_planResult!['total_distance'] ?? '--')}'),
-            _buildResultItem('预估时间', '${(_planResult!['estimated_time'] ?? '--')}'),
+            _buildResultItem(
+                '总距离', '${(_planResult!['total_distance'] ?? '--')}',),
+            _buildResultItem(
+                '预估时间', '${(_planResult!['estimated_time'] ?? '--')}',),
             _buildResultItem('风险等级', '${(_planResult!['risk_level'] ?? '--')}'),
             if (_planResult!['drones_assigned'] != null)
               _buildResultItem('分配无人机', '${_planResult!['drones_assigned']}'),
@@ -281,8 +299,9 @@ class _PlanningPageState extends ConsumerState<PlanningPage> {
           point: wp,
           width: 40,
           height: 40,
-          child: const Icon(Icons.flight_takeoff, color: AppConfig.successColor, size: 32),
-        ));
+          child: const Icon(Icons.flight_takeoff,
+              color: AppConfig.successColor, size: 32,),
+        ),);
       } else {
         markers.add(Marker(
           point: wp,
@@ -297,11 +316,14 @@ class _PlanningPageState extends ConsumerState<PlanningPage> {
             child: Center(
               child: Text(
                 '$i',
-                style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,),
               ),
             ),
           ),
-        ));
+        ),);
       }
     }
 
@@ -311,7 +333,7 @@ class _PlanningPageState extends ConsumerState<PlanningPage> {
         points: _plannedPath,
         color: AppConfig.primaryColor,
         strokeWidth: 3,
-      ));
+      ),);
     }
 
     return Stack(
@@ -342,10 +364,14 @@ class _PlanningPageState extends ConsumerState<PlanningPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text('💡 提示', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                  Text('💡 提示',
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 12),),
                   SizedBox(height: 4),
-                  Text('点击地图添加任务点', style: TextStyle(fontSize: 11, color: Colors.grey)),
-                  Text('✏️ 按钮手动输入坐标', style: TextStyle(fontSize: 11, color: Colors.grey)),
+                  Text('点击地图添加任务点',
+                      style: TextStyle(fontSize: 11, color: Colors.grey),),
+                  Text('✏️ 按钮手动输入坐标',
+                      style: TextStyle(fontSize: 11, color: Colors.grey),),
                 ],
               ),
             ),
