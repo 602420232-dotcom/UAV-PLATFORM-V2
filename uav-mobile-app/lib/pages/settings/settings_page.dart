@@ -79,13 +79,13 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                 try {
                   final manager = OfflineManager();
                   await manager.clearCache();
-                  if (mounted) {
+                  if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('缓存已清除'), backgroundColor: AppConfig.successColor),
                     );
                   }
                 } catch (e) {
-                  if (mounted) {
+                  if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text('清除失败: $e'), backgroundColor: AppConfig.errorColor),
                     );
