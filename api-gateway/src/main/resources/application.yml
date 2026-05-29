@@ -15,89 +15,44 @@ spring:
             connectTimeout: 30000
             readTimeout: 30000
     gateway:
-      default-filters:
-        - name: RequestRateLimiter
-          args:
-            key-resolver: '#{@ipKeyResolver}'
-            redis-rate-limiter:
-              replenishRate: 100
-              burstCapacity: 200
-              requestedTokens: 1
-        - name: Retry
-          args:
-            retries: 3
-            statuses: BAD_GATEWAY, SERVICE_UNAVAILABLE
-            methods: GET,POST
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods: "*"
+            allowedHeaders: "*"
       routes:
         - id: uav-platform
-          uri: lb://uav-platform-service
+          uri: http://localhost:8080
           predicates:
             - Path=/api/v1/**
-          filters:
-            - name: CircuitBreaker
-              args:
-                name: uavPlatformCB
-                fallbackUri: forward:/fallback/platform
-
-        - id: wrf-processor
-          uri: lb://wrf-processor-service
+        - id: wrf-fallback
+          uri: http://localhost:8080
           predicates:
             - Path=/api/wrf/**
-          filters:
-            - name: RequestRateLimiter
-              args:
-                key-resolver: '#{@ipKeyResolver}'
-                redis-rate-limiter:
-                  replenishRate: 50
-                  burstCapacity: 100
-            - name: CircuitBreaker
-              args:
-                name: wrfProcessorCB
-
-        - id: meteor-forecast
-          uri: lb://meteor-forecast-service
+        - id: forecast-fallback
+          uri: http://localhost:8080
           predicates:
             - Path=/api/forecast/**
-          filters:
-            - name: RequestRateLimiter
-              args:
-                key-resolver: '#{@ipKeyResolver}'
-                redis-rate-limiter:
-                  replenishRate: 30
-                  burstCapacity: 60
-
-        - id: path-planning
-          uri: lb://path-planning-service
+        - id: planning-fallback
+          uri: http://localhost:8080
           predicates:
             - Path=/api/planning/**
-          filters:
-            - name: RequestRateLimiter
-              args:
-                key-resolver: '#{@ipKeyResolver}'
-                redis-rate-limiter:
-                  replenishRate: 20
-                  burstCapacity: 40
-
-        - id: data-assimilation
-          uri: lb://data-assimilation-service
+        - id: weather-fallback
+          uri: http://localhost:8080
+          predicates:
+            - Path=/api/weather/**
+        - id: assimilation-fallback
+          uri: http://localhost:8080
           predicates:
             - Path=/api/assimilation/**
-          filters:
-            - name: RequestRateLimiter
-              args:
-                key-resolver: '#{@ipKeyResolver}'
-                redis-rate-limiter:
-                  replenishRate: 15
-                  burstCapacity: 30
-
       discovery:
         locator:
-          enabled: true
-          lower-case-service-id: true
+          enabled: false
 
   data:
     redis:
-      host: ${REDIS_HOST:redis}
+      host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
 
 management:
