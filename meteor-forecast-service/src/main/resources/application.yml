@@ -1,12 +1,4 @@
 spring:
-  cloud:
-    openfeign:
-      lazy-attributes-resolution: true
-      client:
-        config:
-          default:
-            connectTimeout: 30000
-            readTimeout: 30000
   main:
     allow-bean-definition-overriding: true
   application:
@@ -24,6 +16,9 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: false
+
+spring.cloud.openfeign.client.config.default.connectTimeout: 30000
+spring.cloud.openfeign.client.config.default.readTimeout: 30000
 
 # 服务器配置
 server:
