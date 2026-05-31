@@ -214,6 +214,9 @@ tools/mypanel/node_modules
 # -----------------
 # Additional
 # -----------------
+# Trae AI
+.trae/
+
 *.pid
 *.seed
 *.pid.lock
