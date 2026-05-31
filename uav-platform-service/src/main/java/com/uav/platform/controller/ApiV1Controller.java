@@ -144,30 +144,15 @@ public class ApiV1Controller {
     }
 
     // ==================== Auth ====================
-    // ⚠️  SECURITY: This login implementation has NO credential verification.
-    // In production, this must be replaced with proper authentication via AuthenticationManager.
-    // This stub is intended for development/demo purposes only.
+    // 🔒 SECURITY: Demo login has been disabled for security.
+    // This endpoint throws UnsupportedOperationException to ensure secure authentication.
+    // Use the real auth endpoint at backend-spring:8089/api/v1/auth/login for production.
     @PostMapping("/api/v1/auth/login")
     public ResponseEntity<Map<String, Object>> login(@Valid @RequestBody LoginRequest loginReq) {
-        // FIXME: Replace with proper AuthenticationManager.authenticate() call.
-        // Current implementation is a demo stub that generates tokens without verifying credentials.
+        // Demo login disabled - requires real AuthenticationManager.authenticate() in production
         throw new UnsupportedOperationException(
             "Demo login disabled for security. Use the real auth endpoint at backend-spring:8089/api/v1/auth/login"
         );
-        /* ORIGINAL INSECURE CODE (for reference):
-        String username = (String) loginReq.getOrDefault("username", "admin");
-        String role = "admin".equals(username) ? "admin" : "user";
-        List<String> roles = List.of("ROLE_" + role.toUpperCase(), "ROLE_USER");
-        String token = jwtTokenProvider.generateToken(username, roles);
-        String refreshToken = jwtTokenProvider.generateRefreshToken(username);
-        return ResponseEntity.ok(Map.of(
-            "code", 200,
-            "token", token,
-            "refreshToken", refreshToken,
-            "user", Map.of("id", "U001", "username", username, "role", role, "name", "管理员"),
-            "message", "login success"
-        ));
-        */
     }
 
     @PostMapping("/api/v1/auth/logout")
