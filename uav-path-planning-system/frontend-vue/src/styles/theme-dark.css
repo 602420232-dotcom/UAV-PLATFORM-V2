@@ -1,0 +1,341 @@
+/**
+ * 科技深空主题 - 深色主题样式
+ * 设计理念：延续 SmartCockpit 的深色科技风格，统一全站视觉语言
+ */
+
+:root {
+  /* 主色调 */
+  --primary-color: #00d4ff;
+  --primary-hover: #00b8e6;
+  --primary-active: #0099cc;
+  --primary-light: rgba(0, 212, 255, 0.1);
+  
+  /* 背景色 */
+  --bg-primary: #0a0e1a;
+  --bg-secondary: #111827;
+  --bg-tertiary: #1a1f2e;
+  --bg-card: rgba(255, 255, 255, 0.03);
+  --bg-hover: rgba(0, 212, 255, 0.1);
+  --bg-input: rgba(255, 255, 255, 0.05);
+  
+  /* 文字色 */
+  --text-primary: #e0e0e0;
+  --text-secondary: #90a4ae;
+  --text-muted: #607d8b;
+  --text-inverse: #1a1f2e;
+  
+  /* 状态色 */
+  --success-color: #00ff88;
+  --warning-color: #ff9800;
+  --error-color: #ff4d4f;
+  --info-color: #2196f3;
+  
+  /* 边框 */
+  --border-color: rgba(255, 255, 255, 0.08);
+  --border-hover: rgba(0, 212, 255, 0.3);
+  --border-glow: rgba(0, 212, 255, 0.5);
+  
+  /* 阴影 */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+  --shadow-glow: 0 0 20px rgba(0, 212, 255, 0.2);
+  
+  /* 圆角 */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  
+  /* 过渡 */
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.3s ease;
+  --transition-slow: 0.5s ease;
+}
+
+/* 全局样式 */
+.theme-dark {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+/* 卡片样式 */
+.theme-dark .ant-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(10px);
+  transition: all var(--transition-normal);
+}
+
+.theme-dark .ant-card:hover {
+  border-color: var(--border-hover);
+  box-shadow: var(--shadow-glow);
+}
+
+.theme-dark .ant-card-head {
+  border-bottom: 1px solid var(--border-color);
+  color: var(--primary-color);
+}
+
+.theme-dark .ant-card-head-title {
+  color: var(--primary-color);
+}
+
+/* 按钮样式 */
+.theme-dark .ant-btn-primary {
+  background: linear-gradient(135deg, var(--primary-color), #0099cc);
+  border: none;
+  box-shadow: 0 4px 15px rgba(0, 212, 255, 0.3);
+  transition: all var(--transition-normal);
+}
+
+.theme-dark .ant-btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 212, 255, 0.4);
+}
+
+.theme-dark .ant-btn-default {
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+}
+
+.theme-dark .ant-btn-default:hover {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+/* 输入框样式 */
+.theme-dark .ant-input,
+.theme-dark .ant-select-selector,
+.theme-dark .ant-picker {
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  transition: all var(--transition-normal);
+}
+
+.theme-dark .ant-input:focus,
+.theme-dark .ant-input-focused,
+.theme-dark .ant-select-focused .ant-select-selector {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(0, 212, 255, 0.2);
+}
+
+.theme-dark .ant-input::placeholder {
+  color: var(--text-muted);
+}
+
+/* 表格样式 */
+.theme-dark .ant-table {
+  background: transparent;
+  color: var(--text-primary);
+}
+
+.theme-dark .ant-table-thead > tr > th {
+  background: rgba(0, 212, 255, 0.1);
+  color: var(--primary-color);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.theme-dark .ant-table-tbody > tr > td {
+  border-bottom: 1px solid var(--border-color);
+}
+
+.theme-dark .ant-table-tbody > tr:hover > td {
+  background: var(--bg-hover);
+}
+
+/* 菜单样式 */
+.theme-dark .ant-menu-dark {
+  background: transparent;
+}
+
+.theme-dark .ant-menu-dark .ant-menu-item-selected {
+  background: var(--bg-hover);
+}
+
+/* 模态框样式 */
+.theme-dark .ant-modal-content {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+}
+
+.theme-dark .ant-modal-header {
+  background: transparent;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.theme-dark .ant-modal-title {
+  color: var(--primary-color);
+}
+
+.theme-dark .ant-modal-close-x {
+  color: var(--text-secondary);
+}
+
+/* 消息提示样式 */
+.theme-dark .ant-message-notice-content {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+}
+
+/* 抽屉样式 */
+.theme-dark .ant-drawer-content {
+  background: var(--bg-secondary);
+}
+
+.theme-dark .ant-drawer-header {
+  border-bottom: 1px solid var(--border-color);
+}
+
+.theme-dark .ant-drawer-title {
+  color: var(--text-primary);
+}
+
+/* 标签样式 */
+.theme-dark .ant-tag {
+  border-radius: var(--radius-sm);
+}
+
+/* 统计数值样式 */
+.theme-dark .ant-statistic-title {
+  color: var(--text-secondary);
+}
+
+.theme-dark .ant-statistic-content {
+  color: var(--text-primary);
+}
+
+/* 分割线样式 */
+.theme-dark .ant-divider {
+  border-color: var(--border-color);
+}
+
+/* 列表样式 */
+.theme-dark .ant-list-item {
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* 进度条样式 */
+.theme-dark .ant-progress-bg {
+  background: linear-gradient(90deg, var(--primary-color), var(--success-color));
+}
+
+/* 滑块样式 */
+.theme-dark .ant-slider-rail {
+  background: var(--bg-input);
+}
+
+.theme-dark .ant-slider-track {
+  background: linear-gradient(90deg, var(--primary-color), var(--success-color));
+}
+
+.theme-dark .ant-slider-handle {
+  border-color: var(--primary-color);
+}
+
+/* 上传样式 */
+.theme-dark .ant-upload {
+  background: var(--bg-input);
+  border-color: var(--border-color);
+}
+
+/* 选择器下拉样式 */
+.theme-dark .ant-select-dropdown {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+}
+
+.theme-dark .ant-select-item {
+  color: var(--text-primary);
+}
+
+.theme-dark .ant-select-item-option-selected {
+  background: var(--bg-hover);
+}
+
+/* 动画效果 */
+@keyframes pulse-glow {
+  0%, 100% { 
+    box-shadow: 0 0 5px var(--primary-color); 
+  }
+  50% { 
+    box-shadow: 0 0 20px var(--primary-color); 
+  }
+}
+
+@keyframes data-flash {
+  0% { 
+    background-color: transparent; 
+  }
+  50% { 
+    background-color: rgba(0, 212, 255, 0.2); 
+  }
+  100% { 
+    background-color: transparent; 
+  }
+}
+
+.loading-pulse {
+  animation: pulse-glow 2s infinite;
+}
+
+.data-updated {
+  animation: data-flash 0.5s ease;
+}
+
+/* 滚动条样式 */
+.theme-dark ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.theme-dark ::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+
+.theme-dark ::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+
+.theme-dark ::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-color);
+}
+
+/* 发光边框效果 */
+.glow-border {
+  border: 1px solid var(--border-glow);
+  box-shadow: var(--shadow-glow);
+}
+
+/* 悬浮卡片效果 */
+.hover-card {
+  transition: all var(--transition-normal);
+}
+
+.hover-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-glow);
+}
+
+/* 渐变文字 */
+.gradient-text {
+  background: linear-gradient(135deg, var(--primary-color), var(--success-color));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* 毛玻璃效果 */
+.glass-effect {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--border-color);
+}

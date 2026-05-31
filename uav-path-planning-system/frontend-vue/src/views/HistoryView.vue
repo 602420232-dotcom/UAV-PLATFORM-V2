@@ -8,10 +8,10 @@
         </a-col>
         <a-col :span="6">
           <a-select v-model:value="statusFilter" placeholder="状态筛选">
-            <a-option value="">全部</a-option>
-            <a-option value="成功">成功</a-option>
-            <a-option value="失败">失败</a-option>
-            <a-option value="进行中">进行中</a-option>
+            <a-select-option value="">全部</a-select-option>
+            <a-select-option value="成功">成功</a-select-option>
+            <a-select-option value="失败">失败</a-select-option>
+            <a-select-option value="进行中">进行中</a-select-option>
           </a-select>
         </a-col>
         <a-col :span="6">

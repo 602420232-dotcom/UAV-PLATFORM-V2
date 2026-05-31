@@ -7,7 +7,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.NoHandlerFoundException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.client.RestClientException;
@@ -115,6 +114,12 @@ public class GlobalExceptionHandler {
         Thread.currentThread().interrupt();
         log.error("操作被中断", e);
         return buildError(HttpStatus.INTERNAL_SERVER_ERROR, "操作被中断", null);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Map<String, Object>> handleException(Exception e) {
+        log.error("服务器内部错误: {}", e.getMessage(), e);
+        return buildError(HttpStatus.INTERNAL_SERVER_ERROR, "服务器内部错误", null);
     }
 
     private ResponseEntity<Map<String, Object>> buildError(HttpStatus status, String message, Object detail) {

@@ -6,8 +6,16 @@ import * as Cesium from 'cesium';
 import * as echarts from 'echarts';
 
 export class ARDigitalMap {
-  constructor(containerId) {
-    this.container = document.getElementById(containerId);
+  constructor(container) {
+    // 支持字符串ID或DOM元素
+    this.container = typeof container === 'string' 
+      ? document.getElementById(container) 
+      : container;
+    
+    if (!this.container) {
+      throw new Error('ARDigitalMap: 无效的容器元素');
+    }
+    
     this.viewer = null;
     this.entities = [];
     this.heatmapLayer = null;
@@ -21,7 +29,14 @@ export class ARDigitalMap {
       terrain: Cesium.Terrain.fromWorldTerrain(),
       animation: false,
       timeline: false,
-      baseLayerPicker: false
+      baseLayerPicker: false,
+      // 性能优化配置
+      requestRenderMode: true,
+      maximumRenderTimeChange: Infinity,
+      infoBox: false,
+      selectionIndicator: false,
+      shadows: false,
+      shouldAnimate: false
     });
     this.viewer.scene.globe.enableLighting = true;
   }

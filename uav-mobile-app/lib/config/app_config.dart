@@ -1,4 +1,5 @@
-import 'package:flutter/foundation.dart' show defaultTargetPlatform, TargetPlatform;
+import 'package:flutter/foundation.dart'
+    show defaultTargetPlatform, kIsWeb, TargetPlatform;
 import 'package:flutter/material.dart';
 
 class AppConfig {
@@ -7,7 +8,20 @@ class AppConfig {
   static const String appName = '无人机路径规划系统';
   static const String appVersion = '1.0.0';
 
+  /// API base URL — auto-detected from compile-time define or platform.
+  /// For Web dev with WSL2: `flutter run -d chrome --dart-define=API_BASE_URL=http://172.x.x.x:8088`
+  /// For Web production: nginx proxy, use relative path (empty string).
+  static const String _compileTimeBaseUrl = String.fromEnvironment('API_BASE_URL');
+
   static String get apiBaseUrl {
+    if (kIsWeb) {
+      // Compile-time define takes priority (set by run scripts)
+      if (_compileTimeBaseUrl.isNotEmpty) {
+        return _compileTimeBaseUrl;
+      }
+      // Default: try localhost (works when WSL2 forwarding is active)
+      return 'http://localhost:8088';
+    }
     if (defaultTargetPlatform == TargetPlatform.android) {
       return 'http://10.0.2.2:8088';
     }

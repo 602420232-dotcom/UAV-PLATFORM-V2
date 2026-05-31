@@ -6,9 +6,9 @@ spring:
   
   # 数据库配置
   datasource:
-    url: jdbc:mysql://${DB_HOST:localhost}:3306/uav_platform?useSSL=true&requireSSL=true&serverTimezone=UTC
+    url: jdbc:mysql://${DB_HOST:localhost}:3306/uav_platform?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf8mb4
     username: ${DB_USER:root}
-    password: ${DB_PASSWORD:***  # 移除默认值，强制要求配置
+    password: ${DB_PASSWORD:uav_ploy_2026_secure}
     driver-class-name: com.mysql.cj.jdbc.Driver
   
   # JPA配置
@@ -16,13 +16,13 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: false
+    database-platform: org.hibernate.dialect.MySQLDialect
   
-  # Spring Security配置
-  security:
-    user:
-      name: ${SECURITY_USER_NAME:admin}
-      password: ${SECURITY_USER_PASSWORD:***  # 移除默认值，强制要求配置
-      roles: ADMIN
+# JWT 认证配置
+jwt:
+  secret: ${JWT_SECRET:uav-jw…-me}
+  expiration-ms: ${JWT_EXPIRATION_MS:86400000}
+  refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION_MS:604800000}
 
 
 

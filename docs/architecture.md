@@ -1,8 +1,20 @@
 # 架构设计文档
 
+> 最后更新: 2026-05-31 (v2.3)
+
 ## 模块边界定义
 
 本项目采用微服务分层架构，模块边界清晰定义如下：
+
+### 新增模块 (v2.3)
+
+| 模块 | 路径 | 说明 |
+|------|------|------|
+| **errors** | [common-utils/src/main/python/errors.py](../common-utils/src/main/python/errors.py) | 统一错误码/AppError/Result |
+| **planners** | [path-planning-service/src/main/python/planners/](../path-planning-service/src/main/python/planners/) | 模块化路径规划器 |
+| **security_validation** | [edge-cloud-coordinator/security_validation.py](../edge-cloud-coordinator/security_validation.py) | 安全输入验证 |
+| **docker/base** | [docker/base/](../docker/base/) | Docker 统一基础镜像 |
+| **mypanel/backend** | [tools/mypanel/backend/](../tools/mypanel/backend/) | 监控面板后端模块化 |
 
 ### 模块分层
 

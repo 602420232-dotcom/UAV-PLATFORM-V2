@@ -69,7 +69,7 @@
     
     <!-- 添加/编辑数据源模态框 -->
     <a-modal
-      v-model:visible="modalVisible"
+      v-model:open="modalVisible"
       :title="modalTitle"
       @ok="handleOk"
       @cancel="handleCancel"
@@ -191,16 +191,7 @@ const columns = [
   {
     title: '类型',
     dataIndex: 'type',
-    key: 'type',
-    customRender: (text) => {
-      const typeMap = {
-        'satellite': '卫星数据',
-        'radar': '雷达数据',
-        'ground_station': '地面站数据',
-        'buoy': '浮标数据'
-      }
-      return typeMap[text] || text
-    }
+    key: 'type'
   },
   {
     title: '格式',
@@ -210,12 +201,7 @@ const columns = [
   {
     title: '状态',
     dataIndex: 'status',
-    key: 'status',
-    customRender: (text) => {
-      return text === 'active' ? 
-        h('a-tag', { color: 'green' }, () => '活跃') : 
-        h('a-tag', { color: 'red' }, () => '禁用')
-    }
+    key: 'status'
   },
   {
     title: '创建时间',
@@ -224,8 +210,7 @@ const columns = [
   },
   {
     title: '操作',
-    key: 'action',
-    slots: { customRender: 'action' }
+    key: 'action'
   }
 ]
 

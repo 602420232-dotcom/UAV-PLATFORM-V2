@@ -1,0 +1,385 @@
+openapi: "3.0.3"
+info:
+  title: "Edge-Cloud Coordinator API"
+  description: "边云协同计算框架 REST API — 支持任务管理、联邦学习、云端同步等功能"
+  version: "1.0.0"
+  contact:
+    name: "UAV Platform Team"
+
+servers:
+  - url: "http://localhost:8000"
+    description: "本地开发环境"
+
+tags:
+  - name: Health
+    description: "服务健康检查"
+  - name: Tasks
+    description: "任务管理（提交/查询/取消/批量）"
+  - name: Coordinator
+    description: "边云协同操作（同步/上传/模型列表）"
+  - name: Federated Learning
+    description: "联邦学习（客户端更新/状态/训练）"
+  - name: Batch
+    description: "批量任务操作"
+
+paths:
+  # ==================== Health ====================
+  /:
+    get:
+      tags: [Health]
+      summary: "API 根路径"
+      responses:
+        "200":
+          description: "服务信息"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RootResponse"
+
+  /health:
+    get:
+      tags: [Health]
+      summary: "健康检查"
+      responses:
+        "200":
+          description: "健康状态"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+
+  # ==================== Tasks ====================
+  /tasks:
+    post:
+      tags: [Tasks]
+      summary: "提交任务"
+      description: "根据任务类型自动分配到云端或边缘处理"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TaskSubmitRequest"
+      responses:
+        "200":
+          description: "任务提交成功"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaskSubmitResponse"
+        "400":
+          description: "无效的任务类型"
+        "500":
+          description: "服务器内部错误"
+
+    get:
+      tags: [Tasks]
+      summary: "获取任务列表"
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, completed]
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+            maximum: 100
+      responses:
+        "200":
+          description: "任务列表"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TaskStatusResponse"
+
+  /tasks/batch:
+    post:
+      tags: [Batch]
+      summary: "批量提交任务（上限100个）"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "#/components/schemas/TaskSubmitRequest"
+              maxItems: 100
+      responses:
+        "200":
+          description: "批量提交结果"
+        "400":
+          description: "超出批量上限"
+
+  /tasks/{task_id}:
+    get:
+      tags: [Tasks]
+      summary: "查询任务状态"
+      parameters:
+        - name: task_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "任务状态"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaskStatusResponse"
+        "404":
+          description: "任务不存在"
+
+    delete:
+      tags: [Tasks]
+      summary: "取消任务"
+      parameters:
+        - name: task_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "任务已取消"
+        "404":
+          description: "任务不存在"
+
+  # ==================== Coordinator ====================
+  /status:
+    get:
+      tags: [Coordinator]
+      summary: "获取系统状态"
+      responses:
+        "200":
+          description: "系统状态信息"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SystemStatusResponse"
+
+  /sync:
+    post:
+      tags: [Coordinator]
+      summary: "同步云端模型"
+      responses:
+        "200":
+          description: "同步完成"
+        "500":
+          description: "同步失败"
+
+  /upload:
+    post:
+      tags: [Coordinator]
+      summary: "上传边缘数据到云端（后台任务）"
+      responses:
+        "200":
+          description: "上传任务已提交"
+
+  /models:
+    get:
+      tags: [Coordinator]
+      summary: "列出可用模型"
+      responses:
+        "200":
+          description: "云端和本地模型列表"
+
+  # ==================== Federated Learning ====================
+  /fl/update:
+    post:
+      tags: [Federated Learning]
+      summary: "接收联邦学习客户端模型更新"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FLClientUpdateRequest"
+      responses:
+        "200":
+          description: "更新结果"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FLClientUpdateResponse"
+
+  /fl/status:
+    get:
+      tags: [Federated Learning]
+      summary: "获取联邦学习状态"
+      responses:
+        "200":
+          description: "联邦学习状态"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FLStatusResponse"
+
+  /fl/history:
+    get:
+      tags: [Federated Learning]
+      summary: "获取联邦学习训练历史"
+      responses:
+        "200":
+          description: "训练历史记录"
+
+  /fl/train:
+    post:
+      tags: [Federated Learning]
+      summary: "模拟无人机本地训练"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FLTrainRequest"
+      responses:
+        "200":
+          description: "训练结果"
+
+components:
+  schemas:
+    RootResponse:
+      type: object
+      properties:
+        service:
+          type: string
+          example: "Edge-Cloud Coordinator"
+        version:
+          type: string
+          example: "1.0.0"
+        status:
+          type: string
+          example: "running"
+
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: "healthy"
+
+    TaskSubmitRequest:
+      type: object
+      required: [task_type]
+      properties:
+        task_type:
+          type: string
+          description: "任务类型"
+          enum: [global_path, local_avoidance, sensor_fusion, model_update, batch_processing]
+        priority:
+          type: integer
+          minimum: 1
+          maximum: 10
+          default: 5
+        data:
+          type: object
+          description: "任务数据"
+        deadline:
+          type: number
+          description: "截止时间（秒）"
+          default: 60.0
+
+    TaskSubmitResponse:
+      type: object
+      properties:
+        task_id:
+          type: string
+        status:
+          type: string
+        message:
+          type: string
+
+    TaskStatusResponse:
+      type: object
+      properties:
+        task_id:
+          type: string
+        task_type:
+          type: string
+        priority:
+          type: integer
+        status:
+          type: string
+        result:
+          type: object
+
+    SystemStatusResponse:
+      type: object
+      properties:
+        node_id:
+          type: string
+        queue_size:
+          type: integer
+        completed_count:
+          type: integer
+        cloud_connected:
+          type: boolean
+        edge_connected:
+          type: boolean
+        buffer_size:
+          type: integer
+
+    FLClientUpdateRequest:
+      type: object
+      required: [drone_id, weights, n_samples, metrics]
+      properties:
+        drone_id:
+          type: string
+        weights:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: array
+              items:
+                type: number
+        n_samples:
+          type: integer
+        metrics:
+          type: object
+
+    FLClientUpdateResponse:
+      type: object
+      properties:
+        aggregated:
+          type: boolean
+        round_id:
+          type: integer
+        global_accuracy:
+          type: number
+
+    FLStatusResponse:
+      type: object
+      properties:
+        strategy:
+          type: string
+        min_clients:
+          type: integer
+        round_id:
+          type: integer
+        clients_this_round:
+          type: integer
+        global_accuracy:
+          type: number
+        total_rounds:
+          type: integer
+
+    FLTrainRequest:
+      type: object
+      required: [drone_id]
+      properties:
+        drone_id:
+          type: string
+        epochs:
+          type: integer
+          default: 5
+        n_samples:
+          type: integer
+          default: 100

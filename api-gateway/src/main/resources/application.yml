@@ -10,30 +10,22 @@ spring:
   cloud:
     gateway:
       routes:
-        - id: uav-platform
-          uri: http://localhost:8080
+        - id: uav-platform-all
+          uri: http://uav-platform:8080
           predicates:
-            - Path=/api/v1/**
-        - id: wrf-fallback
-          uri: http://localhost:8080
+            - Path=/api/**
+        - id: actuator-health
+          uri: http://uav-platform:8080
           predicates:
-            - Path=/api/wrf/**
-        - id: forecast-fallback
-          uri: http://localhost:8080
-          predicates:
-            - Path=/api/forecast/**
-        - id: planning-fallback
-          uri: http://localhost:8080
-          predicates:
-            - Path=/api/planning/**
-        - id: weather-fallback
-          uri: http://localhost:8080
-          predicates:
-            - Path=/api/weather/**
-        - id: assimilation-fallback
-          uri: http://localhost:8080
-          predicates:
-            - Path=/api/assimilation/**
+            - Path=/actuator/**
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+    nacos:
+      discovery:
+        server-addr: ${NACOS_SERVER:nacos:8848}
+        namespace: ${NACOS_NAMESPACE:public}
 
   data:
     redis:

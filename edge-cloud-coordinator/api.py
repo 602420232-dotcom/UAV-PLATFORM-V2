@@ -20,6 +20,12 @@ except ImportError:
 # 本地模块
 from coordinator import EdgeCloudCoordinator, EdgeTask, TaskType
 from federated_learning import FederatedLearning, DroneClient
+from security_validation import sanitize_task_id, validate_task_data, safe_get
+
+import sys
+import os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'common-utils', 'src', 'main', 'python'))
+from errors import AppError, ErrorCode, Result, handle_errors
 
 logger = logging.getLogger(__name__)
 
@@ -167,10 +173,11 @@ if HAS_FASTAPI:
         根据任务类型自动分配到云端或边缘处理
         """
         try:
-            # 转换任务类型
             task_type = TaskType(request.task_type)
-            
-            # 创建任务
+
+            if not validate_task_data(request.task_type, request.data):
+                raise HTTPException(status_code=400, detail="任务数据验证失败")
+
             task = EdgeTask(
                 task_id=f"task_{len(coordinator.task_queue) + 1}",
                 task_type=task_type,
@@ -192,10 +199,13 @@ if HAS_FASTAPI:
             )
             
         except ValueError:
-            raise HTTPException(status_code=400, detail="无效的任务类型")
+            raise HTTPException(status_code=400, detail=ErrorCode.TASK_INVALID_TYPE.message)
+        except AppError as e:
+            logger.error(f"任务提交失败: {e.detail}", exc_info=True)
+            raise HTTPException(status_code=500, detail=e.detail)
         except Exception:
-            logger.error(f"任务提交失败", exc_info=True)
-            raise HTTPException(status_code=500, detail="服务器内部错误")
+            logger.error("任务提交失败", exc_info=True)
+            raise HTTPException(status_code=500, detail=ErrorCode.INTERNAL_ERROR.message)
     
     
     @app.get("/tasks/{task_id}", response_model=TaskStatusResponse, tags=["Tasks"])
@@ -314,6 +324,9 @@ if HAS_FASTAPI:
         for req in tasks:
             try:
                 task_type = TaskType(req.task_type)
+                if not validate_task_data(req.task_type, req.data):
+                    results.append({"error": "任务数据验证失败"})
+                    continue
                 task = EdgeTask(
                     task_id=f"task_{len(coordinator.task_queue) + 1}",
                     task_type=task_type,

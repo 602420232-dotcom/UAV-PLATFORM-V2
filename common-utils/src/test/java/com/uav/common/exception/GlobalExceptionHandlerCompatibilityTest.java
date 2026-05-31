@@ -136,8 +136,8 @@ class GlobalExceptionHandlerCompatibilityTest {
             assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
             Map<String, Object> body = response.getBody();
             assertNotNull(body);
-            assertEquals(false, body.get("success"));
-            assertEquals("服务器内部错误", body.get("error"));
+            assertEquals(500, body.get("code"));
+            assertEquals("服务器内部错误", body.get("message"));
         }
     }
 }

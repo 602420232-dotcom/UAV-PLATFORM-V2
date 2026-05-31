@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WSL2 监控面板 Pro</title>
+<link rel="stylesheet" href="/css/style.css">
+<script src="/chart.js"></script>
+</head>
+<body>
+
+<div class="header">
+  <h1>WSL2 监控面板</h1>
+  <div style="display:flex;align-items:center">
+    <div class="clock" id="clock">加载中...</div>
+    <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn"></button>
+  </div>
+</div>
+
+<div class="nav">
+  <div class="nav-item active" onclick="showPage('monitor')">监控面板</div>
+  <div class="nav-item" onclick="showPage('nettest')">网络测试</div>
+  <div class="nav-item" onclick="showPage('bashrc')">Bashrc编辑</div>
+  <div class="nav-item" onclick="showPage('tools')">工具聚合</div>
+</div>
+
+<div id="page-monitor" class="page active">
+  <div class="grid">
+    <div class="card"><h3>系统负载</h3><div class="row"><span>CPU (1m)</span><span id="cpu1">-</span></div><div class="row"><span>内存</span><span id="memP">-</span></div><div class="row"><span>GPU</span><span id="gpuU" style="color:var(--warn)">-</span></div></div>
+    <div class="card"><h3>磁盘 & 网络</h3><div class="row"><span>磁盘</span><span id="diskU">-</span></div><div class="row"><span>下载</span><span id="rxS" style="color:var(--link)">-</span></div><div class="row"><span>上传</span><span id="txS" style="color:var(--warn)">-</span></div><div class="row"><span>累计接收</span><span id="totalRx">-</span></div><div class="row"><span>累计发送</span><span id="totalTx">-</span></div></div>
+    <div class="card"><h3>IP与路由</h3><div class="row"><span>本机地址 (eth0)</span><span id="ipAddr">-</span></div><div class="row"><span>默认网关</span><span id="ipGW">-</span></div><div class="row"><span>HTTP 代理</span><span id="httpProxy" style="font-size:12px">-</span></div><div class="row"><span>HTTPS 代理</span><span id="httpsProxy" style="font-size:12px">-</span></div><div class="row"><span>Google 测试</span><span id="googleTestMini">检测中...</span></div></div>
+  </div>
+  <div class="card"><h3>历史趋势</h3><canvas id="myChart" height="80"></canvas></div>
+  <div class="card"><h3>Docker 容器 <span style="font-size:0.65em;color:#888">(点击操作)</span></h3><div id="dockerList">加载中...</div></div>
+  <div class="card"><h3>进程管理 (Top 10)</h3><table id="procTable"><thead><tr><th>用户</th><th>PID</th><th>CPU%</th><th>内存%</th><th>命令</th><th>操作</th></tr></thead><tbody></tbody></table></div>
+  <div class="card">
+    <h3>OpenClaw 控制台</h3>
+    <div id="oc-status" style="margin-bottom: 10px; font-weight: bold;">检测中...</div>
+    <div class="controls">
+      <button class="btn" onclick="startOC()">启动</button>
+      <button class="btn btn-danger" onclick="stopOC()">停止</button>
+      <button class="btn btn-sm btn-link" onclick="checkOC()">刷新</button>
+    </div>
+    <div id="oc-result" style="margin-top: 10px;"></div>
+  </div>
+  <div class="card">
+    <h3>系统操作</h3>
+    <button class="btn btn-warn" onclick="doAction('clear-traffic')">清空流量统计</button>
+    <button class="btn" onclick="doAction('restart-panel')">重启面板</button>
+    <button class="btn" onclick="doAction('restart-docker')">重启Docker</button>
+    <button class="btn btn-danger" onclick="doAction('restart-wsl')">重启WSL</button>
+    <div id="actionResult"></div>
+  </div>
+</div>
+
+<div id="page-nettest" class="page">
+  <div class="card">
+    <h3>连通性检测 <button class="btn btn-sm btn-link" onclick="loadNetTest()" id="retryBtn">重新测试</button></h3>
+    <div class="test-time">上次测试: <span id="testTime">-</span></div>
+    <div class="row"><span>本地回环 (127.0.0.1)</span><span id="test-local">检测中...</span></div>
+    <div class="row"><span>阿里DNS (223.5.5.5)</span><span id="test-alidns">检测中...</span></div>
+    <div class="row"><span>腾讯DNS (119.29.29.29)</span><span id="test-tencentdns">检测中...</span></div>
+    <div class="row"><span>百度DNS (180.76.76.76)</span><span id="test-baidudns">检测中...</span></div>
+    <div class="row"><span>谷歌DNS (8.8.8.8)</span><span id="test-googledns">检测中...</span></div>
+    <div class="row"><span>域名解析 (www.baidu.com)</span><span id="test-baidu">检测中...</span></div>
+    <hr style="border-color:var(--border); margin:1rem 0">
+    <h3>Google 专项测试 <button class="btn btn-sm btn-link" onclick="testGoogle()" id="googleBtn">测试连接</button></h3>
+    <div id="googleResult">点击按钮测试 https://www.google.com (Timeout 6s)</div>
+    <hr style="border-color:var(--border); margin:1.2rem 0">
+    <h3>GitHub 连通性 <button class="btn btn-sm btn-link" onclick="testGithub()" id="githubBtn">测试</button></h3>
+    <div id="githubResult" style="margin-bottom:.8rem">点击按钮测试 github.com（HTTPS）</div>
+    <h3>网速测试（1MB 样本）<button class="btn btn-sm btn-link" onclick="runSpeedTest()" id="speedBtn">测试</button></h3>
+    <div id="speedResult">点击按钮开始（会短暂下载 1MB 数据）</div>
+  </div>
+</div>
+
+<div id="page-bashrc" class="page">
+  <div class="card">
+    <h3>编辑 ~/.bashrc <button class="btn btn-sm btn-warn" onclick="saveAndSource()" id="saveBtn">保存</button></h3>
+    <p style="font-size:12px;color:#888;margin-bottom:1rem">在此编辑配置，保存后需重新进入终端或执行 source ~/.bashrc 生效。</p>
+    <textarea id="bashrcEditor">加载中...</textarea>
+  </div>
+</div>
+
+<div id="page-tools" class="page">
+  <div class="card">
+    <h3>常用链接</h3>
+    <p style="margin-bottom:1rem">点击跳转常用开发资源：</p>
+    <button class="btn btn-link" onclick="window.open('http://localhost:5577','_blank')">本地面板</button>
+    <button class="btn btn-link" onclick="window.open('https://github.com','_blank')">GitHub</button>
+    <button class="btn btn-link" onclick="window.open('https://nodejs.org','_blank')">Node.js</button>
+    <button class="btn btn-link" onclick="window.open('https://www.baidu.com','_blank')">百度</button>
+    <button class="btn btn-link" onclick="window.open('http://localhost:18789','_blank')" style="color:var(--accent)">OpenClaw Web</button>
+    <button class="btn btn-link" onclick="window.open('https://platform.deepseek.com/usage','_blank')" style="color:#66bb6a">DeepSeek 用量</button>
+  </div>
+</div>
+
+<script src="/js/app.js"></script>
+</body>
+</html>
