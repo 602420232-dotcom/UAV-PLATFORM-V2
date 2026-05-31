@@ -1,6 +1,6 @@
 import api from './index'
 
-const BASE = '/api/v1/tasks'
+const BASE = '/v1/tasks'
 
 export function getTasks(params) {
   return api.get(BASE, { params })

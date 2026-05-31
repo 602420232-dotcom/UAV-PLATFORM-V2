@@ -302,7 +302,7 @@ def scan_and_generate_tests(root_dir: str) -> Dict[str, any]:
 
 if __name__ == '__main__':
     import sys
-import logging
+    import logging
     
     if len(sys.argv) > 1:
         root_dir = sys.argv[1]

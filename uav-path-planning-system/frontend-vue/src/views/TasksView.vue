@@ -119,9 +119,9 @@ const loadTasks = async () => {
     const res = await getTasks()
     tasks.value = Array.isArray(res) ? res : (res.data || res.content || [])
   } catch (e) {
-    // 后端未连接或需要认证时，使用演示数据
-    if (e.message === 'BACKEND_UNAVAILABLE' || e.message === 'AUTH_REQUIRED') {
-      console.log('[TasksView] 使用演示数据')
+    // 后端未连接或需要认证时，静默使用演示数据
+    if (e.message !== 'BACKEND_UNAVAILABLE' && e.message !== 'AUTH_REQUIRED') {
+      console.error('[TasksView] 加载失败:', e.message)
     }
     loadDemoData()
   } finally {

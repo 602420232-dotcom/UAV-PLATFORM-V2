@@ -1,12 +1,10 @@
-﻿﻿﻿﻿﻿﻿﻿﻿apiVersion: apps/v1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: meteor-forecast-service
   namespace: uav-platform
-  labels:
-    app: meteor-forecast-service
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: meteor-forecast-service
@@ -16,53 +14,28 @@ spec:
         app: meteor-forecast-service
     spec:
       containers:
-      - name: meteor-forecast-service
-        image: meteor-forecast-service:v1.0.0
-        ports:
-        - containerPort: 8082
-        env:
-        - name: SPRING_PROFILES_ACTIVE
-          value: "prod"
-        - name: MODEL_PATH
-          value: "/models"
-        - name: DATA_PATH
-          value: "/data/forecast"
-        resources:
-          requests:
-            cpu: "1"
-            memory: "2Gi"
-          limits:
-            cpu: "4"
-            memory: "4Gi"
-        readinessProbe:
-          httpGet:
-            path: /actuator/health
-            port: 8082
-          initialDelaySeconds: 60
-          periodSeconds: 20
-        livenessProbe:
-          httpGet:
-            path: /actuator/health
-            port: 8082
-          initialDelaySeconds: 120
-          periodSeconds: 60
-        volumeMounts:
-        - name: model-data
-          mountPath: /models
-        - name: forecast-data
-          mountPath: /data/forecast
-      volumes:
-      - name: model-data
-        persistentVolumeClaim:
-          claimName: model-data-pvc
-      - name: forecast-data
-        persistentVolumeClaim:
-          claimName: forecast-data-pvc
-  strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxUnavailable: 1
-      maxSurge: 1
+        - name: wrf-processor
+          image: trae-wrf-processor:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8082
+          env:
+            - name: NACOS_SERVER
+              value: nacos:8848
+            - name: DB_HOST
+              value: mysql
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: spring.datasource.password
+                  name: uav-platform-secrets
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "200m"
+            limits:
+              memory: "1Gi"
+              cpu: "1"
 ---
 apiVersion: v1
 kind: Service
@@ -73,32 +46,5 @@ spec:
   selector:
     app: meteor-forecast-service
   ports:
-  - port: 8082
-    targetPort: 8082
-  type: ClusterIP
----
-apiVersion: autoscaling/v2
-kind: HorizontalPodAutoscaler
-metadata:
-  name: meteor-forecast-service-hpa
-  namespace: uav-platform
-spec:
-  scaleTargetRef:
-    apiVersion: apps/v1
-    kind: Deployment
-    name: meteor-forecast-service
-  minReplicas: 2
-  maxReplicas: 5
-  metrics:
-  - type: Resource
-    resource:
-      name: cpu
-      target:
-        type: Utilization
-        averageUtilization: 70
-  - type: Resource
-    resource:
-      name: memory
-      target:
-        type: Utilization
-        averageUtilization: 80
+    - port: 8082
+      targetPort: 8082

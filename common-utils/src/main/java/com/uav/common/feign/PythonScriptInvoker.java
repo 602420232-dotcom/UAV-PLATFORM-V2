@@ -67,8 +67,11 @@ public class PythonScriptInvoker {
     // 允许执行的操作白名单
     private static final Set<String> ALLOWED_ACTIONS = Set.of(
             "predict", "plan", "compute", "assimilate", "optimize",
-            "vrptw", "global_path", "local_avoidance",
-            "parse", "validate", "transform"
+            "vrptw", "astar", "dwa", "full",
+            "global_path", "local_avoidance",
+            "parse", "validate", "transform",
+            "execute", "batch", "variance",
+            "correct", "get_forecast", "get_detailed_forecast", "get_realtime_weather"
     );
 
     private static final int MAX_THREAD_POOL_SIZE = 10;

@@ -1,7 +1,7 @@
 # Type annotations added: 2026-05-08 13:22:43
 from typing import Dict, List, Any, Optional, Callable, Tuple
 
-﻿"""
+"""
 贝叶斯同化基础使用示例
 源自: bayesian_assimilation(small).py 和 compatibility.py
 """
@@ -138,7 +138,7 @@ def assimilate_with_parallel(assimilator, background, observations, locations):
             return assimilator.assimilate_3dvar(background, observations, locations)
 
 
-def adaptive_resolution_assimilation(assimilator: Any, config: Dict[str, Any], min_resolution=5.0: Any):
+def adaptive_resolution_assimilation(assimilator: Any, config: Dict[str, Any], min_resolution: float = 5.0):
     """动态分辨率同化，根据计算资源自动调整"""
     original_resolution = config.target_resolution
     
@@ -278,91 +278,86 @@ def visualize_results(background, analysis, variance):
 def main():
     logger.info("=" * 60)
     logger.info("贝叶斯同化基础示例")
-    logger.info("=" * 6 0)
+    logger.info("=" * 60)
     
-    try:
-        # 从配置文件加载配置
-        config = load_config_from_file()
+    # 从配置文件加载配置
+    config = load_config_from_file()
         
         # 初始化同化器
-        assimilator = BayesianAssimilator(config)
+    assimilator = BayesianAssimilator(config)
+    
+    # 动态分辨率适配
+    grid_shape = adaptive_resolution_assimilation(assimilator, config)
+    nx, ny, nz = grid_shape
+    logger.info(f"\n网格: {nx}×{ny}×{nz} = {nx*ny*nz:,} 点")
+    
+    # 内存使用预估
+    estimated_memory_gb = (nx * ny * nz * 8) / (1024 ** 3)  # 8字节/float64
+    logger.info(f"预估内存使用: {estimated_memory_gb:.2f} GB")
+    
+    if estimated_memory_gb > 4.0:  # 4GB阈值
+        logger.warning("内存使用较高，考虑分块处理或降低分辨率")
+    
+    # 生成模拟背景场（风场）
+    background = generate_background_field((nx, ny, nz), config.domain_size)
+    logger.info(f"背景场范围: [{background.min():.2f}, {background.max():.2f}] m/s")
+    
+    # 生成多变量背景场（可选）
+    multi_var_background = generate_multi_variable_background((nx, ny, nz), config.domain_size)
+    logger.info(f"温度场范围: [{multi_var_background['temperature'].min():.2f}, {multi_var_background['temperature'].max():.2f}] °C")
+    logger.info(f"湿度场范围: [{multi_var_background['humidity'].min():.2f}, {multi_var_background['humidity'].max():.2f}] %")
+    
+    # 生成观测（3个气象站）
+    observations = np.array([4.5, 5.8, 3.2])
+    obs_locations = np.array([
+        [250, 250, 50],   # 站点1
+        [500, 500, 50],   # 站点2
+        [750, 750, 50]    # 站点3
+    ])
+    
+    # 验证观测数据
+    validate_observations(observations, obs_locations)
+    logger.info(f"\n观测点: {len(observations)} 个")
+    logger.info(f"观测值: {observations}")
+    
+    # 执行同化
+    logger.info("\n执行3DVAR同化...")
+    try:
+        # 尝试带进度显示的并行计算
+        analysis, variance = assimilate_with_progress(
+            assimilator, background, observations, obs_locations
+        )
         
-        # 动态分辨率适配
-        grid_shape = adaptive_resolution_assimilation(assimilator, config)
-        nx, ny, nz = grid_shape
-        logger.info(f"\n网格: {nx}×{ny}×{nz} = {nx*ny*nz:,} 点")
+        # 应用物理约束
+        if np.any(analysis < 0):
+            logger.warning("检测到负风速，应用物理约束修正")
+            analysis = np.maximum(analysis, 0.0)
         
-        # 内存使用预估
-        estimated_memory_gb = (nx * ny * nz * 8) / (1024 ** 3)  # 8字节/float64
-        logger.info(f"预估内存使用: {estimated_memory_gb:.2f} GB")
+        logger.info(f"\n分析场范围: [{analysis.min():.2f}, {analysis.max():.2f}] m/s")
+        logger.info(f"方差场范围: [{variance.min():.4f}, {variance.max():.4f}]")
         
-        if estimated_memory_gb > 4.0:  # 4GB阈值
-            logger.warning("内存使用较高，考虑分块处理或降低分辨率")
+        # 降尺度到10米
+        logger.info("\n降尺度到10米分辨率...")
+        variance_fine = assimilator.interpolate_to_path_grid(target_resolution=10.0)
+        logger.info(f"降尺度后形状: {variance_fine.shape}")
         
-        # 生成模拟背景场（风场）
-        background = generate_background_field((nx, ny, nz), config.domain_size)
-        logger.info(f"背景场范围: [{background.min():.2f}, {background.max():.2f}] m/s")
-        
-        # 生成多变量背景场（可选）
-        multi_var_background = generate_multi_variable_background((nx, ny, nz), config.domain_size)
-        logger.info(f"温度场范围: [{multi_var_background['temperature'].min():.2f}, {multi_var_background['temperature'].max():.2f}] °C")
-        logger.info(f"湿度场范围: [{multi_var_background['humidity'].min():.2f}, {multi_var_background['humidity'].max():.2f}] %")
-        
-        # 生成观测（3个气象站）
-        observations = np.array([4.5, 5.8, 3.2])
-        obs_locations = np.array([
-            [250, 250, 50],   # 站点1
-            [500, 500, 50],   # 站点2
-            [750, 750, 50]    # 站点3
-        ])
-        
-        # 验证观测数据
-        validate_observations(observations, obs_locations)
-        logger.info(f"\n观测点: {len(observations)} 个")
-        logger.info(f"观测值: {observations}")
-        
-        # 执行同化
-        logger.info("\n执行3DVAR同化...")
-        try:
-            # 尝试带进度显示的并行计算
-            analysis, variance = assimilate_with_progress(
-                assimilator, background, observations, obs_locations
-            )
-            
-            # 应用物理约束
-            if np.any(analysis < 0):
-                logger.warning("检测到负风速，应用物理约束修正")
-                analysis = np.maximum(analysis, 0.0)
-            
-            logger.info(f"\n分析场范围: [{analysis.min():.2f}, {analysis.max():.2f}] m/s")
-            logger.info(f"方差场范围: [{variance.min():.4f}, {variance.max():.4f}]")
-            
-            # 降尺度到10米
-            logger.info("\n降尺度到10米分辨率...")
-            variance_fine = assimilator.interpolate_to_path_grid(target_resolution=10.0)
-            logger.info(f"降尺度后形状: {variance_fine.shape}")
-            
-            # 可视化结果
-            visualize_results(background, analysis, variance)
-            
-        except Exception as e:
-            logger.error(f"同化过程失败: {str(e)}")
-            # 提供回退方案
-            analysis = background.copy()
-            variance = np.ones_like(background) * config.background_error_scale
-            logger.info("使用背景场作为回退方案")
-        
-        # 展示高级算法支持
-        if HAS_ADVANCED_ALGORITHMS:
-            logger.info("\n" + "=" * 60)
-        logger.info("高级同化算法支持")
-        logger.info("=" * 60)
-            logger.info("支持的算法: EnKF, 4DVAR")
+        # 可视化结果
+        visualize_results(background, analysis, variance)
         
     except Exception as e:
-        logger.error(f"程序运行失败: {str(e)}")
-        raise
-    
+        logger.error(f"同化过程失败: {str(e)}")
+        # 提供回退方案
+        analysis = background.copy()
+        variance = np.ones_like(background) * config.background_error_scale
+        logger.info("使用背景场作为回退方案")
+        
+    # 展示高级算法支持
+    if HAS_ADVANCED_ALGORITHMS:
+        logger.info("\n" + "=" * 60)
+        logger.info("高级同化算法支持")
+        logger.info("=" * 60)
+        logger.info("支持的算法: EnKF, 4DVAR")
+
     logger.info("\n" + "=" * 60)
     logger.info("示例完成！")
     logger.info("=" * 60)

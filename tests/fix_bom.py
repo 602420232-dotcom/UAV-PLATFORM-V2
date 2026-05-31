@@ -19,7 +19,7 @@ for dp, dn, fn in os.walk(ROOT):
                 bom_files.append(fp)
                 with open(fp, 'wb') as fh:
                     fh.write(data[3:])
-        except:
+        except OSError:
             pass
 
 logger.info(f"Fixed {len(bom_files)} BOM files:")

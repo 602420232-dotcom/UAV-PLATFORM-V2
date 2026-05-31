@@ -1,11 +1,19 @@
 package com.uav.platform.controller;
 
 import com.uav.common.security.JwtTokenProvider;
+import com.uav.platform.dto.DroneRequest;
+import com.uav.platform.dto.LoginRequest;
+import com.uav.platform.dto.TaskRequest;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 @RestController
 public class ApiV1Controller {
@@ -57,12 +65,12 @@ public class ApiV1Controller {
     }
 
     @PostMapping("/api/v1/drones")
-    public ResponseEntity<Map<String, Object>> createDrone(@RequestBody Map<String, Object> drone) {
+    public ResponseEntity<Map<String, Object>> createDrone(@Valid @RequestBody DroneRequest drone) {
         return ResponseEntity.ok(Map.of("code", 200, "data", drone, "message", "created"));
     }
 
     @PutMapping("/api/v1/drones/{id}")
-    public ResponseEntity<Map<String, Object>> updateDrone(@PathVariable String id, @RequestBody Map<String, Object> drone) {
+    public ResponseEntity<Map<String, Object>> updateDrone(@PathVariable String id, @Valid @RequestBody DroneRequest drone) {
         return ResponseEntity.ok(Map.of("code", 200, "data", drone, "message", "updated"));
     }
 
@@ -121,12 +129,12 @@ public class ApiV1Controller {
     }
 
     @PostMapping("/api/v1/tasks")
-    public ResponseEntity<Map<String, Object>> createTask(@RequestBody Map<String, Object> task) {
+    public ResponseEntity<Map<String, Object>> createTask(@Valid @RequestBody TaskRequest task) {
         return ResponseEntity.ok(Map.of("code", 200, "data", task, "message", "created"));
     }
 
     @PutMapping("/api/v1/tasks/{id}")
-    public ResponseEntity<Map<String, Object>> updateTask(@PathVariable String id, @RequestBody Map<String, Object> task) {
+    public ResponseEntity<Map<String, Object>> updateTask(@PathVariable String id, @Valid @RequestBody TaskRequest task) {
         return ResponseEntity.ok(Map.of("code", 200, "data", task, "message", "updated"));
     }
 
@@ -136,8 +144,17 @@ public class ApiV1Controller {
     }
 
     // ==================== Auth ====================
+    // ⚠️  SECURITY: This login implementation has NO credential verification.
+    // In production, this must be replaced with proper authentication via AuthenticationManager.
+    // This stub is intended for development/demo purposes only.
     @PostMapping("/api/v1/auth/login")
-    public ResponseEntity<Map<String, Object>> login(@RequestBody Map<String, Object> loginReq) {
+    public ResponseEntity<Map<String, Object>> login(@Valid @RequestBody LoginRequest loginReq) {
+        // FIXME: Replace with proper AuthenticationManager.authenticate() call.
+        // Current implementation is a demo stub that generates tokens without verifying credentials.
+        throw new UnsupportedOperationException(
+            "Demo login disabled for security. Use the real auth endpoint at backend-spring:8089/api/v1/auth/login"
+        );
+        /* ORIGINAL INSECURE CODE (for reference):
         String username = (String) loginReq.getOrDefault("username", "admin");
         String role = "admin".equals(username) ? "admin" : "user";
         List<String> roles = List.of("ROLE_" + role.toUpperCase(), "ROLE_USER");
@@ -150,6 +167,7 @@ public class ApiV1Controller {
             "user", Map.of("id", "U001", "username", username, "role", role, "name", "管理员"),
             "message", "login success"
         ));
+        */
     }
 
     @PostMapping("/api/v1/auth/logout")

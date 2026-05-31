@@ -44,7 +44,22 @@ kubectl apply -f frontend-vue.yml
 echo "10. 部署自动扩展配置..."
 kubectl apply -f autoscaling.yml
 
+echo "11. 部署API网关..."
+kubectl apply -f api-gateway.yml
+
+echo "12. 部署天气采集服务..."
+kubectl apply -f uav-weather-collector.yml
+
+echo "13. 部署边云协同服务..."
+kubectl apply -f edge-cloud-coordinator.yml
+
+echo "14. 部署Ingress..."
+kubectl apply -f nginx-ingress.yml
+
+echo "15. 部署监控..."
+kubectl apply -f monitoring.yml
+
 echo "=== 部署完成 ==="
-echo "查看部署状态: kubectl get all -n uav-path-planning"
-echo "查看服务日志: kubectl logs -n uav-path-planning <pod-name>"
-echo "查看自动扩展状态: kubectl get hpa -n uav-path-planning"
+echo "查看部署状态: kubectl get all -n uav-platform"
+echo "查看服务日志: kubectl logs -n uav-platform <pod-name>"
+echo "查看自动扩展状态: kubectl get hpa -n uav-platform"

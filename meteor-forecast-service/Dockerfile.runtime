@@ -8,5 +8,11 @@ RUN pip3 install --no-cache-dir --break-system-packages -r /app/python/requireme
 
 EXPOSE 8082
 
+# Security: create non-root user
+RUN addgroup -g 1001 -S appgroup && \
+    adduser -u 1001 -S appuser -G appgroup && \
+    chown -R appuser:appgroup /app
+USER appuser
+
 HEALTHCHECK --interval=30s --timeout=3s --retries=3 \
     CMD curl -f http://localhost:8082/actuator/health || exit 1

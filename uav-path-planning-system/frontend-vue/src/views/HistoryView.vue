@@ -106,6 +106,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { message } from 'ant-design-vue'
 import { SearchOutlined, EyeOutlined, DownloadOutlined } from '@ant-design/icons-vue'
 
 // 响应式数据
@@ -191,9 +192,8 @@ const searchHistory = async () => {
   }
 }
 
-const handleTableChange = (pagination, filters, sorter) => {
-  console.log('表格变化:', pagination, filters, sorter)
-  // 这里可以处理分页、排序等
+const handleTableChange = (_pagination, _filters, _sorter) => {
+  // 分页、排序等处理（当接入真实API后实现）
 }
 
 const viewDetails = (record) => {
@@ -202,9 +202,8 @@ const viewDetails = (record) => {
 }
 
 const exportResult = (record) => {
-  console.log('导出结果:', record)
-  // 这里可以实现导出功能
-  alert('导出功能已触发')
+  // 导出功能（待接入真实导出API）
+  message.info(`正在导出任务: ${record?.name || record?.id}`)
 }
 
 const generateMockData = () => {

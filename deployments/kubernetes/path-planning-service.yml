@@ -1,12 +1,10 @@
-﻿﻿﻿﻿﻿﻿﻿﻿apiVersion: apps/v1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: path-planning-service
   namespace: uav-platform
-  labels:
-    app: path-planning-service
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
       app: path-planning-service
@@ -16,46 +14,28 @@ spec:
         app: path-planning-service
     spec:
       containers:
-      - name: path-planning-service
-        image: path-planning-service:v1.0.0
-        ports:
-        - containerPort: 8083
-        env:
-        - name: SPRING_PROFILES_ACTIVE
-          value: "prod"
-        - name: ALGORITHM_CONFIG_PATH
-          value: "/config"
-        resources:
-          requests:
-            cpu: "1"
-            memory: "2Gi"
-          limits:
-            cpu: "4"
-            memory: "4Gi"
-        readinessProbe:
-          httpGet:
-            path: /actuator/health
-            port: 8083
-          initialDelaySeconds: 30
-          periodSeconds: 15
-        livenessProbe:
-          httpGet:
-            path: /actuator/health
-            port: 8083
-          initialDelaySeconds: 60
-          periodSeconds: 45
-        volumeMounts:
-        - name: config-data
-          mountPath: /config
-      volumes:
-      - name: config-data
-        persistentVolumeClaim:
-          claimName: config-data-pvc
-  strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxUnavailable: 1
-      maxSurge: 1
+        - name: wrf-processor
+          image: trae-wrf-processor:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8083
+          env:
+            - name: NACOS_SERVER
+              value: nacos:8848
+            - name: DB_HOST
+              value: mysql
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: spring.datasource.password
+                  name: uav-platform-secrets
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "200m"
+            limits:
+              memory: "1Gi"
+              cpu: "1"
 ---
 apiVersion: v1
 kind: Service
@@ -66,32 +46,5 @@ spec:
   selector:
     app: path-planning-service
   ports:
-  - port: 8083
-    targetPort: 8083
-  type: ClusterIP
----
-apiVersion: autoscaling/v2
-kind: HorizontalPodAutoscaler
-metadata:
-  name: path-planning-service-hpa
-  namespace: uav-platform
-spec:
-  scaleTargetRef:
-    apiVersion: apps/v1
-    kind: Deployment
-    name: path-planning-service
-  minReplicas: 3
-  maxReplicas: 10
-  metrics:
-  - type: Resource
-    resource:
-      name: cpu
-      target:
-        type: Utilization
-        averageUtilization: 60
-  - type: Resource
-    resource:
-      name: memory
-      target:
-        type: Utilization
-        averageUtilization: 75
+    - port: 8083
+      targetPort: 8083

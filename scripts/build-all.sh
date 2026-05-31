@@ -26,11 +26,21 @@ services=(
     "wrf-processor-service"
     "uav-platform-service"
     "uav-weather-collector"
+    "fengwu-service"
+    "edge-cloud-coordinator"
 )
+
+# Build frontend separately (non-Java)
+echo "[10/11] Building uav-frontend..."
+docker build -t uav-frontend:latest -f uav-path-planning-system/frontend-vue/Dockerfile uav-path-planning-system/frontend-vue
+
+# Build edge SDK
+echo "[11/11] Building uav-edge-sdk..."
+docker build -t uav-edge-sdk:latest -f uav-edge-sdk/Dockerfile uav-edge-sdk
 
 index=3
 for service in "${services[@]}"; do
-    echo "[$index/9] Building $service..."
+    echo "[$index/11] Building $service..."
     docker build -t "uav-$service:latest" -f "$service/Dockerfile.runtime" "$service"
     index=$((index + 1))
 done

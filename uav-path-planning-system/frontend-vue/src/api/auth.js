@@ -1,7 +1,8 @@
 import api from './index'
 
 export async function login(username, password) {
-  const res = await api.post('/api/v1/auth/login', { username, password })
+  // Note: api baseURL is already '/api', so use '/v1/auth/login' (not '/api/v1/...')
+  const res = await api.post('/v1/auth/login', { username, password })
   const token = res.token || (res.data && res.data.token)
   if (token) {
     localStorage.setItem('token', token)

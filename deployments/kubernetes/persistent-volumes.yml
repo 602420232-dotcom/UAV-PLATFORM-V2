@@ -89,3 +89,18 @@ spec:
     requests:
       storage: 1Gi
   storageClassName: standard
+
+---
+# 备份存储
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: backup-pvc
+  namespace: uav-platform
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 50Gi
+  storageClassName: standard

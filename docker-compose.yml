@@ -1,3 +1,5 @@
+version: '3.8'
+
 # Docker Compose - 优化版
 # 包含差异化资源限制和JVM参数优化
 
@@ -7,7 +9,7 @@ services:
     image: mysql:8.0
     container_name: uav-mysql
     environment:
-      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-${DB_PASSWORD}}
       MYSQL_DATABASE: uav_platform
       MYSQL_USER: uav
       MYSQL_PASSWORD: ${DB_PASSWORD}
@@ -151,10 +153,10 @@ services:
       PYTHON_TIMEOUT: 60000
       JAVA_OPTS: -Xms512m -Xmx1g -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+UseStringDeduplication -XX:+ParallelRefProcEnabled
       SPRING_MAIN_ALLOW_BEAN_DEFINITION_OVERRIDING: "true"
-      JWT_SECRET: "uav-jwt-production-secret-change-me"
-      ENCRYPTION_KEY: "uav-aes256-encryption-key-change-me"
-      SECURITY_USER_PASSWORD: "admin123"
-      DB_PASSWORD: "uav_ploy_2026_secure"
+      JWT_SECRET: ${JWT_SECRET_KEY}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      SECURITY_USER_PASSWORD: ${SECURITY_USER_PASSWORD:-changeme}
+      DB_PASSWORD: ${DB_PASSWORD}
     restart: always
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
@@ -192,10 +194,10 @@ services:
       PYTHON_TIMEOUT: 300000
       JAVA_OPTS: -Xms512m -Xmx1g -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+ParallelRefProcEnabled -Djava.security.egd=file:/dev/./urandom
       SPRING_MAIN_ALLOW_BEAN_DEFINITION_OVERRIDING: "true"
-      JWT_SECRET: "uav-jwt-production-secret-change-me"
-      ENCRYPTION_KEY: "uav-aes256-encryption-key-change-me"
-      SECURITY_USER_PASSWORD: "admin123"
-      DB_PASSWORD: "uav_ploy_2026_secure"
+      JWT_SECRET: ${JWT_SECRET_KEY}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      SECURITY_USER_PASSWORD: ${SECURITY_USER_PASSWORD:-changeme}
+      DB_PASSWORD: ${DB_PASSWORD}
     restart: always
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8084/actuator/health"]
@@ -233,10 +235,10 @@ services:
       PYTHON_TIMEOUT: 120000
       JAVA_OPTS: -Xms512m -Xmx1g -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+UseStringDeduplication
       SPRING_MAIN_ALLOW_BEAN_DEFINITION_OVERRIDING: "true"
-      JWT_SECRET: "uav-jwt-production-secret-change-me"
-      ENCRYPTION_KEY: "uav-aes256-encryption-key-change-me"
-      SECURITY_USER_PASSWORD: "admin123"
-      DB_PASSWORD: "uav_ploy_2026_secure"
+      JWT_SECRET: ${JWT_SECRET_KEY}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      SECURITY_USER_PASSWORD: ${SECURITY_USER_PASSWORD:-changeme}
+      DB_PASSWORD: ${DB_PASSWORD}
     restart: always
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
@@ -274,10 +276,10 @@ services:
       PYTHON_TIMEOUT: 60000
       JAVA_OPTS: -Xms512m -Xmx1g -XX:+UseG1GC -XX:MaxGCPauseMillis=100 -XX:+UseStringDeduplication -XX:+ParallelRefProcEnabled
       SPRING_MAIN_ALLOW_BEAN_DEFINITION_OVERRIDING: "true"
-      JWT_SECRET: "uav-jwt-production-secret-change-me"
-      ENCRYPTION_KEY: "uav-aes256-encryption-key-change-me"
-      SECURITY_USER_PASSWORD: "admin123"
-      DB_PASSWORD: "uav_ploy_2026_secure"
+      JWT_SECRET: ${JWT_SECRET_KEY}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      SECURITY_USER_PASSWORD: ${SECURITY_USER_PASSWORD:-changeme}
+      DB_PASSWORD: ${DB_PASSWORD}
     restart: always
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8083/actuator/health"]
@@ -325,10 +327,10 @@ services:
       SERVICES_PATH_PLANNING_URL: http://path-planning:8083/api/planning
       JAVA_OPTS: -Xms512m -Xmx1g -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+UseStringDeduplication
       SPRING_MAIN_ALLOW_BEAN_DEFINITION_OVERRIDING: "true"
-      JWT_SECRET: "uav-jwt-production-secret-change-me"
-      ENCRYPTION_KEY: "uav-aes256-encryption-key-change-me"
-      SECURITY_USER_PASSWORD: "admin123"
-      DB_PASSWORD: "uav_ploy_2026_secure"
+      JWT_SECRET: ${JWT_SECRET_KEY}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      SECURITY_USER_PASSWORD: ${SECURITY_USER_PASSWORD:-changeme}
+      DB_PASSWORD: ${DB_PASSWORD}
     restart: always
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
@@ -367,10 +369,10 @@ services:
       NACOS_SERVER: nacos:8848
       JAVA_OPTS: -Xms256m -Xmx512m -XX:+UseG1GC -XX:MaxGCPauseMillis=200
       SPRING_MAIN_ALLOW_BEAN_DEFINITION_OVERRIDING: "true"
-      JWT_SECRET: "uav-jwt-production-secret-change-me"
-      ENCRYPTION_KEY: "uav-aes256-encryption-key-change-me"
-      SECURITY_USER_PASSWORD: "admin123"
-      DB_PASSWORD: "uav_ploy_2026_secure"
+      JWT_SECRET: ${JWT_SECRET_KEY}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      SECURITY_USER_PASSWORD: ${SECURITY_USER_PASSWORD:-changeme}
+      DB_PASSWORD: ${DB_PASSWORD}
     restart: always
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8086/actuator/health"]
@@ -403,6 +405,12 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
     restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
     deploy:
       resources:
         limits:
@@ -484,7 +492,7 @@ services:
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_INTERNAL://kafka:29092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://${KAFKA_HOST:-localhost}:9092,PLAINTEXT_INTERNAL://kafka:29092
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT_INTERNAL
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
@@ -493,6 +501,12 @@ services:
       KAFKA_LOG_RETENTION_HOURS: 168
       KAFKA_LOG_SEGMENT_BYTES: 1073741824
       KAFKA_JMX_PORT: 9999
+    healthcheck:
+      test: ["CMD", "bash", "-c", "kafka-broker-api-versions --bootstrap-server localhost:9092 > /dev/null 2>&1"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
     deploy:
       resources:
         limits:
@@ -510,6 +524,12 @@ services:
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
+    healthcheck:
+      test: ["CMD", "bash", "-c", "echo ruok | nc -w 2 localhost 2181 | grep imok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
     deploy:
       resources:
         limits:

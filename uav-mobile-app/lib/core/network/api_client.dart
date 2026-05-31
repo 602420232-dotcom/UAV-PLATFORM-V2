@@ -37,8 +37,13 @@ class ApiClient {
     if (!kIsWeb) {
       (_dio.httpClientAdapter as IOHttpClientAdapter).createHttpClient = () {
         final client = HttpClient();
-        client.badCertificateCallback =
-            (X509Certificate cert, String host, int port) => true;
+        // SECURITY: Only allow bad certificates in debug mode for local development.
+        // Production builds must validate certificates properly.
+        assert(() {
+          client.badCertificateCallback =
+              (X509Certificate cert, String host, int port) => true;
+          return true;
+        }());
         return client;
       };
     }

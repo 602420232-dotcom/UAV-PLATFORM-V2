@@ -21,7 +21,7 @@ services:
         limits: { memory: 512M }
 
   redis:
-    image: redis:6.2
+    image: redis:6.2-alpine
     container_name: uav-redis-dev
     ports:
       - "6379:6379"
@@ -39,8 +39,16 @@ services:
     container_name: uav-nacos-dev
     environment:
       - MODE=standalone
+      - JVM_XMS=256m
+      - JVM_XMX=512m
     ports:
       - "8848:8848"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8848/nacos/"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
     deploy:
       resources:
         limits: { memory: 512M }

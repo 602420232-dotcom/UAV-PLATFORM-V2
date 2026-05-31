@@ -93,19 +93,19 @@ data:
 
       - job_name: 'uav-platform'
         static_configs:
-        - targets: ['uav-platform.uav-path-planning.svc.cluster.local:8080']
+        - targets: ['uav-platform.uav-platform.svc.cluster.local:8080']
 
       - job_name: 'path-planning'
         static_configs:
-        - targets: ['path-planning.uav-path-planning.svc.cluster.local:8083']
+        - targets: ['path-planning.uav-platform.svc.cluster.local:8083']
 
       - job_name: 'meteor-forecast'
         static_configs:
-        - targets: ['meteor-forecast.uav-path-planning.svc.cluster.local:8082']
+        - targets: ['meteor-forecast.uav-platform.svc.cluster.local:8082']
 
       - job_name: 'wrf-processor'
         static_configs:
-        - targets: ['wrf-processor.uav-path-planning.svc.cluster.local:8081']
+        - targets: ['wrf-processor.uav-platform.svc.cluster.local:8081']
 ---
 apiVersion: v1
 kind: Service

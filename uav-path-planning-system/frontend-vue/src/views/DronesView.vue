@@ -44,9 +44,9 @@ const loadDrones = async () => {
     const res = await getDrones()
     drones.value = Array.isArray(res) ? res : (res.data || res.content || [])
   } catch (e) {
-    // 后端未连接或需要认证时，使用演示数据
-    if (e.message === 'BACKEND_UNAVAILABLE' || e.message === 'AUTH_REQUIRED') {
-      console.log('[DronesView] 使用演示数据')
+    // 后端未连接或需要认证时，静默使用演示数据
+    if (e.message !== 'BACKEND_UNAVAILABLE' && e.message !== 'AUTH_REQUIRED') {
+      console.error('[DronesView] 加载失败:', e.message)
     }
     drones.value = [
       { id: 'UAV-001', name: '无人机1', type: 'multirotor', status: '在线', battery: 85, location: '39.90, 116.40' },

@@ -67,7 +67,7 @@ def get_parallel_strategy(total_points):
         return 'process', min(mp.cpu_count(), 16)
 
 
-def create_data(domain_size: int, resolution: Any, n_obs=30: Any):
+def create_data(domain_size: int, resolution: Any, n_obs: int = 30):
     """创建合成数据"""
     nx = int(domain_size[0] / resolution) + 1
     ny = int(domain_size[1] / resolution) + 1

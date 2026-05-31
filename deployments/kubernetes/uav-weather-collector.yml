@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: weather-collector
-          image: uav-registry/uav-weather-collector:v1.0.0
+          image: trae-uav-weather-collector:latest
           ports:
             - containerPort: 8086
               name: http

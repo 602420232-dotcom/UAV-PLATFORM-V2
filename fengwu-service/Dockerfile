@@ -15,9 +15,12 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY app.py inference_engine.py ./
 
 # Model files will be mounted as volume at runtime
-RUN mkdir -p /app/model
-
 EXPOSE 8085
+# Security: create non-root user
+RUN groupadd -r appgroup && useradd -r -g appgroup -m -s /sbin/nologin appuser && \
+    chown -R appuser:appgroup /app
+USER appuser
+
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
     CMD curl -f http://localhost:8085/health || exit 1
 

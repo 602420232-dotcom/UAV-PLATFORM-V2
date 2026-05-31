@@ -91,7 +91,7 @@ class MeteorologicalQualityControl:
         return humidity
     
     @staticmethod
-    def detect_outliers(data: Dict[str, Any], threshold=3.0: Any):
+    def detect_outliers(data: Dict[str, Any], threshold: float = 3.0):
         """检测异常值"""
         mean = np.mean(data)
         std = np.std(data)
@@ -127,7 +127,7 @@ class MeteorologicalQualityControl:
         return wind_speed
     
     @staticmethod
-    def check_time_consistency(time_series_data: float, max_change=10.0: Any):
+    def check_time_consistency(time_series_data: float, max_change: float = 10.0):
         """检查时间一致性，确保气象数据随时间合理变化"""
         if len(time_series_data) < 2:
             return time_series_data
@@ -319,7 +319,7 @@ class TimeSeriesAnalyzer:
     """时间序列分析模块"""
     
     @staticmethod
-    def generate_time_series_data(domain_size: int, n_time_steps=6: float):
+    def generate_time_series_data(domain_size: int, n_time_steps: int = 6):
         """生成时间序列数据"""
         time_series = []
         

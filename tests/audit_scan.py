@@ -27,7 +27,7 @@ for dp, dn, fn in os.walk(ROOT):
         try:
             if os.path.getsize(fp) == 0 and f.endswith(('.java','.py','.xml','.yml','.yaml','.properties','.json','.sh')):
                 issues['empty_files'].append(rel)
-        except:
+        except OSError:
             pass
         
         if not f.endswith(('.java','.py','.xml','.yml','.yaml','.properties','.sh','.json','.js','.ts','.vue','.css')):
@@ -36,11 +36,11 @@ for dp, dn, fn in os.walk(ROOT):
         try:
             with open(fp, 'r', encoding='utf-8') as fh:
                 content = fh.read(100000)
-        except:
+        except UnicodeDecodeError:
             try:
                 with open(fp, 'r', encoding='gbk') as fh:
                     content = fh.read(100000)
-            except:
+            except (UnicodeDecodeError, OSError):
                 continue
             
         # Check BOM

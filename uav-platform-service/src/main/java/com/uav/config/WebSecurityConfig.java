@@ -49,11 +49,15 @@ public class WebSecurityConfig {
     }
 
     private CorsConfigurationSource corsConfigurationSource() {
+        // FIX: Removed wildcard origin with credentials (security issue NOC-01).
+        // Origins should be configured via CORS_ORIGINS env var in production.
+        String originsStr = System.getenv().getOrDefault("CORS_ORIGINS", "http://localhost:3000,http://localhost:8080");
         CorsConfiguration config = new CorsConfiguration();
-        config.addAllowedOriginPattern("*");
-        config.addAllowedMethod("*");
-        config.addAllowedHeader("*");
+        config.setAllowedOriginPatterns(java.util.Arrays.asList(originsStr.split(",")));
+        config.setAllowedMethods(java.util.Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(java.util.Arrays.asList("Authorization", "Content-Type", "X-Requested-With", "Accept", "Origin"));
         config.setAllowCredentials(true);
+        config.setMaxAge(3600L);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
         return source;

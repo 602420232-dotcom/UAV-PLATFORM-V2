@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: frontend-vue
-        image: frontend-vue:v1.0.0
+        image: trae-frontend:latest
         ports:
         - containerPort: 80
         env:

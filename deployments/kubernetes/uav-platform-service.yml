@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: uav-platform-service
-        image: uav-platform-service:v1.0.0
+        image: trae-uav-platform:latest
         ports:
         - containerPort: 8080
         env:

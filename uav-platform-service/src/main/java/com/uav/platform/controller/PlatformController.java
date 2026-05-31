@@ -138,14 +138,11 @@ public class PlatformController {
         log.debug("Getting weather data for fileId={}", fileId);
         
         try {
-            Map<String, Object> response = wrfProcessorClient.getWrfDataDetail(
-                    Long.parseLong(fileId));
+            Map<String, Object> response = wrfProcessorClient.getWeatherData(fileId);
             if (!isSuccess(response)) {
                 return Map.of("code", 500, "message", "获取气象数据失败");
             }
             return response;
-        } catch (NumberFormatException e) {
-            return Map.of("code", 400, "message", "无效的文件ID格式");
         } catch (Exception e) {
             log.error("Failed to get weather data", e);
             throw ServiceUnavailableException.serviceDown("wrf-processor", 

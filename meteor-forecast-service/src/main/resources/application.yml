@@ -6,9 +6,9 @@ spring:
   
   # 数据库配置
   datasource:
-    url: jdbc:mysql://${DB_HOST:localhost}:3306/meteor_forecast?useSSL=true&requireSSL=true&serverTimezone=UTC
+    url: jdbc:mysql://${DB_HOST:localhost}:3306/meteor_forecast?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai
     username: ${DB_USER:root}
-    password: ${DB_PASSWORD:***
+    password: ${DB_PASSWORD:***}
     driver-class-name: com.mysql.cj.jdbc.Driver
   
   # JPA配置

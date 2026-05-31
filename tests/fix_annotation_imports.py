@@ -16,7 +16,7 @@ for dp, dn, fn in os.walk(ROOT):
         try:
             with open(fp, 'r', encoding='utf-8') as fh:
                 content = fh.read()
-        except:
+        except (UnicodeDecodeError, OSError):
             continue
         
         needs_spring_web = bool(re.search(

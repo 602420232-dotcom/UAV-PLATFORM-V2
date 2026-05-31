@@ -111,8 +111,13 @@ Platform Service (localhost:8080)
 | **Jaeger** | 16686 | 链路追踪 | http://localhost:16686 |
 | **Kibana** | 5601 | 日志分析 | http://localhost:5601 |
 | **Elasticsearch** | 9200 | 日志存储 | http://localhost:9200 |
+| **Nacos** | 8848 | 服务发现与配置中心 | http://localhost:8848 |
+| **Adminer** | 8899 | 数据库管理界面 | http://localhost:8899 |
 
-> 注意: Grafana 默认端口 3000 与前端开发服务器冲突，建议修改为 3030 或其他端口。
+> 注意: 
+> - Grafana 默认端口 3000 与前端开发服务器冲突，已修改为 3030
+> - Nacos 控制台用户: `nacos` / `nacos`
+> - Adminer 支持管理所有 MySQL 数据库
 
 ### 健康检查端点
 

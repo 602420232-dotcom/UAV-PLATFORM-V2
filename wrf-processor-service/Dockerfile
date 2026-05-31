@@ -10,7 +10,7 @@ RUN sed -i 's|http://archive.ubuntu.com|http://mirrors.aliyun.com|g' /etc/apt/so
     && groupadd -r appuser && useradd -r -g appuser -m -s /sbin/nologin appuser
 COPY --from=builder /build/target/*.jar app.jar
 COPY src/main/python/ /app/python/
-RUN pip3 install --no-cache-dir -r /app/python/requirements.txt 2>/dev/null || true
+RUN pip3 install --no-cache-dir -r /app/python/requirements.txt 
 RUN chown -R appuser:appuser /app
 ENV PYTHONPATH=/app/python
 EXPOSE 8081

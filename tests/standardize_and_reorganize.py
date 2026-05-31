@@ -40,11 +40,11 @@ def add_footer():
             try:
                 with open(fp, 'r', encoding='utf-8') as fh:
                     content = fh.read()
-            except:
+            except UnicodeDecodeError:
                 try:
                     with open(fp, 'r', encoding='gbk') as fh:
                         content = fh.read()
-                except:
+                except (UnicodeDecodeError, OSError):
                     skipped += 1
                     continue
 

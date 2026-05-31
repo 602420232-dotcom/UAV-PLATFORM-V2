@@ -39,7 +39,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def create_synthetic_data(domain_size: int, resolution: Any, n_obs=20: Any):
+def create_synthetic_data(domain_size: int, resolution: Any, n_obs: int = 20):
     """创建合成数据"""
     nx = int(domain_size[0] / resolution) + 1
     ny = int(domain_size[1] / resolution) + 1

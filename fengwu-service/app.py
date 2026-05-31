@@ -3,15 +3,18 @@ FengWu Weather Forecast Service
 
 REST API for global weather forecasting using the FengWu ONNX model.
 Provides endpoints for submitting ERA5 data and retrieving forecasts.
+
+Security: API Key authentication required for all endpoints except /health
 """
 
 import logging
+import os
 import time
 from contextlib import asynccontextmanager
 from typing import Optional
 
 import numpy as np
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Header, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
@@ -22,6 +25,20 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
 )
 logger = logging.getLogger("fengwu-service")
+
+
+# ─── Security Configuration ──────────────────────────────────────────────────
+_API_KEY = os.getenv("FENGWU_API_KEY", "")
+_ALLOWED_ORIGINS = os.getenv("CORS_ORIGINS", "localhost:3000,localhost:8080").split(",")
+
+def verify_api_key(x_api_key: str = Header(..., alias="X-API-Key")):
+    """Verify API Key from request header."""
+    if not _API_KEY:
+        logger.warning("⚠️  FENGWU_API_KEY not configured — authentication disabled")
+        return True
+    if x_api_key != _API_KEY:
+        raise HTTPException(status_code=401, detail="Invalid API Key")
+    return True
 
 
 # ─── Lifespan: load model on startup ───────────────────────────────────────
@@ -44,12 +61,23 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# CORS configuration - restrict origins in production
+if os.getenv("ENVIRONMENT") == "production":
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=_ALLOWED_ORIGINS,
+        allow_methods=["GET", "POST"],
+        allow_headers=["Authorization", "Content-Type", "X-API-Key"],
+    )
+    logger.info(f"🔒 Production CORS enabled for origins: {_ALLOWED_ORIGINS}")
+else:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+    logger.warning("⚠️  Development CORS mode — allow all origins")
 
 
 # ─── Models ─────────────────────────────────────────────────────────────────
@@ -114,7 +142,7 @@ async def readiness():
     raise HTTPException(status_code=503, detail="Model not loaded")
 
 
-@app.post("/api/v1/forecast", response_model=ForecastResponse)
+@app.post("/api/v1/forecast", response_model=ForecastResponse, dependencies=[Depends(verify_api_key)])
 async def forecast(request: ForecastRequest):
     """
     Run FengWu weather forecast.
@@ -185,7 +213,7 @@ async def forecast(request: ForecastRequest):
     )
 
 
-@app.post("/api/v1/forecast/wind")
+@app.post("/api/v1/forecast/wind", dependencies=[Depends(verify_api_key)])
 async def forecast_wind(request: ForecastRequest):
     """
     Lightweight endpoint — returns only wind speed/direction as grid summary.
@@ -218,7 +246,7 @@ async def forecast_wind(request: ForecastRequest):
     return {"status": "success", "model": os.path.basename(engine.model_path), "wind": wind_summary}
 
 
-@app.get("/api/v1/model/info")
+@app.get("/api/v1/model/info", dependencies=[Depends(verify_api_key)])
 async def model_info():
     """Return model metadata."""
     engine = get_engine()

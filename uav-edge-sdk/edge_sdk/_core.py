@@ -306,7 +306,6 @@ if __name__ == "__main__":
     logger.info("UAV Edge SDK - Python Wrapper")
     logger.info(f"Version: {__version__}")
     logger.info(f"C++ Module Available: {HAS_CPP_MODULE}")
-    print()
     
     # 创建 SDK 实例
     sdk = EdgeSDK({

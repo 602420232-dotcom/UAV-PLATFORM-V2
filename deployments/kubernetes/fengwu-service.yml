@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fengwu-service
+  namespace: uav-platform
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fengwu-service
+  template:
+    metadata:
+      labels:
+        app: fengwu-service
+    spec:
+      containers:
+        - name: fengwu
+          image: trae-fengwu:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: FENGWU_MODEL_PATH
+              value: "/app/model/fengwu_v2.onnx"
+          ports:
+            - containerPort: 8085
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "500m"
+            limits:
+              memory: "4Gi"
+              cpu: "2"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8085
+            initialDelaySeconds: 60
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fengwu-service
+  namespace: uav-platform
+spec:
+  type: ClusterIP
+  selector:
+    app: fengwu-service
+  ports:
+    - port: 8085
+      targetPort: 8085

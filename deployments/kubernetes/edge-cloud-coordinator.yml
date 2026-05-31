@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: coordinator
-          image: uav-registry/edge-cloud-coordinator:v1.0.0
+          image: trae-edge-cloud-coordinator:latest
           ports:
             - containerPort: 8000
               name: http

@@ -60,9 +60,7 @@ const loadWeather = async () => {
     }
   } catch (e) {
     // 后端未连接或需要认证时，静默处理
-    if (e.message === 'BACKEND_UNAVAILABLE' || e.message === 'AUTH_REQUIRED') {
-      console.log('[WeatherView] 后端服务需要认证或未连接')
-    } else {
+    if (e.message !== 'BACKEND_UNAVAILABLE' && e.message !== 'AUTH_REQUIRED') {
       error.value = '气象服务未连接，请确认后端已启动'
     }
   } finally {

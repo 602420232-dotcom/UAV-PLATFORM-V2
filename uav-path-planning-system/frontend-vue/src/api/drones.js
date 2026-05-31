@@ -1,6 +1,6 @@
 import api from './index'
 
-const BASE = '/api/v1/drones'
+const BASE = '/v1/drones'
 
 export function getDrones() {
   return api.get(BASE)
