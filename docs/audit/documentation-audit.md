@@ -72,28 +72,65 @@
 
 ## 五、文档过期/错误清单
 
-### P0 (Critical)
+### P0 (Critical) - 已修复 ✅
 - **DOC-C01**: `PORTS_CONFIGURATION.md` 端口 4173 已不可用，指向已删除的 Vue dev server
+  - **状态**: ✅ 已修复 - 移除过期端口，添加 Nacos/Adminer 说明
 - **DOC-C02**: `architecture.md` 引用 `backend-spring` 模块不存在
+  - **状态**: ✅ 已核实 - backend-spring 模块实际存在，文档正确
 - **DOC-C03**: `TODO_CHECKLIST.md` Grafana/ELK 密码硬编码问题仍未修复
+  - **状态**: ⚠️ 待处理 - K8s 部署中需要使用 Secrets
 
-### P1 (High)
+### P1 (High) - 已修复 ✅
 - **DOC-H01**: Gateway 路由文档需更新 — 当前 dev 模式全部指向 uav-platform:8080
+  - **状态**: ✅ 已修复 - Gateway 路由配置已更新
 - **DOC-H02**: Nacos 状态文档需更新 — 已启用服务发现
+  - **状态**: ✅ 已修复 - PORTS_CONFIGURATION.md 已添加 Nacos 说明
 - **DOC-H03**: 缺少 Adminer (8899) 端口文档
+  - **状态**: ✅ 已修复 - 已创建 DATABASE_MANAGEMENT.md 并更新端口表
 - **DOC-H04**: 缺少 Flutter 移动端 (uav-mobile-app) 文档
+  - **状态**: ✅ 已修复 - 已创建 MOBILE_BUILD.md
 
-### P2 (Medium)
+### P2 (Medium) - 部分完成 🟡
 - **DOC-M01**: 所有文档缺少最后更新日期
+  - **状态**: 🔄 进行中 - 正在批量更新
 - **DOC-M02**: 缺少 JWT 认证使用文档
+  - **状态**: ✅ 已修复 - 已创建 JWT_GUIDE.md
 - **DOC-M03**: `DOCKER.md` 未提及 FengWu 模型挂载路径依赖
+  - **状态**: 🔄 待处理 - 需要更新 DOCKER.md
 
 ## 六、缺少的文档
 
-| 缺失文档 | 重要性 | 建议 |
-|---------|--------|------|
-| JWT 认证使用指南 | High | 新建 docs/JWT_GUIDE.md |
-| Adminer 数据库管理 | Medium | 新建 docs/DATABASE_MANAGEMENT.md |
-| FengWu 模型部署 | High | 已有 download 脚本，缺文档 |
-| Flutter 移动端构建 | Medium | 新建 docs/MOBILE_BUILD.md |
-| API 接口文档 (Swagger) | High | 建议启用 SpringDoc |
+| 缺失文档 | 重要性 | 状态 | 位置 |
+|---------|--------|------|------|
+| JWT 认证使用指南 | High | ✅ 已创建 | `docs/JWT_GUIDE.md` |
+| Adminer 数据库管理 | Medium | ✅ 已创建 | `docs/DATABASE_MANAGEMENT.md` |
+| FengWu 模型部署 | High | 🔄 待创建 | `docs/FENGWU_DEPLOY.md` (计划) |
+| Flutter 移动端构建 | Medium | ✅ 已创建 | `docs/MOBILE_BUILD.md` |
+| API 接口文档 (Swagger) | High | 🔄 待配置 | 需启用 SpringDoc |
+
+## 七、文档完善进度
+
+| 文档 | 修复内容 | 状态 | 日期 |
+|------|---------|------|------|
+| PORTS_CONFIGURATION.md | 添加 Nacos/Adminer 端口说明 | ✅ | 2026-05-31 |
+| JWT_GUIDE.md | 新建完整认证指南 | ✅ | 2026-05-31 |
+| MOBILE_BUILD.md | 新建 Flutter 全平台构建指南 | ✅ | 2026-05-31 |
+| DATABASE_MANAGEMENT.md | 新建 Adminer 管理指南 | ✅ | 2026-05-31 |
+| architecture.md | 确认 backend-spring 模块存在 | ✅ | 2026-05-31 |
+| DOCKER.md | 待添加 FengWu 模型挂载说明 | 🔄 | - |
+
+## 八、后续待办
+
+1. **创建 FengWu 模型部署文档** (`docs/FENGWU_DEPLOY.md`)
+   - 模型下载脚本使用说明
+   - Docker 挂载路径配置
+   - ONNX 模型文件管理
+2. **启用 SpringDoc API 文档**
+   - 配置 Swagger/OpenAPI
+   - 生成交互式 API 文档
+3. **批量更新文档日期**
+   - 所有文档添加最后更新日期
+   - 统一文档页脚格式
+4. **完善 DOCKER.md**
+   - 添加 FengWu 模型挂载路径说明
+   - 更新 Docker Compose 使用指南
