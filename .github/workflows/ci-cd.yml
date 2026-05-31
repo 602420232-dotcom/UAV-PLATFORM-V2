@@ -9,6 +9,7 @@ on:
 env:
   MAVEN_OPTS: "-Xmx512m"
   JAVA_VERSION: "17"
+  FLUTTER_VERSION: "3.16.0"
 
 jobs:
   build:
@@ -41,6 +42,48 @@ jobs:
         with:
           name: jacoco-report
           path: '**/target/site/jacoco/'
+
+  flutter-build:
+    name: Flutter Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: 'stable'
+
+      - name: Flutter analyze
+        working-directory: uav-mobile-app
+        run: |
+          flutter pub get
+          flutter analyze --no-fatal-infos
+
+      - name: Build Web
+        working-directory: uav-mobile-app
+        run: flutter build web --release
+
+      - name: Build Android APK
+        working-directory: uav-mobile-app
+        run: |
+          flutter build apk --release
+        env:
+          FLUTTER_VERSION: ${{ env.FLUTTER_VERSION }}
+
+      - name: Upload Web Build
+        uses: actions/upload-artifact@v4
+        with:
+          name: flutter-web-build
+          path: uav-mobile-app/build/web/
+
+      - name: Upload Android APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: flutter-android-apk
+          path: uav-mobile-app/build/app/outputs/flutter-apk/app-release.apk
 
   quality:
     name: SonarQube Quality Scan
@@ -96,6 +139,43 @@ jobs:
         with:
           name: dependency-check-report
           path: '**/target/dependency-check-reports/'
+
+  security-scan:
+    name: Security Scan
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: GitHub Security CodeQL Analysis
+        uses: github/codeql-action/analyze@v2
+        with:
+          languages: Java, Python, Dart, JavaScript
+          queries: security-extended
+          category: "/language:{${{ matrix.language }}"
+
+      - name: Run Trivy Vulnerability Scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy Scan Results
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+      - name: Check for Secrets in Code
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: ${{ github.event.repository.default_branch }}
+          head: HEAD
 
   deploy-dev:
     name: Deploy to Development
