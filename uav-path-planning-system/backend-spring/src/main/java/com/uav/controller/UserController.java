@@ -30,19 +30,15 @@ public class UserController {
         admin.setId(1L);
         admin.setUsername("admin");
         admin.setPassword(passwordEncoder.encode(defaultPassword));
-        admin.setRole("ADMIN");
-        admin.setName("管理员");
+        admin.setFullName("管理员");
         admin.setEmail("admin@example.com");
-        admin.setPhone("13800138000");
 
         User dispatcher = new User();
         dispatcher.setId(2L);
         dispatcher.setUsername("dispatcher");
         dispatcher.setPassword(passwordEncoder.encode(defaultPassword));
-        dispatcher.setRole("DISPATCHER");
-        dispatcher.setName("调度员");
+        dispatcher.setFullName("调度员");
         dispatcher.setEmail("dispatcher@example.com");
-        dispatcher.setPhone("13800138001");
 
         users.add(admin);
         users.add(dispatcher);
@@ -74,10 +70,9 @@ public class UserController {
             if (user.getPassword() != null && !user.getPassword().isEmpty()) {
                 existingUser.setPassword(passwordEncoder.encode(user.getPassword()));
             }
-            existingUser.setRole(user.getRole());
-            existingUser.setName(user.getName());
+            existingUser.setFullName(user.getFullName());
             existingUser.setEmail(user.getEmail());
-            existingUser.setPhone(user.getPhone());
+            existingUser.setRoles(user.getRoles());
         }
         return existingUser;
     }

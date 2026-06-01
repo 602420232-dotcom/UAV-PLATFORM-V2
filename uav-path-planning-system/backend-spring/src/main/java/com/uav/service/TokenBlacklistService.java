@@ -1,6 +1,5 @@
 package com.uav.service;
 
-import com.uav.config.JwtProperties;
 import com.uav.config.JwtUtil;
 import com.uav.config.TokenType;
 import com.uav.entity.RefreshToken;
@@ -32,7 +31,6 @@ public class TokenBlacklistService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final RedisTemplate<String, Object> redisTemplate;
     private final JwtUtil jwtUtil;
-    private final JwtProperties jwtProperties;
 
     public boolean isTokenBlacklisted(String tokenId, TokenType tokenType) {
         String redisKey = getBlacklistKey(tokenId, tokenType);
@@ -45,9 +43,9 @@ public class TokenBlacklistService {
 
     @Transactional
     public void addToBlacklist(String token, TokenType tokenType, String reason) {
-        String tokenId = jwtUtil.extractTokenId(token, tokenType);
-        Long userId = jwtUtil.extractUserId(token, tokenType);
-        Date expirationDate = jwtUtil.extractExpiration(token, tokenType);
+        String tokenId = jwtUtil.extractTokenId(token);
+        Long userId = jwtUtil.extractUserId(token);
+        Date expirationDate = jwtUtil.extractExpiration(token);
         LocalDateTime expiresAt = expirationDate.toInstant()
                 .atZone(ZoneId.systemDefault())
                 .toLocalDateTime();
@@ -78,10 +76,10 @@ public class TokenBlacklistService {
 
     @Transactional
     public void storeRefreshToken(String refreshToken, String deviceInfo, String ipAddress) {
-        String tokenId = jwtUtil.extractTokenId(refreshToken, TokenType.REFRESH);
-        Long userId = jwtUtil.extractUserId(refreshToken, TokenType.REFRESH);
+        String tokenId = jwtUtil.extractTokenId(refreshToken);
+        Long userId = jwtUtil.extractUserId(refreshToken);
         Date issuedDate = new Date();
-        Date expirationDate = jwtUtil.extractExpiration(refreshToken, TokenType.REFRESH);
+        Date expirationDate = jwtUtil.extractExpiration(refreshToken);
         LocalDateTime issuedAt = issuedDate.toInstant()
                 .atZone(ZoneId.systemDefault())
                 .toLocalDateTime();
@@ -112,7 +110,7 @@ public class TokenBlacklistService {
     }
 
     public boolean isRefreshTokenValid(String refreshToken) {
-        String tokenId = jwtUtil.extractTokenId(refreshToken, TokenType.REFRESH);
+        String tokenId = jwtUtil.extractTokenId(refreshToken);
 
         if (isTokenBlacklisted(tokenId, TokenType.REFRESH)) {
             log.warn("Refresh token is blacklisted: {}", tokenId);
@@ -142,7 +140,7 @@ public class TokenBlacklistService {
 
     @Transactional
     public void markRefreshTokenAsUsed(String refreshToken) {
-        String tokenId = jwtUtil.extractTokenId(refreshToken, TokenType.REFRESH);
+        String tokenId = jwtUtil.extractTokenId(refreshToken);
 
         RefreshToken refreshTokenEntity = refreshTokenRepository.findByRefreshTokenId(tokenId)
                 .orElse(null);
@@ -164,8 +162,6 @@ public class TokenBlacklistService {
         log.info("Starting cleanup of expired tokens...");
 
         LocalDateTime now = LocalDateTime.now();
-        int deletedBlacklist = 0;
-        int deletedRefresh = 0;
 
         try {
             tokenBlacklistRepository.deleteByExpiresAtBefore(now);

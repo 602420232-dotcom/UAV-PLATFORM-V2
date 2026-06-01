@@ -2,6 +2,7 @@ package com.uav.service;
 
 import com.uav.model.User;
 import com.uav.repository.UserRepository;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -27,7 +28,7 @@ public class CustomUserDetailsService implements UserDetailsService {
             .username(user.getUsername())
             .password(user.getPassword())
             .authorities(user.getRoles().stream()
-                .map(role -> "ROLE_" + role.getName())
+                .map(role -> new SimpleGrantedAuthority("ROLE_" + role.getName()))
                 .collect(Collectors.toList()))
             .accountExpired(!user.isAccountNonExpired())
             .accountLocked(!user.isAccountNonLocked())
