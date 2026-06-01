@@ -2,7 +2,6 @@ package com.uav.common.security;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -42,13 +41,13 @@ public class JwtTokenProvider {
     public String generateToken(String username, List<String> roles, String tenantId) {
         Date now = new Date();
         return Jwts.builder()
-                .setSubject(username)
+                .subject(username)
                 .claim("roles", roles)
                 .claim("tenant_id", tenantId)
                 .claim("jti", UUID.randomUUID().toString())
-                .setIssuedAt(now)
-                .setExpiration(new Date(now.getTime() + jwtProperties.getExpirationMs()))
-                .signWith(getKey(), SignatureAlgorithm.HS256)
+                .issuedAt(now)
+                .expiration(new Date(now.getTime() + jwtProperties.getExpirationMs()))
+                .signWith(getKey())
                 .compact();
     }
 
@@ -58,11 +57,11 @@ public class JwtTokenProvider {
     public String generateRefreshToken(String username) {
         Date now = new Date();
         return Jwts.builder()
-                .setSubject(username)
+                .subject(username)
                 .claim("jti", UUID.randomUUID().toString())
-                .setIssuedAt(now)
-                .setExpiration(new Date(now.getTime() + jwtProperties.getRefreshExpirationMs()))
-                .signWith(getKey(), SignatureAlgorithm.HS256)
+                .issuedAt(now)
+                .expiration(new Date(now.getTime() + jwtProperties.getRefreshExpirationMs()))
+                .signWith(getKey())
                 .compact();
     }
 
@@ -89,11 +88,11 @@ public class JwtTokenProvider {
      * 验证 Token 并获取 Claims
      */
     public Claims validateAndGetClaims(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKey(getKey())
+        return Jwts.parser()
+                .verifyWith(getKey())
                 .build()
-                .parseClaimsJws(token)
-                .getBody();
+                .parseSignedClaims(token)
+                .getPayload();
     }
 
     /**

@@ -1,7 +1,6 @@
 package com.uav.config;
 
 import com.uav.common.security.CookieCsrfTokenRepository;
-import com.uav.service.CustomUserDetailsService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -25,7 +24,6 @@ import java.util.List;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    private final CustomUserDetailsService userDetailsService;
     private final JwtFilter jwtFilter;
 
     @Value("${uav.cors.allowed-origins:http://localhost:5173}")
@@ -34,8 +32,7 @@ public class SecurityConfig {
     @Value("${uav.csrf.enabled:true}")
     private boolean csrfEnabled;
 
-    public SecurityConfig(CustomUserDetailsService userDetailsService, JwtFilter jwtFilter) {
-        this.userDetailsService = userDetailsService;
+    public SecurityConfig(JwtFilter jwtFilter) {
         this.jwtFilter = jwtFilter;
     }
 

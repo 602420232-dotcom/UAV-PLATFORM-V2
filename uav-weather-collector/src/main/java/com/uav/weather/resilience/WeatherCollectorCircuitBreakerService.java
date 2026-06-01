@@ -15,6 +15,7 @@ import jakarta.annotation.PostConstruct;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Weather Collector 熔断器服务
@@ -112,11 +113,13 @@ public class WeatherCollectorCircuitBreakerService {
     /**
      * 调用WRF气象模型（带熔断保护）
      */
-    public ResponseEntity<Map> callWRFModel(String url, Class<Map> responseType) {
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    public ResponseEntity<Map<String, Object>> callWRFModel(String url, Class<Map> responseType) {
         try {
             return wrfCircuitBreaker.executeSupplier(() -> {
                 log.debug("Calling WRF model: {}", url);
-                ResponseEntity<Map> response = restTemplate.getForEntity(url, responseType);
+                ResponseEntity<Map<String, Object>> response = (ResponseEntity<Map<String, Object>>) (ResponseEntity<?>) restTemplate
+                        .getForEntity(Objects.requireNonNull(url), Objects.requireNonNull(responseType));
                 
                 // 检查响应是否成功
                 if (!response.getStatusCode().is2xxSuccessful()) {
@@ -134,11 +137,13 @@ public class WeatherCollectorCircuitBreakerService {
     /**
      * 调用卫星气象数据（带熔断保护）
      */
-    public ResponseEntity<Map> callSatellite(String url, Class<Map> responseType) {
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    public ResponseEntity<Map<String, Object>> callSatellite(String url, Class<Map> responseType) {
         try {
             return satelliteCircuitBreaker.executeSupplier(() -> {
                 log.debug("Calling satellite: {}", url);
-                ResponseEntity<Map> response = restTemplate.getForEntity(url, responseType);
+                ResponseEntity<Map<String, Object>> response = (ResponseEntity<Map<String, Object>>) (ResponseEntity<?>) restTemplate
+                        .getForEntity(Objects.requireNonNull(url), Objects.requireNonNull(responseType));
                 
                 if (!response.getStatusCode().is2xxSuccessful()) {
                     throw new RuntimeException("Satellite returned error: " + response.getStatusCode());
@@ -155,11 +160,13 @@ public class WeatherCollectorCircuitBreakerService {
     /**
      * 调用地面气象站（带熔断保护）
      */
-    public ResponseEntity<Map> callGroundStation(String url, Class<Map> responseType) {
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    public ResponseEntity<Map<String, Object>> callGroundStation(String url, Class<Map> responseType) {
         try {
             return groundStationCircuitBreaker.executeSupplier(() -> {
                 log.debug("Calling ground station: {}", url);
-                ResponseEntity<Map> response = restTemplate.getForEntity(url, responseType);
+                ResponseEntity<Map<String, Object>> response = (ResponseEntity<Map<String, Object>>) (ResponseEntity<?>) restTemplate
+                        .getForEntity(Objects.requireNonNull(url), Objects.requireNonNull(responseType));
                 
                 if (!response.getStatusCode().is2xxSuccessful()) {
                     throw new RuntimeException("Ground station returned error: " + response.getStatusCode());
@@ -176,11 +183,13 @@ public class WeatherCollectorCircuitBreakerService {
     /**
      * 调用浮标气象站（带熔断保护）
      */
-    public ResponseEntity<Map> callBuoy(String url, Class<Map> responseType) {
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    public ResponseEntity<Map<String, Object>> callBuoy(String url, Class<Map> responseType) {
         try {
             return buoyCircuitBreaker.executeSupplier(() -> {
                 log.debug("Calling buoy: {}", url);
-                ResponseEntity<Map> response = restTemplate.getForEntity(url, responseType);
+                ResponseEntity<Map<String, Object>> response = (ResponseEntity<Map<String, Object>>) (ResponseEntity<?>) restTemplate
+                        .getForEntity(Objects.requireNonNull(url), Objects.requireNonNull(responseType));
                 
                 if (!response.getStatusCode().is2xxSuccessful()) {
                     throw new RuntimeException("Buoy returned error: " + response.getStatusCode());

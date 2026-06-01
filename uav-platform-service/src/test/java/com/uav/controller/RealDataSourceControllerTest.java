@@ -1,7 +1,6 @@
 package com.uav.controller;
 
 import com.uav.service.RealDataSourceService;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -13,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -40,9 +40,12 @@ class RealDataSourceControllerTest {
 
             ResponseEntity<Map<String, Object>> response = controller.getGroundStationData();
 
-            assertEquals(200, response.getStatusCodeValue());
-            assertEquals(200, response.getBody().get("code"));
-            assertEquals(data, response.getBody().get("data"));
+            assertEquals(200,
+                    Objects.requireNonNull(response.getStatusCode()).value());
+            assertEquals(200,
+                    Objects.requireNonNull(response.getBody()).get("code"));
+            assertEquals(data,
+                    Objects.requireNonNull(response.getBody()).get("data"));
         }
 
         @Test
@@ -52,7 +55,8 @@ class RealDataSourceControllerTest {
 
             ResponseEntity<Map<String, Object>> response = controller.getGroundStationData();
 
-            assertEquals(200, response.getStatusCodeValue());
+            assertEquals(200,
+                    Objects.requireNonNull(response.getStatusCode()).value());
         }
     }
 
@@ -69,8 +73,10 @@ class RealDataSourceControllerTest {
 
             ResponseEntity<Map<String, Object>> response = controller.getBuoyData();
 
-            assertEquals(200, response.getStatusCodeValue());
-            assertEquals(data, response.getBody().get("data"));
+            assertEquals(200,
+                    Objects.requireNonNull(response.getStatusCode()).value());
+            assertEquals(data,
+                    Objects.requireNonNull(response.getBody()).get("data"));
         }
     }
 
@@ -87,8 +93,10 @@ class RealDataSourceControllerTest {
 
             ResponseEntity<Map<String, Object>> response = controller.getDataSourceStatus();
 
-            assertEquals(200, response.getStatusCodeValue());
-            assertEquals(status, response.getBody().get("data"));
+            assertEquals(200,
+                    Objects.requireNonNull(response.getStatusCode()).value());
+            assertEquals(status,
+                    Objects.requireNonNull(response.getBody()).get("data"));
         }
 
         @Test
@@ -98,8 +106,9 @@ class RealDataSourceControllerTest {
 
             ResponseEntity<Map<String, Object>> response = controller.getDataSourceStatus();
 
-            assertNotNull(response.getBody().get("code"));
-            assertNotNull(response.getBody().get("message"));
+            Map<String, Object> body = Objects.requireNonNull(response.getBody());
+            assertNotNull(body.get("code"));
+            assertNotNull(body.get("message"));
         }
     }
 
@@ -113,9 +122,15 @@ class RealDataSourceControllerTest {
             when(realDataSourceService.getBuoyData()).thenReturn(List.of());
             when(realDataSourceService.getDataSourceStatus()).thenReturn(Map.of());
 
-            assertEquals(200, controller.getGroundStationData().getStatusCodeValue());
-            assertEquals(200, controller.getBuoyData().getStatusCodeValue());
-            assertEquals(200, controller.getDataSourceStatus().getStatusCodeValue());
+            assertEquals(200,
+                    Objects.requireNonNull(controller.getGroundStationData()
+                            .getStatusCode()).value());
+            assertEquals(200,
+                    Objects.requireNonNull(controller.getBuoyData()
+                            .getStatusCode()).value());
+            assertEquals(200,
+                    Objects.requireNonNull(controller.getDataSourceStatus()
+                            .getStatusCode()).value());
         }
     }
 }

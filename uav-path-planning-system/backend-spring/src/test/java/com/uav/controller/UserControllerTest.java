@@ -67,8 +67,7 @@ class UserControllerTest {
         User newUser = new User();
         newUser.setUsername("operator");
         newUser.setPassword("password123");
-        newUser.setRole("OPERATOR");
-        newUser.setName("操作员");
+        newUser.setFullName("操作员");
 
         User created = userController.createUser(newUser);
         assertNotNull(created);
@@ -82,13 +81,12 @@ class UserControllerTest {
     void testUpdateUser() {
         User update = new User();
         update.setUsername("admin_updated");
-        update.setName("管理员新名");
-        update.setRole("ADMIN");
+        update.setFullName("管理员新名");
 
         User result = userController.updateUser(1L, update);
         assertNotNull(result);
         assertEquals("admin_updated", result.getUsername());
-        assertEquals("管理员新名", result.getName());
+        assertEquals("管理员新名", result.getFullName());
     }
 
     @Test

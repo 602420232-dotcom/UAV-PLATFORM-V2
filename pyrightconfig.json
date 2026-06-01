@@ -1,0 +1,22 @@
+{
+  "exclude": [
+    "**/__pycache__",
+    "**/node_modules",
+    "**.pyc",
+    "api-gateway",
+    "deployments",
+    "docker",
+    "docs",
+    "logs",
+    "results",
+    "site",
+    "tools",
+    "uav-mobile-app",
+    "uav-path-planning-system",
+    "uav-platform-service",
+    "uav-weather-collector",
+    "wrf-processor-service"
+  ],
+  "reportMissingImports": true,
+  "typeCheckingMode": "basic"
+}

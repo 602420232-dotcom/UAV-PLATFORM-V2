@@ -16,7 +16,7 @@
 
 import logging
 import os
-from typing import List, Optional, Set
+from typing import List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +33,9 @@ class SecurityMiddleware:
     ):
         self._jwt_auth = None
         self._demo_service = None
-        self._jwt_secret = secret_key or os.getenv("JWT_SECRET", "") or os.getenv("JWT_SECRET_KEY", "")
+        self._jwt_secret = (
+            secret_key or os.getenv("JWT_SECRET", "") or os.getenv("JWT_SECRET_KEY", "")
+        )
         self._algorithm = algorithm
         self._demo_enabled = demo_enabled
         self._redis_url = redis_url or os.getenv("REDIS_URL", "")
@@ -90,7 +92,10 @@ class SecurityMiddleware:
         """
         from fastapi import Depends
 
-        public = set(health_paths or ["/health", "/actuator/health", "/health/ready", "/healthz"])
+        public = set(
+            health_paths
+            or ["/health", "/actuator/health", "/health/ready", "/healthz"]
+        )
         if public_paths:
             public.update(public_paths)
 
@@ -125,7 +130,10 @@ class SecurityMiddleware:
             if not token:
                 raise HTTPException(
                     status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail={"code": "AUTH_001", "message": "Missing or invalid Authorization header"},
+                    detail={
+                        "code": "AUTH_001",
+                        "message": "Missing or invalid Authorization header",
+                    },
                     headers={"WWW-Authenticate": "Bearer"},
                 )
 
@@ -139,7 +147,10 @@ class SecurityMiddleware:
                     except Exception:
                         raise HTTPException(
                             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                            detail={"code": "AUTH_008", "message": "Demo rate limit exceeded"},
+                            detail={
+                                "code": "AUTH_008",
+                                "message": "Demo rate limit exceeded",
+                            },
                         )
 
                 return {
@@ -185,7 +196,10 @@ class SecurityMiddleware:
             if not token:
                 raise HTTPException(
                     status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Missing authorization",
+                    detail={
+                        "code": "AUTH_003",
+                        "message": "Missing authorization",
+                    },
                 )
 
             try:
@@ -197,7 +211,10 @@ class SecurityMiddleware:
                 if not required.issubset(user_roles):
                     raise HTTPException(
                         status_code=status.HTTP_403_FORBIDDEN,
-                        detail=f"Requires roles: {roles}",
+                        detail={
+                            "code": "AUTH_005",
+                            "message": f"Requires roles: {roles}",
+                        },
                     )
 
                 return {
@@ -208,7 +225,10 @@ class SecurityMiddleware:
             except HTTPException:
                 raise
             except Exception as e:
-                raise HTTPException(status_code=401, detail=str(e))
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail={"code": "AUTH_004", "message": str(e)},
+                )
 
         return check_role
 
@@ -243,3 +263,4 @@ class SecurityMiddleware:
             return result
 
         return check
+

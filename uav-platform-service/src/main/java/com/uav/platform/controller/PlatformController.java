@@ -1,21 +1,17 @@
 package com.uav.platform.controller;
 import com.uav.common.exception.ServiceUnavailableException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.ResourceAccessException;
-import org.springframework.web.server.ResponseStatusException;
 import jakarta.annotation.Resource;
 import java.net.ConnectException;
 import java.util.Map;
+import java.util.Objects;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/platform")
 public class PlatformController {
-
-    private static final Logger log = LoggerFactory.getLogger(PlatformController.class);
 
     @Resource
     private org.springframework.web.client.RestTemplate restTemplate;
@@ -32,9 +28,11 @@ public class PlatformController {
     @Value("${services.path-planning.url}")
     private String pathPlanningUrl;
 
+    @SuppressWarnings("unchecked")
     private Map<String, Object> callService(String url, Object request, String errorMsg) {
         try {
-            Map<String, Object> response = restTemplate.postForObject(url, request, Map.class);
+            Map<String, Object> response = restTemplate.postForObject(
+                    Objects.requireNonNull(url), request, Map.class);
             if (response == null || !Boolean.TRUE.equals(response.get("success"))) {
                 return Map.of("success", false, "error", errorMsg);
             }
@@ -80,6 +78,7 @@ public class PlatformController {
     }
 
     @GetMapping("/weather")
+    @SuppressWarnings("unchecked")
     public Map<String, Object> getWeather(@RequestParam("fileId") String fileId) {
         try {
             Map<String, Object> response = restTemplate.getForObject(

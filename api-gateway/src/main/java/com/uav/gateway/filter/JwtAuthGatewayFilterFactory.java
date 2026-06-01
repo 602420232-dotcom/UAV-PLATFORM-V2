@@ -4,7 +4,6 @@ import com.uav.common.security.JwtTokenProvider;
 import io.jsonwebtoken.Claims;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
-import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -13,7 +12,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Gateway JWT 认证过滤器工厂。
@@ -118,12 +119,13 @@ public class JwtAuthGatewayFilterFactory
     private Mono<Void> unauthorized(ServerWebExchange exchange, String message) {
         exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
         exchange.getResponse().getHeaders().add(HttpHeaders.CONTENT_TYPE, "application/json");
-        byte[] body = String.format(
+        byte[] body = Objects.requireNonNull(String.format(
                 "{\"code\":401,\"message\":\"%s\",\"timestamp\":%d}",
                 message, System.currentTimeMillis()
-        ).getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        ).getBytes(StandardCharsets.UTF_8));
         return exchange.getResponse()
-                .writeWith(Mono.just(exchange.getResponse().bufferFactory().wrap(body)));
+                .writeWith(Objects.requireNonNull(
+                        Mono.just(exchange.getResponse().bufferFactory().wrap(body))));
     }
 
     public static class Config {

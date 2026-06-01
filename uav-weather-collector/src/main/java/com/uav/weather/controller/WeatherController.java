@@ -1,6 +1,5 @@
 package com.uav.weather.controller;
 import com.uav.common.exception.BusinessException;
-import com.uav.weather.model.WeatherData;
 import com.uav.weather.service.WeatherCollectorService;
 import org.springframework.validation.annotation.Validated;
 import jakarta.annotation.Resource;

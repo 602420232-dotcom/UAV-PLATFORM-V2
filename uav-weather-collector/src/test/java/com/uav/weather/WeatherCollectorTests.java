@@ -10,6 +10,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -23,7 +24,7 @@ class WeatherCollectorTests {
     void setUp() {
         weatherController = new WeatherController();
         weatherCollectorService = new WeatherCollectorService();
-        ReflectionTestUtils.setField(weatherController, "weatherCollectorService", weatherCollectorService);
+        ReflectionTestUtils.setField(Objects.requireNonNull(weatherController), "weatherCollectorService", weatherCollectorService);
     }
 
     @Test

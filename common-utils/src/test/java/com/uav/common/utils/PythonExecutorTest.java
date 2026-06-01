@@ -3,20 +3,16 @@ package com.uav.common.utils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.HashMap;
-import java.util.Map;
+import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * PythonExecutor单元测试
  */
-@ExtendWith(MockitoExtension.class)
 @DisplayName("PythonExecutor测试")
 class PythonExecutorTest {
 
@@ -25,8 +21,10 @@ class PythonExecutorTest {
     @BeforeEach
     void setUp() {
         pythonExecutor = new PythonExecutor();
-        ReflectionTestUtils.setField(pythonExecutor, "scriptPath", "src/main/python");
-        ReflectionTestUtils.setField(pythonExecutor, "timeout", 30000);
+        ReflectionTestUtils.setField(
+                Objects.requireNonNull(pythonExecutor), "scriptPath", "src/main/python");
+        ReflectionTestUtils.setField(
+                Objects.requireNonNull(pythonExecutor), "timeout", 30000);
     }
 
     @Test

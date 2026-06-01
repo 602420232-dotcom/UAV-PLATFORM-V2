@@ -10,12 +10,14 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
+import javax.crypto.SecretKey;
 import java.security.Key;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -252,11 +254,18 @@ public class JwtKeyRotationService {
     }
 
     private Claims parseTokenWithKey(String token, Key key) {
-        return Jwts.parserBuilder()
-            .setSigningKey(key)
+        if (key instanceof SecretKey sk) {
+            return Jwts.parser()
+                .verifyWith(sk)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+        }
+        return Jwts.parser()
+            .verifyWith((PublicKey) key)
             .build()
-            .parseClaimsJws(token)
-            .getBody();
+            .parseSignedClaims(token)
+            .getPayload();
     }
 
     private Boolean isTokenExpired(String token) {
@@ -279,20 +288,20 @@ public class JwtKeyRotationService {
             throw new IllegalArgumentException("Invalid key version: " + keyVersion);
         }
         return Jwts.builder()
-            .setClaims(claims)
-            .setSubject(userDetails.getUsername())
-            .setIssuedAt(new Date(System.currentTimeMillis()))
-            .setExpiration(new Date(System.currentTimeMillis() + expiration))
+            .claims(claims)
+            .subject(userDetails.getUsername())
+            .issuedAt(new Date(System.currentTimeMillis()))
+            .expiration(new Date(System.currentTimeMillis() + expiration))
             .signWith(key)
             .compact();
     }
 
     private String createToken(Map<String, Object> claims, String subject) {
         return Jwts.builder()
-            .setClaims(claims)
-            .setSubject(subject)
-            .setIssuedAt(new Date(System.currentTimeMillis()))
-            .setExpiration(new Date(System.currentTimeMillis() + expiration))
+            .claims(claims)
+            .subject(subject)
+            .issuedAt(new Date(System.currentTimeMillis()))
+            .expiration(new Date(System.currentTimeMillis() + expiration))
             .signWith(getSigningKey())
             .compact();
     }

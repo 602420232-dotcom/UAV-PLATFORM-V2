@@ -17,14 +17,16 @@ import time
 from contextlib import asynccontextmanager
 from typing import Optional
 
+sys.path.insert(
+    0, os.path.join(os.path.dirname(__file__), "..", "common-utils", "src", "main", "python")
+)
+
 import numpy as np
 from fastapi import FastAPI, HTTPException, Header, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 from inference_engine import get_engine, FengWuEngine
-
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'common-utils', 'src', 'main', 'python'))
 from security_middleware import SecurityMiddleware
 
 logging.basicConfig(
@@ -118,16 +120,20 @@ app.add_middleware(
     allow_methods=["GET", "POST"],
     allow_headers=["Authorization", "Content-Type", "X-API-Key"],
 )
-logger.info(f"🔒 CORS enabled for origins: {_ALLOWED_ORIGINS}")
+logger.info("🔒 CORS enabled for origins: %s", _ALLOWED_ORIGINS)
 
 # JWT 认证中间件（与 Java 后端共享 JWT_SECRET，补充 API Key 认证）
 _jwt_secret = os.getenv("JWT_SECRET", "") or os.getenv("JWT_SECRET_KEY", "")
-_jwt_middleware = SecurityMiddleware(
-    secret_key=_jwt_secret,
-    algorithm="HS512",
-)
+_jwt_middleware = None
 if _jwt_secret:
-    _jwt_middleware.protect_app(app, public_paths=["/health", "/actuator/health", "/health/ready"])
+    _jwt_middleware = SecurityMiddleware(
+        secret_key=_jwt_secret,
+        algorithm="HS512",
+    )
+    _jwt_middleware.protect_app(
+        app,
+        public_paths=["/health", "/actuator/health", "/health/ready"],
+    )
     logger.info("JWT authentication enabled")
 else:
     logger.warning(
@@ -204,7 +210,11 @@ async def readiness():
     raise HTTPException(status_code=503, detail="Model not loaded")
 
 
-@app.post("/api/v1/forecast", response_model=ForecastResponse, dependencies=[Depends(verify_api_key)])
+@app.post(
+    "/api/v1/forecast",
+    response_model=ForecastResponse,
+    dependencies=[Depends(verify_api_key)],
+)
 async def forecast(request: ForecastRequest):
     """
     Run FengWu weather forecast.
@@ -275,7 +285,10 @@ async def forecast(request: ForecastRequest):
     )
 
 
-@app.post("/api/v1/forecast/wind", dependencies=[Depends(verify_api_key)])
+@app.post(
+    "/api/v1/forecast/wind",
+    dependencies=[Depends(verify_api_key)],
+)
 async def forecast_wind(request: ForecastRequest):
     """
     Lightweight endpoint — returns only wind speed/direction as grid summary.
@@ -285,17 +298,28 @@ async def forecast_wind(request: ForecastRequest):
     if not engine or not engine.is_loaded:
         raise HTTPException(status_code=503, detail="Model not loaded")
 
-    input_0h = np.array(request.input_0h, dtype=np.float32)
-    input_6h = np.array(request.input_6h, dtype=np.float32)
+    try:
+        input_0h = np.array(request.input_0h, dtype=np.float32)
+        input_6h = np.array(request.input_6h, dtype=np.float32)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Invalid input data: {e}")
 
     results = engine.predict(input_0h, input_6h, steps=request.steps)
 
     wind_summary = []
     for step, data in enumerate(results):
-        u10 = data[0]  # shape (721, 1440)
-        v10 = data[1]
+        if isinstance(data, dict):
+            u10 = data.get("u10")
+            v10 = data.get("v10")
+            if u10 is None or v10 is None:
+                continue
+        elif isinstance(data, (list, np.ndarray)) and len(data) >= 2:
+            u10 = data[0]
+            v10 = data[1]
+        else:
+            continue
+
         wind_speed = np.sqrt(u10**2 + v10**2)
-        wind_dir = np.arctan2(v10, u10) * 180 / np.pi
 
         wind_summary.append({
             "step": step,
@@ -305,10 +329,17 @@ async def forecast_wind(request: ForecastRequest):
             "wind_speed_min": float(np.min(wind_speed)),
         })
 
-    return {"status": "success", "model": os.path.basename(engine.model_path), "wind": wind_summary}
+    return {
+        "status": "success",
+        "model": os.path.basename(engine.model_path),
+        "wind": wind_summary,
+    }
 
 
-@app.get("/api/v1/model/info", dependencies=[Depends(verify_api_key)])
+@app.get(
+    "/api/v1/model/info",
+    dependencies=[Depends(verify_api_key)],
+)
 async def model_info():
     """Return model metadata."""
     engine = get_engine()

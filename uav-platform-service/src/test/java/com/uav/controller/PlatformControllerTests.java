@@ -8,6 +8,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Map;
+import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -23,15 +24,21 @@ class PlatformControllerTest {
     void setUp() {
         restTemplate = mock(RestTemplate.class);
         controller = new PlatformController();
-        ReflectionTestUtils.setField(controller, "restTemplate", restTemplate);
-        ReflectionTestUtils.setField(controller, "wrfProcessorUrl", "http://wrf:8081/api/wrf");
-        ReflectionTestUtils.setField(controller, "dataAssimilationUrl", "http://assim:8084/api/assim");
-        ReflectionTestUtils.setField(controller, "meteorForecastUrl", "http://meteor:8082/api/forecast");
-        ReflectionTestUtils.setField(controller, "pathPlanningUrl", "http://plan:8083/api/plan");
+        ReflectionTestUtils.setField(
+                Objects.requireNonNull(controller), "restTemplate", restTemplate);
+        ReflectionTestUtils.setField(
+                Objects.requireNonNull(controller), "wrfProcessorUrl", "http://wrf:8081/api/wrf");
+        ReflectionTestUtils.setField(
+                Objects.requireNonNull(controller), "dataAssimilationUrl", "http://assim:8084/api/assim");
+        ReflectionTestUtils.setField(
+                Objects.requireNonNull(controller), "meteorForecastUrl", "http://meteor:8082/api/forecast");
+        ReflectionTestUtils.setField(
+                Objects.requireNonNull(controller), "pathPlanningUrl", "http://plan:8083/api/plan");
     }
 
     @Test
     @DisplayName("getWeather 返回成功响应")
+    @SuppressWarnings("null")
     void testGetWeather() {
         when(restTemplate.getForObject(anyString(), eq(Map.class), (Object[]) any()))
                 .thenReturn(Map.of("success", true, "data", Map.of()));
@@ -58,6 +65,7 @@ class PlatformControllerTest {
 
     @Test
     @DisplayName("plan 在无 weatherData 时返回错误")
+    @SuppressWarnings("null")
     void testPlanWithoutWeatherData() {
         Map<String, Object> request = Map.of("drones", Map.of(), "tasks", Map.of());
         when(restTemplate.postForObject(anyString(), any(), eq(Map.class)))

@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -19,7 +20,9 @@ public class CacheService {
 
     public void cache(String key, Object value, long ttlSeconds) {
         try {
-            redisTemplate.opsForValue().set(key, value, ttlSeconds, TimeUnit.SECONDS);
+            redisTemplate.opsForValue().set(
+                    Objects.requireNonNull(key), Objects.requireNonNull(value),
+                    ttlSeconds, TimeUnit.SECONDS);
             log.debug("缓存设置: {} (TTL={}s)", key, ttlSeconds);
         } catch (Exception e) {
             log.warn("缓存写入失败: {}", e.getMessage());
@@ -28,7 +31,7 @@ public class CacheService {
 
     public Object get(String key) {
         try {
-            return redisTemplate.opsForValue().get(key);
+            return redisTemplate.opsForValue().get(Objects.requireNonNull(key));
         } catch (Exception e) {
             log.warn("缓存读取失败: {}", e.getMessage());
             return null;
@@ -37,7 +40,7 @@ public class CacheService {
 
     public void evict(String key) {
         try {
-            redisTemplate.delete(key);
+            redisTemplate.delete(Objects.requireNonNull(key));
         } catch (Exception e) {
             log.warn("缓存删除失败: {}", e.getMessage());
         }

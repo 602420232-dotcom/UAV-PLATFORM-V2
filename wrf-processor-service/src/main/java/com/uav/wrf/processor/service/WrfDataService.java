@@ -23,7 +23,7 @@ public class WrfDataService {
     }
 
     public Optional<WrfDataFile> findById(Long id) {
-        return wrfDataFileRepository.findById(id);
+        return wrfDataFileRepository.findById(Objects.requireNonNull(id));
     }
 
     public Page<WrfDataFile> findAll(int page, int size) {
@@ -45,11 +45,11 @@ public class WrfDataService {
                 .variables("temperature,humidity,wind_speed,wind_direction,pressure")
                 .build();
         
-        return wrfDataFileRepository.save(wrfDataFile);
+        return wrfDataFileRepository.save(Objects.requireNonNull(wrfDataFile));
     }
 
     public WrfDataFile updateWrfDataFile(WrfDataFile wrfDataFile) {
-        return wrfDataFileRepository.save(wrfDataFile);
+        return wrfDataFileRepository.save(Objects.requireNonNull(wrfDataFile));
     }
 
     public Map<String, Object> getWeatherData(String fileId) {

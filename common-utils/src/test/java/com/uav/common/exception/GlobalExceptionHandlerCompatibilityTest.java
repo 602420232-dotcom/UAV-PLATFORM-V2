@@ -5,14 +5,8 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.AccessDeniedException;
-import org.springframework.web.client.ResourceAccessException;
-import org.springframework.web.client.RestClientException;
 
-import java.net.ConnectException;
-import java.net.SocketTimeoutException;
 import java.util.Map;
-import java.util.concurrent.TimeoutException;
 
 import static org.junit.jupiter.api.Assertions.*;
 

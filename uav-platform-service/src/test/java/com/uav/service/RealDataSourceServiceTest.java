@@ -3,7 +3,6 @@ package com.uav.service;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -53,6 +52,7 @@ class RealDataSourceServiceTest {
 
     @Test
     @DisplayName("状态包含地面站信息")
+    @SuppressWarnings("unchecked")
     void shouldContainGroundStationStatus() {
         Map<String, Object> status = service.getDataSourceStatus();
         assertNotNull(status.get("ground_station"));
@@ -62,6 +62,7 @@ class RealDataSourceServiceTest {
 
     @Test
     @DisplayName("状态包含浮标信息")
+    @SuppressWarnings("unchecked")
     void shouldContainBuoyStatus() {
         Map<String, Object> status = service.getDataSourceStatus();
         assertNotNull(status.get("buoy"));
@@ -71,6 +72,7 @@ class RealDataSourceServiceTest {
 
     @Test
     @DisplayName("数据源status标记为active")
+    @SuppressWarnings("unchecked")
     void shouldBeActive() {
         Map<String, Object> status = service.getDataSourceStatus();
         Map<String, Object> gs = (Map<String, Object>) status.get("ground_station");
@@ -80,6 +82,7 @@ class RealDataSourceServiceTest {
 
     @Test
     @DisplayName("地面站初始count为0")
+    @SuppressWarnings("unchecked")
     void shouldHaveZeroGroundStationCountInitially() {
         Map<String, Object> status = service.getDataSourceStatus();
         Map<String, Object> gs = (Map<String, Object>) status.get("ground_station");

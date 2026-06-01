@@ -10,16 +10,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -55,8 +53,8 @@ class DataSourceControllerTest {
 
             ResponseEntity<Map<String, Object>> response = controller.getDataSourceList();
 
-            assertEquals(200, response.getStatusCodeValue());
-            Map<String, Object> body = response.getBody();
+            assertEquals(200, Objects.requireNonNull(response.getStatusCode()).value());
+            Map<String, Object> body = Objects.requireNonNull(response.getBody());
             assertEquals(200, body.get("code"));
             assertEquals(sources, body.get("data"));
         }
@@ -68,7 +66,8 @@ class DataSourceControllerTest {
 
             ResponseEntity<Map<String, Object>> response = controller.getDataSourceList();
 
-            assertEquals(200, response.getStatusCodeValue());
+            assertEquals(200,
+                    Objects.requireNonNull(response.getStatusCode()).value());
         }
     }
 
@@ -82,8 +81,10 @@ class DataSourceControllerTest {
 
             ResponseEntity<Map<String, Object>> response = controller.getDataSourceById(1L);
 
-            assertEquals(200, response.getStatusCodeValue());
-            assertEquals(sampleSource, response.getBody().get("data"));
+            assertEquals(200,
+                    Objects.requireNonNull(response.getStatusCode()).value());
+            assertEquals(sampleSource,
+                    Objects.requireNonNull(response.getBody()).get("data"));
         }
 
         @Test
@@ -106,8 +107,10 @@ class DataSourceControllerTest {
 
             ResponseEntity<Map<String, Object>> response = controller.createDataSource(request);
 
-            assertEquals(200, response.getStatusCodeValue());
-            assertEquals(sampleSource, response.getBody().get("data"));
+            assertEquals(200,
+                    Objects.requireNonNull(response.getStatusCode()).value());
+            assertEquals(sampleSource,
+                    Objects.requireNonNull(response.getBody()).get("data"));
             verify(dataSourceService).createDataSource(request);
         }
     }
@@ -123,8 +126,10 @@ class DataSourceControllerTest {
 
             ResponseEntity<Map<String, Object>> response = controller.updateDataSource(1L, request);
 
-            assertEquals(200, response.getStatusCodeValue());
-            assertEquals(sampleSource, response.getBody().get("data"));
+            assertEquals(200,
+                    Objects.requireNonNull(response.getStatusCode()).value());
+            assertEquals(sampleSource,
+                    Objects.requireNonNull(response.getBody()).get("data"));
         }
 
         @Test
@@ -147,8 +152,10 @@ class DataSourceControllerTest {
 
             ResponseEntity<Map<String, Object>> response = controller.deleteDataSource(1L);
 
-            assertEquals(200, response.getStatusCodeValue());
-            assertEquals(200, response.getBody().get("code"));
+            assertEquals(200,
+                    Objects.requireNonNull(response.getStatusCode()).value());
+            assertEquals(200,
+                    Objects.requireNonNull(response.getBody()).get("code"));
         }
 
         @Test
@@ -172,8 +179,10 @@ class DataSourceControllerTest {
 
             ResponseEntity<Map<String, Object>> response = controller.testDataSource(request);
 
-            assertEquals(200, response.getStatusCodeValue());
-            assertEquals(testResult, response.getBody().get("data"));
+            assertEquals(200,
+                    Objects.requireNonNull(response.getStatusCode()).value());
+            assertEquals(testResult,
+                    Objects.requireNonNull(response.getBody()).get("data"));
         }
     }
 
@@ -190,8 +199,10 @@ class DataSourceControllerTest {
 
             ResponseEntity<Map<String, Object>> response = controller.getDataSourceTypes();
 
-            assertEquals(200, response.getStatusCodeValue());
-            assertEquals(types, response.getBody().get("data"));
+            assertEquals(200,
+                    Objects.requireNonNull(response.getStatusCode()).value());
+            assertEquals(types,
+                    Objects.requireNonNull(response.getBody()).get("data"));
         }
     }
 }

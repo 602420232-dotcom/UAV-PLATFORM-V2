@@ -12,6 +12,7 @@ import org.springframework.security.web.csrf.DefaultCsrfToken;
 import org.springframework.util.StringUtils;
 import org.springframework.web.util.WebUtils;
 
+import java.util.Objects;
 import java.util.UUID;
 
 public class CookieCsrfTokenRepository implements CsrfTokenRepository {
@@ -89,7 +90,8 @@ public class CookieCsrfTokenRepository implements CsrfTokenRepository {
 
     @Override
     public CsrfToken loadToken(HttpServletRequest request) {
-        Cookie cookie = WebUtils.getCookie(request, this.cookieName);
+        Cookie cookie = WebUtils.getCookie(
+                Objects.requireNonNull(request), Objects.requireNonNull(this.cookieName));
         if (cookie == null) {
             return null;
         }

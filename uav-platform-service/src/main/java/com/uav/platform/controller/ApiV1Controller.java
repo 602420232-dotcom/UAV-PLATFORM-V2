@@ -2,7 +2,6 @@ package com.uav.platform.controller;
 
 import com.uav.common.annotation.StubController;
 import com.uav.common.security.JwtTokenProvider;
-import com.uav.platform.dto.DataSourceRequest;
 import com.uav.platform.dto.DroneRequest;
 import com.uav.platform.dto.ForecastRequest;
 import com.uav.platform.dto.LoginRequest;
@@ -47,6 +46,7 @@ public class ApiV1Controller {
     }
 
     /** Map builder that allows null values (unlike Map.of) */
+    @SuppressWarnings("unchecked")
     private static <K, V> Map<K, V> map(K k1, V v1, Object... rest) {
         Map<K, V> map = new LinkedHashMap<>();
         map.put(k1, v1);

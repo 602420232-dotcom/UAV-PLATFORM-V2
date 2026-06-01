@@ -1,7 +1,6 @@
 package com.uav.common.security;
 
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -20,6 +19,7 @@ import jakarta.servlet.FilterChain;
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -40,18 +40,19 @@ class JwtAuthenticationFilterIntegrationTest {
     void setUp() {
         jwtAuthenticationFilter = new JwtAuthenticationFilter();
         ReflectionTestUtils.setField(jwtAuthenticationFilter, "jwtSecret", TEST_SECRET);
-        ReflectionTestUtils.setField(jwtAuthenticationFilter, "jwtEnabled", true);
+        ReflectionTestUtils.setField(
+                Objects.requireNonNull(jwtAuthenticationFilter), "jwtEnabled", true);
         SecurityContextHolder.clearContext();
     }
 
     private String createValidToken() {
         SecretKey key = Keys.hmacShaKeyFor(TEST_SECRET.getBytes(StandardCharsets.UTF_8));
         return Jwts.builder()
-                .setSubject("admin")
+                .subject("admin")
                 .claim("roles", java.util.List.of("ROLE_ADMIN"))
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + 3600_000))
-                .signWith(key, SignatureAlgorithm.HS256)
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + 3600_000))
+                .signWith(key)
                 .compact();
     }
 
@@ -61,7 +62,8 @@ class JwtAuthenticationFilterIntegrationTest {
         MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/auth/login");
         MockHttpServletResponse response = new MockHttpServletResponse();
 
-        jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
+        jwtAuthenticationFilter.doFilterInternal(request, response,
+                Objects.requireNonNull(filterChain));
 
         verify(filterChain, times(1)).doFilter(request, response);
         assertNull(SecurityContextHolder.getContext().getAuthentication());
@@ -73,7 +75,8 @@ class JwtAuthenticationFilterIntegrationTest {
         MockHttpServletRequest request = new MockHttpServletRequest("GET", "/actuator/health");
         MockHttpServletResponse response = new MockHttpServletResponse();
 
-        jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
+        jwtAuthenticationFilter.doFilterInternal(request, response,
+                Objects.requireNonNull(filterChain));
 
         verify(filterChain, times(1)).doFilter(request, response);
     }
@@ -84,7 +87,8 @@ class JwtAuthenticationFilterIntegrationTest {
         MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/drones");
         MockHttpServletResponse response = new MockHttpServletResponse();
 
-        jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
+        jwtAuthenticationFilter.doFilterInternal(request, response,
+                Objects.requireNonNull(filterChain));
 
         assertEquals(401, response.getStatus());
         verify(filterChain, never()).doFilter(request, response);
@@ -97,7 +101,8 @@ class JwtAuthenticationFilterIntegrationTest {
         request.addHeader("Authorization", "Bearer invalid-token");
         MockHttpServletResponse response = new MockHttpServletResponse();
 
-        jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
+        jwtAuthenticationFilter.doFilterInternal(request, response,
+                Objects.requireNonNull(filterChain));
 
         assertEquals(401, response.getStatus());
         verify(filterChain, never()).doFilter(request, response);
@@ -111,7 +116,8 @@ class JwtAuthenticationFilterIntegrationTest {
         request.addHeader("Authorization", "Bearer " + token);
         MockHttpServletResponse response = new MockHttpServletResponse();
 
-        jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
+        jwtAuthenticationFilter.doFilterInternal(request, response,
+                Objects.requireNonNull(filterChain));
 
         verify(filterChain, times(1)).doFilter(request, response);
         assertNotNull(SecurityContextHolder.getContext().getAuthentication());

@@ -15,18 +15,16 @@ class ModelTests {
         user.setId(1L);
         user.setUsername("testuser");
         user.setPassword("encryptedPass");
-        user.setRole("ADMIN");
-        user.setName("测试用户");
+        user.setFullName("测试用户");
         user.setEmail("test@example.com");
-        user.setPhone("13800138000");
+        user.setEnabled(true);
 
         assertEquals(1L, user.getId());
         assertEquals("testuser", user.getUsername());
         assertEquals("encryptedPass", user.getPassword());
-        assertEquals("ADMIN", user.getRole());
-        assertEquals("测试用户", user.getName());
+        assertEquals("测试用户", user.getFullName());
         assertEquals("test@example.com", user.getEmail());
-        assertEquals("13800138000", user.getPhone());
+        assertTrue(user.isEnabled());
     }
 
     @Test
@@ -43,21 +41,29 @@ class ModelTests {
     @DisplayName("Drone模型测试")
     void testDroneModel() {
         Drone drone = new Drone();
-        drone.setId("UAV-001");
-        drone.setStatus("active");
-        drone.setLatitude(39.9);
-        drone.setLongitude(116.4);
-        drone.setAltitude(100.0);
-        drone.setSpeed(15.0);
-        drone.setBattery(85);
+        drone.setId(1L);
+        drone.setName("UAV-001");
+        drone.setModel("Quadrotor X8");
+        drone.setSerialNumber("SN-2024-001");
+        drone.setStatus("IDLE");
+        drone.setCurrentLatitude(39.9);
+        drone.setCurrentLongitude(116.4);
+        drone.setCurrentAltitude(100.0);
+        drone.setCruiseSpeed(15.0);
+        drone.setMaxSpeed(20.0);
+        drone.setBatteryLevel(85);
 
-        assertEquals("UAV-001", drone.getId());
-        assertEquals("active", drone.getStatus());
-        assertEquals(39.9, drone.getLatitude());
-        assertEquals(116.4, drone.getLongitude());
-        assertEquals(100.0, drone.getAltitude());
-        assertEquals(15.0, drone.getSpeed());
-        assertEquals(85, drone.getBattery());
+        assertEquals(1L, drone.getId());
+        assertEquals("UAV-001", drone.getName());
+        assertEquals("Quadrotor X8", drone.getModel());
+        assertEquals("SN-2024-001", drone.getSerialNumber());
+        assertEquals("IDLE", drone.getStatus());
+        assertEquals(39.9, drone.getCurrentLatitude());
+        assertEquals(116.4, drone.getCurrentLongitude());
+        assertEquals(100.0, drone.getCurrentAltitude());
+        assertEquals(15.0, drone.getCruiseSpeed());
+        assertEquals(20.0, drone.getMaxSpeed());
+        assertEquals(85, drone.getBatteryLevel());
     }
 
     @Test
@@ -66,15 +72,23 @@ class ModelTests {
         Task task = new Task();
         task.setId(100L);
         task.setName("航拍任务");
-        task.setType("survey");
-        task.setStatus("pending");
+        task.setDescription("高空航拍巡检");
+        task.setLatitude(39.9);
+        task.setLongitude(116.4);
+        task.setAltitude(100.0);
+        task.setDemand(5.0);
         task.setPriority(1);
+        task.setStatus("PENDING");
 
         assertEquals(100L, task.getId());
         assertEquals("航拍任务", task.getName());
-        assertEquals("survey", task.getType());
-        assertEquals("pending", task.getStatus());
+        assertEquals("高空航拍巡检", task.getDescription());
+        assertEquals(39.9, task.getLatitude());
+        assertEquals(116.4, task.getLongitude());
+        assertEquals(100.0, task.getAltitude());
+        assertEquals(5.0, task.getDemand());
         assertEquals(1, task.getPriority());
+        assertEquals("PENDING", task.getStatus());
     }
 
     @Test
@@ -83,35 +97,43 @@ class ModelTests {
         PathPlan plan = new PathPlan();
         plan.setId(200L);
         plan.setName("航线方案A");
-        plan.setDroneId("UAV-001");
-        plan.setStatus("active");
+        plan.setDescription("城区全覆盖航线");
+        plan.setDroneCount(3);
+        plan.setTaskCount(10);
+        plan.setTotalDistance(15000.0);
+        plan.setTotalTime(120.0);
+        plan.setStatus("PENDING");
 
         assertEquals(200L, plan.getId());
         assertEquals("航线方案A", plan.getName());
-        assertEquals("UAV-001", plan.getDroneId());
-        assertEquals("active", plan.getStatus());
+        assertEquals("城区全覆盖航线", plan.getDescription());
+        assertEquals(3, plan.getDroneCount());
+        assertEquals(10, plan.getTaskCount());
+        assertEquals(15000.0, plan.getTotalDistance());
+        assertEquals(120.0, plan.getTotalTime());
+        assertEquals("PENDING", plan.getStatus());
     }
 
     @Test
     @DisplayName("WeatherData模型测试")
     void testWeatherDataModel() {
-        com.uav.model.WeatherData weather = new com.uav.model.WeatherData();
+        WeatherData weather = new WeatherData();
         weather.setId(300L);
-        weather.setLatitude(39.9);
-        weather.setLongitude(116.4);
-        weather.setTemperature(25.0);
-        weather.setWindSpeed(5.0);
-        weather.setWindDirection(180);
-        weather.setHumidity(60);
-        weather.setPressure(1013.25);
+        weather.setMinLatitude(39.0);
+        weather.setMaxLatitude(40.0);
+        weather.setMinLongitude(116.0);
+        weather.setMaxLongitude(117.0);
+        weather.setHeight(500);
+        weather.setSource("WRF");
+        weather.setStatus("AVAILABLE");
 
         assertEquals(300L, weather.getId());
-        assertEquals(39.9, weather.getLatitude());
-        assertEquals(116.4, weather.getLongitude());
-        assertEquals(25.0, weather.getTemperature());
-        assertEquals(5.0, weather.getWindSpeed());
-        assertEquals(180, weather.getWindDirection());
-        assertEquals(60, weather.getHumidity());
-        assertEquals(1013.25, weather.getPressure());
+        assertEquals(39.0, weather.getMinLatitude());
+        assertEquals(40.0, weather.getMaxLatitude());
+        assertEquals(116.0, weather.getMinLongitude());
+        assertEquals(117.0, weather.getMaxLongitude());
+        assertEquals(500, weather.getHeight());
+        assertEquals("WRF", weather.getSource());
+        assertEquals("AVAILABLE", weather.getStatus());
     }
 }

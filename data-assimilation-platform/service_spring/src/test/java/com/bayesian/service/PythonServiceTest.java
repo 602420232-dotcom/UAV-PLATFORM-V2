@@ -12,6 +12,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Map;
+import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -29,7 +30,8 @@ class PythonServiceTest {
 
     @BeforeEach
     void setUp() {
-        ReflectionTestUtils.setField(service, "pythonServiceUrl", "http://localhost:8000");
+        ReflectionTestUtils.setField(
+                Objects.requireNonNull(service), "pythonServiceUrl", "http://localhost:8000");
     }
 
     @Nested

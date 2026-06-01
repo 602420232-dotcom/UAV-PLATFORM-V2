@@ -14,6 +14,7 @@ import org.springframework.web.client.ResourceAccessException;
 import java.net.ConnectException;
 import java.net.SocketTimeoutException;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
@@ -76,7 +77,7 @@ public class GlobalExceptionHandler {
         body.put("service", e.getServiceName());
         body.put("httpStatus", e.getHttpStatus().value());
         
-        return ResponseEntity.status(e.getHttpStatus()).body(body);
+        return ResponseEntity.status(Objects.requireNonNull(e.getHttpStatus())).body(body);
     }
 
     @ExceptionHandler(ResourceAccessException.class)
@@ -112,7 +113,7 @@ public class GlobalExceptionHandler {
         body.put("code", e.getCode());
         body.put("httpStatus", e.getHttpStatus().value());
         
-        return ResponseEntity.status(e.getHttpStatus()).body(body);
+        return ResponseEntity.status(Objects.requireNonNull(e.getHttpStatus())).body(body);
     }
 
     @ExceptionHandler(DataNotFoundException.class)

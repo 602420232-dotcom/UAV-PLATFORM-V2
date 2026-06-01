@@ -13,6 +13,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -30,7 +31,8 @@ class AssimilationControllerTest {
 
     @BeforeEach
     void setUp() {
-        ReflectionTestUtils.setField(assimilationController, "pythonScriptPath", "assimilation_handler.py");
+        ReflectionTestUtils.setField(
+                Objects.requireNonNull(assimilationController), "pythonScriptPath", "assimilation_handler.py");
     }
 
     private AssimilationRequest createValidRequest() {

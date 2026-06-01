@@ -1,6 +1,5 @@
 package com.wrf.processor.controller;
 import org.springframework.web.bind.annotation.*;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.multipart.MultipartFile;
@@ -8,6 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.io.BufferedReader;
@@ -73,7 +73,7 @@ public class WrfController {
             }
 
             Files.createDirectories(tempFile.getParent());
-            file.transferTo(tempFile.toFile());
+            file.transferTo(Objects.requireNonNull(tempFile.toFile()));
 
             ProcessBuilder processBuilder = new ProcessBuilder(
                 "python3", pythonScriptPath, tempFile.toString(), String.valueOf(height)

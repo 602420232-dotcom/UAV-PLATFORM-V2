@@ -1,31 +1,5 @@
 {
+    "cmake.cmakePath": "D:\\Developer\\MSYS\\mingw64\\bin\\cmake.exe",
     "java.compile.nullAnalysis.mode": "automatic",
-    "java.configuration.updateBuildConfiguration": "automatic",
-    "python.testing.pytestArgs": [
-        "."
-    ],
-    "python.testing.unittestEnabled": false,
-    "python.testing.pytestEnabled": true,
-    "java.import.gradle.enabled": false,
-    "java.dependency.packagePresentation": "flat",
-    "cmake.cmakePath": "D:\\Developer\\MSYS\\cmake-wrapper.bat",
-    "cmake.enabled": true,
-    "cmake.configureOnOpen": false,
-    "cmake.sourceDirectory": "${workspaceFolder}/uav-edge-sdk",
-    "cmake.buildDirectory": "${workspaceFolder}/uav-edge-sdk/build",
-    "cmake.generator": "Ninja",
-    "files.associations": {
-        "*.md": "markdown",
-        "*.yml": "yaml",
-        "*.yaml": "yaml"
-    },
-    "search.exclude": {
-        "**/node_modules": true,
-        "**/bower_components": true,
-        "**/target": true,
-        "**/.git": true,
-        "**/.idea": true,
-        "**/.vs": true,
-        "**/build": true
-    }
+    "java.configuration.updateBuildConfiguration": "automatic"
 }
