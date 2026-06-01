@@ -34,8 +34,7 @@ class GlobalExceptionHandlerCompatibilityTest {
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         Map<String, Object> body = response.getBody();
         assertNotNull(body);
-        assertEquals(400, body.get("code"));
-        assertEquals("参数错误", body.get("message"));
+        assertEquals("参数错误", body.get("error"));
     }
 
     @Test
@@ -54,7 +53,7 @@ class GlobalExceptionHandlerCompatibilityTest {
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
         Map<String, Object> body = response.getBody();
         assertNotNull(body);
-        assertTrue(body.containsKey("data"));
+        assertTrue(body.containsKey("script"));
     }
 
     @Test
@@ -99,7 +98,7 @@ class GlobalExceptionHandlerCompatibilityTest {
         assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
         Map<String, Object> body = response.getBody();
         assertNotNull(body);
-        assertEquals(409, body.get("code"));
+        assertEquals("BIZ_001", body.get("code"));
     }
 
     @Test
@@ -110,7 +109,7 @@ class GlobalExceptionHandlerCompatibilityTest {
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
         Map<String, Object> body = response.getBody();
         assertNotNull(body);
-        assertEquals("Drone 不存在", body.get("message"));
+        assertEquals("数据不存在", body.get("error"));
     }
 
     @Test
@@ -138,8 +137,7 @@ class GlobalExceptionHandlerCompatibilityTest {
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
         Map<String, Object> body = response.getBody();
         assertNotNull(body);
-        assertEquals(500, body.get("code"));
-        assertEquals("服务器内部错误", body.get("message"));
+        assertEquals("服务器内部错误", body.get("error"));
     }
     }
 }

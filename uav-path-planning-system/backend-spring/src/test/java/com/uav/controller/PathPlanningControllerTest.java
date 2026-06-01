@@ -1,7 +1,7 @@
 package com.uav.controller;
 
-import com.uav.common.script.PythonScriptInvoker;
 import com.uav.model.PathPlan;
+import com.uav.utils.PythonAlgorithmUtil;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -12,7 +12,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
@@ -21,7 +20,7 @@ import static org.mockito.Mockito.when;
 class PathPlanningControllerTest {
 
     @Mock
-    private PythonScriptInvoker pythonScriptInvoker;
+    private PythonAlgorithmUtil pythonAlgorithmUtil;
 
     @InjectMocks
     private PathPlanningController pathPlanningController;
@@ -34,8 +33,7 @@ class PathPlanningControllerTest {
             "drones", "[{\"id\":\"UAV-001\",\"speed\":15}]",
             "weatherData", "{\"wind\":5}"
         );
-        when(pythonScriptInvoker.executeAsMap(anyString(), anyString(), anyMap()))
-                .thenReturn(Map.of("paths", new Object[]{}));
+        when(pythonAlgorithmUtil.planPath(anyString(), anyString(), anyString())).thenReturn("{\"paths\":[]}");
         Map<String, Object> result = pathPlanningController.planPath(request);
         assertNotNull(result);
         assertTrue((Boolean) result.get("success"));
@@ -45,12 +43,11 @@ class PathPlanningControllerTest {
     @DisplayName("路径规划失败返回错误")
     void testPlanPathWithError() {
         Map<String, Object> request = Map.of("tasks", "", "drones", "", "weatherData", "");
-        when(pythonScriptInvoker.executeAsMap(anyString(), anyString(), anyMap()))
-                .thenThrow(new RuntimeException("Python脚本异常"));
+        when(pythonAlgorithmUtil.planPath(anyString(), anyString(), anyString())).thenThrow(new RuntimeException("Python脚本异常"));
         Map<String, Object> result = pathPlanningController.planPath(request);
         assertNotNull(result);
         assertFalse((Boolean) result.get("success"));
-        assertEquals("路径规划处理失败", result.get("message"));
+        assertEquals("路径规划处理失败", result.get("error"));
     }
 
     @Test

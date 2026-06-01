@@ -29,7 +29,7 @@ jobs:
           distribution: 'temurin'
           cache: maven
       - name: Run Maven Tests
-        run: mvn test -B -am -pl wrf-processor-service,meteor-forecast-service,path-planning-service,data-assimilation-service,uav-platform-service,api-gateway
+        run: mvn clean test -B
 
       - uses: actions/setup-python@v5
         with:
@@ -108,34 +108,16 @@ jobs:
     needs: deploy
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v4
-      
       - name: Wait for Deployment
-        run: sleep 120
+        run: sleep 60
 
-      - name: Health Check - Skip Localhost Checks
+      - name: Health Check
         run: |
-          # 在 GitHub Actions runner 中无法直接访问 K8s 内部服务（localhost:$port）
-          # 健康检查应由以下方式之一处理：
-          # 1. 使用外部 Ingress 域名（需要配置外部访问）
-          # 2. 使用 kubectl port-forward（需要 K8s 凭据）
-          # 3. 使用 ArgoCD 的应用健康状态 API
-          
-          echo "Skipping localhost health checks - these are not accessible in GitHub Actions environment"
-          echo "Health checks are already performed by Kubernetes liveness/readiness probes"
-          echo "Use ArgoCD or monitoring system to verify deployment health"
-          
-          # 注释掉原有的 localhost 健康检查
-          # for port in 8080 8081 8082 8083 8084 8088; do
-          #   curl -sf "http://localhost:$port/actuator/health" || exit 1
-          # done
-          
-          # 可选：使用 ArgoCD API 检查应用健康状态
-          # curl -sf "https://argocd.uav-platform.com/api/v1/applications/uav-platform" \
-          #   -H "Authorization: Bearer ${{ secrets.ARGOCD_TOKEN }}" \
-          #   | grep -q '"status":"Healthy"' || exit 1
+          for port in 8080 8081 8082 8083 8084 8088; do
+            curl -sf "http://localhost:$port/actuator/health" || exit 1
+          done
 
-      - name: Run Regression Tests (Optional)
+      - name: Run Regression Tests
         run: |
-          echo "Skipping regression tests - requires access to K8s services"
-          # 如果有外部可访问的测试环境，可以在此处运行测试
+          pip install pytest requests
+          pytest tests/regression/ -v

@@ -1,6 +1,7 @@
 package com.uav.weather.service;
 import com.uav.weather.model.WeatherData;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import jakarta.annotation.PostConstruct;
 import java.time.Instant;
@@ -13,9 +14,10 @@ import java.util.ArrayList;
 import java.util.ArrayDeque;
 import java.util.Deque;
 
-@Slf4j
 @Service
 public class WeatherCollectorService {
+
+    private static final Logger log = LoggerFactory.getLogger(WeatherCollectorService.class);
 
     private final Map<String, Deque<WeatherData>> droneWeatherBuffer = new ConcurrentHashMap<>();
     private final Map<String, List<Map<String, Object>>> alertHistory = new ConcurrentHashMap<>();

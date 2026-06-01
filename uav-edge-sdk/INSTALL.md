@@ -2,7 +2,7 @@
 
 This guide will help you install UAV Edge SDK on your system.
 
-##  Prerequisites
+## 📋 Prerequisites
 
 Before installing, make sure you have the following:
 
@@ -53,7 +53,7 @@ xcode-select --install
 brew install cmake
 ```
 
-##  Installation Methods
+## 🚀 Installation Methods
 
 ### Method 1: From Source (Recommended)
 
@@ -116,7 +116,7 @@ make test
 pip install uav-edge-sdk
 ```
 
-##  Troubleshooting
+## 🔧 Troubleshooting
 
 ### CMake not found
 
@@ -165,7 +165,7 @@ chmod +x build.sh
 ./build.sh
 ```
 
-## Verification
+## ✅ Verification
 
 After installation, verify everything works:
 
@@ -178,7 +178,7 @@ python
 >>> print("✅ Installation successful!")
 ```
 
-##  Optional Dependencies
+## 📦 Optional Dependencies
 
 ### For Flight Controller Support
 
@@ -192,12 +192,12 @@ pip install pyserial
 pip install -r requirements-dev.txt
 ```
 
-##  Next Steps
+## 🎯 Next Steps
 
 1. Read the [README.md](README.md)
 2. Check out the [examples](tests/)
 
-##  Updating
+## 🔄 Updating
 
 To update to the latest version:
 
@@ -207,7 +207,7 @@ git pull origin main
 ./build.sh  # or .\build.bat
 ```
 
-##  System Requirements
+## 📊 System Requirements
 
 | Component | Minimum | Recommended |
 |-----------|---------|-------------|
@@ -218,10 +218,9 @@ git pull origin main
 
 ---
 
-**Happy coding! **
+**Happy coding! 🚀**
 ---
 
-> **最后更新**: 2026-05-09  
+> **最后更新**: 2026-05-08  
 > **版本**: 2.1  
 > **维护者**: DITHIOTHREITOL
-

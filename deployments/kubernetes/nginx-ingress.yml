@@ -1,52 +1,40 @@
-apiVersion: networking.k8s.io/v1
+﻿apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: uav-platform-ingress
-  namespace: uav-platform
+  namespace: uav-path-planning
   annotations:
     kubernetes.io/ingress.class: "nginx"
-    nginx.ingress.kubernetes.io/ssl-redirect: "true"
-    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
     nginx.ingress.kubernetes.io/use-regex: "true"
-    # CSP 安全头 - ngx_http_headers_module
-    nginx.ingress.kubernetes.io/configuration-snippet: |
-      add_header X-Frame-Options "SAMEORIGIN" always;
-      add_header X-Content-Type-Options "nosniff" always;
-      add_header X-XSS-Protection "1; mode=block" always;
-      add_header Referrer-Policy "strict-origin-when-cross-origin" always;
-      add_header Content-Security-Policy-Report-Only "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; report-uri /api/csp-violation-report;" always;
-      add_header Report-To '{"group":"csp-endpoint","max_age":10886400,"endpoints":[{"url":"/api/csp-violation-report"}]}' always;
 spec:
-  tls:
-  - hosts:
-    - uav-platform.local
-    secretName: uav-platform-tls
   rules:
   - host: uav-platform.local
     http:
       paths:
-      - path: /api/platform(/|$)(.*)
+      - path: /api/platform
         pathType: Prefix
         backend:
           service:
             name: uav-platform
             port:
               number: 8080
-      - path: /api/forecast(/|$)(.*)
+      - path: /api/forecast
         pathType: Prefix
         backend:
           service:
             name: meteor-forecast
             port:
               number: 8082
-      - path: /api/planning(/|$)(.*)
+      - path: /api/planning
         pathType: Prefix
         backend:
           service:
             name: path-planning
             port:
               number: 8083
-      - path: /api/wrf(/|$)(.*)
+      - path: /api/wrf
         pathType: Prefix
         backend:
           service:

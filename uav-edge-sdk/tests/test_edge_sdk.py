@@ -1,158 +1,132 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-UAV Edge SDK 单元测试
+UAV Edge SDK - 测试文件
+覆盖: path_planner, risk_assessor, flight_controller, SDKConfig, mission
 """
-
 import sys
 import os
-import io
+import json
+import tempfile
+sys.path.insert(0, os.path.dirname(__file__))
 
-# 设置标准输出编码为UTF-8
-sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
-sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
-
-# 添加 edge_sdk 路径
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-from edge_sdk._core import EdgeSDK, create_sdk, plan_path, assess_weather, HAS_CPP_MODULE
-from edge_sdk.path_planner_python import PathPlannerFallback
-from edge_sdk.risk_assessor_python import RiskAssessorFallback
+from edge_sdk import EdgeSDK, create_sdk
+from edge_sdk.config import SDKConfig
 
 
-def run_tests():
-    """运行所有测试"""
+def test_path_planner():
+    """测试路径规划"""
+    sdk = create_sdk({'grid_width': 100, 'grid_height': 100, 'resolution': 1.0})
+    path = sdk.plan_path(start=(0, 0), goal=(10, 10), obstacles=[])
+    assert len(path) > 0, "Path should not be empty"
+    path2 = sdk.plan_path(start=(0, 0), goal=(10, 10), obstacles=[(5, 5), (5, 6)])
+    assert len(path2) > 0, "Path with obstacles should not be empty"
+    path3 = sdk.plan_path(start=(0, 0), goal=(10, 10), obstacles=[(i, i) for i in range(11)])
+    print(f"  No-path case: length={len(path3)}")
+    print("✅ Path Planner tests passed!")
+
+
+def test_risk_assessor():
+    """测试气象风险评估"""
+    sdk = create_sdk()
+    low = sdk.assess_weather_risk({'wind_speed': 3.0, 'temperature': 20.0, 'visibility': 15.0, 'has_thunderstorm': False})
+    assert low['level'] == 'LOW', f"Expected LOW, got {low['level']}"
+    high = sdk.assess_weather_risk({'wind_speed': 15.0, 'temperature': 35.0, 'visibility': 2.0, 'has_thunderstorm': False})
+    assert high['level'] in ['HIGH', 'SEVERE'], f"Expected HIGH/SEVERE, got {high['level']}"
+    storm = sdk.assess_weather_risk({'wind_speed': 5.0, 'temperature': 25.0, 'visibility': 8.0, 'has_thunderstorm': True})
+    assert '雷暴' in str(storm['warnings']), "Should have thunderstorm warning"
+    print("✅ Risk Assessor tests passed!")
+
+
+def test_flight_controller():
+    """测试飞控接口"""
+    sdk = create_sdk()
+    assert sdk.connect_flight_controller() is True
+    state = sdk.get_uav_state()
+    assert isinstance(state, dict), f"Expected dict, got {type(state)}"
+    assert sdk.arm() is True
+    assert sdk.disarm() is True
+    sdk.disconnect_flight_controller()
+    print("✅ Flight Controller tests passed!")
+
+
+def test_takeoff_and_land():
+    """测试起飞和降落"""
+    sdk = create_sdk()
+    sdk.connect_flight_controller()
+    sdk.arm()
+    result_takeoff = sdk.takeoff(altitude=10)
+    assert result_takeoff is not None, "Takeoff should return a result"
+    result_land = sdk.land()
+    assert result_land is not None, "Land should return a result"
+    sdk.disarm()
+    sdk.disconnect_flight_controller()
+    print("✅ Takeoff & Land tests passed!")
+
+
+def test_upload_and_execute_mission():
+    """测试上传和执行任务"""
+    sdk = create_sdk()
+    waypoints = [(0, 0, 10), (1, 1, 15), (2, 2, 10)]
+    result_upload = sdk.upload_mission(waypoints)
+    assert result_upload is not None, "Upload mission should return a result"
+    result_exec = sdk.execute_mission()
+    assert result_exec is not None, "Execute mission should return a result"
+    print("✅ Upload & Execute Mission tests passed!")
+
+
+def test_sdk_config():
+    """测试SDKConfig配置管理"""
+    config = SDKConfig()
+    assert config.get('grid_width') == 100, "Default grid_width should be 100"
+    assert config.get('nonexistent', 'default') == 'default', "Missing key should return default"
+    config.set('grid_width', 200)
+    assert config.get('grid_width') == 200, "Should return updated value"
+    config.update({'resolution': 2.0, 'offline_mode': False})
+    assert config.get('resolution') == 2.0
+    assert config.get('offline_mode') is False
+    d = config.to_dict()
+    assert isinstance(d, dict) and len(d) > 5
+
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+        fpath = f.name
+    try:
+        config.save(fpath)
+        loaded = SDKConfig.load(fpath)
+        assert loaded.get('grid_width') == 200
+        assert loaded.get('resolution') == 2.0
+    finally:
+        os.unlink(fpath)
+
+    config2 = SDKConfig({'wind_speed_threshold': 12.0})
+    assert config2.get('wind_speed_threshold') == 12.0
+    assert config2.get('grid_width') == 100
+
+    global_config = SDKConfig()
+    assert global_config.get('log_level') == 'INFO'
+    print("✅ SDKConfig tests passed!")
+
+
+def main():
     print("=" * 60)
-    print("UAV Edge SDK Unit Tests")
+    print("UAV Edge SDK - Test Suite")
     print("=" * 60)
-    
-    passed = 0
-    failed = 0
-    
-    # Test PathPlanner
-    print("\n[1] Path Planner Tests")
-    print("-" * 40)
-    
-    try:
-        planner = PathPlannerFallback(100, 100, 1.0)
-        assert planner is not None
-        print("  [PASS] Create path planner")
-        passed += 1
-    except Exception as e:
-        print(f"  [FAIL] Create path planner: {e}")
-        failed += 1
-    
-    try:
-        path = planner.plan((0, 0), (5, 5))
-        assert len(path) > 0
-        print(f"  [PASS] Simple path planning (length: {len(path)})")
-        passed += 1
-    except Exception as e:
-        print(f"  [FAIL] Simple path planning: {e}")
-        failed += 1
-    
-    try:
-        obstacles = [(5, 5), (5, 6), (6, 5), (6, 6)]
-        path = planner.plan((0, 0), (10, 10), obstacles)
-        assert len(path) > 0
-        print(f"  [PASS] Obstacle path planning (length: {len(path)})")
-        passed += 1
-    except Exception as e:
-        print(f"  [FAIL] Obstacle path planning: {e}")
-        failed += 1
-    
-    # Test RiskAssessor
-    print("\n[2] Risk Assessor Tests")
-    print("-" * 40)
-    
-    try:
-        assessor = RiskAssessorFallback()
-        print("  [PASS] Create risk assessor")
-        passed += 1
-    except Exception as e:
-        print(f"  [FAIL] Create risk assessor: {e}")
-        failed += 1
-    
-    try:
-        weather = {
-            'wind_speed': 3.0, 'wind_direction': 180, 'temperature': 25.0,
-            'humidity': 50.0, 'visibility': 15.0, 'precipitation': 0.0,
-            'has_thunderstorm': False
-        }
-        result = assessor.assess(weather)
-        assert result.level in [0, 1]  # LOW=0, MEDIUM=1
-        level_names = {0: 'LOW', 1: 'MEDIUM', 2: 'HIGH', 3: 'SEVERE'}
-        print(f"  [PASS] Low risk assessment (level: {level_names.get(result.level, 'UNKNOWN')}, score: {result.score})")
-        passed += 1
-    except Exception as e:
-        print(f"  [FAIL] Low risk assessment: {e}")
-        failed += 1
-    
-    try:
-        weather = {
-            'wind_speed': 20.0, 'wind_direction': 90, 'temperature': 40.0,
-            'humidity': 95.0, 'visibility': 1.0, 'precipitation': 10.0,
-            'has_thunderstorm': True
-        }
-        result = assessor.assess(weather)
-        assert result.level in [2, 3]  # HIGH=2, SEVERE=3
-        level_names = {0: 'LOW', 1: 'MEDIUM', 2: 'HIGH', 3: 'SEVERE'}
-        print(f"  [PASS] High risk assessment (level: {level_names.get(result.level, 'UNKNOWN')}, score: {result.score})")
-        passed += 1
-    except Exception as e:
-        print(f"  [FAIL] High risk assessment: {e}")
-        failed += 1
-    
-    # Test EdgeSDK
-    print("\n[3] Edge SDK Integration Tests")
-    print("-" * 40)
-    
-    try:
-        sdk = create_sdk({'grid_width': 100, 'grid_height': 100, 'resolution': 1.0})
-        print("  [PASS] Create SDK instance")
-        passed += 1
-    except Exception as e:
-        print(f"  [FAIL] Create SDK instance: {e}")
-        failed += 1
-    
-    try:
-        path = sdk.plan_path((0, 0), (10, 10))
-        assert len(path) > 0
-        print(f"  [PASS] SDK path planning (length: {len(path)})")
-        passed += 1
-    except Exception as e:
-        print(f"  [FAIL] SDK path planning: {e}")
-        failed += 1
-    
-    try:
-        weather = {
-            'wind_speed': 5.0, 'wind_direction': 180, 'temperature': 25.0,
-            'humidity': 60.0, 'visibility': 10.0, 'precipitation': 0.0,
-            'has_thunderstorm': False
-        }
-        result = sdk.assess_weather_risk(weather)
-        assert 'level' in result and 'score' in result
-        print(f"  [PASS] SDK weather assessment (level: {result['level']})")
-        passed += 1
-    except Exception as e:
-        print(f"  [FAIL] SDK weather assessment: {e}")
-        failed += 1
-    
-    # Module Info
-    print("\n[4] Module Info")
-    print("-" * 40)
-    from edge_sdk import __version__
-    print(f"  Version: {__version__}")
-    print(f"  C++ Module Available: {HAS_CPP_MODULE}")
-    
-    # Summary
+    tests = [
+        test_path_planner, test_risk_assessor, test_flight_controller,
+        test_takeoff_and_land, test_upload_and_execute_mission, test_sdk_config
+    ]
+    for t in tests:
+        try:
+            t()
+        except Exception as e:
+            print(f"❌ {t.__name__} failed: {e}")
+            import traceback; traceback.print_exc()
+            return 1
     print("\n" + "=" * 60)
-    print(f"Test Results: {passed} passed, {failed} failed")
+    print("🎉 All tests passed!")
     print("=" * 60)
-    
-    return failed == 0
+    return 0
 
 
-if __name__ == '__main__':
-    success = run_tests()
-    sys.exit(0 if success else 1)
+if __name__ == "__main__":
+    sys.exit(main())

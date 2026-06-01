@@ -4,9 +4,9 @@
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Status](https://img.shields.io/badge/status-beta-yellow)
 
->  本模块是无人机路径规划系统的核心算法库如需了解整体系统架构请查看[项目主文档](../../README.md)
+> 📖 本模块是无人机路径规划系统的核心算法库。如需了解整体系统架构，请查看[项目主文档](../../README.md)。
 
-## 功能特点
+## 功能特性
 
 ### 核心算法
 
@@ -17,7 +17,7 @@
 
 ### 数据处理
 
-- 多源数据适配卫星雷达地面站
+- 多源数据适配（卫星、雷达、地面站）
 - 网格插值与数据重采样
 - 质量控制与数据验证
 - 时间序列分析与异常检测
@@ -33,7 +33,7 @@
 
 - 同化结果可视化
 - 风险热力图
-- 不确定性分布
+- 不确定性分析
 - 动画演示
 
 ## 安装
@@ -42,7 +42,7 @@
 # 基础安装
 pip install -e .
 
-# 安装所有依赖包括API并行计算GPU支持
+# 安装所有依赖（包括API、并行计算、GPU支持）
 pip install -e .[api,parallel,gpu]
 ```
 
@@ -99,7 +99,7 @@ curl -X POST http://localhost:8000/assimilate \
 
 ## 配置
 
-详见 [configs/](../configs/) 目录下的配置文件
+详见 [configs/](../configs/) 目录下的配置文件。
 
 ### 默认配置示例
 
@@ -137,21 +137,21 @@ docker-compose up -d
 
 ```
 algorithm_core/
- src/
-    bayesian_assimilation/   # 主包
-        core/               # 核心同化算法
-        models/             # 同化模型
-        parallel/           # 并行计算框架
-        api/                # API接口
-        adapters/           # 数据适配器
-        visualization/      # 可视化模块
-        quality_control/    # 质量控制
-        risk_assessment/    # 风险评估
-        workflows/          # 工作流管理
- configs/                    # 配置文件
- docker/                     # Docker部署
- examples/                   # 示例代码
- benchmarks/                # 性能测试
+├── src/
+│   └── bayesian_assimilation/   # 主包
+│       ├── core/               # 核心同化算法
+│       ├── models/             # 同化模型
+│       ├── parallel/           # 并行计算框架
+│       ├── api/                # API接口
+│       ├── adapters/           # 数据适配器
+│       ├── visualization/      # 可视化模块
+│       ├── quality_control/    # 质量控制
+│       ├── risk_assessment/    # 风险评估
+│       └── workflows/          # 工作流管理
+├── configs/                    # 配置文件
+├── docker/                     # Docker部署
+├── examples/                   # 示例代码
+└── benchmarks/                # 性能测试
 ```
 
 ## 开发
@@ -184,27 +184,26 @@ pytest --cov=bayesian_assimilation --cov-report=html
 
 | 类 | 说明 |
 |---|---|
-| `BayesianAssimilator` | 主同化器|
+| `BayesianAssimilator` | 主同化器类 |
 | `ThreeDimensionalVar` | 3D-VAR 实现 |
 | `FourDimensionalVar` | 4D-VAR 实现 |
-| `EnKF` | 集合卡尔曼滤波|
-| `HybridAssimilator` | 混合同化|
+| `EnKF` | 集合卡尔曼滤波 |
+| `HybridAssimilator` | 混合同化器 |
 
 ### 并行管理器
 
 | 类型 | 说明 |
 |------|------|
 | `BlockParallelManager` | 区域分解并行 |
-| `DaskParallelManager` | Dask 分布式|
+| `DaskParallelManager` | Dask 分布式 |
 | `MPIParallelManager` | MPI 多机并行 |
-| `RayParallelManager` | Ray 分布式|
+| `RayParallelManager` | Ray 分布式 |
 
 ## 许可证
 
 MIT License - 详见项目根目录 [LICENSE](../../LICENSE) 文件
 ---
 
-> **最后更新**: 2026-05-09  
+> **最后更新**: 2026-05-08  
 > **版本**: 2.1  
 > **维护者**: DITHIOTHREITOL
-

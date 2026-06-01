@@ -1,4 +1,3 @@
-import logging
 #!/usr/bin/env python3
 """Restore annotation wildcard imports that were incorrectly removed."""
 import re, os
@@ -16,7 +15,7 @@ for dp, dn, fn in os.walk(ROOT):
         try:
             with open(fp, 'r', encoding='utf-8') as fh:
                 content = fh.read()
-        except (UnicodeDecodeError, OSError):
+        except:
             continue
         
         needs_spring_web = bool(re.search(
@@ -59,4 +58,4 @@ for dp, dn, fn in os.walk(ROOT):
             rel = os.path.relpath(fp, ROOT)
             print(f'  OK {rel}: {", ".join(changes)}')
 
-logger.info(f"\nFixed {fixed} files")
+print(f'\nFixed {fixed} files')

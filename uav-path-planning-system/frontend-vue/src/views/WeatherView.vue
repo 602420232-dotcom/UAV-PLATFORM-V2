@@ -1,88 +1,86 @@
 <template>
-  <a-card title="气象服务">
+  <a-card title="气象数据" class="weather-card">
     <a-row :gutter="[16, 16]">
-      <a-col :xs="24" :sm="12" :md="6" v-for="item in weatherCards" :key="item.title">
-        <a-card size="small">
-          <a-statistic :title="item.title" :value="item.value" :suffix="item.unit">
-            <template #prefix><component :is="item.icon" :style="{ color: item.color }" /></template>
-          </a-statistic>
-        </a-card>
-      </a-col>
-    </a-row>
-    <a-divider />
-    <a-spin :spinning="store.loading.weather">
-      <a-alert v-if="store.error.weather" :message="store.error.weather" type="warning" show-icon style="margin-bottom:16px" />
-      <a-empty v-if="!store.loading.weather && !store.error.weather && store.windData.length === 0" description="暂无气象数据" />
-      <a-row v-else :gutter="[16, 16]">
-        <a-col :span="24">
-          <a-table :columns="windCols" :data-source="store.windData" row-key="lat" :pagination="false" size="small" />
-        </a-col>
-      </a-row>
-    </a-spin>
-    
-    <a-divider>方差场分析</a-divider>
-    
-    <a-row :gutter="[16, 16]">
-      <a-col :span="24">
-        <a-card title="方差场参数" size="small">
-          <a-descriptions :column="2" size="small">
-            <a-descriptions-item label="背景误差尺度">{{ varianceParams.background_error_scale?.toFixed(4) || '-' }}</a-descriptions-item>
-            <a-descriptions-item label="观测误差尺度">{{ varianceParams.observation_error_scale?.toFixed(4) || '-' }}</a-descriptions-item>
-            <a-descriptions-item label="相关长度尺度">{{ varianceParams.correlation_length_scale?.toFixed(4) || '-' }}</a-descriptions-item>
-            <a-descriptions-item label="正则化参数">{{ varianceParams.regularization?.toFixed(6) || '-' }}</a-descriptions-item>
-          </a-descriptions>
-          <a-space style="margin-top: 16px">
-            <a-button @click="loadVarianceParams" :loading="varianceLoading">刷新参数</a-button>
-            <a-button @click="computeVarianceField" :loading="varianceLoading" type="primary">计算方差场</a-button>
-          </a-space>
-        </a-card>
-      </a-col>
-    </a-row>
-    
-    <a-row :gutter="[16, 16]" style="margin-top: 16px">
-      <a-col :xs="24" :md="12">
-        <a-card title="方差场可视化" size="small">
-          <div ref="varianceChartRef" style="height: 300px"></div>
-          <a-empty v-if="!varianceData.length" description="暂无方差场数据" />
-        </a-card>
-      </a-col>
-      <a-col :xs="24" :md="12">
-        <a-card title="优化历史" size="small">
-          <a-table 
-            :columns="optimizationCols" 
-            :data-source="optimizationHistory" 
-            :pagination="false"
-            size="small"
-            :scroll="{ y: 250 }"
-          />
-        </a-card>
-      </a-col>
-    </a-row>
-    
-    <a-row :gutter="[16, 16]" style="margin-top: 16px">
-      <a-col :span="24">
-        <a-card title="方差场配置" size="small">
-          <a-form layout="inline" :model="varianceConfig">
-            <a-form-item label="使用自适应">
-              <a-switch v-model:checked="varianceConfig.use_adaptive" />
+      <!-- 左侧气象数据面板 -->
+      <a-col :span="8">
+        <a-card title="气象参数">
+          <a-form :model="formState" layout="vertical">
+            <a-form-item label="时间">
+              <a-date-picker v-model:value="selectedTime" show-time style="width: 100%" />
             </a-form-item>
-            <a-form-item label="使用交叉验证">
-              <a-switch v-model:checked="varianceConfig.use_cv" />
+            <a-form-item label="高度">
+              <a-select v-model:value="selectedHeight" style="width: 100%">
+                <a-option value="10">10m</a-option>
+                <a-option value="50">50m</a-option>
+                <a-option value="100">100m</a-option>
+                <a-option value="200">200m</a-option>
+                <a-option value="500">500m</a-option>
+                <a-option value="1000">1000m</a-option>
+              </a-select>
             </a-form-item>
-            <a-form-item label="交叉验证折数">
-              <a-input-number v-model:value="varianceConfig.n_folds" :min="2" :max="10" :disabled="!varianceConfig.use_cv" />
-            </a-form-item>
-            <a-form-item label="优化方法">
-              <a-select v-model:value="varianceConfig.method" style="width: 120px">
-                <a-select-option value="L-BFGS-B">L-BFGS-B</a-select-option>
-                <a-select-option value="SLSQP">SLSQP</a-select-option>
-                <a-select-option value="Powell">Powell</a-select-option>
-              </a-select-option>
+            <a-form-item label="气象要素">
+              <a-checkbox-group v-model:value="selectedElements">
+                <a-checkbox value="wind">风速风向</a-checkbox>
+                <a-checkbox value="temperature">温度</a-checkbox>
+                <a-checkbox value="humidity">湿度</a-checkbox>
+                <a-checkbox value="turbulence">湍流</a-checkbox>
+                <a-checkbox value="visibility">能见度</a-checkbox>
+                <a-checkbox value="risk">风险等级</a-checkbox>
+              </a-checkbox-group>
             </a-form-item>
             <a-form-item>
-              <a-button @click="applyVarianceConfig" type="primary">应用配置</a-button>
+              <a-button type="primary" block @click="loadWeatherData">
+                <template #icon>
+                  <CloudOutlined />
+                </template>
+                加载气象数据
+              </a-button>
             </a-form-item>
           </a-form>
+        </a-card>
+        
+        <!-- 气象数据详情 -->
+        <a-card title="数据详情" style="margin-top: 16px">
+          <div v-if="weatherData" class="weather-details">
+            <a-descriptions bordered>
+              <a-descriptions-item label="风速">
+                {{ weatherData.windSpeed }} m/s
+              </a-descriptions-item>
+              <a-descriptions-item label="风向">
+                {{ weatherData.windDirection }}°
+              </a-descriptions-item>
+              <a-descriptions-item label="温度">
+                {{ weatherData.temperature }} °C
+              </a-descriptions-item>
+              <a-descriptions-item label="湿度">
+                {{ weatherData.humidity }}%
+              </a-descriptions-item>
+              <a-descriptions-item label="湍流强度">
+                {{ weatherData.turbulence }}
+              </a-descriptions-item>
+              <a-descriptions-item label="能见度">
+                {{ weatherData.visibility }} km
+              </a-descriptions-item>
+              <a-descriptions-item label="风险等级" :span="2">
+                <a-tag :color="getRiskColor(weatherData.risk)">{{ weatherData.risk }}</a-tag>
+              </a-descriptions-item>
+            </a-descriptions>
+          </div>
+          <div v-else class="no-data">
+            <Empty description="请选择参数并加载数据" />
+          </div>
+        </a-card>
+      </a-col>
+      
+      <!-- 右侧气象可视化 -->
+      <a-col :span="16">
+        <a-card title="气象热力图">
+          <div id="weather-map" class="weather-map-container"></div>
+        </a-card>
+        
+        <!-- 气象趋势图 -->
+        <a-card title="气象趋势" style="margin-top: 16px">
+          <div ref="chartRef" class="chart-container"></div>
         </a-card>
       </a-col>
     </a-row>
@@ -90,203 +88,185 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, nextTick, computed } from 'vue'
-import { CloudOutlined, FireOutlined, CompassOutlined, DashboardOutlined } from '@ant-design/icons-vue'
-import { getVarianceParams, setVarianceParams, computeVariance } from '../api/variance'
-import { useDataStore } from '../stores/dataStore'
-import { demoData } from '../utils/demoData'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { CloudOutlined } from '@ant-design/icons-vue'
+import { Empty } from 'ant-design-vue'
+import L from 'leaflet'
 import * as echarts from 'echarts'
 
-const store = useDataStore()
+// 响应式数据
+const formState = ref({})
+const selectedTime = ref(new Date())
+const selectedHeight = ref('100')
+const selectedElements = ref(['wind', 'temperature', 'risk'])
+const weatherData = ref(null)
+const chartRef = ref(null)
+let weatherMap = null
+let chart = null
 
-const varianceLoading = ref(false)
-const varianceParams = ref({})
-const varianceData = ref([])
-const optimizationHistory = ref([])
-const varianceChartRef = ref(null)
-let varianceChart = null
+// 方法
+const loadWeatherData = async () => {
+  // 模拟API调用
+  await new Promise(resolve => setTimeout(resolve, 1000))
+  
+  // 模拟数据
+  weatherData.value = {
+    windSpeed: 5.2,
+    windDirection: 135,
+    temperature: 25.5,
+    humidity: 65,
+    turbulence: '低',
+    visibility: 10,
+    risk: '低'
+  }
+  
+  // 更新地图和图表
+  updateWeatherMap()
+  updateChart()
+}
 
-const varianceConfig = ref({
-  use_adaptive: false,
-  use_cv: false,
-  n_folds: 5,
-  method: 'L-BFGS-B'
-})
+const getRiskColor = (risk) => {
+  const colorMap = {
+    '低': 'green',
+    '中': 'orange',
+    '高': 'red'
+  }
+  return colorMap[risk] || 'default'
+}
 
-const weatherCards = computed(() => {
-  const d = store.weatherData
-  return [
-    { title: '风速', value: d?.windSpeed ?? '-', unit: 'm/s', icon: DashboardOutlined, color: '#1677ff' },
-    { title: '风向', value: d?.windDirection ?? '-', unit: '°N', icon: CompassOutlined, color: '#52c41a' },
-    { title: '温度', value: d?.temperature ?? '-', unit: '°C', icon: FireOutlined, color: '#ff4d4f' },
-    { title: '湿度', value: d?.humidity ?? '-', unit: '%', icon: CloudOutlined, color: '#722ed1' },
+const initWeatherMap = () => {
+  weatherMap = L.map('weather-map').setView([39.9042, 116.4074], 12)
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap contributors'
+  }).addTo(weatherMap)
+  
+  // 模拟气象热力图数据
+  updateWeatherMap()
+}
+
+const updateWeatherMap = () => {
+  if (!weatherMap) return
+  
+  // 这里可以添加真实的热力图数据
+  // 模拟风场数据
+  const windData = [
+    { lat: 39.9, lng: 116.4, value: 4 },
+    { lat: 39.91, lng: 116.41, value: 5 },
+    { lat: 39.92, lng: 116.42, value: 6 },
+    { lat: 39.93, lng: 116.43, value: 4 },
+    { lat: 39.94, lng: 116.44, value: 3 }
   ]
-})
-
-const windCols = [
-  { title: '纬度', dataIndex: 'lat', key: 'lat' },
-  { title: '经度', dataIndex: 'lng', key: 'lng' },
-  { title: '风速(m/s)', dataIndex: 'speed', key: 'speed' },
-  { title: '风向(°N)', dataIndex: 'direction', key: 'direction' },
-  { title: '温度(°C)', dataIndex: 'temperature', key: 'temperature' },
-  { title: '湿度(%)', dataIndex: 'humidity', key: 'humidity' },
-]
-
-const optimizationCols = [
-  { title: '迭代', dataIndex: 'iteration', key: 'iteration', width: 80 },
-  { title: '参数', dataIndex: 'params', key: 'params', 
-    customRender: ({ text }) => text ? text.map(v => v.toFixed(4)).join(', ') : '-' 
-  },
-  { title: '分数', dataIndex: 'score', key: 'score', 
-    customRender: ({ text }) => text ? text.toFixed(6) : '-' 
-  },
-]
-
-const loadVarianceParams = async () => {
-  varianceLoading.value = true
-  try {
-    const res = await getVarianceParams()
-    varianceParams.value = res.current_params || {}
-  } catch (e) {
-    console.error('加载方差场参数失败:', e)
-  } finally {
-    varianceLoading.value = false
-  }
-}
-
-const applyVarianceConfig = async () => {
-  varianceLoading.value = true
-  try {
-    await setVarianceParams(varianceConfig.value)
-    await loadVarianceParams()
-  } catch (e) {
-    console.error('应用方差场配置失败:', e)
-  } finally {
-    varianceLoading.value = false
-  }
-}
-
-const computeVarianceField = async () => {
-  varianceLoading.value = true
-  try {
-    const nx = 20, ny = 20, nz = 5
-    const background = Array(nx).fill(0).map(() => 
-      Array(ny).fill(0).map(() => Array(nz).fill(10).map(() => Math.random() * 10))
-    )
-    
-    const obsCount = 50
-    const obsLocations = Array(obsCount).fill(0).map(() => [
-      Math.floor(Math.random() * nx),
-      Math.floor(Math.random() * ny),
-      Math.floor(Math.random() * nz)
-    ])
-    
-    const observations = obsLocations.map(loc => 
-      background[loc[0]][loc[1]][loc[2]] + (Math.random() - 0.5) * 2
-    )
-    
-    const res = await computeVariance({
-      background,
-      observations,
-      obsLocations,
-      ...varianceConfig.value
-    })
-    
-    if (res.variance_field) {
-      varianceData.value = res.variance_field
-      optimizationHistory.value = res.optimization_history || []
-      renderVarianceChart()
+  
+  // 清除现有图层
+  weatherMap.eachLayer(layer => {
+    if (layer instanceof L.Circle) {
+      weatherMap.removeLayer(layer)
     }
-  } catch (e) {
-    console.error('计算方差场失败:', e)
-  } finally {
-    varianceLoading.value = false
-  }
-}
-
-const renderVarianceChart = () => {
-  nextTick(() => {
-    if (!varianceChartRef.value || !varianceData.value.length) return
-    
-    if (!varianceChart) {
-      varianceChart = echarts.init(varianceChartRef.value)
-    }
-    
-    const flatData = varianceData.value.flat(Infinity)
-    const gridSize = Math.sqrt(flatData.length)
-    
-    const option = {
-      title: {
-        text: '方差场分布',
-        left: 'center'
-      },
-      tooltip: {
-        formatter: (params) => `方差: ${params.value.toFixed(6)}`
-      },
-      visualMap: {
-        min: Math.min(...flatData),
-        max: Math.max(...flatData),
-        calculable: true,
-        orient: 'vertical',
-        left: 'left',
-        bottom: '20%',
-        inRange: {
-          color: ['#313695', '#4575b4', '#74add1', '#abd9e9', '#e0f3f8', '#fee090', '#fdae61', '#f46d43', '#d73027', '#a50026']
-        }
-      },
-      grid: {
-        left: '3%',
-        right: '10%',
-        bottom: '3%',
-        containLabel: true
-      },
-      xAxis: {
-        type: 'category',
-        data: Array.from({ length: gridSize }, (_, i) => i),
-        name: 'X'
-      },
-      yAxis: {
-        type: 'category',
-        data: Array.from({ length: gridSize }, (_, i) => i),
-        name: 'Y'
-      },
-      series: [{
-        type: 'heatmap',
-        data: flatData.map((value, idx) => [
-          idx % gridSize,
-          Math.floor(idx / gridSize),
-          value
-        ]),
-        emphasis: {
-          itemStyle: {
-            shadowBlur: 10,
-            shadowColor: 'rgba(0, 0, 0, 0.5)'
-          }
-        }
-      }]
-    }
-    
-    varianceChart.setOption(option)
+  })
+  
+  // 添加风场标记
+  windData.forEach(data => {
+    L.circle([data.lat, data.lng], {
+      color: getWindColor(data.value),
+      fillColor: getWindColor(data.value),
+      fillOpacity: 0.5,
+      radius: data.value * 100
+    }).addTo(weatherMap).bindPopup(`风速: ${data.value} m/s`)
   })
 }
 
-const handleResize = () => {
-  if (varianceChart) {
-    varianceChart.resize()
+const getWindColor = (speed) => {
+  if (speed < 3) return '#52c41a'
+  if (speed < 6) return '#faad14'
+  return '#f5222d'
+}
+
+const initChart = () => {
+  if (chartRef.value) {
+    chart = echarts.init(chartRef.value)
+    updateChart()
   }
 }
 
-onMounted(async () => {
-  await store.fetchWeather()
-  await loadVarianceParams()
-  window.addEventListener('resize', handleResize)
+const updateChart = () => {
+  if (!chart) return
+  
+  const option = {
+    title: {
+      text: '风速变化趋势'
+    },
+    tooltip: {
+      trigger: 'axis'
+    },
+    legend: {
+      data: ['风速']
+    },
+    xAxis: {
+      type: 'category',
+      data: ['00:00', '03:00', '06:00', '09:00', '12:00', '15:00', '18:00', '21:00']
+    },
+    yAxis: {
+      type: 'value',
+      name: '风速 (m/s)'
+    },
+    series: [{
+      name: '风速',
+      type: 'line',
+      data: [3.2, 4.5, 5.1, 6.2, 5.8, 4.9, 4.2, 3.8],
+      smooth: true,
+      lineStyle: {
+        color: '#1890ff'
+      }
+    }]
+  }
+  
+  chart.setOption(option)
+}
+
+// 生命周期
+onMounted(() => {
+  initWeatherMap()
+  initChart()
+  
+  // 监听窗口大小变化
+  window.addEventListener('resize', () => {
+    if (chart) {
+      chart.resize()
+    }
+  })
 })
 
 onUnmounted(() => {
-  window.removeEventListener('resize', handleResize)
-  if (varianceChart) {
-    varianceChart.dispose()
-    varianceChart = null
+  if (weatherMap) {
+    weatherMap.remove()
+  }
+  if (chart) {
+    chart.dispose()
   }
 })
 </script>
+
+<style scoped>
+.weather-card {
+  margin-bottom: 24px;
+}
+
+.weather-details {
+  padding: 16px 0;
+}
+
+.no-data {
+  padding: 40px 0;
+  text-align: center;
+}
+
+.weather-map-container {
+  height: 400px;
+  width: 100%;
+}
+
+.chart-container {
+  height: 300px;
+  width: 100%;
+}
+</style>

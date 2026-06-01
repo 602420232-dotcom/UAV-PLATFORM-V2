@@ -6,16 +6,8 @@ import * as Cesium from 'cesium';
 import * as echarts from 'echarts';
 
 export class ARDigitalMap {
-  constructor(container) {
-    // 支持字符串ID或DOM元素
-    this.container = typeof container === 'string' 
-      ? document.getElementById(container) 
-      : container;
-    
-    if (!this.container) {
-      throw new Error('ARDigitalMap: 无效的容器元素');
-    }
-    
+  constructor(containerId) {
+    this.container = document.getElementById(containerId);
     this.viewer = null;
     this.entities = [];
     this.heatmapLayer = null;
@@ -24,19 +16,12 @@ export class ARDigitalMap {
   }
 
   init() {
-    Cesium.Ion.defaultAccessToken = import.meta.env.VITE_CESIUM_ION_TOKEN || '';
+    Cesium.Ion.defaultAccessToken = 'your-cesium-token';
     this.viewer = new Cesium.Viewer(this.container, {
       terrain: Cesium.Terrain.fromWorldTerrain(),
       animation: false,
       timeline: false,
-      baseLayerPicker: false,
-      // 性能优化配置
-      requestRenderMode: true,
-      maximumRenderTimeChange: Infinity,
-      infoBox: false,
-      selectionIndicator: false,
-      shadows: false,
-      shouldAnimate: false
+      baseLayerPicker: false
     });
     this.viewer.scene.globe.enableLighting = true;
   }
@@ -81,9 +66,9 @@ export class ARDigitalMap {
   }
 
   riskToColor(risk) {
-    if (risk === 'HIGH') return Cesium.Color.RED.clone().setAlpha(0.5);
-    if (risk === 'MEDIUM') return Cesium.Color.YELLOW.clone().setAlpha(0.4);
-    return Cesium.Color.GREEN.clone().setAlpha(0.3);
+    if (risk === 'HIGH') return Cesium.Color.RED.withAlpha(0.5);
+    if (risk === 'MEDIUM') return Cesium.Color.YELLOW.withAlpha(0.4);
+    return Cesium.Color.GREEN.withAlpha(0.3);
   }
 
   trackDrone(droneId, getPositionFn) {
@@ -118,7 +103,7 @@ export class ARDigitalMap {
         ellipse: {
           semiMinorAxis: obs.radius * 1000,
           semiMajorAxis: obs.radius * 1000,
-          material: Cesium.Color.RED.clone().setAlpha(0.3),
+          material: Cesium.Color.RED.withAlpha(0.3),
           outline: true,
           outlineColor: Cesium.Color.RED
         },

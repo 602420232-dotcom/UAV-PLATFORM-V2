@@ -6,12 +6,11 @@
 
 ### 1. 采集无人机传感器数据
 
-**接口地址**: `POST /api/weather/collect/uav`
+**接口地址**：`POST /api/weather/collect/uav`
 
-**功能**: 接收无人机机载传感器实时气象数据
+**功能**：接收无人机机载传感器实时气象数据
 
-**请求参数**
-
+**请求参数**：
 ```json
 {
   "drone_id": "UAV-001",
@@ -30,8 +29,7 @@
 }
 ```
 
-**响应**
-
+**响应**：
 ```json
 {
   "success": true,
@@ -42,24 +40,23 @@
 
 ### 2. 采集WRF模型数据
 
-**接口地址**: `POST /api/weather/collect/wrf`
+**接口地址**：`POST /api/weather/collect/wrf`
 
-**功能**: 接收WRF模型预报数据
+**功能**：接收WRF模型预报数据
 
 ### 3. 采集地面站数据
 
-**接口地址**: `POST /api/weather/collect/ground`
+**接口地址**：`POST /api/weather/collect/ground`
 
-**功能**: 接收地面气象站观测数据
+**功能**：接收地面气象站观测数据
 
 ### 4. 获取无人机实时气象
 
-**接口地址**: `GET /api/weather/drone/{droneId}`
+**接口地址**：`GET /api/weather/drone/{droneId}`
 
-**功能**: 获取指定无人机最新气象数据
+**功能**：获取指定无人机最新气象数据
 
-**响应**
-
+**响应**：
 ```json
 {
   "success": true,
@@ -69,18 +66,17 @@
 
 ### 5. 获取气象历史
 
-**接口地址**: `GET /api/weather/drone/{droneId}/history?minutes=10`
+**接口地址**：`GET /api/weather/drone/{droneId}/history?minutes=10`
 
-**功能**: 获取指定无人机历史气象数据，默认最近10分钟
+**功能**：获取指定无人机历史气象数据（默认最近10分钟）
 
 ### 6. 获取多源融合气象
 
-**接口地址**: `GET /api/weather/fusion/{droneId}`
+**接口地址**：`GET /api/weather/fusion/{droneId}`
 
-**功能**: 获取多源融合气象（传感器 70% + WRF 30% 加权融合）
+**功能**：获取多源融合气象（传感器70% + WRF 30% 加权融合）
 
-**响应**
-
+**响应**：
 ```json
 {
   "success": true,
@@ -94,12 +90,11 @@
 
 ### 7. 气象告警评估
 
-**接口地址**: `POST /api/weather/alert`
+**接口地址**：`POST /api/weather/alert`
 
-**功能**: 评估气象是否触发告警
+**功能**：评估气象是否触发告警
 
-**响应**
-
+**响应**：
 ```json
 {
   "has_alert": true,
@@ -110,18 +105,17 @@
 
 ### 8. 获取告警记录
 
-**接口地址**: `GET /api/weather/alerts/{droneId}`
+**接口地址**：`GET /api/weather/alerts/{droneId}`
 
-**功能**: 获取指定无人机的历史告警记录
+**功能**：获取指定无人机的历史告警记录
 
 ### 9. 获取数据源列表
 
-**接口地址**: `GET /api/weather/sources`
+**接口地址**：`GET /api/weather/sources`
 
-**功能**: 获取所有可用气象数据源
+**功能**：获取所有可用气象数据源
 
-**响应**
-
+**响应**：
 ```json
 {
   "sources": [
@@ -139,7 +133,7 @@
 | 无人机传感器 | sensor | 机载气象传感器实时数据 |
 | 地面气象站 | station | 地面自动气象站观测数据 |
 | 卫星遥感 | satellite | 气象卫星遥感数据 |
-| 浮标 | buoy | 海洋浮标气象数据 |
+| 浮标站 | buoy | 海洋浮标气象数据 |
 
 ## 告警阈值
 
@@ -150,6 +144,6 @@
 | 能见度 | < 2 km | 告警 |
 ---
 
-> **最后更新**: 2026-05-09  
+> **最后更新**: 2026-05-08  
 > **版本**: 2.1  
 > **维护者**: DITHIOTHREITOL

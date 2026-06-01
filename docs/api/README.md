@@ -7,28 +7,23 @@
 | 服务 | 端口 | 说明 |
 |------|------|------|
 | **api-gateway** | 8088 | API 网关，统一入口 |
-| **backend-spring** | 8089 | 路径规划系统后端 - 认证授权 |
 | **uav-platform-service** | 8080 | 主服务，提供系统的核心功能 |
 | **wrf-processor-service** | 8081 | WRF 气象数据处理服务 |
 | **meteor-forecast-service** | 8082 | 气象预测服务 |
 | **path-planning-service** | 8083 | 路径规划服务 |
 | **data-assimilation-service** | 8084 | 贝叶斯同化服务 |
 | **uav-weather-collector** | 8086 | 气象信息收集服务 |
-| **edge-cloud-coordinator** | 8000 | 边云协同框架，联邦学习、WebSocket同步 |
+| **edge-cloud-coordinator** | 8000 | 边云协同框架（联邦学习/WebSocket） |
 
 ## 认证与授权
 
-所有 API 接口都需要使用 JWT 令牌进行认证，在请求头中添加以下信息：
+所有 API 接口都需要使用 JWT 令牌进行认证。在请求头中添加以下信息：
 
 ```
 Authorization: Bearer <JWT令牌>
 ```
 
 ## 接口文档
-
-### backend-spring (uav-path-planning-system)
-
-- [认证授权接口](uav-path-planning-system/backend-spring.md)
 
 ### uav-platform-service
 
@@ -62,7 +57,7 @@ Authorization: Bearer <JWT令牌>
 
 ## 通用错误处理
 
-所有 API 接口返回统一的错误格式
+所有 API 接口返回统一的错误格式：
 
 ```json
 {
@@ -90,6 +85,6 @@ API 版本通过 URL 路径进行控制，例如：
 
 ---
 
-> **最后更新**: 2026-05-09  
+> **最后更新**: 2026-05-08  
 > **版本**: 2.1  
 > **维护者**: DITHIOTHREITOL

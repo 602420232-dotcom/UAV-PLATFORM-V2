@@ -59,7 +59,7 @@ class JAXAccelerator(BaseAccelerator):
                 # 旧版本兼容
                 try:
                     self._backend = jax.lib.xla_bridge.get_backend().platform  # type: ignore
-                except (AttributeError, Exception):
+                except:
                     self._backend = 'cpu'
 
             self._platform = self._backend
@@ -303,7 +303,7 @@ class JAXAccelerator(BaseAccelerator):
                     return True
 
             return False
-        except (AttributeError, Exception):
+        except:
             return False
 
     def check_gpu_available(self) -> bool:

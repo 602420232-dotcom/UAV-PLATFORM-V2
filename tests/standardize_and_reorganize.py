@@ -8,7 +8,6 @@ import os
 import re
 import shutil
 import json
-import logging
 from datetime import datetime
 
 ROOT = r'd:\Developer\workplace\py\iteam\trae'
@@ -40,11 +39,11 @@ def add_footer():
             try:
                 with open(fp, 'r', encoding='utf-8') as fh:
                     content = fh.read()
-            except UnicodeDecodeError:
+            except:
                 try:
                     with open(fp, 'r', encoding='gbk') as fh:
                         content = fh.read()
-                except (UnicodeDecodeError, OSError):
+                except:
                     skipped += 1
                     continue
 
@@ -62,12 +61,12 @@ def add_footer():
                     fh.write(content + '\n' + FOOTER + '\n')
                 updated += 1
             except Exception as e:
-                logger.info(f"  ERR {rel}: {e}")
+                print(f'  ERR {rel}: {e}')
                 skipped += 1
 
-    logger.info(f"Footer added: {updated} files")
-    logger.info(f"Already had footer: {already_has} files")
-    logger.info(f"Skipped: {skipped} files")
+    print(f'Footer added: {updated} files')
+    print(f'Already had footer: {already_has} files')
+    print(f'Skipped: {skipped} files')
     return updated
 
 # ========== PHASE 2: Reorganize docs/ ==========
@@ -124,7 +123,7 @@ def reorganize_docs():
         if os.path.exists(src):
             shutil.move(src, dst)
             changes['archived'].append(f)
-            logger.info(f"  ARCHIVE {f}")
+            print(f'  ARCHIVE {f}')
 
     # Delete duplicates
     for f in DELETE_FILES:
@@ -132,7 +131,7 @@ def reorganize_docs():
         if os.path.exists(fp):
             os.remove(fp)
             changes['deleted'].append(f)
-            logger.info(f"  DELETE {f}")
+            print(f'  DELETE {f}')
 
     # Move files to categorized dirs
     for f, dest_rel in MOVE_MAP.items():
@@ -142,20 +141,20 @@ def reorganize_docs():
             os.makedirs(os.path.dirname(dst), exist_ok=True)
             shutil.move(src, dst)
             changes['moved'].append((f, dest_rel))
-            logger.info(f"  MOVE {f} -> {dest_rel}")
+            print(f'  MOVE {f} -> {dest_rel}')
 
     return changes
 
 # ========== MAIN ==========
 if __name__ == '__main__':
     print('=' * 60)
-    logger.info("PHASE 1: Standardizing .md footers")
+    print('PHASE 1: Standardizing .md footers')
     print('=' * 60)
     footer_count = add_footer()
 
     print()
     print('=' * 60)
-    logger.info("PHASE 2: Reorganizing docs/ directory")
+    print('PHASE 2: Reorganizing docs/ directory')
     print('=' * 60)
     changes = reorganize_docs()
 
@@ -258,8 +257,8 @@ docs/
         f.write(report_md)
 
     print()
-    logger.info(f"Reorganization report saved to: {os.path.relpath(report_path, ROOT)}")
+    print(f'Reorganization report saved to: {os.path.relpath(report_path, ROOT)}')
     print()
     print('=' * 60)
-    logger.info("DONE")
+    print('DONE')
     print('=' * 60)

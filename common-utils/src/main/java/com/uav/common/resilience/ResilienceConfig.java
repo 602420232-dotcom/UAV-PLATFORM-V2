@@ -1,12 +1,15 @@
 package com.uav.common.resilience;
 
-import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import io.github.resilience4j.circuitbreaker.*;
+import io.github.resilience4j.circuitbreaker.event.*;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.retry.RetryRegistry;
-import lombok.extern.slf4j.Slf4j;
+import io.github.resilience4j.timelimiter.TimeLimiter;
+import io.github.resilience4j.timelimiter.TimeLimiterConfig;
+import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -23,10 +26,11 @@ import java.util.concurrent.TimeoutException;
  * Resilience4j 熔断器配置类
  * 为微服务间调用提供熔断、重试、限流保护
  */
-@Slf4j
 @Configuration
 @EnableConfigurationProperties
 public class ResilienceConfig {
+    
+    private static final Logger log = LoggerFactory.getLogger(ResilienceConfig.class);
     
     @Value("${spring.application.name:unknown}")
     private String applicationName;
@@ -174,6 +178,19 @@ public class ResilienceConfig {
     }
     
     /**
+     * 配置 TimeLimiterRegistry
+     */
+    @Bean
+    public TimeLimiterRegistry timeLimiterRegistry() {
+        TimeLimiterConfig defaultConfig = TimeLimiterConfig.custom()
+                .timeoutDuration(Duration.ofSeconds(5))
+                .cancelRunningFuture(true)
+                .build();
+        
+        return TimeLimiterRegistry.of(defaultConfig);
+    }
+    
+    /**
      * 创建带有超时和重试的 RestTemplate
      */
     @Bean
@@ -190,12 +207,12 @@ public class ResilienceConfig {
      */
     @PostConstruct
     public void init() {
-        log.debug("========================================");
-        log.debug("Resilience4j Circuit Breaker 配置已加载");
-        log.debug("应用名称: {}", applicationName);
-        log.debug("失败率阈值: {}%", failureRateThreshold);
-        log.debug("熔断器等待时间: {}", waitDurationInOpenState);
-        log.debug("滑动窗口大小: {}", slidingWindowSize);
-        log.debug("========================================");
+        log.info("========================================");
+        log.info("Resilience4j Circuit Breaker 配置已加载");
+        log.info("应用名称: {}", applicationName);
+        log.info("失败率阈值: {}%", failureRateThreshold);
+        log.info("熔断器等待时间: {}", waitDurationInOpenState);
+        log.info("滑动窗口大小: {}", slidingWindowSize);
+        log.info("========================================");
     }
 }

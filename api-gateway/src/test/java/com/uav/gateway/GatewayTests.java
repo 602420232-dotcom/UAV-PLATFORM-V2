@@ -2,6 +2,7 @@ package com.uav.gateway;
 
 import com.uav.gateway.config.RateLimitConfig;
 import com.uav.gateway.handler.RateLimitHandler;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.cloud.gateway.filter.ratelimit.KeyResolver;
@@ -35,12 +36,9 @@ class GatewayTests {
         RateLimitConfig config = new RateLimitConfig();
         KeyResolver resolver = config.ipKeyResolver();
 
-        java.net.InetSocketAddress remoteAddr = java.net.InetSocketAddress.createUnresolved("192.168.1.1", 8080);
-        assertNotNull(remoteAddr);
-
         MockServerHttpRequest request = MockServerHttpRequest
             .get("/api/test")
-            .remoteAddress(remoteAddr)
+            .remoteAddress(new java.net.InetSocketAddress("192.168.1.1", 8080))
             .build();
         MockServerWebExchange exchange = MockServerWebExchange.from(request);
 
@@ -67,5 +65,12 @@ class GatewayTests {
         com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
         RateLimitHandler handler = new RateLimitHandler(mapper);
         assertNotNull(handler);
+    }
+
+    @Test
+    @Disabled("需要 Nacos/Redis 基础设施")
+    @DisplayName("应用启动")
+    void testApplicationStartup() {
+        assertDoesNotThrow(() -> GatewayApplication.main(new String[]{}));
     }
 }

@@ -1,13 +1,7 @@
 package com.uav.model;
 import lombok.Data;
 import java.time.LocalDateTime;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 
 @Data
 @Entity
@@ -17,29 +11,35 @@ public class WeatherData {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
+    // 数据时间
     private LocalDateTime forecastTime;
     private LocalDateTime updateTime;
     
+    // 空间范围
     private Double minLatitude;
     private Double maxLatitude;
     private Double minLongitude;
     private Double maxLongitude;
     private Integer height;
     
-    private String windSpeedData;
-    private String windDirData;
-    private String temperatureData;
-    private String humidityData;
-    private String turbulenceData;
-    private String visibilityData;
-    private String thunderRiskData;
+    // 气象要素
+    private String windSpeedData; // JSON格式
+    private String windDirData; // JSON格式
+    private String temperatureData; // JSON格式
+    private String humidityData; // JSON格式
+    private String turbulenceData; // JSON格式
+    private String visibilityData; // JSON格式
+    private String thunderRiskData; // JSON格式
     
-    private String uncertaintyData;
-    private String varianceField;
+    // 同化结果
+    private String uncertaintyData; // 不确定性方差场
+    private String varianceField; // 综合方差场
     
-    private String source;
-    private String status;
+    // 数据来源
+    private String source; // WRF, ASSIMILATED, OBSERVATION
+    private String status; // AVAILABLE, PROCESSING, EXPIRED
     
+    // 创建和更新时间
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     
@@ -53,12 +53,4 @@ public class WeatherData {
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
-    
-    private Double latitude;
-    private Double longitude;
-    private Double temperature;
-    private Double windSpeed;
-    private Integer windDirection;
-    private Integer humidity;
-    private Double pressure;
 }

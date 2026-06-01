@@ -1,30 +1,22 @@
 import { defineConfig } from 'vite'
-import vueJsx from '@vitejs/plugin-vue-jsx'
 import vue from '@vitejs/plugin-vue'
-import { fileURLToPath, URL } from 'node:url'
 
+// https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [vue(), vueJsx()],
-  resolve: {
-    alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url))
-    }
-  },
-  define: {
-    CESIUM_BASE_URL: JSON.stringify('/cesium/')
-  },
+  plugins: [vue()],
   server: {
     port: 3000,
     proxy: {
       '/api': {
         target: 'http://localhost:8080',
         changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, '')
       }
     }
   },
   build: {
     minify: 'esbuild',
-    chunkSizeWarningLimit: 1500,
+    chunkSizeWarningLimit: 1000,
     target: ['es2020', 'edge88', 'firefox78', 'chrome87', 'safari14'],
     rollupOptions: {
       output: {
@@ -32,20 +24,14 @@ export default defineConfig({
           vendor: ['vue', 'vue-router', 'pinia', 'axios'],
           ui: ['ant-design-vue'],
           chart: ['echarts'],
-          map: ['leaflet'],
-          cesium: ['cesium']
+          map: ['leaflet']
         }
       }
     },
-    cacheDir: './node_modules/.vite-cache',
-    sourcemap: false
+    cacheDir: './node_modules/.vite-cache'
   },
   optimizeDeps: {
-    include: [
-      'vue', 'vue-router', 'pinia', 'axios',
-      'leaflet', 'echarts', 'ant-design-vue',
-      'cesium'
-    ],
+    include: ['vue', 'vue-router', 'pinia', 'axios', 'leaflet', 'echarts', 'ant-design-vue'],
     exclude: []
   }
 })

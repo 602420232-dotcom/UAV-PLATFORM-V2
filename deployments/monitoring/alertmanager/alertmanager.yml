@@ -1,42 +1,36 @@
-# Alertmanager Configuration - UAV Platform
-# Provides Slack and Email dual-channel notification with severity-based routing
+# Alertmanager Configuration
 global:
   resolve_timeout: 5m
-  smtp_smarthost: '${SMTP_HOST}:${SMTP_PORT}'
-  smtp_from: 'UAV Platform Alerts <${SMTP_FROM}>'
-  smtp_auth_username: '${SMTP_USERNAME}'
+  smtp_smarthost: 'smtp.example.com:587'
+  smtp_from: 'alerts@example.com'
+  smtp_auth_username: 'alerts@example.com'
   smtp_auth_password: '${SMTP_PASSWORD}'
-  smtp_require_tls: true
 
+# Slack notification configuration
 templates:
   - '/etc/alertmanager/template*.tmpl'
 
-# ============================================================
-# Route Configuration
-# ============================================================
+# Route configuration
 route:
-  group_by: ['alertname', 'severity', 'component']
+  group_by: ['alertname', 'cluster', 'service']
   group_wait: 30s
   group_interval: 5m
   repeat_interval: 4h
   receiver: 'default-receiver'
-
   routes:
-    # Critical alerts - immediate notification via Slack + Email
+    # Critical alerts - immediate notification
     - match:
         severity: critical
       receiver: 'critical-receiver'
       group_wait: 0s
       repeat_interval: 1h
-      continue: true
 
-    # Warning alerts - notify within 5 minutes
+    # Warning alerts - notify after 5 minutes
     - match:
         severity: warning
       receiver: 'warning-receiver'
       group_wait: 5m
       repeat_interval: 4h
-      continue: true
 
     # Info alerts - daily digest
     - match:
@@ -44,53 +38,32 @@ route:
       receiver: 'info-receiver'
       group_wait: 1h
       repeat_interval: 24h
-      continue: true
 
-# ============================================================
-# Receivers Configuration
-# ============================================================
+# Receivers
 receivers:
-  # ---------- Default Receiver ----------
+  # Default receiver (all alerts)
   - name: 'default-receiver'
     email_configs:
-      - to: '${OPS_TEAM_EMAIL}'
+      - to: 'ops-team@example.com'
         send_resolved: true
         headers:
-          subject: '{{ if eq .Status "firing" }}🔴{{ else }}✅{{ end }} UAV Alert: {{ .GroupLabels.alertname }}'
+          subject: 'UAV Platform Alert: {{ .GroupLabels.alertname }}'
         html: |
-          <!DOCTYPE html>
-          <html>
-          <head><meta charset="utf-8"></head>
-          <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 20px; max-width: 600px;">
-            <div style="border-left: 4px solid {{ if eq .Status "firing" }}#e53e3e{{ else }}#38a169{{ end }}; padding: 16px; background: #f7fafc;">
-              <h2 style="margin: 0 0 8px 0; color: {{ if eq .Status "firing" }}#e53e3e{{ else }}#38a169{{ end }};">
-                {{ if eq .Status "firing" }}🔴 CRITICAL{{ else }}✅ RESOLVED{{ end }}: {{ .GroupLabels.alertname }}
-              </h2>
-              <hr style="border: none; border-top: 1px solid #e2e8f0;">
-              <table style="width: 100%; border-collapse: collapse;">
-                <tr><td style="padding: 4px 0; color: #718096; font-size: 12px; width: 100px;">Severity</td><td style="padding: 4px 0; font-weight: bold;">{{ .CommonLabels.severity }}</td></tr>
-                <tr><td style="padding: 4px 0; color: #718096; font-size: 12px;">Component</td><td style="padding: 4px 0;">{{ .CommonLabels.component }}</td></tr>
-                <tr><td style="padding: 4px 0; color: #718096; font-size: 12px;">Status</td><td style="padding: 4px 0;">{{ .Status }}</td></tr>
-                <tr><td style="padding: 4px 0; color: #718096; font-size: 12px;">Started</td><td style="padding: 4px 0;">{{ .Alerts.Firing | first | reReplaceAll ".*" "" | .StartsAt }}</td></tr>
-              </table>
-              <hr style="border: none; border-top: 1px solid #e2e8f0;">
-              <h3 style="margin: 8px 0;">Alert Details</h3>
-              {{ range .Alerts }}
-                <div style="background: white; border: 1px solid #e2e8f0; border-radius: 4px; padding: 12px; margin: 8px 0;">
-                  <p><strong>{{ .Labels.alertname }}</strong></p>
-                  <p>{{ .Annotations.description }}</p>
-                  {{ if .Annotations.impact }}<p><strong>Impact:</strong> {{ .Annotations.impact }}</p>{{ end }}
-                  {{ if .Annotations.recommended_action }}<pre style="background: #f7fafc; padding: 8px; border-radius: 4px; font-size: 12px; white-space: pre-wrap;">{{ .Annotations.recommended_action }}</pre>{{ end }}
-                </div>
-              {{ end }}
-              <p style="color: #718096; font-size: 11px; margin-top: 16px;">
-                UAV Platform Monitoring | {{ .Alerts.Firing | first | reReplaceAll ".*" "" | .StartsAt }}
-              </p>
-            </div>
-          </body>
-          </html>
+          <h1>UAV Platform Alert</h1>
+          <p><strong>Alert:</strong> {{ .GroupLabels.alertname }}</p>
+          <p><strong>Severity:</strong> {{ .CommonLabels.severity }}</p>
+          <p><strong>Status:</strong> {{ .Status }}</p>
+          <h2>Details</h2>
+          {{ range .Alerts }}
+            <h3>{{ .Labels.alertname }}</h3>
+            <p>{{ .Annotations.description }}</p>
+            <p><strong>Started:</strong> {{ .StartsAt }}</p>
+            {{ if .Annotations.runbook_url }}
+              <p><a href="{{ .Annotations.runbook_url }}">Runbook</a></p>
+            {{ end }}
+          {{ end }}
 
-  # ---------- Critical Receiver (Slack + Email) ----------
+  # Critical alerts receiver (immediate notification)
   - name: 'critical-receiver'
     slack_configs:
       - api_url: '${SLACK_WEBHOOK_URL}'
@@ -98,66 +71,36 @@ receivers:
         send_resolved: true
         color: '{{ if eq .Status "firing" }}danger{{ else }}good{{ end }}'
         title: '{{ if eq .Status "firing" }}🔴 CRITICAL{{ else }}✅ RESOLVED{{ end }}: {{ .GroupLabels.alertname }}'
-        text: |-
-          *Alert:* {{ .GroupLabels.alertname }}
-          *Severity:* {{ .CommonLabels.severity }}
-          *Component:* {{ .CommonLabels.component }}
-          *Status:* {{ .Status }}
+        text: |
           {{ range .Alerts }}
-          ------------------------------------------------------------------
+          *Alert:* {{ .Labels.alertname }}
+          *Severity:* {{ .Labels.severity }}
           *Description:* {{ .Annotations.description }}
-          {{ if .Annotations.impact }}*Impact:* {{ .Annotations.impact }}{{ end }}
-          {{ if .Annotations.recommended_action }}*Recommended Action:*{{ "\n" }}{{ .Annotations.recommended_action }}{{ end }}
-          {{ if .Annotations.runbook_url }}*Runbook:* <{{ .Annotations.runbook_url }}|Click here>{{ end }}
+          {{ if .Annotations.runbook_url }}
+          *Runbook:* <{{ .Annotations.runbook_url }}|Click here>
           {{ end }}
-        actions:
-          - type: button
-            text: 'View in Alertmanager :grafana:'
-            url: '{{ .ExternalURL }}'
-          - type: button
-            text: 'View Dashboard :grafana:'
-            url: 'https://grafana.example.com/d/uav-platform-overview'
+          *Details:* {{ .Annotations.summary }}
+          {{ end }}
     email_configs:
-      - to: '${CRITICAL_TEAM_EMAIL}'
+      - to: 'critical-team@example.com'
         send_resolved: true
         headers:
           subject: '🚨 CRITICAL: {{ .GroupLabels.alertname }}'
         html: |
-          <!DOCTYPE html>
-          <html>
-          <head><meta charset="utf-8"></head>
-          <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 20px; max-width: 600px;">
-            <div style="border: 1px solid #fc8181; border-radius: 8px; padding: 24px;">
-              <h1 style="color: #e53e3e; margin: 0 0 16px 0;">🚨 CRITICAL ALERT</h1>
-              <hr style="border: none; border-top: 2px solid #fc8181;">
-              <h2>{{ .GroupLabels.alertname }}</h2>
-              <table style="width: 100%; border-collapse: collapse;">
-                <tr><td style="padding: 6px 0; color: #718096; width: 120px;">Severity</td><td style="padding: 6px 0; font-weight: bold; color: #e53e3e;">CRITICAL</td></tr>
-                <tr><td style="padding: 6px 0; color: #718096;">Component</td><td style="padding: 6px 0;">{{ .CommonLabels.component }}</td></tr>
-                <tr><td style="padding: 6px 0; color: #718096;">Environment</td><td style="padding: 6px 0;">Production</td></tr>
-              </table>
-              <hr style="border: none; border-top: 1px solid #e2e8f0;">
-              {{ range .Alerts }}
-                <div style="background: #fff5f5; border: 1px solid #fed7d7; border-radius: 6px; padding: 16px; margin: 12px 0;">
-                  <h3 style="margin: 0 0 8px 0; color: #c53030;">{{ .Labels.alertname }}</h3>
-                  <p><strong>Description:</strong><br>{{ .Annotations.description }}</p>
-                  {{ if .Annotations.impact }}<p><strong>Impact:</strong><br>{{ .Annotations.impact }}</p>{{ end }}
-                  {{ if .Annotations.recommended_action }}<p><strong>Recommended Actions:</strong></p><pre style="background: white; padding: 12px; border-radius: 4px; font-size: 13px; white-space: pre-wrap; border: 1px solid #e2e8f0;">{{ .Annotations.recommended_action }}</pre>{{ end }}
-                  <p style="color: #718096; font-size: 12px;"><strong>Started:</strong> {{ .StartsAt }}</p>
-                </div>
-              {{ end }}
-              <hr style="border: none; border-top: 1px solid #e2e8f0;">
-              <p style="color: #718096; font-size: 11px;">
-                UAV Platform Monitoring | This is an automated alert. Do not reply directly.
-              </p>
-            </div>
-          </body>
-          </html>
+          <h1 style="color:red;">🚨 CRITICAL ALERT</h1>
+          <p><strong>Alert:</strong> {{ .GroupLabels.alertname }}</p>
+          <p><strong>Environment:</strong> Production</p>
+          {{ range .Alerts }}
+            <hr/>
+            <h2>{{ .Labels.alertname }}</h2>
+            <p>{{ .Annotations.description }}</p>
+            <p><strong>Started:</strong> {{ .StartsAt }}</p>
+          {{ end }}
     webhook_configs:
       - url: 'http://alert-webhook:5000/webhook'
         send_resolved: true
 
-  # ---------- Warning Receiver (Slack + Email) ----------
+  # Warning alerts receiver
   - name: 'warning-receiver'
     slack_configs:
       - api_url: '${SLACK_WEBHOOK_URL}'
@@ -165,78 +108,41 @@ receivers:
         send_resolved: true
         color: '{{ if eq .Status "firing" }}warning{{ else }}good{{ end }}'
         title: '{{ if eq .Status "firing" }}⚠️ WARNING{{ else }}✅ RESOLVED{{ end }}: {{ .GroupLabels.alertname }}'
-        text: |-
-          *Alert:* {{ .GroupLabels.alertname }}
-          *Component:* {{ .CommonLabels.component }}
-          *Status:* {{ .Status }}
+        text: |
           {{ range .Alerts }}
+          *Alert:* {{ .Labels.alertname }}
           *Description:* {{ .Annotations.description }}
-          {{ if .Annotations.recommended_action }}*Recommended Action:* {{ .Annotations.recommended_action }}{{ end }}
           {{ end }}
     email_configs:
-      - to: '${OPS_TEAM_EMAIL}'
+      - to: 'ops-team@example.com'
         send_resolved: true
         headers:
           subject: '⚠️ WARNING: {{ .GroupLabels.alertname }}'
-        html: |
-          <!DOCTYPE html>
-          <html>
-          <head><meta charset="utf-8"></head>
-          <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 20px; max-width: 600px;">
-            <div style="border: 1px solid #ecc94b; border-radius: 8px; padding: 24px;">
-              <h2 style="color: #d69e2e; margin: 0 0 16px 0;">⚠️ WARNING ALERT</h2>
-              <hr style="border: none; border-top: 1px solid #ecc94b;">
-              <h3>{{ .GroupLabels.alertname }}</h3>
-              <table style="width: 100%; border-collapse: collapse;">
-                <tr><td style="padding: 6px 0; color: #718096; width: 120px;">Component</td><td style="padding: 6px 0;">{{ .CommonLabels.component }}</td></tr>
-              </table>
-              {{ range .Alerts }}
-                <div style="background: #fffff0; border: 1px solid #fefcbf; border-radius: 6px; padding: 12px; margin: 8px 0;">
-                  <p>{{ .Annotations.description }}</p>
-                </div>
-              {{ end }}
-            </div>
-          </body>
-          </html>
 
-  # ---------- Info Receiver (Daily Digest) ----------
+  # Info alerts receiver (daily digest)
   - name: 'info-receiver'
     email_configs:
-      - to: '${OPS_TEAM_EMAIL}'
+      - to: 'daily-digest@example.com'
         send_resolved: true
         headers:
-          subject: '📊 UAV Platform Daily Alert Digest'
+          subject: 'UAV Platform Daily Digest'
         html: |
-          <!DOCTYPE html>
-          <html>
-          <head><meta charset="utf-8"></head>
-          <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 20px;">
-            <h1>📊 Daily Alert Digest</h1>
-            <p>Summary of daily system health information</p>
-            <hr style="border: none; border-top: 1px solid #e2e8f0;">
-            {{ range .Alerts }}
-              <div style="border: 1px solid #e2e8f0; border-radius: 4px; padding: 8px 12px; margin: 4px 0;">
-                <p style="margin: 0;"><strong>{{ .Labels.alertname }}</strong>: {{ .Annotations.summary }}</p>
-              </div>
-            {{ end }}
-            <p style="color: #718096; font-size: 11px; margin-top: 16px;">
-              This is an automated daily digest from UAV Platform Monitoring.
-            </p>
-          </body>
-          </html>
+          <h1>Daily Alert Digest</h1>
+          <p>Date: {{ .GroupLabels.date }}</p>
+          {{ range .Alerts }}
+            <p>• {{ .Labels.alertname }}: {{ .Annotations.summary }}</p>
+          {{ end }}
 
-# ============================================================
-# Inhibition Rules
-# ============================================================
+# Inhibition rules
 inhibit_rules:
-  # Suppress warning alerts when critical is firing for same alert
+  # Suppress warning alerts if critical is firing
   - source_match:
       severity: 'critical'
     target_match:
       severity: 'warning'
     equal: ['alertname', 'cluster', 'service']
 
-  # Suppress info alerts when warning or critical is firing
+  # Suppress info alerts if warning or critical is firing
   - source_match:
       severity: ['critical', 'warning']
     target_match:

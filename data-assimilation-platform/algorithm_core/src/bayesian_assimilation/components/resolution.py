@@ -116,7 +116,7 @@ class MultiResolutionAssimilator:
         return result
 
 
-def interpolate_to_grid(data: Dict[str, Any], target_resolution: Any, current_resolution: float = 50.0):
+def interpolate_to_grid(data: Dict[str, Any], target_resolution: Any, current_resolution=50.0: Any):
     """
     将数据插值到目标分辨率
 

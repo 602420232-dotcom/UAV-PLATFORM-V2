@@ -1,6 +1,6 @@
 # 测试合规检查脚本
 
-本目录包含以下测试与质量检查脚本
+本目录包含以下测试与质量检查脚本：
 
 ## 测试脚本
 
@@ -25,7 +25,7 @@ mvn test -pl common-utils -am
 # 生成覆盖率报告
 mvn jacoco:report
 
-# 检查覆盖率阈值 80% line, 70% branch
+# 检查覆盖率阈值（80% line, 70% branch）
 mvn jacoco:check
 ```
 
@@ -57,9 +57,9 @@ mvn jacoco:check
 
 1. 测试类使用`@DisplayName`注解描述测试目的
 2. 每个测试方法使用`@DisplayName`描述场景
-3. 遵循AAA模式Arrange-Act-Assert
-4. 测试需要独立可重复
-5. Mock外部依赖使用Mockito
+3. 遵循AAA模式：Arrange-Act-Assert
+4. 测试需要独立、可重复
+5. Mock外部依赖，使用Mockito
 
 ## 测试文件清单
 
@@ -82,6 +82,7 @@ src/test/java/com/uav/controller/PlatformControllerTests.java
 src/test/java/com/uav/config/JwtUtilTest.java
 src/test/java/com/uav/config/SecurityConfigTest.java
 src/test/java/com/uav/model/ModelTests.java
+src/test/java/com/uav/utils/PythonAlgorithmUtilTest.java
 src/test/java/com/uav/gateway/GatewayTests.java
 src/test/java/com/uav/weather/WeatherCollectorTests.java
 src/test/java/com/bayesian/DataAssimilationModelTests.java
@@ -93,7 +94,6 @@ src/test/java/com/bayesian/resilience/ResilienceTest.java
 
 ---
 
-> **最后更新**: 2026-05-09  
+> **最后更新**: 2026-05-08  
 > **版本**: 2.1  
 > **维护者**: DITHIOTHREITOL
-

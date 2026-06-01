@@ -1,12 +1,12 @@
 # UAV Platform Monitoring & Logging Guide
 
-## 监控和日志聚合系统
+## 📊 监控和日志聚合系统
 
-本指南说明了如何配置和使用UAV平台的监控、告警和日志聚合系统。
+本指南说明了如何配置和使用UAV平台的监控告警和日志聚合系统。
 
 ---
 
-## 快速开始
+## 🚀 快速开始
 
 ### 1. 启动监控栈
 
@@ -49,7 +49,7 @@ SMTP_PASSWORD=your_smtp_password
 
 ---
 
-## Prometheus 监控
+## 📈 Prometheus 监控
 
 ### Prometheus 配置
 
@@ -83,8 +83,8 @@ Prometheus 自动从以下服务收集指标：
 - `jvm_memory_used_bytes`: JVM内存使用
 
 #### 业务指标
-- `weather_data_collection_total`: 气象数据采集量
-- `path_planning_requests_total`: 路径规划请求量
+- `weather_data_collection_total`: 气象数据采集数
+- `path_planning_requests_total`: 路径规划请求数
 - `authentication_failures_total`: 认证失败次数
 
 ### 告警规则
@@ -98,7 +98,7 @@ Prometheus 自动从以下服务收集指标：
 
 2. **Warning（警告）**
    - 高错误率 > 5%
-   - 高延迟 > 2s
+   - 高延迟 > 2秒
    - CPU/内存使用率 > 80%
 
 3. **Info（信息）**
@@ -123,7 +123,7 @@ rate(http_requests_total[5m])
 
 ---
 
-## Grafana 仪表板
+## 📉 Grafana 仪表板
 
 ### 导入仪表板
 
@@ -174,7 +174,7 @@ rate(http_requests_total[5m])
 
 ---
 
-## ELK Stack 日志聚合
+## 📋 ELK Stack 日志聚合
 
 ### Elasticsearch 索引
 
@@ -233,16 +233,16 @@ Filebeat/Application → Logstash → Elasticsearch → Kibana
 
 ---
 
-## Alertmanager 告警
+## 🔔 Alertmanager 告警
 
 ### 告警流程
 
 ```
 Prometheus → Alertmanager → Slack/Email/PagerDuty
             ↓
-          Webhook
+         Webhook
             ↓
-       Alert Webhook App → Slack
+      Alert Webhook App → Slack
 ```
 
 ### 配置通知渠道
@@ -256,7 +256,7 @@ Prometheus → Alertmanager → Slack/Email/PagerDuty
 
 #### Email
 
-在 `alertmanager.yml` 中配置SMTP：
+在 `alertmanager.yml` 中配置 SMTP：
 
 ```yaml
 global:
@@ -286,7 +286,7 @@ global:
 
 ---
 
-## Jaeger 链路追踪
+## 🔍 Jaeger 链路追踪
 
 ### 配置应用
 
@@ -322,7 +322,7 @@ tracer = config.initialize_tracer()
 
 ---
 
-## 性能基准
+## 📊 性能基准
 
 ### 性能目标
 
@@ -339,18 +339,18 @@ tracer = config.initialize_tracer()
 
 根据当前负载：
 
-- **CPU**: 100 RPS需要约1核
-- **内存**: 100 RPS需要约512MB
+- **CPU**: 每100 RPS需要约1核
+- **内存**: 每100 RPS需要约512MB
 - **磁盘**: 日志保留30天约需50GB
 
 ---
 
-## 故障排查
+## 🛠 故障排查
 
 ### Prometheus 不工作
 
 ```bash
-# 检查Prometheus 日志
+# 检查 Prometheus 日志
 docker-compose logs prometheus
 
 # 检查目标状态
@@ -387,7 +387,7 @@ curl -X POST http://localhost:5000/webhook \
 
 ---
 
-## 资源
+## 📚 资源
 
 ### 文档链接
 
@@ -406,7 +406,7 @@ curl -X POST http://localhost:5000/webhook \
 
 ---
 
-## 安全建议
+## 🔐 安全建议
 
 ### 网络安全
 
@@ -432,9 +432,18 @@ curl -X POST http://localhost:5000/webhook \
    - 备份 Prometheus 数据
    - 测试恢复流程
 
+---
+
+## 📞 支持
+
+如有问题，请查看：
+- 项目 Wiki: https://wiki.example.com
+- 故障排查指南: `docs/TROUBLESHOOTING.md`
+- 联系: support@example.com
+
 
 ---
 
-> **最后更新**: 2026-05-09  
+> **最后更新**: 2026-05-08  
 > **版本**: 2.1  
 > **维护者**: DITHIOTHREITOL

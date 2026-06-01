@@ -2,69 +2,105 @@ server:
   port: 8088
 
 spring:
-  main:
-    allow-bean-definition-overriding: true
-    web-application-type: reactive
   application:
     name: api-gateway
   cloud:
     gateway:
+      default-filters:
+        - name: RequestRateLimiter
+          args:
+            key-resolver: '#{@ipKeyResolver}'
+            redis-rate-limiter:
+              replenishRate: 100
+              burstCapacity: 200
+              requestedTokens: 1
+        - name: Retry
+          args:
+            retries: 3
+            statuses: BAD_GATEWAY, SERVICE_UNAVAILABLE
+            methods: GET,POST
       routes:
-        # 认证路由（无需 JWT 验证，先通过再转发）
-        - id: uav-backend-auth
-          uri: http://backend-spring:8089
+        - id: uav-platform
+          uri: lb://uav-platform-service
           predicates:
-            - Path=/api/v1/auth/**
+            - Path=/api/v1/**
           filters:
-            - StripPrefix=0
-          order: -1
+            - StripPrefix=1
+            - name: CircuitBreaker
+              args:
+                name: uavPlatformCB
+                fallbackUri: forward:/fallback/platform
 
-        # 平台 API 路由（需要 JWT 验证）
-        - id: uav-platform-all
-          uri: http://uav-platform:8080
+        - id: wrf-processor
+          uri: lb://wrf-processor-service
           predicates:
-            - Path=/api/**
+            - Path=/api/wrf/**
           filters:
-            - name: JwtAuth
             - name: RequestRateLimiter
               args:
-                key-resolver: "#{@userKeyResolver}"
+                key-resolver: '#{@ipKeyResolver}'
                 redis-rate-limiter:
-                  replenishRate: 60
+                  replenishRate: 50
                   burstCapacity: 100
-            - StripPrefix=0
+            - name: CircuitBreaker
+              args:
+                name: wrfProcessorCB
 
-        # Actuator 健康检查（无需 JWT 验证）
-        - id: actuator-health
-          uri: http://uav-platform:8080
+        - id: meteor-forecast
+          uri: lb://meteor-forecast-service
           predicates:
-            - Path=/actuator/**
+            - Path=/api/forecast/**
           filters:
-            - StripPrefix=0
+            - name: RequestRateLimiter
+              args:
+                key-resolver: '#{@ipKeyResolver}'
+                redis-rate-limiter:
+                  replenishRate: 30
+                  burstCapacity: 60
+
+        - id: path-planning
+          uri: lb://path-planning-service
+          predicates:
+            - Path=/api/planning/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                key-resolver: '#{@ipKeyResolver}'
+                redis-rate-limiter:
+                  replenishRate: 20
+                  burstCapacity: 40
+
+        - id: data-assimilation
+          uri: lb://data-assimilation-service
+          predicates:
+            - Path=/api/assimilation/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                key-resolver: '#{@ipKeyResolver}'
+                redis-rate-limiter:
+                  replenishRate: 15
+                  burstCapacity: 30
+
       discovery:
         locator:
           enabled: true
           lower-case-service-id: true
-    nacos:
-      discovery:
-        server-addr: ${NACOS_SERVER:nacos:8848}
-        namespace: ${NACOS_NAMESPACE:public}
 
-  data:
-    redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
+  redis:
+    host: ${REDIS_HOST:redis}
+    port: ${REDIS_PORT:6379}
 
 management:
   endpoints:
     web:
       exposure:
-        include: health,info,gateway,metrics,prometheus
-  observations:
-    key-values:
-      application: ${spring.application.name:api-gateway}
+        include: health,info,gateway,metrics
+  metrics:
+    tags:
+      application: ${spring.application.name}
 
 logging:
   level:
-    '[org.springframework.cloud.gateway]': INFO
-    '[reactor.netty.http.server]': INFO
+    org.springframework.cloud.gateway: INFO
+    reactor.netty.http.server: INFO

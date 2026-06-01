@@ -1,11 +1,11 @@
-﻿# HPA 自动扩缩容 — 补充服务
+# HPA 自动扩缩容 — 补充服务
 # 补充 uav-weather-collector 和 edge-cloud-coordinator 的 HPA 配置
 ---
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: uav-weather-collector-hpa
-  namespace: uav-platform
+  namespace: uav-system
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
@@ -44,7 +44,7 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: edge-cloud-coordinator-hpa
-  namespace: uav-platform
+  namespace: uav-system
 spec:
   scaleTargetRef:
     apiVersion: apps/v1

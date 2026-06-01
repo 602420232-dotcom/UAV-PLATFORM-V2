@@ -1,267 +1,191 @@
-#!/usr/bin/env python3
 """
-Python类型注解自动生成工具
-
-自动为Python函数和方法添加类型注解。
-使用方法:
-    python auto_add_type_annotations.py <目录或文件路径>
-    python auto_add_type_annotations.py --dry-run <目录或文件路径>  # 仅预览
-
-Author: AI Code Audit System
-Date: 2026-05-08
+Python类型注解自动添加器
+自动为关键函数添加类型注解（基于ast模块）
 """
 
 import ast
 import os
-import sys
-import logging
-import argparse
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import List, Tuple, Optional
+from datetime import datetime
 
-
-class TypeAnnotationVisitor(ast.NodeVisitor):
-    """AST访问器，分析函数定义并生成类型注解"""
-
-    def __init__(self, source_lines: List[str]):
-        self.source_lines = source_lines
-        self.changes: List[Dict[str, Any]] = []
-
-    def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
-        """访问函数定义"""
-        self._check_function(node)
-        self.generic_visit(node)
-
-    def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
-        """访问异步函数定义"""
-        self._check_function(node)
-        self.generic_visit(node)
-
-    def _check_function(self, node: Union[ast.FunctionDef, ast.AsyncFunctionDef]) -> None:
-        """检查函数并记录需要添加的类型注解"""
-        # 跳过私有函数
-        if node.name.startswith('_'):
-            return
-
-        # 检查返回值类型注解
-        if node.returns is None:
-            line_content = self.source_lines[node.lineno - 1]
-            if '-> None' not in line_content:
+class TypeAnnotationAdder(ast.NodeVisitor):
+    """Python AST访问器，为函数添加类型注解"""
+    
+    def __init__(self):
+        self.modified = False
+        self.changes = []
+        
+    def visit_FunctionDef(self, node):
+        """检查并添加类型注解"""
+        has_annotations = (
+            node.returns is not None or  # 返回类型
+            any(arg.annotation is not None for arg in node.args.args)  # 参数类型
+        )
+        
+        if not has_annotations and len(node.args.args) <= 3:
+            # 只处理参数较少的函数
+            arg_names = [arg.arg for arg in node.args.args]
+            
+            # 智能推断类型
+            inferred_types = self._infer_types(arg_names, node.name)
+            
+            if inferred_types:
                 self.changes.append({
-                    'type': 'return',
-                    'lineno': node.lineno,
-                    'name': node.name,
-                    'node': node
+                    'function': node.name,
+                    'args': arg_names,
+                    'types': inferred_types
                 })
+                
+        self.generic_visit(node)
+    
+    def _infer_types(self, arg_names: List[str], func_name: str) -> Optional[List[str]]:
+        """根据参数名推断类型"""
+        type_mapping = {
+            'id': 'str',
+            'name': 'str',
+            'data': 'Dict[str, Any]',
+            'config': 'Dict[str, Any]',
+            'params': 'Dict[str, Any]',
+            'options': 'Dict[str, Any]',
+            'result': 'Any',
+            'response': 'Dict[str, Any]',
+            'error': 'Exception',
+            'message': 'str',
+            'value': 'Any',
+            'count': 'int',
+            'size': 'int',
+            'limit': 'int',
+            'page': 'int',
+            'enabled': 'bool',
+            'active': 'bool',
+            'timestamp': 'float',
+            'duration': 'int',
+            'callback': 'Callable',
+            'executor': 'ExecutorService',
+            'task': 'Callable',
+        }
+        
+        types = []
+        for name in arg_names:
+            if name in type_mapping:
+                types.append(type_mapping[name])
+            else:
+                types.append('Any')
+                
+        return types
 
-        # 检查参数类型注解
-        for arg in node.args.args:
-            if arg.annotation is None:
-                self.changes.append({
-                    'type': 'arg',
-                    'lineno': node.lineno,
-                    'name': f"{node.name}({arg.arg})",
-                    'arg': arg.arg,
-                    'node': node
-                })
-
-
-class TypeAnnotationInserter:
-    """类型注解插入器"""
-
-    # 常见类型映射
-    TYPE_MAPPING = {
-        'str': 'str',
-        'int': 'int',
-        'float': 'float',
-        'bool': 'bool',
-        'list': 'List[Any]',
-        'dict': 'Dict[str, Any]',
-        'tuple': 'Tuple[Any, ...]',
-        'set': 'Set[Any]',
-        'None': 'None',
-        'object': 'Any',
-    }
-
-    @staticmethod
-    def infer_type_from_name(name: str) -> str:
-        """根据变量名推断类型"""
-        name_lower = name.lower()
-
-        if 'id' in name_lower or 'count' in name_lower or 'num' in name_lower:
-            return 'int'
-        elif 'name' in name_lower or 'title' in name_lower or 'desc' in name_lower:
-            return 'str'
-        elif 'flag' in name_lower or 'is_' in name_lower or 'has_' in name_lower:
-            return 'bool'
-        elif 'list' in name_lower or 'ids' in name_lower:
-            return 'List[Any]'
-        elif 'dict' in name_lower or 'map' in name_lower:
-            return 'Dict[str, Any]'
-        elif 'time' in name_lower or 'date' in name_lower:
-            return 'str'  # 或 datetime
-        elif 'path' in name_lower or 'file' in name_lower:
-            return 'str'  # 或 Path
-        else:
-            return 'Any'
-
-    @classmethod
-    def generate_annotation(cls, name: str, is_arg: bool = True) -> str:
-        """生成类型注解"""
-        if is_arg:
-            inferred = cls.infer_type_from_name(name)
-            return cls.TYPE_MAPPING.get(inferred, inferred)
-        else:
-            return '-> None'
-
-
-def analyze_file(file_path: Path, dry_run: bool = False) -> List[Dict[str, Any]]:
-    """分析单个文件"""
+def add_types_to_file(file_path: str) -> Tuple[bool, List[dict]]:
+    """为单个文件添加类型注解"""
     try:
-        content = file_path.read_text(encoding='utf-8')
-        tree = ast.parse(content, filename=str(file_path))
-        source_lines = content.split('\n')
-
-        visitor = TypeAnnotationVisitor(source_lines)
-        visitor.visit(tree)
-
-        changes = visitor.changes
-        for change in changes:
-            change['file'] = str(file_path)
-
-        return changes
-
+        with open(file_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+            
+        tree = ast.parse(content)
+        adder = TypeAnnotationAdder()
+        adder.visit(tree)
+        
+        if adder.changes:
+            return True, adder.changes
+        return False, []
+        
     except Exception as e:
-        logger.info(f"Error analyzing {file_path}: {e}")
-        return []
+        return False, []
 
+def scan_python_files(root_dir: str, extensions: List[str] = ['.py']) -> List[str]:
+    """扫描所有Python文件"""
+    python_files = []
+    exclude_dirs = {'__pycache__', '.git', '.idea', 'venv', 'env', 'node_modules', 'build', 'dist'}
+    
+    for root, dirs, files in os.walk(root_dir):
+        # 排除目录
+        dirs[:] = [d for d in dirs if d not in exclude_dirs]
+        
+        for file in files:
+            if any(file.endswith(ext) for ext in extensions):
+                python_files.append(os.path.join(root, file))
+                
+    return python_files
 
-def generate_annotated_code(file_path: Path) -> Optional[str]:
-    """为文件生成带类型注解的代码"""
-    try:
-        content = file_path.read_text(encoding='utf-8')
-        tree = ast.parse(content, filename=str(file_path))
-        source_lines = content.split('\n')
-
-        # 分析需要的更改
-        visitor = TypeAnnotationVisitor(source_lines)
-        visitor.visit(tree)
-
-        if not visitor.changes:
-            return None
-
-        # 生成新代码（简化版本，仅处理简单情况）
-        lines = source_lines.copy()
-
-        for change in sorted(visitor.changes, key=lambda x: x['lineno'], reverse=True):
-            if change['type'] == 'arg' and 'arg' in change:
-                # 在参数后添加类型注解
-                arg_name = change['arg']
-                annotation = TypeAnnotationInserter.generate_annotation(arg_name, True)
-                line_idx = change['lineno'] - 1
-                line = lines[line_idx]
-
-                # 简单处理：添加 annotation
-                if f': {annotation}' not in line:
-                    lines[line_idx] = f"{line}: {annotation}  # TODO: 确认类型"
-
-        return '\n'.join(lines)
-
-    except Exception as e:
-        logger.info(f"Error generating annotated code for {file_path}: {e}")
-        return None
-
+def generate_typed_wrapper(original_file: str, functions: List[dict]) -> str:
+    """为函数生成带类型注解的包装器"""
+    wrapper_lines = [
+        "# 类型注解建议（请手动验证后应用）",
+        f"# 文件: {original_file}",
+        f"# 生成时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
+        "",
+        "'''",
+        "类型注解建议：",
+        ""
+    ]
+    
+    for func in functions:
+        wrapper_lines.append(f"def {func['function']}({', '.join(func['args'])}):")
+        wrapper_lines.append(f"    # 建议类型: {dict(zip(func['args'], func['types']))}")
+        wrapper_lines.append("    pass")
+        wrapper_lines.append("")
+    
+    wrapper_lines.append("'''")
+    
+    return '\n'.join(wrapper_lines)
 
 def main():
     """主函数"""
-    parser = argparse.ArgumentParser(description='Python类型注解自动生成工具')
-    parser.add_argument('path', nargs='?', default='.', help='要分析的目录或文件路径')
-    parser.add_argument('--dry-run', action='store_true', help='仅预览，不实际修改')
-    parser.add_argument('--recursive', '-r', action='store_true', help='递归处理子目录')
-    parser.add_argument('--extensions', default='.py', help='文件扩展名过滤（默认.py）')
-
-    args = parser.parse_args()
-
-    path = Path(args.path)
-    if not path.exists():
-        logger.info(f"Path does not exist: {path}")
-        sys.exit(1)
-
-    # 收集所有Python文件
-    if path.is_file():
-        files = [path]
-    else:
-        pattern = '**/*' + args.extensions if args.recursive else '*' + args.extensions
-        files = list(path.glob(pattern))
-
-    logger.info(f"Found {len(files)} Python files")
-
+    print("=" * 60)
+    print("Python类型注解自动添加器")
+    print("=" * 60)
+    
+    # 扫描项目根目录
+    root_dir = r"d:\Developer\workplace\py\iteam\trae"
+    
+    print(f"\n正在扫描: {root_dir}")
+    python_files = scan_python_files(root_dir)
+    print(f"找到 {len(python_files)} 个Python文件\n")
+    
+    # 分析并生成建议
     all_changes = []
-    for file_path in files:
-        if file_path.name.startswith('.'):
-            continue
-        changes = analyze_file(file_path, args.dry_run)
-        all_changes.extend(changes)
-
-    # 统计
-    arg_changes = [c for c in all_changes if c['type'] == 'arg']
-    return_changes = [c for c in all_changes if c['type'] == 'return']
-
-    logger.info(f"\n=== 分析结果 ===")
-    logger.info(f"缺少类型注解的参数: {len(arg_changes)}")
-    logger.info(f"缺少返回类型注解: {len(return_changes)}")
-
-    if arg_changes:
-        logger.info(f"\n需要添加参数类型注解的函数:")
-        seen = set()
-        for change in arg_changes:
-            if change['name'] not in seen:
-                print(f"  - {change['file']}:{change['lineno']} {change['name']}")
-                seen.add(change['name'])
-
-    if return_changes:
-        logger.info(f"\n需要添加返回类型注解的函数:")
-        seen = set()
-        for change in return_changes:
-            if change['name'] not in seen:
-                print(f"  - {change['file']}:{change['lineno']} {change['name']}")
-                seen.add(change['name'])
-
-    if args.dry_run:
-        logger.info("\n[Dry Run] 未进行任何修改")
-    else:
-        logger.info("\n使用 --dry-run 参数预览修改")
-
-    # 生成报告文件
-    report_path = Path('type_annotation_report.md')
-    with report_path.open('w', encoding='utf-8') as f:
-        f.write("# Python类型注解分析报告\n\n")
-        f.write(f"分析时间: 2026-05-08\n\n")
-        f.write(f"## 统计\n\n")
-        f.write(f"- 缺少参数类型注解: {len(arg_changes)}\n")
-        f.write(f"- 缺少返回类型注解: {len(return_changes)}\n\n")
-        f.write(f"## 详细列表\n\n")
-
-        if arg_changes:
-            f.write("### 需要添加参数类型注解\n\n")
-            seen = set()
-            for change in arg_changes:
-                key = f"{change['file']}:{change['lineno']}"
-                if key not in seen:
-                    f.write(f"- `{change['file']}` 行{change['lineno']}: `{change['name']}`\n")
-                    seen.add(key)
-
-        if return_changes:
-            f.write("\n### 需要添加返回类型注解\n\n")
-            seen = set()
-            for change in return_changes:
-                key = f"{change['file']}:{change['lineno']}"
-                if key not in seen:
-                    f.write(f"- `{change['file']}` 行{change['lineno']}: `{change['name']}`\n")
-                    seen.add(key)
-
-    logger.info(f"\n详细报告已保存到: {report_path}")
-
+    
+    for i, file_path in enumerate(python_files, 1):
+        if i % 20 == 0:
+            print(f"进度: {i}/{len(python_files)}...")
+            
+        modified, changes = add_types_to_file(file_path)
+        if changes:
+            all_changes.append({
+                'file': file_path,
+                'changes': changes
+            })
+    
+    print(f"\n分析完成！")
+    print(f"找到 {len(all_changes)} 个文件可以添加类型注解")
+    print(f"总计 {sum(len(c['changes']) for c in all_changes)} 个函数")
+    
+    # 生成报告
+    if all_changes:
+        report_file = os.path.join(root_dir, 'type_annotations_report.txt')
+        with open(report_file, 'w', encoding='utf-8') as f:
+            f.write("Python类型注解建议报告\n")
+            f.write("=" * 60 + "\n\n")
+            
+            for item in all_changes:
+                f.write(f"文件: {item['file']}\n")
+                for change in item['changes']:
+                    f.write(f"  函数: {change['function']}\n")
+                    f.write(f"  参数类型: {dict(zip(change['args'], change['types']))}\n")
+                f.write("\n")
+                
+        print(f"\n报告已生成: {report_file}")
+        
+        # 显示示例
+        print("\n示例（前10个）：")
+        for item in all_changes[:10]:
+            print(f"\n{item['file']}")
+            for change in item['changes'][:3]:
+                print(f"  {change['function']}({', '.join(change['args'])}) -> {dict(zip(change['args'], change['types']))}")
+    
+    print("\n" + "=" * 60)
+    print("提示：此工具提供类型注解建议，请手动验证后应用")
+    print("=" * 60)
 
 if __name__ == '__main__':
     main()

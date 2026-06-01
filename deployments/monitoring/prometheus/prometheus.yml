@@ -26,59 +26,51 @@ scrape_configs:
     metrics_path: /metrics
 
   # Spring Boot applications
-  - job_name: 'uav-platform'
+  - job_name: 'uav-platform-service'
     metrics_path: /actuator/prometheus
     scrape_interval: 10s
     static_configs:
-      - targets: ['uav-platform:8080']
+      - targets: ['uav-platform-service:8080']
         labels:
           application: 'uav-platform'
           component: 'backend'
 
-  - job_name: 'data-assimilation'
+  - job_name: 'data-assimilation-service'
     metrics_path: /actuator/prometheus
     scrape_interval: 10s
     static_configs:
-      - targets: ['data-assimilation:8084']
+      - targets: ['data-assimilation-service:8081']
         labels:
           application: 'data-assimilation'
           component: 'backend'
 
-  - job_name: 'meteor-forecast'
+  - job_name: 'meteor-forecast-service'
     metrics_path: /actuator/prometheus
     scrape_interval: 10s
     static_configs:
-      - targets: ['meteor-forecast:8082']
+      - targets: ['meteor-forecast-service:8082']
         labels:
           application: 'meteor-forecast'
           component: 'backend'
 
-  - job_name: 'path-planning'
-    metrics_path: /actuator/prometheus
-    scrape_interval: 10s
+  # Python services
+  - job_name: 'path-planning-python'
+    metrics_path: /metrics
+    scrape_interval: 15s
     static_configs:
-      - targets: ['path-planning:8083']
+      - targets: ['path-planning-python:8000']
         labels:
           application: 'path-planning'
-          component: 'backend'
+          component: 'algorithm'
 
-  - job_name: 'wrf-processor'
-    metrics_path: /actuator/prometheus
-    scrape_interval: 10s
+  - job_name: 'data-assimilation-python'
+    metrics_path: /metrics
+    scrape_interval: 15s
     static_configs:
-      - targets: ['wrf-processor:8081']
+      - targets: ['data-assimilation-python:8001']
         labels:
-          application: 'wrf-processor'
-          component: 'backend'
-
-  - job_name: 'uav-weather'
-    metrics_path: /actuator/prometheus
-    scrape_interval: 10s
-    static_configs:
-      - targets: ['uav-weather:8086']
-        labels:
-          application: 'uav-weather'
-          component: 'backend'
+          application: 'data-assimilation'
+          component: 'algorithm'
 
   # Infrastructure
   - job_name: 'mysql'

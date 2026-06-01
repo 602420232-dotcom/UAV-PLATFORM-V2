@@ -1,9 +1,9 @@
-﻿# Changelog
+# Changelog
 
-所有重要的项目更改都会记录在此文件中
+所有重要的项目更改都会记录在此文件中。
 
-格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.0.0/)
-项目版本遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)
+格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.0.0/)，
+项目版本遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
 ## [1.0.0] - 2024-01-15
 
@@ -13,9 +13,9 @@
 - 添加 3D-VAR 三维变分同化算法
 - 添加 4D-VAR 四维变分同化算法
 - 添加 EnKF 集合卡尔曼滤波算法
-- 添加混合同化算法自适应组合多种算法
+- 添加混合同化算法（自适应组合多种算法）
 - 实现并行计算框架
-  - 区域分解并行Block Parallel
+  - 区域分解并行（Block Parallel）
   - Dask 分布式计算
   - MPI 多机并行
   - Ray 分布式计算
@@ -24,10 +24,10 @@
   - 观测数据适配器
   - 网格数据适配器
 - 实现质量控制模块
-  - 数据验证
+  - 数据验证器
   - 异常检测
 - 实现风险评估模块
-  - 风险评估
+  - 风险评估器
   - 风险热力图生成
 - 添加时间序列分析模块
   - 趋势分析
@@ -39,8 +39,8 @@
   - 仪表盘
 - 添加 API 接口
   - CLI 命令行接口
-  - REST API (FastAPI)
-  - Web 界面 (Flask)
+  - REST API（FastAPI）
+  - Web 界面（Flask）
 - 实现工作流管理
   - 批处理工作流
   - 流水线工作流
@@ -59,7 +59,7 @@
 
 ### 更改
 
-- 重构项目结构遵循单一职责原则
+- 重构项目结构，遵循单一职责原则
 - 优化核心算法性能
 - 改进内存管理
 
@@ -85,7 +85,6 @@
 - 文档初始化
 ---
 
-> **最后更新**: 2026-05-09  
+> **最后更新**: 2026-05-08  
 > **版本**: 2.1  
 > **维护者**: DITHIOTHREITOL
-

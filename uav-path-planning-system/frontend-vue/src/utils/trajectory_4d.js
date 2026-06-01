@@ -69,7 +69,7 @@ export class Trajectory4DVisualizer {
       point: { pixelSize: 10, color: color, outlineColor: Cesium.Color.WHITE, outlineWidth: 2 },
       path: {
         resolution: 1,
-        material: new Cesium.Color(color.red, color.green, color.blue, 0.3),
+        material: color.withAlpha(0.3),
         width: 2,
         leadTime: 0,
         trailTime: 60
@@ -117,7 +117,7 @@ export class Trajectory4DVisualizer {
             w.lon + w.u * 0.01, w.lat + w.v * 0.01
           ]),
           width: 2,
-          material: Cesium.Color.fromCssColorString('#00d4ff').clone().setAlpha(0.4),
+          material: Cesium.Color.fromCssColorString('#00d4ff').withAlpha(0.4),
           clampToGround: true
         },
         availability: new Cesium.TimeIntervalCollection([

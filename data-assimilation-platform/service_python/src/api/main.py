@@ -6,8 +6,6 @@ from fastapi.middleware.gzip import GZipMiddleware
 from contextlib import asynccontextmanager
 import asyncio
 import logging
-import os
-import sys
 import time
 from typing import Optional
 
@@ -16,10 +14,7 @@ from api.models.request import AssimilationRequest
 from api.models.response import AssimilationResponse
 from api.utils.validators import validate_grid_consistency
 from api.parallel.dask import DaskClusterManager
-from api.routes import assimilation, batch, variance_field
-
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', '..', 'common-utils', 'src', 'main', 'python'))
-from security_middleware import SecurityMiddleware
+from api.routes import assimilation, batch
 
 # 结构化日志
 logging.basicConfig(
@@ -72,22 +67,6 @@ app.add_middleware(
 
 # 注册路由
 app.include_router(assimilation.router, prefix="/api/v1/assimilation", tags=["assimilation"])
-app.include_router(variance_field.router, prefix="/api/v1/variance", tags=["variance"])
-
-# JWT 认证中间件（与 Java 后端共享 JWT_SECRET）
-_jwt_secret = os.getenv("JWT_SECRET", "") or os.getenv("JWT_SECRET_KEY", "")
-if _jwt_secret:
-    _auth_middleware = SecurityMiddleware(
-        secret_key=_jwt_secret,
-        algorithm="HS512",
-    )
-    _auth_middleware.protect_app(app)
-    logger.info("JWT authentication enabled")
-else:
-    logger.warning(
-        "JWT_SECRET not set — authentication DISABLED for all endpoints. "
-        "Set JWT_SECRET environment variable to enable."
-    )
 
 @app.get("/health")
 async def health_check():

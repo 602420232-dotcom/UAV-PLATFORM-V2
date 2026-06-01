@@ -1,23 +1,17 @@
 """
 安全增强模块
-使用 PyJWT 标准库 + AES-256-GCM 加密 + mTLS 服务间通信
+mTLS 服务间通信 + JWT 认证 + AES-256-GCM 加密
 """
 import json
 import logging
 import time
 import hashlib
+import hmac
+import base64
 import os
 from typing import Dict, Optional
 from dataclasses import dataclass
 from enum import Enum
-
-try:
-    import jwt as pyjwt
-except ImportError:
-    raise ImportError(
-        "PyJWT library is required for security features. "
-        "Install with: pip install pyjwt[crypto]"
-    )
 
 try:
     from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
@@ -41,17 +35,15 @@ class SecurityLevel(Enum):
 @dataclass
 class SecurityConfig:
     level: SecurityLevel = SecurityLevel.JWT
-    jwt_secret: Optional[str] = None
+    jwt_secret: str = ""
     jwt_expiry_seconds: int = 3600
     mtls_cert_path: str = ""
     mtls_key_path: str = ""
-    encryption_key: Optional[str] = None
+    encryption_key: str = ""
 
 
 class JWTProvider:
-    """JWT 认证（基于 PyJWT 标准库）"""
-
-    ALGORITHM = "HS256"
+    """JWT 认证"""
 
     def __init__(self, secret: str = None):
         self.secret = secret or os.environ.get("JWT_SECRET_KEY")
@@ -60,39 +52,32 @@ class JWTProvider:
                 "JWT secret key must be provided via parameter or JWT_SECRET_KEY environment variable"
             )
         if len(self.secret) < 32:
-            raise ValueError(
-                "JWT secret key must be at least 32 characters long for HS256 algorithm. "
-                f"Current length: {len(self.secret)}"
-            )
+            logger.warning("JWT secret key is shorter than 32 characters, consider using a stronger key")
 
     def generate_token(self, drone_id: str, role: str = "drone") -> str:
-        now = int(time.time())
-        payload = {
-            "sub": drone_id,
-            "role": role,
-            "iat": now,
-            "exp": now + 3600,
-            "jti": hashlib.sha256(f"{drone_id}:{now}:{os.urandom(8).hex()}".encode()).hexdigest()[:16]
-        }
-        return pyjwt.encode(payload, self.secret, algorithm=self.ALGORITHM)
+        header = base64.b64encode(json.dumps({"alg": "HS256", "typ": "JWT"}).encode()).decode()
+        payload = base64.b64encode(json.dumps({
+            "sub": drone_id, "role": role,
+            "iat": int(time.time()),
+            "exp": int(time.time()) + 3600
+        }).encode()).decode()
+        signature = hmac.new(self.secret.encode(), f"{header}.{payload}".encode(), hashlib.sha256).hexdigest()
+        return f"{header}.{payload}.{signature}"
 
     def verify_token(self, token: str) -> Optional[dict]:
         try:
-            payload = pyjwt.decode(
-                token,
-                self.secret,
-                algorithms=[self.ALGORITHM],
-                options={"require": ["exp", "sub"]}
-            )
+            parts = token.split(".")
+            if len(parts) != 3:
+                return None
+            expected = hmac.new(self.secret.encode(), f"{parts[0]}.{parts[1]}".encode(), hashlib.sha256).hexdigest()
+            if expected != parts[2]:
+                return None
+            payload = json.loads(base64.b64decode(parts[1] + "==").decode())
+            if payload.get("exp", 0) < time.time():
+                return None
             return payload
-        except pyjwt.ExpiredSignatureError:
-            logger.warning("JWT令牌已过期")
-            return None
-        except pyjwt.InvalidTokenError as e:
-            logger.warning(f"JWT验证失败: {e}")
-            return None
         except Exception as e:
-            logger.error(f"JWT验证异常: {e}")
+            logger.error(f"JWT验证失败: {e}")
             return None
 
 
@@ -106,14 +91,10 @@ class DataEncryptor:
                 "Encryption key must be provided via parameter or ENCRYPTION_KEY environment variable"
             )
         if len(encryption_key) < 32:
-            raise ValueError(
-                "Encryption key must be at least 32 characters for AES-256. "
-                f"Current length: {len(encryption_key)}"
-            )
+            logger.warning("Encryption key is shorter than 32 characters, consider using a stronger key")
         self.key = hashlib.sha256(encryption_key.encode()).digest()
 
     def encrypt(self, data: dict) -> str:
-        import base64
         text_bytes = json.dumps(data).encode()
         iv = os.urandom(12)
         cipher = Cipher(algorithms.AES(self.key), modes.GCM(iv), backend=default_backend())
@@ -123,7 +104,6 @@ class DataEncryptor:
         return base64.b64encode(combined).decode()
 
     def decrypt(self, encrypted_data: str) -> dict:
-        import base64
         try:
             combined = base64.b64decode(encrypted_data)
             if len(combined) < 28:
@@ -173,9 +153,7 @@ class SecureMessage:
             "token": self.jwt.generate_token(drone_id),
             "payload": self.encryptor.encrypt(payload),
             "timestamp": int(time.time()),
-            "signature": hashlib.sha256(
-                f"{drone_id}:{json.dumps(payload, sort_keys=True)}".encode()
-            ).hexdigest()
+            "signature": hashlib.sha256(f"{drone_id}:{payload}".encode()).hexdigest()
         }
 
     def unpack(self, message: dict) -> Optional[dict]:

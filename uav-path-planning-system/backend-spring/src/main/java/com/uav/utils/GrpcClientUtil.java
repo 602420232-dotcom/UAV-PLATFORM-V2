@@ -2,8 +2,7 @@ package com.uav.utils;
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -11,9 +10,9 @@ import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import java.util.concurrent.TimeUnit;
 
+@Slf4j
 @Component
 public class GrpcClientUtil {
-    private static final Logger log = LoggerFactory.getLogger(GrpcClientUtil.class);
     
     @Value("${uav.grpc.host}")
     private String grpcHost;

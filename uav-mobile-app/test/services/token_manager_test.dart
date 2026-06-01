@@ -6,33 +6,84 @@ class InMemorySecureStorage extends FlutterSecureStorage {
   final _store = <String, String>{};
 
   @override
-  Future<void> write({required String key, required String value, IOSOptions? iOptions, AndroidOptions? aOptions, LinuxOptions? lOptions, WebOptions? wOptions, MacOsOptions? mOptions, WindowsOptions? windowsOptions}) async {
-    _store[key] = value;
+  Future<void> write({
+    required String key,
+    required String? value,
+    IOSOptions? iOptions,
+    AndroidOptions? aOptions,
+    LinuxOptions? lOptions,
+    WebOptions? webOptions,
+    MacOsOptions? mOptions,
+    WindowsOptions? wOptions,
+  }) async {
+    if (value != null) {
+      _store[key] = value;
+    } else {
+      _store.remove(key);
+    }
   }
 
   @override
-  Future<String?> read({required String key, IOSOptions? iOptions, AndroidOptions? aOptions, LinuxOptions? lOptions, WebOptions? wOptions, MacOsOptions? mOptions, WindowsOptions? windowsOptions}) async {
+  Future<String?> read({
+    required String key,
+    IOSOptions? iOptions,
+    AndroidOptions? aOptions,
+    LinuxOptions? lOptions,
+    WebOptions? webOptions,
+    MacOsOptions? mOptions,
+    WindowsOptions? wOptions,
+  }) async {
     return _store[key];
   }
 
   @override
-  Future<void> delete({required String key, IOSOptions? iOptions, AndroidOptions? aOptions, LinuxOptions? lOptions, WebOptions? wOptions, MacOsOptions? mOptions, WindowsOptions? windowsOptions}) async {
-    _store.remove(key);
-  }
-
-  @override
-  Future<bool> containsKey({required String key, IOSOptions? iOptions, AndroidOptions? aOptions, LinuxOptions? lOptions, WebOptions? wOptions, MacOsOptions? mOptions, WindowsOptions? windowsOptions}) async {
+  Future<bool> containsKey({
+    required String key,
+    IOSOptions? iOptions,
+    AndroidOptions? aOptions,
+    LinuxOptions? lOptions,
+    WebOptions? webOptions,
+    MacOsOptions? mOptions,
+    WindowsOptions? wOptions,
+  }) async {
     return _store.containsKey(key);
   }
 
   @override
-  Future<void> deleteAll({IOSOptions? iOptions, AndroidOptions? aOptions, LinuxOptions? lOptions, WebOptions? wOptions, MacOsOptions? mOptions, WindowsOptions? windowsOptions}) async {
-    _store.clear();
+  Future<void> delete({
+    required String key,
+    IOSOptions? iOptions,
+    AndroidOptions? aOptions,
+    LinuxOptions? lOptions,
+    WebOptions? webOptions,
+    MacOsOptions? mOptions,
+    WindowsOptions? wOptions,
+  }) async {
+    _store.remove(key);
   }
 
   @override
-  Future<Map<String, String>> readAll({IOSOptions? iOptions, AndroidOptions? aOptions, LinuxOptions? lOptions, WebOptions? wOptions, MacOsOptions? mOptions, WindowsOptions? windowsOptions}) async {
+  Future<Map<String, String>> readAll({
+    IOSOptions? iOptions,
+    AndroidOptions? aOptions,
+    LinuxOptions? lOptions,
+    WebOptions? webOptions,
+    MacOsOptions? mOptions,
+    WindowsOptions? wOptions,
+  }) async {
     return Map.from(_store);
+  }
+
+  @override
+  Future<void> deleteAll({
+    IOSOptions? iOptions,
+    AndroidOptions? aOptions,
+    LinuxOptions? lOptions,
+    WebOptions? webOptions,
+    MacOsOptions? mOptions,
+    WindowsOptions? wOptions,
+  }) async {
+    _store.clear();
   }
 }
 

@@ -1,30 +1,26 @@
 spring:
-  main:
-    allow-bean-definition-overriding: true
   application:
     name: uav-platform-service
   
   # 数据库配置
   datasource:
-    url: jdbc:mysql://${DB_HOST:localhost}:3306/uav_platform?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf8mb4
+    url: jdbc:mysql://localhost:3306/uav_platform?useSSL=false&serverTimezone=UTC
     username: ${DB_USER:root}
-    password: ${DB_PASSWORD:***}
+    password: ${DB_PASSWORD}  # 移除默认值，强制要求配置
     driver-class-name: com.mysql.cj.jdbc.Driver
   
   # JPA配置
   jpa:
     hibernate:
-      ddl-auto: ${JPA_DDL_AUTO:update}
+      ddl-auto: update
     show-sql: false
-    database-platform: org.hibernate.dialect.MySQLDialect
   
-# JWT 认证配置
-jwt:
-  secret: ${JWT_SECRET:***}
-  expiration-ms: ${JWT_EXPIRATION_MS:86400000}
-  refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION_MS:604800000}
-
-
+  # Spring Security配置
+  security:
+    user:
+      name: admin
+      password: ${SECURITY_USER_PASSWORD}  # 移除默认值，强制要求配置
+      roles: ADMIN
 
 # 服务器配置
 server:
@@ -37,30 +33,28 @@ server:
 
 # Actuator 健康检查
 management:
-  server:
-    port: ${MANAGEMENT_SERVER_PORT:}
   endpoints:
     web:
       exposure:
         include: health,info,prometheus
   endpoint:
     health:
-      show-details: ${MANAGEMENT_HEALTH_DETAILS:when-authorized}
+      show-details: when-authorized
 
 # 服务配置
 services:
   # WRF处理服务
   wrf-processor:
-    url: http://wrf-processor:8081
+    url: http://wrf-processor:8081/api/wrf
   
   # 贝叶斯同化服务
   data-assimilation:
-    url: http://data-assimilation:8084
+    url: http://data-assimilation:8084/api/assimilation
   
   # 气象预测服务
   meteor-forecast:
-    url: http://meteor-forecast:8082
+    url: http://meteor-forecast:8082/api/forecast
   
   # 路径规划服务
   path-planning:
-    url: http://path-planning:8083
+    url: http://path-planning:8083/api/planning

@@ -1,16 +1,13 @@
 #!/usr/bin/env python3
 """
 批量修复Python文件中的print()语句为logging
-将 logger.debug(json.dumps(...)) 替换为 logger.info(...)
+将 print(json.dumps(...)) 替换为 logger.info(...)
 """
 
 import os
 import re
 import sys
-import logging
 from pathlib import Path
-
-logger = logging.getLogger(__name__)
 
 # 项目根目录
 PROJECT_ROOT = Path(__file__).parent.parent
@@ -35,8 +32,8 @@ def fix_file(filepath):
         
         original_content = content
         
-        # 1. 替换 logger.debug(json.dumps(...)) 为 logger.info(...)
-        # 匹配: logger.debug(json.dumps(...))
+        # 1. 替换 print(json.dumps(...)) 为 logger.info(...)
+        # 匹配: print(json.dumps(...))
         pattern1 = r'print\(json\.dumps\((.*?)\)\)'
         replacement1 = r'logger.info(json.dumps(\1))'
         content = re.sub(pattern1, replacement1, content, flags=re.DOTALL)
@@ -86,9 +83,9 @@ def main():
     fixed_count = 0
     error_count = 0
     
-    logger.info("=" * 60)
+    print("=" * 60)
     logger.info("批量修复 print() 语句为 logging")
-    logger.info("=" * 60)
+    print("=" * 60)
     
     for target_dir in TARGET_DIRS:
         dir_path = PROJECT_ROOT / target_dir
@@ -97,7 +94,7 @@ def main():
             continue
         
         logger.info(f"\n扫描目录: {target_dir}")
-        logger.info("-" * 60)
+        print("-" * 60)
         
         # 递归查找所有 .py 文件
         for py_file in dir_path.rglob("*.py"):
@@ -114,11 +111,11 @@ def main():
                 logger.info(f"❌ {py_file.relative_to(PROJECT_ROOT)} - 处理失败: {e}")
                 error_count += 1
     
-    logger.info("\n" + "=" * 60)
+    print("\n" + "=" * 60)
     logger.info(f"修复完成！")
     logger.info(f"✅ 已修复: {fixed_count} 个文件")
     logger.info(f"❌ 错误: {error_count} 个文件")
-    logger.info("=" * 60)
+    print("=" * 60)
 
 if __name__ == "__main__":
     main()

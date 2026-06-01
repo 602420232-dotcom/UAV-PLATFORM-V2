@@ -20,15 +20,15 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(level
 logger = logging.getLogger(__name__)
 
 class DQNPlanner:
-    """DQN-based path planning with experience replay."""
-
+    """
+    DQN路径规划器
+    """
     def __init__(self, state_size=6, action_size=4, model_path=None):
-        """Initialize DQN planner.
-
-        Args:
-            state_size: Dimension of the state space.
-            action_size: Number of possible actions.
-            model_path: Directory path for model persistence.
+        """
+        初始化DQN规划器
+        :param state_size: 状态空间大小
+        :param action_size: 动作空间大小
+        :param model_path: 模型保存路径
         """
         self.state_size = state_size
         self.action_size = action_size
@@ -149,15 +149,15 @@ class DQNPlanner:
         return np.argmax(act_values[0])
 
 class PPOPlanner:
-    """PPO-based path planning with clipped surrogate objective."""
-
+    """
+    PPO路径规划器
+    """
     def __init__(self, state_size=6, action_size=4, model_path=None):
-        """Initialize PPO planner.
-
-        Args:
-            state_size: Dimension of the state space.
-            action_size: Number of possible actions.
-            model_path: Directory path for model persistence.
+        """
+        初始化PPO规划器
+        :param state_size: 状态空间大小
+        :param action_size: 动作空间大小
+        :param model_path: 模型保存路径
         """
         self.state_size = state_size
         self.action_size = action_size
@@ -516,7 +516,7 @@ def main():
     主函数
     """
     if len(sys.argv) < 2:
-        logger.debug(json.dumps({
+        print(json.dumps({
             'success': False,
             'error': '缺少命令参数'
         }))
@@ -527,7 +527,7 @@ def main():
     if command == 'train':
         # 训练命令
         if len(sys.argv) < 3:
-            logger.debug(json.dumps({
+            print(json.dumps({
                 'success': False,
                 'error': '缺少训练配置'
             }))
@@ -551,13 +551,13 @@ def main():
             planner = ReinforcementLearningPlanner(algorithm)
             planner.train(env, episodes)
             
-            logger.debug(json.dumps({
+            print(json.dumps({
                 'success': True,
                 'message': f'{algorithm}模型训练完成'
             }))
             
         except Exception as e:
-            logger.debug(json.dumps({
+            print(json.dumps({
                 'success': False,
                 'error': str(e)
             }))
@@ -565,7 +565,7 @@ def main():
     elif command == 'plan':
         # 规划命令
         if len(sys.argv) < 3:
-            logger.debug(json.dumps({
+            print(json.dumps({
                 'success': False,
                 'error': '缺少规划配置'
             }))
@@ -580,13 +580,13 @@ def main():
             planner = ReinforcementLearningPlanner(algorithm)
             action = planner.plan(state)
             
-            logger.debug(json.dumps({
+            print(json.dumps({
                 'success': True,
                 'action': action
             }))
             
         except Exception as e:
-            logger.debug(json.dumps({
+            print(json.dumps({
                 'success': False,
                 'error': str(e)
             }))
@@ -594,7 +594,7 @@ def main():
     elif command == 'improve':
         # 自迭代改进命令
         if len(sys.argv) < 3:
-            logger.debug(json.dumps({
+            print(json.dumps({
                 'success': False,
                 'error': '缺少改进配置'
             }))
@@ -618,19 +618,19 @@ def main():
             planner = ReinforcementLearningPlanner(algorithm)
             planner.self_improve(env, episodes)
             
-            logger.debug(json.dumps({
+            print(json.dumps({
                 'success': True,
                 'message': f'{algorithm}模型自迭代改进完成'
             }))
             
         except Exception as e:
-            logger.debug(json.dumps({
+            print(json.dumps({
                 'success': False,
                 'error': str(e)
             }))
             
     else:
-        logger.debug(json.dumps({
+        print(json.dumps({
             'success': False,
             'error': '未知命令'
         }))

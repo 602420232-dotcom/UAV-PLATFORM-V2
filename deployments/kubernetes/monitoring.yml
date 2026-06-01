@@ -1,5 +1,4 @@
-# 监控配置 - 使用K8s Secrets管理敏感信息（见 monitoring-secrets.yml）
-# 部署前请先应用 secrets: kubectl apply -f monitoring-secrets.yml
+# 监控配置
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -74,19 +73,19 @@ data:
 
       - job_name: 'uav-platform'
         static_configs:
-        - targets: ['uav-platform.uav-platform.svc.cluster.local:8080']
+        - targets: ['uav-platform.uav-path-planning.svc.cluster.local:8080']
 
       - job_name: 'path-planning'
         static_configs:
-        - targets: ['path-planning.uav-platform.svc.cluster.local:8083']
+        - targets: ['path-planning.uav-path-planning.svc.cluster.local:8083']
 
       - job_name: 'meteor-forecast'
         static_configs:
-        - targets: ['meteor-forecast.uav-platform.svc.cluster.local:8082']
+        - targets: ['meteor-forecast.uav-path-planning.svc.cluster.local:8082']
 
       - job_name: 'wrf-processor'
         static_configs:
-        - targets: ['wrf-processor.uav-platform.svc.cluster.local:8081']
+        - targets: ['wrf-processor.uav-path-planning.svc.cluster.local:8081']
 ---
 apiVersion: v1
 kind: Service
@@ -101,7 +100,7 @@ spec:
     targetPort: 9090
   type: LoadBalancer
 ---
-# Grafana配置 - 使用Secret
+# Grafana配置
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -125,51 +124,14 @@ spec:
         volumeMounts:
         - name: grafana-storage
           mountPath: /var/lib/grafana
-        - name: grafana-secrets
-          mountPath: /etc/secrets
-          readOnly: true
         env:
         - name: GF_SECURITY_ADMIN_USER
-          valueFrom:
-            secretKeyRef:
-              name: grafana-secrets
-              key: admin-user
+          value: admin
         - name: GF_SECURITY_ADMIN_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: grafana-secrets
-              key: admin-password
-        - name: GF_SECURITY_ADMIN_PASSWORD__FILE
-          value: /etc/secrets/admin-password
-        resources:
-          requests:
-            memory: "256Mi"
-            cpu: "100m"
-          limits:
-            memory: "512Mi"
-            cpu: "500m"
-        livenessProbe:
-          httpGet:
-            path: /api/health
-            port: 3000
-          initialDelaySeconds: 30
-          periodSeconds: 10
-        readinessProbe:
-          httpGet:
-            path: /api/health
-            port: 3000
-          initialDelaySeconds: 10
-          periodSeconds: 5
+          value: admin123
       volumes:
       - name: grafana-storage
         emptyDir: {}
-      - name: grafana-secrets
-        secret:
-          secretName: grafana-secrets
-      securityContext:
-        runAsNonRoot: true
-        runAsUser: 472
-        fsGroup: 472
 ---
 apiVersion: v1
 kind: Service

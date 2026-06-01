@@ -1,4 +1,3 @@
-import logging
 """
 配置文件一致性检查工具
 检查所有YAML配置文件的一致性和安全性
@@ -23,12 +22,12 @@ class ConfigChecker:
     def check_all(self):
         """检查所有配置文件"""
         print("=" * 60)
-        logger.info("Configuration Files Consistency Checker")
+        print("Configuration Files Consistency Checker")
         print("=" * 60)
         
         # 查找所有YAML文件
         yaml_files = self._find_yaml_files()
-        logger.info(f"\nFound {len(yaml_files)} YAML files\n")
+        print(f"\nFound {len(yaml_files)} YAML files\n")
         
         # 检查每个文件
         for yaml_file in yaml_files:
@@ -240,18 +239,18 @@ class ConfigChecker:
             else:
                 f.write("\n✅ All checks passed!\n")
         
-        logger.info(f"\nReport generated: {report_file}")
+        print(f"\nReport generated: {report_file}")
         
         # Print summary
         print("\n" + "=" * 60)
-        logger.info("SUMMARY")
+        print("SUMMARY")
         print("=" * 60)
-        logger.info(f"Issues: {len(self.issues)}")
-        logger.info(f"Warnings: {len(self.warnings)}")
-        logger.info(f"Info: {len(self.info)}")
+        print(f"Issues: {len(self.issues)}")
+        print(f"Warnings: {len(self.warnings)}")
+        print(f"Info: {len(self.info)}")
         
         if self.issues:
-            logger.info("\nTop issues:")
+            print("\nTop issues:")
             for issue in self.issues[:5]:
                 print(f"  - [{issue['severity']}] {issue['issue']}")
                 print(f"    File: {issue['file']}")

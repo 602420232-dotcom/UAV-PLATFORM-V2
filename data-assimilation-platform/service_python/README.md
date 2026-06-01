@@ -1,8 +1,8 @@
 # Data Assimilation Python Service
 
-##  服务概述
+## 📋 服务概述
 
-Python 微服务提供数据同化算法的独立 API 接口
+Python 微服务，提供数据同化算法的独立 API 接口。
 
 **技术栈**:
 - Python 3.8+
@@ -14,24 +14,24 @@ Python 微服务提供数据同化算法的独立 API 接口
 
 ---
 
-##  项目结构
+## 📁 项目结构
 
 ```
 service_python/
- api/
-    routes/         # API 路由
-    schemas/        # 数据模式
-    main.py        # 应用入口
- models/            # 数据模型
- utils/             # 工具函数
- config.py          # 配置
- requirements.txt    # 依赖
- README.md          # 本文档
+├── api/
+│   ├── routes/         # API 路由
+│   ├── schemas/        # 数据模式
+│   └── main.py        # 应用入口
+├── models/            # 数据模型
+├── utils/             # 工具函数
+├── config.py          # 配置
+├── requirements.txt    # 依赖
+└── README.md          # 本文档
 ```
 
 ---
 
-##  快速开始
+## 🚀 快速开始
 
 ### 安装依赖
 
@@ -43,12 +43,13 @@ pip install -r requirements.txt
 
 ```bash
 python -m api.main
-# flask run --port 5000
+# 或
+flask run --port 5000
 ```
 
 ---
 
-##  API 接口
+## 🔌 API 接口
 
 ### 同化接口
 
@@ -56,11 +57,11 @@ python -m api.main
 |------|------|------|
 | `/api/v1/assimilate` | POST | 执行同化 |
 | `/api/v1/variance` | POST | 计算方差 |
-| `/health` | GET | 健康检查|
+| `/health` | GET | 健康检查 |
 
 ---
 
-##  测试
+## 🧪 测试
 
 ```bash
 pytest tests/ -v
@@ -68,7 +69,9 @@ pytest tests/ -v
 
 ---
 
-> **最后更新**: 2026-05-09  
+**最后更新**: 2026-05-08
+---
+
+> **最后更新**: 2026-05-08  
 > **版本**: 2.1  
 > **维护者**: DITHIOTHREITOL
-

@@ -1,0 +1,58 @@
+﻿apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: data-assimilation
+  namespace: uav-platform
+  labels:
+    app: data-assimilation
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: data-assimilation
+  template:
+    metadata:
+      labels:
+        app: data-assimilation
+    spec:
+      containers:
+        - name: data-assimilation
+          image: uav-registry/data-assimilation:latest
+          ports:
+            - containerPort: 8084
+              name: http
+          env:
+            - name: NACOS_SERVER
+              value: nacos:8848
+            - name: DB_HOST
+              value: mysql
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: uav-secrets
+                  key: db-password
+          livenessProbe:
+            httpGet: { path: /actuator/health, port: 8084 }
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet: { path: /actuator/health, port: 8084 }
+            initialDelaySeconds: 20
+            periodSeconds: 5
+          resources:
+            limits: { memory: 512Mi, cpu: 500m }
+            requests: { memory: 256Mi, cpu: 200m }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: data-assimilation
+  namespace: uav-platform
+spec:
+  type: ClusterIP
+  selector:
+    app: data-assimilation
+  ports:
+    - name: http
+      port: 8084
+      targetPort: 8084

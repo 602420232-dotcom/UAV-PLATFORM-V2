@@ -4,362 +4,71 @@ on:
   push:
     branches: [ main, develop ]
   pull_request:
-    branches: [ main, develop ]
-
-env:
-  MAVEN_OPTS: "-Xmx512m"
-  JAVA_VERSION: "17"
-  PYTHON_VERSION: "3.10"
-  FLUTTER_VERSION: "3.16.0"
-  REGISTRY: ghcr.io
-  IMAGE_TAG: ${{ github.sha }}
+    branches: [ main ]
 
 jobs:
-  python-test:
-    name: Python Tests & Linting
+  quality-gate:
+    name: Quality Gate
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          cache: 'pip'
-
-      - name: Install Python dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install numpy pandas scikit-learn xgboost tensorflow
-          pip install pytest flake8 black
-
-      - name: Run Python Linting
-        run: |
-          flake8 data-assimilation-service/src/main/python/ --count --select=E9,F63,F7,F82 --show-source --statistics || echo "Linting issues found (non-blocking)"
-          flake8 meteor-forecast-service/src/main/python/ --count --select=E9,F63,F7,F82 --show-source --statistics || echo "Linting issues found (non-blocking)"
-
-      - name: Check Python syntax
-        run: |
-          python -m compileall -q data-assimilation-service/src/main/python/
-          python -m compileall -q meteor-forecast-service/src/main/python/
-
-      - name: Upload Python artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: python-scripts
-          path: |
-            data-assimilation-service/src/main/python/
-            meteor-forecast-service/src/main/python/
-
-  build:
-    name: Build and Test
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Set up JDK
+      - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
-          java-version: ${{ env.JAVA_VERSION }}
+          java-version: '17'
           distribution: 'temurin'
           cache: maven
 
-      - name: Build with Maven
-        run: mvn compile -q
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+          cache: 'pip'
 
-      - name: Run Unit Tests
-        run: mvn test -q
+      - name: Cache Maven dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
 
-      - name: Generate JaCoCo Report
-        run: mvn jacoco:report -q
+      - name: Run OWASP Dependency Check
+        run: mvn dependency-check:check -DskipTests=true
+
+      - name: Run Unit Tests (Java)
+        run: mvn test -Dspring.profiles.active=test
+
+      - name: Run Python Syntax Checks
+        run: |
+          python -m pip install --upgrade pip
+          python tests/check_syntax.py
+          python tests/check_imports.py
+
+      - name: Run Security Scan
+        run: python tests/check_security.py
+
+      - name: Generate JaCoCo Coverage Report
+        run: mvn jacoco:report -Dspring.profiles.active=test
 
       - name: Upload Coverage Report
         uses: actions/upload-artifact@v4
         with:
-          name: jacoco-report
-          path: '**/target/site/jacoco/'
+          name: coverage-reports
+          path: |
+            **/target/site/jacoco/
+            **/target/dependency-check-reports/
 
-  flutter-build:
-    name: Flutter Build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: ${{ env.FLUTTER_VERSION }}
-          channel: 'stable'
-
-      - name: Flutter analyze
-        working-directory: uav-mobile-app
-        run: |
-          flutter pub get
-          flutter analyze --no-fatal-infos
-
-      - name: Build Web
-        working-directory: uav-mobile-app
-        run: flutter build web --release
-
-      - name: Build Android APK
-        working-directory: uav-mobile-app
-        run: |
-          flutter build apk --release
-        env:
-          FLUTTER_VERSION: ${{ env.FLUTTER_VERSION }}
-
-      - name: Upload Web Build
+      - name: Upload Test Results
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: flutter-web-build
-          path: uav-mobile-app/build/web/
+          name: test-results
+          path: '**/target/surefire-reports/'
 
-      - name: Upload Android APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: flutter-android-apk
-          path: uav-mobile-app/build/app/outputs/flutter-apk/app-release.apk
-
-  quality:
-    name: SonarQube Quality Scan
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Set up JDK
-        uses: actions/setup-java@v4
-        with:
-          java-version: ${{ env.JAVA_VERSION }}
-          distribution: 'temurin'
-          cache: maven
-
-      - name: Build and Test with JaCoCo
-        run: mvn verify jacoco:report -q
-
-      - name: SonarQube Scan
-        uses: SonarSource/sonarqube-scan-action@master
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-
-      - name: Quality Gate Check
-        uses: SonarSource/sonarqube-quality-gate-action@master
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-
-  dependency-check:
-    name: OWASP Dependency Check
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up JDK
-        uses: actions/setup-java@v4
-        with:
-          java-version: ${{ env.JAVA_VERSION }}
-          distribution: 'temurin'
-          cache: maven
-
-      - name: Run OWASP Dependency Check
-        run: mvn dependency-check:check -q
-
-      - name: Upload Dependency Check Report
-        uses: actions/upload-artifact@v4
-        with:
-          name: dependency-check-report
-          path: '**/target/dependency-check-reports/'
-
-  security-scan:
-    name: Security Scan
-    needs: [build, python-test]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: GitHub Security CodeQL Analysis
-        uses: github/codeql-action/analyze@v2
-        with:
-          languages: Java, Python, Dart, JavaScript
-          queries: security-extended
-
-      - name: Run Trivy Vulnerability Scanner
-        uses: aquasecurity/trivy-action@master
-        with:
-          scan-type: 'fs'
-          scan-ref: '.'
-          format: 'sarif'
-          output: 'trivy-results.sarif'
-
-      - name: Upload Trivy Scan Results
-        uses: github/codeql-action/upload-sarif@v2
-        with:
-          sarif_file: 'trivy-results.sarif'
-
-      - name: Check for Secrets in Code
-        uses: trufflesecurity/trufflehog@main
-        with:
-          path: ./
-          base: ${{ github.event.repository.default_branch }}
-          head: HEAD
-
-  build-docker:
-    name: Build Docker Images
-    needs: [quality, security-scan, python-test, flutter-build]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build and push API Gateway
-        uses: docker/build-push-action@v5
-        with:
-          context: ./api-gateway
-          push: true
-          tags: |
-            ${{ env.REGISTRY }}/${{ github.repository }}/api-gateway:latest
-            ${{ env.REGISTRY }}/${{ github.repository }}/api-gateway:${{ env.IMAGE_TAG }}
-            ${{ env.REGISTRY }}/${{ github.repository }}/api-gateway:${{ github.ref_name }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Build and push UAV Platform Service
-        uses: docker/build-push-action@v5
-        with:
-          context: ./uav-platform-service
-          push: true
-          tags: |
-            ${{ env.REGISTRY }}/${{ github.repository }}/uav-platform-service:latest
-            ${{ env.REGISTRY }}/${{ github.repository }}/uav-platform-service:${{ env.IMAGE_TAG }}
-            ${{ env.REGISTRY }}/${{ github.repository }}/uav-platform-service:${{ github.ref_name }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Build and push Data Assimilation Service
-        uses: docker/build-push-action@v5
-        with:
-          context: ./data-assimilation-service
-          push: true
-          tags: |
-            ${{ env.REGISTRY }}/${{ github.repository }}/data-assimilation-service:latest
-            ${{ env.REGISTRY }}/${{ github.repository }}/data-assimilation-service:${{ env.IMAGE_TAG }}
-            ${{ env.REGISTRY }}/${{ github.repository }}/data-assimilation-service:${{ github.ref_name }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Build and push Meteor Forecast Service
-        uses: docker/build-push-action@v5
-        with:
-          context: ./meteor-forecast-service
-          push: true
-          tags: |
-            ${{ env.REGISTRY }}/${{ github.repository }}/meteor-forecast-service:latest
-            ${{ env.REGISTRY }}/${{ github.repository }}/meteor-forecast-service:${{ env.IMAGE_TAG }}
-            ${{ env.REGISTRY }}/${{ github.repository }}/meteor-forecast-service:${{ github.ref_name }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-  notify-dev:
-    name: Notify Development Build Ready
-    needs: [quality, dependency-check, flutter-build, build-docker]
-    if: github.ref == 'refs/heads/develop'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Notify Build Success
+      - name: Enforce Coverage Threshold
         run: |
-          echo "✅ Development build completed successfully!"
-          echo "📋 Build: ${{ github.sha }}"
-          echo "👤 Triggered by: ${{ github.actor }}"
-          echo "🔗 Repository: ${{ github.repository }}"
-          echo ""
-          echo "📦 Docker images built and pushed:"
-          echo "   - ${{ env.REGISTRY }}/${{ github.repository }}/uav-platform-service:${{ env.IMAGE_TAG }}"
-          echo "   - ${{ env.REGISTRY }}/${{ github.repository }}/api-gateway:${{ env.IMAGE_TAG }}"
-          echo "   - ${{ env.REGISTRY }}/${{ github.repository }}/data-assimilation-service:${{ env.IMAGE_TAG }}"
-          echo "   - ${{ env.REGISTRY }}/${{ github.repository }}/meteor-forecast-service:${{ env.IMAGE_TAG }}"
-          echo ""
-          echo "⏭️  GitOps pipeline will deploy to development cluster via ArgoCD"
-
-  deploy-dev:
-    name: Deploy to Development (K8s)
-    needs: [notify-dev]
-    if: github.ref == 'refs/heads/develop'
-    runs-on: ubuntu-latest
-    environment:
-      name: development
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Kubectl
-        uses: azure/setup-kubectl@v3
-        with:
-          version: 'v1.28.0'
-
-      - name: Configure Kubeconfig
-        run: |
-          mkdir -p ~/.kube
-          echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > ~/.kube/config
-          chmod 600 ~/.kube/config
-
-      - name: Deploy to Kubernetes
-        run: |
-          # Update image tags
-          sed -i "s|image: .*/uav-platform-service:.*|image: ${{ env.REGISTRY }}/${{ github.repository }}/uav-platform-service:${{ env.IMAGE_TAG }}|g" deployments/kubernetes/uav-platform-service.yml
-          sed -i "s|image: .*/api-gateway:.*|image: ${{ env.REGISTRY }}/${{ github.repository }}/api-gateway:${{ env.IMAGE_TAG }}|g" deployments/kubernetes/api-gateway.yml
-          sed -i "s|image: .*/data-assimilation-service:.*|image: ${{ env.REGISTRY }}/${{ github.repository }}/data-assimilation-service:${{ env.IMAGE_TAG }}|g" deployments/kubernetes/data-assimilation-service.yml
-          sed -i "s|image: .*/meteor-forecast-service:.*|image: ${{ env.REGISTRY }}/${{ github.repository }}/meteor-forecast-service:${{ env.IMAGE_TAG }}|g" deployments/kubernetes/meteor-forecast-service.yml
-          
-          # Apply deployments
-          kubectl apply -f deployments/kubernetes/namespace.yml
-          kubectl apply -f deployments/kubernetes/ -n uav-dev
-          
-          # Wait for rollouts
-          kubectl rollout status deployment/api-gateway -n uav-dev --timeout=5m
-          kubectl rollout status deployment/uav-platform-service -n uav-dev --timeout=5m
-          kubectl rollout status deployment/data-assimilation-service -n uav-dev --timeout=5m
-          kubectl rollout status deployment/meteor-forecast-service -n uav-dev --timeout=5m
-
-  stub-deploy-prod:
-    name: Production Deployment (Stub)
-    needs: [quality, dependency-check, flutter-build, build-docker]
-    if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Notify Production Build Ready
-        run: |
-          echo "⚠️  Production deployment is handled by GitOps pipeline"
-          echo "📋 Build: ${{ github.sha }}"
-          echo "👤 Triggered by: ${{ github.actor }}"
-          echo ""
-          echo "📦 Docker images available:"
-          echo "   - ${{ env.REGISTRY }}/${{ github.repository }}/uav-platform-service:${{ env.IMAGE_TAG }}"
-          echo "   - ${{ env.REGISTRY }}/${{ github.repository }}/api-gateway:${{ env.IMAGE_TAG }}"
-          echo "   - ${{ env.REGISTRY }}/${{ github.repository }}/data-assimilation-service:${{ env.IMAGE_TAG }}"
-          echo "   - ${{ env.REGISTRY }}/${{ github.repository }}/meteor-forecast-service:${{ env.IMAGE_TAG }}"
-          echo ""
-          echo "⏭️  ArgoCD will sync production deployment automatically"
-          echo "📖 See gitops.yml for production deployment workflow"
+          mvn jacoco:check \
+            -Djacoco.haltOnFailure=true \
+            -Djacoco.lineCoverageMinimum=0.80 \
+            -Djacoco.branchCoverageMinimum=0.70

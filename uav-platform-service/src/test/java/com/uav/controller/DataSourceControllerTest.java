@@ -1,9 +1,7 @@
 package com.uav.controller;
 
 import com.uav.common.exception.DataNotFoundException;
-import com.uav.config.SecurityAuditConfig;
 import com.uav.service.DataSourceService;
-import com.uav.platform.dto.DataSourceRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -12,14 +10,16 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatusCode;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -28,9 +28,6 @@ class DataSourceControllerTest {
 
     @Mock
     private DataSourceService dataSourceService;
-
-    @Mock
-    private SecurityAuditConfig securityAuditConfig;
 
     @InjectMocks
     private DataSourceController controller;
@@ -57,12 +54,9 @@ class DataSourceControllerTest {
             when(dataSourceService.listDataSources()).thenReturn(sources);
 
             ResponseEntity<Map<String, Object>> response = controller.getDataSourceList();
-            HttpStatusCode statusCode = response.getStatusCode();
-            Map<String, Object> body = response.getBody();
 
-            assertNotNull(statusCode);
-            assertEquals(200, statusCode.value());
-            assertNotNull(body);
+            assertEquals(200, response.getStatusCodeValue());
+            Map<String, Object> body = response.getBody();
             assertEquals(200, body.get("code"));
             assertEquals(sources, body.get("data"));
         }
@@ -73,10 +67,8 @@ class DataSourceControllerTest {
             when(dataSourceService.listDataSources()).thenReturn(List.of());
 
             ResponseEntity<Map<String, Object>> response = controller.getDataSourceList();
-            HttpStatusCode statusCode = response.getStatusCode();
 
-            assertNotNull(statusCode);
-            assertEquals(200, statusCode.value());
+            assertEquals(200, response.getStatusCodeValue());
         }
     }
 
@@ -89,13 +81,9 @@ class DataSourceControllerTest {
             when(dataSourceService.getDataSourceById(1L)).thenReturn(sampleSource);
 
             ResponseEntity<Map<String, Object>> response = controller.getDataSourceById(1L);
-            HttpStatusCode statusCode = response.getStatusCode();
-            Map<String, Object> body = response.getBody();
 
-            assertNotNull(statusCode);
-            assertEquals(200, statusCode.value());
-            assertNotNull(body);
-            assertEquals(sampleSource, body.get("data"));
+            assertEquals(200, response.getStatusCodeValue());
+            assertEquals(sampleSource, response.getBody().get("data"));
         }
 
         @Test
@@ -113,16 +101,14 @@ class DataSourceControllerTest {
         @Test
         @DisplayName("创建成功返回数据")
         void shouldCreateSuccessfully() {
-            DataSourceRequest request = new DataSourceRequest();
-            request.setName("New");
-            request.setType("satellite");
-            request.setFormat("json");
-            when(dataSourceService.createDataSource(any())).thenReturn(sampleSource);
+            Map<String, Object> request = Map.of("name", "New", "type", "satellite");
+            when(dataSourceService.createDataSource(request)).thenReturn(sampleSource);
 
             ResponseEntity<Map<String, Object>> response = controller.createDataSource(request);
-            assertEquals(200, response.getStatusCode().value());
-            assertNotNull(response.getBody());
+
+            assertEquals(200, response.getStatusCodeValue());
             assertEquals(sampleSource, response.getBody().get("data"));
+            verify(dataSourceService).createDataSource(request);
         }
     }
 
@@ -132,24 +118,20 @@ class DataSourceControllerTest {
         @Test
         @DisplayName("更新成功返回更新后数据")
         void shouldUpdateSuccessfully() {
-            DataSourceRequest request = new DataSourceRequest();
-            request.setName("Updated");
-            request.setFormat("json");
-            when(dataSourceService.updateDataSource(eq(1L), any())).thenReturn(sampleSource);
+            Map<String, Object> request = Map.of("name", "Updated");
+            when(dataSourceService.updateDataSource(1L, request)).thenReturn(sampleSource);
 
             ResponseEntity<Map<String, Object>> response = controller.updateDataSource(1L, request);
-            assertEquals(200, response.getStatusCode().value());
-            assertNotNull(response.getBody());
+
+            assertEquals(200, response.getStatusCodeValue());
             assertEquals(sampleSource, response.getBody().get("data"));
         }
 
         @Test
         @DisplayName("更新不存在的数据源抛出异常")
         void shouldThrowNotFoundForMissingSource() {
-            DataSourceRequest request = new DataSourceRequest();
-            request.setName("X");
-            request.setFormat("json");
-            when(dataSourceService.updateDataSource(eq(999L), any())).thenReturn(null);
+            Map<String, Object> request = Map.of("name", "X");
+            when(dataSourceService.updateDataSource(999L, request)).thenReturn(null);
 
             assertThrows(DataNotFoundException.class, () -> controller.updateDataSource(999L, request));
         }
@@ -164,13 +146,9 @@ class DataSourceControllerTest {
             when(dataSourceService.deleteDataSource(1L)).thenReturn(true);
 
             ResponseEntity<Map<String, Object>> response = controller.deleteDataSource(1L);
-            HttpStatusCode statusCode = response.getStatusCode();
-            Map<String, Object> body = response.getBody();
 
-            assertNotNull(statusCode);
-            assertEquals(200, statusCode.value());
-            assertNotNull(body);
-            assertEquals(200, body.get("code"));
+            assertEquals(200, response.getStatusCodeValue());
+            assertEquals(200, response.getBody().get("code"));
         }
 
         @Test
@@ -189,14 +167,12 @@ class DataSourceControllerTest {
         @DisplayName("测试成功返回结果")
         void shouldReturnTestResult() {
             Map<String, Object> testResult = Map.of("success", true, "response_time", 123);
-            DataSourceRequest request = new DataSourceRequest();
-            request.setType("ground_station");
-            request.setFormat("json");
-            when(dataSourceService.testDataSource(any())).thenReturn(testResult);
+            Map<String, Object> request = Map.of("type", "ground_station");
+            when(dataSourceService.testDataSource(request)).thenReturn(testResult);
 
             ResponseEntity<Map<String, Object>> response = controller.testDataSource(request);
-            assertEquals(200, response.getStatusCode().value());
-            assertNotNull(response.getBody());
+
+            assertEquals(200, response.getStatusCodeValue());
             assertEquals(testResult, response.getBody().get("data"));
         }
     }
@@ -213,13 +189,9 @@ class DataSourceControllerTest {
             when(dataSourceService.getDataSourceTypes()).thenReturn(types);
 
             ResponseEntity<Map<String, Object>> response = controller.getDataSourceTypes();
-            HttpStatusCode statusCode = response.getStatusCode();
-            Map<String, Object> body = response.getBody();
 
-            assertNotNull(statusCode);
-            assertEquals(200, statusCode.value());
-            assertNotNull(body);
-            assertEquals(types, body.get("data"));
+            assertEquals(200, response.getStatusCodeValue());
+            assertEquals(types, response.getBody().get("data"));
         }
     }
 }

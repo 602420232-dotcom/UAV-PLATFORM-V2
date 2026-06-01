@@ -1,4 +1,4 @@
-# 无人机路径规划系统——详细部署指南
+# 无人机路径规划系统 — 详细部署指南
 
 ## 环境要求
 
@@ -48,14 +48,14 @@ graph TB
 
 ## 一、Docker Compose 部署（推荐）
 
-### 第一步：克隆项目
+### 第1步：克隆项目
 
 ```bash
-git clone https://github.com/602420232-dotcom/weather/uav-platform
+git clone https://github.com/602420232-dotcom/weather uav-platform
 cd uav-platform
 ```
 
-### 第二步：配置环境变量
+### 第2步：配置环境变量
 
 ```bash
 # 检查 .env.example 并复制
@@ -66,7 +66,7 @@ cp .env.example .env
 # JWT_SECRET=your_jwt_secret_32bytes
 ```
 
-`.env` 文件关键配置项：
+`.env` 文件关键配置：
 
 | 变量 | 默认值 | 说明 |
 |------|--------|------|
@@ -75,7 +75,7 @@ cp .env.example .env
 | `REDIS_HOST` | `redis` | Redis 主机地址 |
 | `REDIS_PORT` | `6379` | Redis 端口 |
 
-### 第三步：启动基础设施
+### 第3步：启动基础设施
 
 ```bash
 # 启动数据库、缓存、注册中心、消息队列
@@ -97,13 +97,13 @@ docker exec uav-redis redis-cli ping
 curl -sf http://localhost:8848/nacos/actuator/health
 ```
 
-### 第四步：构建并启动微服务
+### 第4步：构建并启动微服务
 
 ```bash
 # 全部启动
 docker-compose up -d --build
 
-# 或逐个启动，便于观察日志
+# 或逐个启动（便于观察日志）
 docker-compose up -d --build api-gateway
 docker-compose up -d --build wrf-processor
 docker-compose up -d --build data-assimilation
@@ -113,13 +113,13 @@ docker-compose up -d --build uav-platform
 docker-compose up -d --build uav-weather-collector
 ```
 
-### 第五步：验证所有服务
+### 第5步：验证所有服务
 
 ```bash
 # 检查所有容器状态
 docker-compose ps
 
-# 逐个检查健康端口
+# 逐个检查健康端点
 for port in 8088 8080 8081 8082 8083 8084 8086; do
   echo "port $port: $(curl -sf http://localhost:$port/actuator/health | jq .status)"
 done
@@ -136,7 +136,7 @@ port 8084: "UP"
 port 8086: "UP"
 ```
 
-### 第六步：查看日志
+### 第6步：查看日志
 
 ```bash
 # 全部日志
@@ -150,7 +150,7 @@ docker-compose logs -f path-planning
 docker-compose logs --tail=100 -f api-gateway
 ```
 
-### 第七步：停止服务
+### 第7步：停止服务
 
 ```bash
 # 停止所有
@@ -167,23 +167,23 @@ docker-compose stop path-planning
 
 ## 二、Maven 本地开发部署
 
-### 第一步：构建根项目
+### 第1步：构建根项目
 
 ```bash
-# 在项目根目录执行，安装所有依赖
+# 在项目根目录执行（安装所有依赖）
 mvn clean install -DskipTests -B
 
 # 仅构建部分模块
 mvn clean install -pl path-planning-service -am -DskipTests
 ```
 
-### 第二步：启动基础设施
+### 第2步：启动基础设施
 
 ```bash
 docker-compose up -d mysql redis nacos
 ```
 
-### 第三步：逐个启动微服务
+### 第3步：逐个启动微服务
 
 ```bash
 # 启动 WRF 处理服务
@@ -208,7 +208,7 @@ cd uav-weather-collector && mvn spring-boot:run
 cd api-gateway && mvn spring-boot:run
 ```
 
-### 第四步：启动边云协同框架
+### 第4步：启动边云协同框架
 
 ```bash
 cd edge-cloud-coordinator
@@ -216,7 +216,7 @@ pip install -r requirements.txt
 python -m uvicorn api:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-### 第五步：启动前端
+### 第5步：启动前端
 
 ```bash
 cd uav-path-planning-system/frontend-vue
@@ -229,7 +229,7 @@ npm run dev
 
 ## 三、Python 算法模块独立部署
 
-### WRF 处理
+### WRF 处理器
 
 ```bash
 cd wrf-processor-service/src/main/python
@@ -268,7 +268,7 @@ python -c "from bayesian_assimilation import BayesianAssimilator; print('OK')"
 
 ## 四、Kubernetes 部署
 
-### 第一步：准备集群
+### 第1步：准备集群
 
 ```bash
 # 使用 Minikube（本地测试）
@@ -279,7 +279,7 @@ minikube addons enable ingress
 curl -sfL https://get.k3s.io | sh -
 ```
 
-### 第二步：安装基础设施
+### 第2步：安装基础设施
 
 ```bash
 # 创建命名空间
@@ -295,7 +295,7 @@ kubectl apply -f deployments/kubernetes/nacos.yml
 kubectl apply -f deployments/observability/observability.yml
 ```
 
-### 第三步：部署微服务
+### 第3步：部署微服务
 
 ```bash
 cd deployments/kubernetes
@@ -327,7 +327,7 @@ kubectl apply -f nginx-ingress.yml
 kubectl apply -f autoscaling.yml
 ```
 
-### 第四步：验证
+### 第4步：验证
 
 ```bash
 # 检查 Pod 状态
@@ -343,7 +343,7 @@ kubectl get ingress -n uav-platform
 kubectl port-forward -n uav-platform svc/uav-platform-service 8080:8080
 ```
 
-### 第五步：GitOps（ArgoCD，可选）
+### 第5步：GitOps（ArgoCD）
 
 ```bash
 # 安装 ArgoCD
@@ -384,7 +384,7 @@ docker run -d --name uav-edge \
 
 ---
 
-## 六、服务网格（Istio，可选）
+## 六、服务网格（Istio）
 
 ```bash
 # 安装 Istio
@@ -452,7 +452,7 @@ docker system df
 # 检查 Nacos 服务注册
 curl http://localhost:8848/nacos/v1/ns/instance/list?serviceName=uav-platform-service
 
-# 检查网关路径
+# 检查网关路由
 curl -sf http://localhost:8088/actuator/gateway/routes | jq .
 
 # 测试直接调用
@@ -527,8 +527,8 @@ spring:
 
 ### 部署前
 - [ ] 检查 Docker 和 Docker Compose 版本
-- [ ] 检查系统资源（CPU >=4核，内存 >=8G，磁盘>=50G）
-- [ ] 配置 `.env` 环境变量（数据库密码、JWT密钥等）
+- [ ] 检查系统资源（CPU ≥ 4核，内存 ≥ 8G，磁盘 ≥ 50G）
+- [ ] 配置 `.env` 环境变量（数据库密码、JWT密钥）
 - [ ] 确保网络可访问 Docker Hub / Maven Central
 - [ ] 确保 MySQL 和 Redis 端口未被占用
 - [ ] 检查 Java 17+ 和 Maven 3.9+ 安装
@@ -550,6 +550,6 @@ spring:
 - [ ] 数据库备份策略已配置
 ---
 
-> **最后更新**: 2026-05-09  
+> **最后更新**: 2026-05-08  
 > **版本**: 2.1  
 > **维护者**: DITHIOTHREITOL

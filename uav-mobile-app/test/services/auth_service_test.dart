@@ -54,15 +54,19 @@ class InMemorySecureStorage extends FlutterSecureStorage {
   @override
   Future<void> write({
     required String key,
-    required String value,
+    required String? value,
     IOSOptions? iOptions,
     AndroidOptions? aOptions,
     LinuxOptions? lOptions,
-    WebOptions? wOptions,
+    WebOptions? webOptions,
     MacOsOptions? mOptions,
-    WindowsOptions? windowsOptions,
+    WindowsOptions? wOptions,
   }) async {
-    _store[key] = value;
+    if (value != null) {
+      _store[key] = value;
+    } else {
+      _store.remove(key);
+    }
   }
 
   @override
@@ -71,24 +75,11 @@ class InMemorySecureStorage extends FlutterSecureStorage {
     IOSOptions? iOptions,
     AndroidOptions? aOptions,
     LinuxOptions? lOptions,
-    WebOptions? wOptions,
+    WebOptions? webOptions,
     MacOsOptions? mOptions,
-    WindowsOptions? windowsOptions,
+    WindowsOptions? wOptions,
   }) async {
     return _store[key];
-  }
-
-  @override
-  Future<void> delete({
-    required String key,
-    IOSOptions? iOptions,
-    AndroidOptions? aOptions,
-    LinuxOptions? lOptions,
-    WebOptions? wOptions,
-    MacOsOptions? mOptions,
-    WindowsOptions? windowsOptions,
-  }) async {
-    _store.remove(key);
   }
 
   @override
@@ -97,23 +88,24 @@ class InMemorySecureStorage extends FlutterSecureStorage {
     IOSOptions? iOptions,
     AndroidOptions? aOptions,
     LinuxOptions? lOptions,
-    WebOptions? wOptions,
+    WebOptions? webOptions,
     MacOsOptions? mOptions,
-    WindowsOptions? windowsOptions,
+    WindowsOptions? wOptions,
   }) async {
     return _store.containsKey(key);
   }
 
   @override
-  Future<void> deleteAll({
+  Future<void> delete({
+    required String key,
     IOSOptions? iOptions,
     AndroidOptions? aOptions,
     LinuxOptions? lOptions,
-    WebOptions? wOptions,
+    WebOptions? webOptions,
     MacOsOptions? mOptions,
-    WindowsOptions? windowsOptions,
+    WindowsOptions? wOptions,
   }) async {
-    _store.clear();
+    _store.remove(key);
   }
 
   @override
@@ -121,11 +113,23 @@ class InMemorySecureStorage extends FlutterSecureStorage {
     IOSOptions? iOptions,
     AndroidOptions? aOptions,
     LinuxOptions? lOptions,
-    WebOptions? wOptions,
+    WebOptions? webOptions,
     MacOsOptions? mOptions,
-    WindowsOptions? windowsOptions,
+    WindowsOptions? wOptions,
   }) async {
     return Map.from(_store);
+  }
+
+  @override
+  Future<void> deleteAll({
+    IOSOptions? iOptions,
+    AndroidOptions? aOptions,
+    LinuxOptions? lOptions,
+    WebOptions? webOptions,
+    MacOsOptions? mOptions,
+    WindowsOptions? wOptions,
+  }) async {
+    _store.clear();
   }
 }
 

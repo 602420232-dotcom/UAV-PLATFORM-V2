@@ -6,7 +6,6 @@ Production Secrets Generator
 import secrets
 import string
 import json
-import logging
 from datetime import datetime
 
 def generate_strong_password(length=32):
@@ -24,7 +23,7 @@ def generate_api_key():
 
 def main():
     print("=" * 60)
-    logger.info("Production Secrets Generator")
+    print("Production Secrets Generator")
     print("=" * 60)
     print(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
     
@@ -37,11 +36,11 @@ def main():
     }
     
     # 输出到终端
-    logger.info("Generated Secrets:")
+    print("Generated Secrets:")
     print("-" * 60)
     for key, value in secrets_dict.items():
-        logger.info(f"{key}:")
-        logger.info(f"  {value}\n")
+        print(f"{key}:")
+        print(f"  {value}\n")
     
     # 保存到.env.example文件
     env_file = ".env.production.example"
@@ -53,8 +52,8 @@ def main():
         for key, value in secrets_dict.items():
             f.write(f"{key}={value}\n")
     
-    logger.info(f"Template saved to: {env_file}")
-    logger.info("\nWARNING: Please configure these secrets in production immediately!")
+    print(f"Template saved to: {env_file}")
+    print("\nWARNING: Please configure these secrets in production immediately!")
     print("=" * 60)
 
 if __name__ == '__main__':

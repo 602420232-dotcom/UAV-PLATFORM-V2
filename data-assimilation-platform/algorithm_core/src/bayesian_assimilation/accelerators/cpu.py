@@ -116,7 +116,7 @@ class CPUAccelerator(BaseAccelerator):
                 import threadpoolctl
                 with threadpoolctl.threadpool_limits(limits=1):
                     pass
-            except (ImportError, AttributeError, Exception):
+            except:
                 pass
         logger.info("CPU加速器已释放")
 

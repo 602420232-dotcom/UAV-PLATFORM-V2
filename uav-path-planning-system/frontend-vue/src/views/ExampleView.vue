@@ -190,7 +190,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, reactive, onMounted, nextTick } from 'vue'
 import { message } from 'ant-design-vue'
 import * as L from 'leaflet'
 import * as echarts from 'echarts'
@@ -260,7 +260,7 @@ const realDataColumns = [
   },
   {
     title: '风速',
-    dataIndex: 'temperature',
+    dataIndex: 'wind_speed',
     key: 'wind_speed'
   },
   {
@@ -555,26 +555,6 @@ const handleResize = () => {
 
 onMounted(() => {
   window.addEventListener('resize', handleResize)
-})
-
-onUnmounted(() => {
-  window.removeEventListener('resize', handleResize)
-  
-  // 清理地图实例
-  if (map) {
-    map.remove()
-    map = null
-  }
-  
-  // 清理ECharts实例
-  if (weatherEchart) {
-    weatherEchart.dispose()
-    weatherEchart = null
-  }
-  if (monitoringEchart) {
-    monitoringEchart.dispose()
-    monitoringEchart = null
-  }
 })
 </script>
 

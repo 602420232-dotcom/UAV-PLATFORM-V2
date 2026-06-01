@@ -72,7 +72,7 @@ def test_3_rapid_restart():
         try:
             r = requests.get(f"{BASE_URL}/actuator/health", timeout=3)
             return r.status_code
-        except requests.RequestException:
+        except:
             return -1
 
     with ThreadPoolExecutor(max_workers=20) as ex:
@@ -89,7 +89,7 @@ def test_4_resilience_recovery():
     for i in range(10):
         try:
             requests.get(f"{BASE_URL}/api/nonexistent", timeout=2)
-        except requests.RequestException:
+        except:
             pass
 
     time.sleep(1)
@@ -112,7 +112,7 @@ def test_5_memory_leak_detection():
                 json={"weatherData": big_payload, "drones": [], "tasks": []},
                 timeout=5
             )
-        except requests.RequestException:
+        except:
             pass
 
     log("  ✓ 20轮大数据量请求完成")

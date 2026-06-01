@@ -1,41 +1,41 @@
 # Shared Resources - 共享资源
 
-##  概述
+## 📋 概述
 
-共享资源模块包含 Protocol Buffers 定义JSON Schema共享配置等跨服务共用资源
+共享资源模块，包含 Protocol Buffers 定义、JSON Schema、共享配置等跨服务共用资源。
 
 ---
 
-##  目录结构
+## 📁 目录结构
 
 ```
 shared/
- protos/                    # Protocol Buffers 定义
-    common/               # 公共消息类型
-        common.proto
-        types.proto
-        README.md
-    assimilation/         # 数据同化消息
-        request.proto
-        response.proto
-    README.md
-
- schemas/                 # JSON Schema 定义
-    assimilation/
-   validation/
-
- README.md                # 本文档
+├── protos/                    # Protocol Buffers 定义
+│   ├── common/               # 公共消息类型
+│   │   ├── common.proto
+│   │   ├── types.proto
+│   │   └── README.md
+│   ├── assimilation/         # 数据同化消息
+│   │   ├── request.proto
+│   │   └── response.proto
+│   └── README.md
+│
+├── schemas/                 # JSON Schema 定义
+│   ├── assimilation/
+│   └── validation/
+│
+└── README.md                # 本文档
 ```
 
 ---
 
-##  Protos 子模块
+## 📦 Protos 子模块
 
 ### Protocol Buffers 定义
 
 **位置**: `protos/`
 
-**包含文件**：
+**包含文件**:
 
 - `common/common.proto` - 公共消息类型
 - `common/types.proto` - 通用类型定义
@@ -90,7 +90,7 @@ stub = request_pb2_grpc.AssimilationServiceStub(channel)
 response = stub.Assimilate(request)
 ```
 
-**Java**：
+**Java**:
 ```java
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
@@ -114,7 +114,7 @@ AssimilationResponse response = stub.assimilate(request);
 
 ---
 
-##  JSON Schema
+## 📋 JSON Schema
 
 ### 位置
 
@@ -172,7 +172,7 @@ if (errors.isEmpty()) {
 
 ---
 
-##  共享配置
+## 🔧 共享配置
 
 ### 配置格式
 
@@ -216,18 +216,18 @@ production:
 
 ---
 
-##  相关文档
+## 📚 相关文档
 
 | 文档 | 说明 |
 |------|------|
 | [Protos README](protos/README.md) | Protocol Buffers 详细说明 |
 | [Common Types README](protos/common/README.md) | 公共类型说明 |
-| [Algorithm Core](../algorithm_core/README.md) | 核心算法|
+| [Algorithm Core](../algorithm_core/README.md) | 核心算法库 |
 | [Service Spring](../service_spring/README.md) | Spring Boot 服务 |
 
 ---
 
-##  快速开始
+## 🚀 快速开始
 
 ### 1. 克隆项目
 
@@ -257,7 +257,7 @@ mvn protobuf:compile
 
 ---
 
-##  版本管理
+## 🔄 版本管理
 
 ### Proto 版本控制
 
@@ -278,7 +278,7 @@ major.minor.patch
 message DataRequest {
     string id = 1;
     int32 timeout = 2;
-    // 添加新字段必须添加默认值
+    // 添加新字段（必须添加默认值）
     string new_field = 3 [default = ""];
 }
 ```
@@ -290,7 +290,7 @@ message DataRequest {
 
 ---
 
-##  测试
+## 🧪 测试
 
 ### Proto 单元测试
 
@@ -314,11 +314,11 @@ mvn test -Dtest=*SchemaTest
 
 ---
 
-##  发布
+## 📦 发布
 
 ### 发布流程
 
-1. **更新版本**：
+1. **更新版本号**
    ```bash
    # 修改 proto 文件中的 version 注释
    ```
@@ -346,7 +346,7 @@ mvn test -Dtest=*SchemaTest
 
 ---
 
-##  贡献指南
+## 🤝 贡献指南
 
 ### 添加新的 Proto 定义
 
@@ -385,14 +385,13 @@ mvn test -Dtest=*SchemaTest
 
 ---
 
-##  许可证
+## 📄 许可证
 
-本目录遵循项目整体许可证
+本目录遵循项目整体许可证。
 
 
 ---
 
-> **最后更新**: 2026-05-09  
+> **最后更新**: 2026-05-08  
 > **版本**: 2.1  
 > **维护者**: DITHIOTHREITOL
-

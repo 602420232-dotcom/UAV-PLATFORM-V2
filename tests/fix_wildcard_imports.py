@@ -1,4 +1,3 @@
-import logging
 #!/usr/bin/env python3
 """Fix wildcard imports and broad exceptions in Java files."""
 import re, os
@@ -123,8 +122,8 @@ for dp, dn, fn in os.walk(ROOT):
         try:
             if fix_wildcard_file(fp):
                 fixed += 1
-                logger.info(f"  OK {os.path.relpath(fp, ROOT)}")
+                print(f'  OK {os.path.relpath(fp, ROOT)}')
         except Exception as e:
-            logger.info(f"  ERR {os.path.relpath(fp, ROOT)}: {e}")
+            print(f'  ERR {os.path.relpath(fp, ROOT)}: {e}')
 
-logger.info(f"\nFixed {fixed} files with wildcard imports.")
+print(f'\nFixed {fixed} files with wildcard imports.')

@@ -1,7 +1,7 @@
 # Type annotations added: 2026-05-08 13:22:43
 from typing import Dict, List, Any, Optional, Callable, Tuple
 
-"""
+﻿"""
 公平并行计算演示
 确保串行和并行使用相同数据规模，进行公平的性能对比
 优化版本：使用numpy向量化、减少内存复制、优化并行效率
@@ -38,7 +38,7 @@ try:
     import os
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
     tf.get_logger().setLevel('ERROR')
-except ImportError:
+except:
     pass
 
 import numpy as np
@@ -153,7 +153,7 @@ def monitor_resources():
     }
 
 
-def create_synthetic_data(domain_size: int, resolution: Any, n_obs: int = 50):
+def create_synthetic_data(domain_size: int, resolution: Any, n_obs=50: Any):
     """优化版本：使用numpy向量化操作"""
     nx = int(domain_size[0] / resolution) + 1
     ny = int(domain_size[1] / resolution) + 1
@@ -191,7 +191,7 @@ def create_synthetic_data(domain_size: int, resolution: Any, n_obs: int = 50):
     return background, observations, obs_locations
 
 
-def run_sequential(background: Any, observations: Any, obs_locations: Any, config: Dict[str, Any], iterations: int = 10):
+def run_sequential(background: Any, observations: Any, obs_locations: Any, config: Dict[str, Any], iterations=10: Any):
     """运行串行计算"""
     assimilator = BayesianAssimilator(config)
     assimilator.initialize_grid(config.domain_size)
@@ -410,7 +410,7 @@ def run_multiprocessing_parallel(background, observations, obs_locations, config
         return {'success': False, 'elapsed': 0, 'method': 'failed'}
 
 
-def run_smart_parallel(background: Any, observations: Any, obs_locations: Any, config: Dict[str, Any], iterations: int = 10):
+def run_smart_parallel(background: Any, observations: Any, obs_locations: Any, config: Dict[str, Any], iterations=10: Any):
     """智能并行：根据数据规模自动选择最优策略"""
     data_points = background.size
     data_size_gb = background.nbytes / (1024**3)
@@ -563,7 +563,7 @@ def run_fair_benchmark(background, observations, obs_locations, config, n_blocks
     print("="*80)
 
     return results
-def calculate_adaptive_iterations(data_size: int, min_total_time: float = 3.0, max_total_time: float = 10.0):
+def calculate_adaptive_iterations(data_size: int, min_total_time=3.0: float, max_total_time=10.0: float):
     """
     基于实际硬件性能的智能迭代计算
     min_total_time: 最小总测试时间（秒）

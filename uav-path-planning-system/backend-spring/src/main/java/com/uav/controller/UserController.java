@@ -1,142 +1,89 @@
 package com.uav.controller;
-
-import com.uav.model.Role;
 import com.uav.model.User;
-import com.uav.repository.RoleRepository;
-import com.uav.repository.UserRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import jakarta.annotation.PostConstruct;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-import java.util.HashSet;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api")
 public class UserController {
-    private static final Logger log = LoggerFactory.getLogger(UserController.class);
 
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
-    private final UserRepository userRepository;
-    private final RoleRepository roleRepository;
 
-    @Value("${app.default-password:}")
-    private String defaultPasswordRaw;
+    @Value("${app.default-password:Uav@2024!Secure}")
+    private String defaultPassword;
 
-    @Value("${app.init-default-users:false}")
+    @Value("${app.init-default-users:true}")
     private boolean initDefaultUsers;
 
-    public UserController(UserRepository userRepository, RoleRepository roleRepository) {
-        this.userRepository = userRepository;
-        this.roleRepository = roleRepository;
-    }
+    private List<User> users = new ArrayList<>();
 
     @PostConstruct
     public void init() {
         if (!initDefaultUsers) {
             return;
         }
-        String resolvedPassword = defaultPasswordRaw;
-        if (resolvedPassword == null || resolvedPassword.isEmpty()) {
-            resolvedPassword = System.getenv("APP_DEFAULT_ADMIN_PASSWORD");
-        }
-        if (resolvedPassword == null || resolvedPassword.isEmpty()) {
-            log.warn("默认管理员密码未配置，跳过初始化默认用户");
-            return;
-        }
+        User admin = new User();
+        admin.setId(1L);
+        admin.setUsername("admin");
+        admin.setPassword(passwordEncoder.encode(defaultPassword));
+        admin.setRole("ADMIN");
+        admin.setName("管理员");
+        admin.setEmail("admin@example.com");
+        admin.setPhone("13800138000");
 
-        Role adminRole = roleRepository.findByName("ADMIN").orElseGet(() -> {
-            Role r = new Role();
-            r.setName("ADMIN");
-            r.setDescription("系统管理员");
-            return roleRepository.save(r);
-        });
-        Role dispatcherRole = roleRepository.findByName("DISPATCHER").orElseGet(() -> {
-            Role r = new Role();
-            r.setName("DISPATCHER");
-            r.setDescription("调度员");
-            return roleRepository.save(r);
-        });
-        Role userRole = roleRepository.findByName("USER").orElseGet(() -> {
-            Role r = new Role();
-            r.setName("USER");
-            r.setDescription("普通用户");
-            return roleRepository.save(r);
-        });
+        User dispatcher = new User();
+        dispatcher.setId(2L);
+        dispatcher.setUsername("dispatcher");
+        dispatcher.setPassword(passwordEncoder.encode(defaultPassword));
+        dispatcher.setRole("DISPATCHER");
+        dispatcher.setName("调度员");
+        dispatcher.setEmail("dispatcher@example.com");
+        dispatcher.setPhone("13800138001");
 
-        if (!userRepository.existsByUsername("admin")) {
-            User admin = new User();
-            admin.setUsername("admin");
-            admin.setPassword(passwordEncoder.encode(resolvedPassword));
-            admin.setFullName("管理员");
-            admin.setEmail("admin@example.com");
-            admin.setRoles(new HashSet<>(Set.of(adminRole, userRole)));
-            userRepository.save(admin);
-            log.info("默认管理员用户已创建");
-        }
-
-        if (!userRepository.existsByUsername("dispatcher")) {
-            User dispatcher = new User();
-            dispatcher.setUsername("dispatcher");
-            dispatcher.setPassword(passwordEncoder.encode(resolvedPassword));
-            dispatcher.setFullName("调度员");
-            dispatcher.setEmail("dispatcher@example.com");
-            dispatcher.setRoles(new HashSet<>(Set.of(dispatcherRole, userRole)));
-            userRepository.save(dispatcher);
-            log.info("默认调度员用户已创建");
-        }
+        users.add(admin);
+        users.add(dispatcher);
     }
 
     @GetMapping("/admin/users")
     public List<User> getUsers() {
-        return userRepository.findAll();
+        return users;
     }
 
     @GetMapping("/admin/users/{id}")
     public User getUser(@PathVariable Long id) {
-        return userRepository.findById(id).orElse(null);
+        return users.stream().filter(u -> u.getId().equals(id)).findFirst().orElse(null);
     }
 
     @PostMapping("/admin/users")
     public User createUser(@RequestBody User user) {
+        user.setId((long) (users.size() + 1));
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-        return userRepository.save(user);
+        users.add(user);
+        return user;
     }
 
     @PutMapping("/admin/users/{id}")
     public User updateUser(@PathVariable Long id, @RequestBody User user) {
-        return userRepository.findById(id).map(existingUser -> {
-            if (user.getUsername() != null) existingUser.setUsername(user.getUsername());
+        User existingUser = users.stream().filter(u -> u.getId().equals(id)).findFirst().orElse(null);
+        if (existingUser != null) {
+            existingUser.setUsername(user.getUsername());
             if (user.getPassword() != null && !user.getPassword().isEmpty()) {
                 existingUser.setPassword(passwordEncoder.encode(user.getPassword()));
             }
-            if (user.getEmail() != null) existingUser.setEmail(user.getEmail());
-            if (user.getFullName() != null) existingUser.setFullName(user.getFullName());
-            if (user.getRoles() != null && !user.getRoles().isEmpty()) {
-                existingUser.setRoles(user.getRoles());
-            }
-            existingUser.setEnabled(user.isEnabled());
-            return userRepository.save(existingUser);
-        }).orElse(null);
+            existingUser.setRole(user.getRole());
+            existingUser.setName(user.getName());
+            existingUser.setEmail(user.getEmail());
+            existingUser.setPhone(user.getPhone());
+        }
+        return existingUser;
     }
 
     @DeleteMapping("/admin/users/{id}")
     public boolean deleteUser(@PathVariable Long id) {
-        if (userRepository.existsById(id)) {
-            userRepository.deleteById(id);
-            return true;
-        }
-        return false;
+        return users.removeIf(u -> u.getId().equals(id));
     }
 }

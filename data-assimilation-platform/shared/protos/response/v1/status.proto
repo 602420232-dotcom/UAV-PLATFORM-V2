@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package response.v1;
 
-option java_package = "com.uav.bayesian.response.v1";
+option java_package = "com.bayesian.response.v1";
 option java_multiple_files = true;
 
 message StatusResponse {

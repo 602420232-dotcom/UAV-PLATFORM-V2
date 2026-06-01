@@ -20,23 +20,23 @@ class CircuitBreakerConfig:
     
     # HTTP 服务熔断器配置
     HTTP_SERVICE_CB = {
-        'fail_max': 5,
-        'reset_timeout': 60,
-        'exclude': [pybreaker.CircuitBreakerError],
+        'fail_max': 5,              # 失败5次后打开熔断器
+        'reset_timeout': 60,        # 60秒后尝试半开
+        'exclude': [Exception],     # 排除的异常类型
     }
     
     # WebSocket 连接熔断器配置
     WEBSOCKET_CB = {
-        'fail_max': 3,
-        'reset_timeout': 30,
-        'exclude': [],
+        'fail_max': 3,              # WebSocket更敏感，失败3次
+        'reset_timeout': 30,        # 30秒后尝试恢复
+        'exclude': [],              # 不过滤任何异常
     }
     
     # 联邦学习熔断器配置
     FEDERATED_LEARNING_CB = {
         'fail_max': 4,
         'reset_timeout': 45,
-        'exclude': [pybreaker.CircuitBreakerError],
+        'exclude': [Exception],
     }
 
 
@@ -305,9 +305,9 @@ def demo_service_usage():
             fallback=lambda url: {'error': 'service unavailable'},
             url='http://example.com/api'
         )
-        logger.info(f"Result: {result}")
+        print(f"Result: {result}")
     except CircuitBreakerOpenError as e:
-        logger.info(f"Circuit breaker is open: {e}")
+        print(f"Circuit breaker is open: {e}")
     
     # 调用WebSocket
     try:
@@ -317,13 +317,13 @@ def demo_service_usage():
             endpoint='/ws/data',
             message={'type': 'update'}
         )
-        logger.info(f"WebSocket result: {result}")
+        print(f"WebSocket result: {result}")
     except CircuitBreakerOpenError as e:
-        logger.info(f"WebSocket circuit breaker is open: {e}")
+        print(f"WebSocket circuit breaker is open: {e}")
     
     # 获取状态
     status = service.get_status()
-    logger.info(f"Circuit breaker status: {status}")
+    print(f"Circuit breaker status: {status}")
 
 
 if __name__ == '__main__':

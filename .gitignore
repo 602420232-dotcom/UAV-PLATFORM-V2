@@ -101,12 +101,6 @@ uav-edge-sdk/build/
 .packages
 .pub-cache/
 .pub/
-build/
-*.iml
-*.apk
-*.ap_
-*.aab
-*.jar
 uav-mobile-app/.dart_tool/
 uav-mobile-app/.flutter-plugins
 uav-mobile-app/.flutter-plugins-dependencies
@@ -148,8 +142,6 @@ package-lock.json
 *.exe
 *.exe~
 *.dll
-*.so
-*.dylib
 go.work
 go.work.sum
 
@@ -192,14 +184,13 @@ $RECYCLE.BIN/
 .springBeans
 
 # -----------------
-# Environment & Secrets - 按环境分层
+# Environment & Secrets
 # -----------------
-# 根目录 .env 文件
 .env
 .env.local
 .env.*.local
 
-# 按环境命名的 .env 文件（各环境下发）
+# 按环境命名的 .env 文件
 .env.dev
 .env.test
 .env.staging
@@ -214,14 +205,13 @@ $RECYCLE.BIN/
 .env.*.template
 .env.*.example
 
-# 前端 .env 文件（含敏感 token）
+# 前端 .env 文件
 **/frontend-vue/.env
 **/frontend-vue/.env.*
 **/frontend-vue/.env.local
 
 # 密钥管理工具生成的备份文件
 *.bak.*
-*.bak
 *.backup.*
 *.backup
 
@@ -243,11 +233,8 @@ minikube-config
 .githooks/*
 
 # -----------------
-#  构建产物缓存文件
+# 构建产物缓存文件
 # -----------------
-*.swp
-*.swo
-*~
 *.orig
 *.rej
 *.tmp
@@ -340,12 +327,3 @@ pom.xml.backup.*
 pom.xml.bak
 **/pom.xml.backup.*
 **/pom.xml.bak
-*.bak
-
-# Temporary analysis files
-GITIGNORE_ANALYSIS.md
-PROJECT_CHECK_COMPLETE.md
-QUICK_FIX_GUIDE.md
-SPRING_BOOT_VERSION_CHECK.md
-BUILD_VERIFICATION.md
-WINDOWS_BUILD_README.md

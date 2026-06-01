@@ -1,4 +1,3 @@
-import logging
 #!/usr/bin/env python3
 """
 修复重复的页脚问题
@@ -77,17 +76,17 @@ def fix_duplicate_footers(root_dir):
                     if content != original_content:
                         with open(filepath, 'w', encoding='utf-8') as f:
                             f.write(content)
-                        logger.info(f"✅ 修复: {filepath}")
+                        print(f"✅ 修复: {filepath}")
                         fixed_count += 1
                     else:
                         skipped_count += 1
                         
                 except Exception as e:
-                    logger.info(f"❌ 错误处理 {filepath}: {e}")
+                    print(f"❌ 错误处理 {filepath}: {e}")
     
-    logger.info(f"\n📊 完成! 修复了 {fixed_count} 个文件, 跳过 {skipped_count} 个文件")
+    print(f"\n📊 完成! 修复了 {fixed_count} 个文件, 跳过 {skipped_count} 个文件")
 
 if __name__ == "__main__":
     root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    logger.info(f"🚀 开始修复重复页脚问题，根目录: {root_dir}\n")
+    print(f"🚀 开始修复重复页脚问题，根目录: {root_dir}\n")
     fix_duplicate_footers(root_dir)

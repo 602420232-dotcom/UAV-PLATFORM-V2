@@ -32,12 +32,8 @@ def create_app(debug: bool = False):
         app = Flask(__name__, template_folder='templates', static_folder='static')
         app.config['DEBUG'] = debug
         
-        # 启用 CORS - 限制为明确的前端源
-        allowed_origins = os.environ.get(
-            "CORS_ORIGINS",
-            "http://localhost:5173,http://localhost:3000,http://localhost:8088",
-        ).split(",")
-        CORS(app, origins=allowed_origins)
+        # 启用 CORS
+        CORS(app)
         
         # 导入核心功能
         from bayesian_assimilation.core.assimilator import BayesianAssimilator

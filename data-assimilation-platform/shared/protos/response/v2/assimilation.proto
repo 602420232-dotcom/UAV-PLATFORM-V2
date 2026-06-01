@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package response.v2;
 
-option java_package = "com.uav.bayesian.response.v2";
+option java_package = "com.bayesian.response.v2";
 option java_multiple_files = true;
 
 import "common/v1/variance_field.proto";

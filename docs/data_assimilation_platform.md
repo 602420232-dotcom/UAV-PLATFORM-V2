@@ -1,149 +1,136 @@
-# Data Assimilation Platform 服务文档
+# 项目目录结构详解
 
-## 概述
+本文档提供项目各目录的详细说明。
 
-Data Assimilation Platform（数据同化平台）是一个独立的Python微服务模块，提供贝叶斯数据同化的核心算法实现。该服务运行在独立端口8094，与Java微服务通过REST API进行通信。
-
-## 服务架构
+## 根目录结构
 
 ```
-┌──────────────────────────────────────────────────────────────┐
-│                 Java微服务层 (8080-8088)                      │
-│  ┌────────────┐  ┌────────────┐  ┌────────────┐              │
-│  │ Platform   │  │ WRF        │  │ Meteor     │              │
-│  │ Service    │  │ Processor  │  │ Forecast   │              │
-│  └────────────┘  └────────────┘  └────────────┘              │
-│          │                 │                 │                │
-│          └─────────────────┼─────────────────┘                │
-│                            │                                  │
-├────────────────────────────┼──────────────────────────────────┤
-│           Data Assimilation Platform (8094)                   │
-│     ┌──────────────────────────────────────────────┐         │
-│     │             FastAPI应用层                     │         │
-│     ├────────────────┬────────────┬────────────────┤         │
-│     │ Assimilation   │ Batch      │ Monitoring     │         │
-│     │ API            │ API        │ API            │         │
-│     └────────────────┴────────────┴────────────────┘         │
-│     ┌──────────────────────────────────────────────┐         │
-│     │             Service层                         │         │
-│     └──────────────────────────────────────────────┘         │
-│                            │                                  │
-│     ┌──────────────────────────────────────────────┐         │
-│     │        Bayesian Assimilation Core             │         │
-│     ├──────────────┬──────────────┬─────────────────┤         │
-│     │   3D-VAR     │   4D-VAR     │      EnKF       │         │
-│     └──────────────┴──────────────┴─────────────────┘         │
-│     ┌──────────────────────────────────────────────┐         │
-│     │          数据处理与基础设施                    │         │
-│     ├──────────────┬──────────────┬─────────────────┤         │
-│     │ 并行计算     │ 硬件加速     │ 可视化/存储     │         │
-│     └──────────────┴──────────────┴─────────────────┘         │
-└──────────────────────────────────────────────────────────────┘
+trae/                           # 项目根目录
+├── .gitignore                  # Git 忽略规则
+├── .pre-commit-config.yaml     # pre-commit 配置
+├── pyproject.toml              # 项目级别工具配置
+├── README.md                   # 主文档（项目引导）
+├── DEPLOYMENT.md               # 部署与运维手册
+├── EXAMPLE.md                  # 使用示例
+│
+├── data-assimilation-platform/ # 贝叶斯同化服务
+├── wrf-processor-service/      # WRF 气象处理服务
+├── meteor-forecast-service/    # 气象预测服务
+├── path-planning-service/      # 路径规划服务
+├── uav-platform-service/       # 主平台服务
+├── uav-edge-sdk/              # 端侧 SDK
+├── frontend-vue/               # 前端应用
+└── deployments/               # Kubernetes 部署配置
 ```
 
-## 端口配置
+## data-assimilation-platform/
 
-| 环境变量 | 默认值 | 说明 |
-|---------|-------|------|
-| `PORT` | `8094` | 服务监听端口 |
-| `PYTHON_PATH` | `/app/python` | Python脚本路径 |
-| `LOG_LEVEL` | `INFO` | 日志级别 |
-| `MAX_WORKERS` | `4` | 最大工作线程数 |
-| `TIMEOUT` | `300` | 请求超时时间（秒） |
-
-## API端点
-
-### 1. 同化执行接口
-
-**POST** `/api/assimilation/execute`
-
-执行单次数据同化。
-
-**请求参数**:
-```json
-{
-  "method": "3dvar|enkf|hybrid",
-  "background_field": "base64编码的numpy数组",
-  "observations": [
-    {
-      "location": [lat, lon, level],
-      "value": 23.5,
-      "error_variance": 0.1
-    }
-  ],
-  "config": {
-    "max_iterations": 100,
-    "convergence_threshold": 1e-6
-  }
-}
+```
+data-assimilation-platform/
+├── pyproject.toml              # 项目级别工具配置
+└── algorithm_core/            # 【核心】Python 算法库
 ```
 
-**响应**:
-```json
-{
-  "status": "success",
-  "analysis_field": "base64编码的分析场",
-  "cost_function_value": 0.023,
-  "iterations": 45,
-  "computation_time_ms": 1250
-}
+### algorithm_core/ 目录结构
+
+```
+algorithm_core/                 # 核心算法库（可独立 pip 安装）
+├── README.md                  # 算法库文档
+├── setup.py                  # pip 安装脚本
+├── pyproject.toml            # 包配置
+├── .env.example              # 环境变量模板
+│
+├── benchmarks/               # 性能测试
+│   └── results/
+│       └── report.md        # 测试报告
+│
+├── configs/                  # 配置文件
+│   ├── default.yaml         # 默认配置
+│   ├── development.yaml     # 开发环境
+│   └── production.yaml     # 生产环境
+│
+├── docker/                  # Docker 配置
+│   ├── Dockerfile          # CPU 版本
+│   ├── nvidia.Dockerfile # GPU 版本
+│   ├── docker-compose.yml  # 编排配置
+│   ├── entrypoint.sh      # 启动脚本
+│   └── README.md          # Docker 部署指南
+│
+├── docs/                   # 文档
+│   └── CHANGELOG.md      # 变更日志
+│
+├── examples/               # 示例代码
+│   ├── basic_usage.py     # 基础用法
+│   ├── advanced_usage.py  # 高级用法
+│   ├── gpu_acceleration.py # GPU 加速
+│   ├── parallel_demo.py   # 并行计算
+│   ├── jupyter/          # Jupyter 教程
+│   └── output/          # 示例输出
+│
+└── src/
+    └── bayesian_assimilation/  # 主包
+        ├── __init__.py
+        ├── __version__.py
+        │
+        ├── accelerators/    # 硬件加速
+        ├── adapters/       # 数据适配
+        ├── api/           # API 接口
+        ├── components/    # 组件
+        ├── core/         # 核心算法
+        ├── models/        # 同化模型
+        ├── parallel/      # 并行计算
+        ├── quality_control/ # 质量控制
+        ├── risk_assessment/ # 风险评估
+        ├── time_series/  # 时间序列
+        ├── utils/        # 工具
+        ├── visualization/ # 可视化
+        ├── workflows/    # 工作流
+        └── data_sources/ # 数据源
 ```
 
-### 2. 批量处理接口
+### 核心源码模块说明
 
-**POST** `/api/assimilation/batch`
+| 模块 | 说明 |
+|------|------|
+| `accelerators/` | GPU/CPU/TPU 硬件加速 |
+| `adapters/` | WRF/观测/网格数据适配 |
+| `api/` | CLI/REST/Web 接口 |
+| `core/` | 核心同化算法基类 |
+| `models/` | 3D-VAR/4D-VAR/EnKF 实现 |
+| `parallel/` | Dask/MPI/Ray 并行计算 |
+| `quality_control/` | 数据质量验证 |
+| `risk_assessment/` | 风险评估 |
+| `visualization/` | 结果可视化 |
+| `workflows/` | 工作流管理 |
 
-提交批量同化任务。
+## wrf-processor-service/
 
-**请求参数**:
-```json
-{
-  "tasks": [
-    {
-      "task_id": "task_001",
-      "method": "3dvar",
-      "background_field": "base64...",
-      "observations": [...]
-    }
-  ],
-  "priority": "normal|high"
-}
-```
+WRF 气象数据处理服务（Java Spring Boot）
 
-**响应**:
-```json
-{
-  "batch_id": "batch_12345",
-  "status": "queued",
-  "estimated_completion": "2026-05-09T10:15:00Z"
-}
-```
+## meteor-forecast-service/
 
-**查询任务状态**:
-```
-GET /api/assimilation/batch/{batch_id}
-GET /api/assimilation/batch/{batch_id}/task/{task_id}
-```
+气象预测与订正服务（Java Spring Boot）
 
-### 3. 监控接口
+## path-planning-service/
 
-**GET** `/api/assimilation/monitoring/stats`
+路径规划服务（Java Spring Boot）
 
-获取运行时统计信息。
+## uav-platform-service/
 
-**响应**:
-```json
-{
-  "uptime_seconds": 3600,
-  "total_requests": 150,
-  "active_requests": 3,
-  "average_latency_ms": 450,
-  "error_rate": 0.02
-}
-```
+主平台服务（Java Spring Boot）
+
+## uav-edge-sdk/
+
+端侧 SDK（C++/Python 混合）
+
+## frontend-vue/
+
+Vue3 前端应用
+
+## deployments/
+
+Kubernetes 部署配置
 
 ---
 
-> **最后更新**: 2026-06-01  
-> **版本**: 2.1  
-> **维护者**: DITHIOTHREITOL
+> 📌 **提示**: 详细的 API 说明和部署步骤请参考 [DEPLOYMENT.md](DEPLOYMENT.md) 和 [EXAMPLE.md](EXAMPLE.md)。

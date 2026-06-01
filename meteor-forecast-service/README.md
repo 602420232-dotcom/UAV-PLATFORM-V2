@@ -2,7 +2,7 @@
 
 ## 概述
 
-气象预测服务基于 CLSTM + XGBoost 模型，通过分析历史气象数据进行预测和订正，为路径规划提供高精度的气象预报数据。
+气象预测服务基于 CLSTM 和 XGBoost 模型，通过分析历史气象数据进行预测和订正，为路径规划提供高精度的气象预报数据。
 
 ## 技术栈
 
@@ -27,7 +27,7 @@
 
 ## Python 依赖
 
-| 库 | 版本 | 用途 |
+| 包 | 版本 | 用途 |
 |---|------|------|
 | tensorflow | >=2.9.0 | LSTM/ConvLSTM 深度学习 |
 | xgboost | >=1.5.0 | XGBoost 气象订正 |
@@ -37,7 +37,7 @@
 
 ## 模型文件
 
-预训练模型文件存放路径 `src/main/python/models/`
+预训练模型文件存放路径：`src/main/python/models/`
 - `lstm_model.h5` - LSTM 时间序列预测模型
 - `xgb_model.json` - XGBoost 数据订正模型
 - `gpr_model.pkl` - GPR 高斯过程回归模型
@@ -46,7 +46,7 @@
 
 | 变量 | 默认值 | 说明 |
 |------|--------|------|
-| `DB_PASSWORD` | 必填 | 数据库密码 |
+| `DB_PASSWORD` | （必填） | 数据库密码 |
 | `forecast.python-script` | `src/main/python/meteor_forecast.py` | Python 脚本路径 |
 | `SERVER_PORT` | `8082` | 服务端口 |
 
@@ -62,10 +62,9 @@ mvn spring-boot:run
 
 ## 配置
 
-详见 `src/main/resources/application.yml`
-
+详见 `src/main/resources/application.yml`。
 ---
 
-> **最后更新**: 2026-06-01  
+> **最后更新**: 2026-05-08  
 > **版本**: 2.1  
 > **维护者**: DITHIOTHREITOL

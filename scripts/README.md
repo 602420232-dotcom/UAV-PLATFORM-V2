@@ -1,14 +1,14 @@
 # UAV Path Planning System - 自动化脚本集
 
-## 概述
+## 📋 概述
 
 本目录包含 UAV Path Planning System 的各种自动化脚本，用于代码质量提升、安全修复、测试生成等任务。
 
 ---
 
-## 脚本分类
+## 📁 脚本分类
 
-### 代码质量工具
+### 🔧 代码质量工具
 
 #### 1. 类型注解相关
 
@@ -62,7 +62,7 @@ bash fix_print_statements.sh
 
 ---
 
-### 测试相关
+### 🧪 测试相关
 
 #### 1. 单元测试生成
 
@@ -111,7 +111,7 @@ class TestYourFunction:
 
 ---
 
-### 代码质量检查
+### 🔍 代码质量检查
 
 #### 1. 代码质量分析
 
@@ -126,7 +126,7 @@ class TestYourFunction:
 - 函数复杂度
 - 注释覆盖率
 - 命名规范
-- 安全漏洞检查
+- 安全漏洞检测
 
 **使用示例**:
 ```bash
@@ -148,9 +148,9 @@ Total warnings: 27
 #### 2. 安全配置检查
 
 **检查项**:
-- 硬编码密码检查
+- 硬编码密码检测
 - SQL 注入风险
-- XSS 漏洞检查
+- XSS 漏洞检测
 - API 密钥暴露
 - CORS 配置错误
 
@@ -171,7 +171,7 @@ Issues found: 4
 
 ---
 
-### 安全修复工具
+### 🔐 安全修复工具
 
 #### 1. 生产密钥生成
 
@@ -200,13 +200,13 @@ WARNING: Please configure these secrets in production immediately!
 
 ---
 
-### 综合工具
+### 🚀 综合工具
 
 #### 1. 全自动修复工具
 
 | 脚本 | 功能 | 使用方法 |
 |------|------|---------|
-| `comprehensive_auto_fixer.py` | 综合自动化修改 | `python comprehensive_auto_fixer.py` |
+| `comprehensive_auto_fixer.py` | 综合自动化修复 | `python comprehensive_auto_fixer.py` |
 
 **功能说明**:
 - 自动修复代码质量问题
@@ -216,16 +216,16 @@ WARNING: Please configure these secrets in production immediately!
 
 **使用示例**:
 ```bash
-# 执行所有自动修改
+# 执行所有自动修复
 python comprehensive_auto_fixer.py
 
 # 生成修复报告
-cat fix_report_2026-05-09.md
+cat fix_report_2026-05-08.md
 ```
 
 ---
 
-### 构建和部署脚本
+### 🛠️ 构建和部署脚本
 
 #### 1. Maven 依赖修复
 
@@ -251,7 +251,7 @@ fix-maven-deps.bat
 
 ---
 
-## 使用指南
+## 📊 使用指南
 
 ### 推荐的执行顺序
 
@@ -271,7 +271,7 @@ python auto_generate_tests.py
 python apply_type_annotations.py
 ```
 
-#### 2. 代码审查流程
+#### 2. 代码审查前
 
 ```bash
 # 1. 代码质量检查
@@ -294,7 +294,7 @@ python config_checker_simple.py
 
 ---
 
-## 环境要求
+## 🔧 环境要求
 
 ### Python 环境
 
@@ -321,7 +321,7 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 
 ---
 
-## 输出报告
+## 📝 输出报告
 
 ### 生成的文件
 
@@ -338,7 +338,7 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 **code_quality_report.txt**:
 ```
 ======================== Code Quality Report ========================
-Generated: 2026-05-09 16:30:15
+Generated: 2026-05-08 16:30:15
 Files scanned: 350
 
 Metrics:
@@ -356,11 +356,11 @@ Recommendations:
 
 ---
 
-## 配置文件
+## ⚙️ 配置文件
 
 ### 脚本配置
 
-某些脚本支持通过环境变量或配置文件自定义。
+某些脚本支持通过环境变量或配置文件自定义：
 
 ```bash
 # .env 文件示例
@@ -410,7 +410,7 @@ test_*.py
 *.md
 *.txt
 
-# 大文件和二进制文件
+# 大文件和二进制
 *.zip
 *.tar.gz
 *.png
@@ -432,7 +432,7 @@ vendor/
 
 **添加自定义规则**:
 
-编辑 `scripts/.scriptignore` 文件，添加自定义规则：
+编辑 `scripts/.scriptignore` 文件添加自定义规则：
 
 ```bash
 # 添加排除规则
@@ -445,14 +445,14 @@ echo "*.custom" >> .scriptignore
 | 规则 | 说明 | 示例 |
 |------|------|------|
 | `dir/` | 排除目录 | `venv/` |
-| `*.ext` | 排除文件扩展名 | `*.py` |
+| `*.ext` | 排除文件 | `*.py` |
 | `**/pattern` | 递归匹配 | `**/__pycache__` |
 | `# comment` | 注释 | `# 这是注释` |
 | `!pattern` | 取反（包含） | `!important.py` |
 
 ---
 
-## 故障排查
+## 🚨 故障排查
 
 ### 常见问题
 
@@ -489,7 +489,7 @@ chmod +x *.py
 
 ---
 
-## 贡献指南
+## 🤝 贡献指南
 
 ### 添加新脚本
 
@@ -504,7 +504,7 @@ chmod +x *.py
    脚本名称: example_script.py
    功能: 简短的脚本功能描述
    作者: Your Name
-   日期: 2026-05-09
+   日期: 2026-05-08
    """
    ```
 
@@ -520,12 +520,13 @@ chmod +x *.py
 
 ---
 
-## 许可证
+## 📄 许可证
 
 本目录下的脚本遵循项目整体许可证。
 
+
 ---
 
-> **最后更新**: 2026-05-09  
+> **最后更新**: 2026-05-08  
 > **版本**: 2.1  
 > **维护者**: DITHIOTHREITOL

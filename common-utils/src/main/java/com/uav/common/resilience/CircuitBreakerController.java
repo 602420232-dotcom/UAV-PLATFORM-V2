@@ -1,50 +1,33 @@
 package com.uav.common.resilience;
-
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * 熔断器监控REST接口
  * 提供熔断器状态查询和手动控制
- * 
- * 安全说明:
- * - 查询端点 (/status, /details): 需要 ADMIN 或 OPERATOR 角色
- * - 管理端点 (/trip, /reset, /half-open): 仅限 ADMIN 角色
- * - 健康检查 (/health): 公开访问
  */
 @RestController
 @RequestMapping("/api/admin/circuit-breaker")
 public class CircuitBreakerController {
-
-    private final CircuitBreakerRegistry circuitBreakerRegistry;
-    private final CircuitBreakerService circuitBreakerService;
-
-    public CircuitBreakerController(CircuitBreakerRegistry circuitBreakerRegistry,
-                                    CircuitBreakerService circuitBreakerService) {
-        this.circuitBreakerRegistry = circuitBreakerRegistry;
-        this.circuitBreakerService = circuitBreakerService;
-    }
+    
+    @Autowired
+    private CircuitBreakerRegistry circuitBreakerRegistry;
+    
+    @Autowired
+    private CircuitBreakerService circuitBreakerService;
     
     /**
      * 获取所有熔断器状态
-     * 权限: ADMIN 或 OPERATOR
      */
     @GetMapping("/status")
-    @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
     public ResponseEntity<Map<String, Object>> getAllCircuitBreakerStatus() {
         Map<String, Object> response = new HashMap<>();
         List<Map<String, Object>> breakers = new ArrayList<>();
@@ -72,10 +55,8 @@ public class CircuitBreakerController {
     
     /**
      * 获取指定熔断器状态
-     * 权限: ADMIN 或 OPERATOR
      */
     @GetMapping("/status/{serviceName}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
     public ResponseEntity<CircuitBreakerService.CircuitBreakerStatus> getCircuitBreakerStatus(
             @PathVariable String serviceName) {
         try {
@@ -89,10 +70,8 @@ public class CircuitBreakerController {
     
     /**
      * 获取熔断器详细信息
-     * 权限: ADMIN 或 OPERATOR
      */
     @GetMapping("/details/{serviceName}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
     public ResponseEntity<Map<String, Object>> getCircuitBreakerDetails(
             @PathVariable String serviceName) {
         
@@ -132,10 +111,8 @@ public class CircuitBreakerController {
     
     /**
      * 手动触发熔断（强制打开）
-     * 权限: 仅限 ADMIN
      */
     @PostMapping("/trip/{serviceName}")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String, Object>> tripCircuitBreaker(
             @PathVariable String serviceName) {
         
@@ -159,10 +136,8 @@ public class CircuitBreakerController {
     
     /**
      * 手动恢复熔断（强制关闭）
-     * 权限: 仅限 ADMIN
      */
     @PostMapping("/reset/{serviceName}")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String, Object>> resetCircuitBreaker(
             @PathVariable String serviceName) {
         
@@ -186,10 +161,8 @@ public class CircuitBreakerController {
     
     /**
      * 强制转换到半开状态
-     * 权限: 仅限 ADMIN
      */
     @PostMapping("/half-open/{serviceName}")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String, Object>> halfOpenCircuitBreaker(
             @PathVariable String serviceName) {
         

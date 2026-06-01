@@ -1,6 +1,5 @@
 import os
 import sys
-import shlex
 
 SRC_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 if SRC_DIR not in sys.path:
@@ -19,9 +18,6 @@ from bayesian_assimilation.core.base import AssimilationBase
 from bayesian_assimilation.utils.config import BaseConfig
 
 logger = logging.getLogger(__name__)
-
-WRF_SAFE_PATH = os.environ.get("WRF_EXE_PATH", "/opt/wrf/bin/wrf.exe")
-WRF_SAFE_RUN_DIR = os.environ.get("WRF_RUN_DIR", "/opt/wrf/run")
 
 class FourDimensionalVar(AssimilationBase):
     """
@@ -66,18 +62,8 @@ class FourDimensionalVar(AssimilationBase):
         对接真实 WRF 积分
         x0: 初始场 (温、压、湿、风 U、V、W)
         """
-        wrf_input_dir = os.path.abspath(self.config.get("wrf_input_dir", WRF_SAFE_RUN_DIR))
-        wrf_exe_path = os.path.abspath(self.config.get("wrf_exe_path", WRF_SAFE_PATH))
-
-        if not wrf_input_dir.startswith(WRF_SAFE_RUN_DIR):
-            logger.warning("WRF运行目录不在允许路径内，使用安全默认路径")
-            wrf_input_dir = WRF_SAFE_RUN_DIR
-        if not wrf_exe_path.startswith(os.path.dirname(WRF_SAFE_PATH)):
-            logger.warning("WRF可执行路径不在允许路径内，使用安全默认路径")
-            wrf_exe_path = WRF_SAFE_PATH
-
         # 1. 写入 wrfinput_d01
-        nc_file = os.path.join(wrf_input_dir, "wrfinput_d01")
+        nc_file = os.path.join(self.config["wrf_input_dir"], "wrfinput_d01")
         
         if os.path.exists(nc_file):
             with nc.Dataset(nc_file, 'r+') as ds:
@@ -90,19 +76,17 @@ class FourDimensionalVar(AssimilationBase):
                 if 'Ps' in x0 and 'PSFC' in ds.variables:
                     ds.variables['PSFC'][0, :, :] = x0['Ps']
 
-        # 2. 安全运行 WRF（使用固定环境变量路径 + args列表避免Shell注入）
-        if os.path.exists(wrf_exe_path):
+        # 2. 运行 WRF
+        os.chdir(self.config["wrf_input_dir"])
+        if os.path.exists(self.config["wrf_exe_path"]):
             subprocess.run(
-                [wrf_exe_path],
-                cwd=wrf_input_dir,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.PIPE,
-                timeout=3600,
-                env={**os.environ, "OMP_NUM_THREADS": "4"}
+                [self.config["wrf_exe_path"]], 
+                stdout=subprocess.DEVNULL, 
+                stderr=subprocess.PIPE
             )
 
         # 3. 读取 wrfout 全部时刻
-        wrfout_files = sorted([f for f in os.listdir(wrf_input_dir) if 'wrfout' in f])
+        wrfout_files = sorted([f for f in os.listdir(self.config["wrf_input_dir"]) if 'wrfout' in f])
         history = []
         for f in wrfout_files:
             try:

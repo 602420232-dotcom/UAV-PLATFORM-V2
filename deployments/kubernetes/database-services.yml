@@ -1,15 +1,13 @@
 # MySQL数据库配置
 apiVersion: apps/v1
-kind: StatefulSet
+kind: Deployment
 metadata:
   name: mysql
-  namespace: uav-platform
+  namespace: uav-path-planning
   labels:
     app: mysql
-    component: database
 spec:
   replicas: 1
-  serviceName: mysql
   selector:
     matchLabels:
       app: mysql
@@ -17,21 +15,12 @@ spec:
     metadata:
       labels:
         app: mysql
-        component: database
     spec:
-      securityContext:
-        runAsNonRoot: true
-        runAsUser: 999
-        fsGroup: 999
-        fsGroupChangePolicy: "OnRootMismatch"
       containers:
       - name: mysql
         image: mysql:8.0
-        imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 3306
-          name: mysql
-          protocol: TCP
         env:
         - name: MYSQL_ROOT_PASSWORD
           valueFrom:
@@ -52,104 +41,54 @@ spec:
             cpu: "500m"
             memory: "1Gi"
           limits:
-            cpu: "2"
-            memory: "4Gi"
-        securityContext:
-          allowPrivilegeEscalation: false
-          capabilities:
-            drop:
-            - ALL
+            cpu: "1"
+            memory: "2Gi"
         readinessProbe:
-          exec:
-            command:
-            - /bin/sh
-            - -c
-            - mysqladmin ping -h localhost -u root -p${MYSQL_ROOT_PASSWORD}
+          tcpSocket:
+            port: 3306
           initialDelaySeconds: 30
-          periodSeconds: 5
-          timeoutSeconds: 5
-          successThreshold: 1
-          failureThreshold: 3
-        livenessProbe:
-          exec:
-            command:
-            - /bin/sh
-            - -c
-            - mysqladmin ping -h localhost -u root -p${MYSQL_ROOT_PASSWORD}
-          initialDelaySeconds: 60
           periodSeconds: 10
-          timeoutSeconds: 10
-          successThreshold: 1
-          failureThreshold: 5
-        startupProbe:
-          exec:
-            command:
-            - /bin/sh
-            - -c
-            - mysqladmin ping -h localhost -u root -p${MYSQL_ROOT_PASSWORD}
-          initialDelaySeconds: 10
-          periodSeconds: 5
-          timeoutSeconds: 10
-          failureThreshold: 30
+        livenessProbe:
+          tcpSocket:
+            port: 3306
+          initialDelaySeconds: 60
+          periodSeconds: 30
         volumeMounts:
         - name: mysql-data
           mountPath: /var/lib/mysql
-        - name: tmp
-          mountPath: /tmp
       volumes:
-      - name: tmp
-        emptyDir: {}
-  volumeClaimTemplates:
-  - metadata:
-      name: mysql-data
-    spec:
-      accessModes: ["ReadWriteOnce"]
-      resources:
-        requests:
-          storage: 20Gi
+      - name: mysql-data
+        persistentVolumeClaim:
+          claimName: mysql-data-pvc
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: mysql
-  namespace: uav-platform
-  labels:
-    app: mysql
-    component: database
+  namespace: uav-path-planning
 spec:
   selector:
     app: mysql
   ports:
-  - name: mysql
-    port: 3306
-    targetPort: mysql
-    protocol: TCP
+  - port: 3306
+    targetPort: 3306
   type: ClusterIP
-  clusterIP: None
----
-apiVersion: policy/v1
-kind: PodDisruptionBudget
-metadata:
-  name: mysql-pdb
-  namespace: uav-platform
-spec:
-  maxUnavailable: 0
-  selector:
-    matchLabels:
-      app: mysql
 ---
 # Redis缓存配置
 apiVersion: apps/v1
-kind: StatefulSet
+kind: Deployment
 metadata:
   name: redis
-  namespace: uav-platform
+  namespace: uav-path-planning
   labels:
     app: redis
-    component: cache
 spec:
   replicas: 1
-  serviceName: redis
   selector:
     matchLabels:
       app: redis
@@ -157,23 +96,12 @@ spec:
     metadata:
       labels:
         app: redis
-        component: cache
-      annotations:
-        prometheus.io/scrape: "true"
-        prometheus.io/port: "6379"
     spec:
-      securityContext:
-        runAsNonRoot: true
-        runAsUser: 999
-        fsGroup: 999
       containers:
       - name: redis
-        image: redis:7.0-alpine
-        imagePullPolicy: IfNotPresent
+        image: redis:7.0
         ports:
         - containerPort: 6379
-          name: redis
-          protocol: TCP
         env:
         - name: REDIS_PASSWORD
           valueFrom:
@@ -184,106 +112,45 @@ spec:
         - redis-server
         - --requirepass
         - $(REDIS_PASSWORD)
-        - --appendonly
-        - "yes"
-        - --save
-        - "900"
-        - "1"
-        - --save
-        - "300"
-        - "10"
-        - --maxmemory
-        - "256mb"
-        - --maxmemory-policy
-        - "allkeys-lru"
         resources:
           requests:
             cpu: "100m"
             memory: "256Mi"
           limits:
-            cpu: "500m"
+            cpu: "300m"
             memory: "512Mi"
-        securityContext:
-          allowPrivilegeEscalation: false
-          readOnlyRootFilesystem: true
-          capabilities:
-            drop:
-            - ALL
         readinessProbe:
-          exec:
-            command:
-            - sh
-            - -c
-            - redis-cli -a $(REDIS_PASSWORD) ping | grep PONG
-          initialDelaySeconds: 5
-          periodSeconds: 3
-          timeoutSeconds: 3
-          successThreshold: 1
-          failureThreshold: 3
+          tcpSocket:
+            port: 6379
+          initialDelaySeconds: 10
+          periodSeconds: 5
         livenessProbe:
-          exec:
-            command:
-            - sh
-            - -c
-            - redis-cli -a $(REDIS_PASSWORD) ping | grep PONG
+          tcpSocket:
+            port: 6379
           initialDelaySeconds: 20
-          periodSeconds: 10
-          timeoutSeconds: 5
-          successThreshold: 1
-          failureThreshold: 5
-        startupProbe:
-          exec:
-            command:
-            - sh
-            - -c
-            - redis-cli -a $(REDIS_PASSWORD) ping | grep PONG
-          initialDelaySeconds: 2
-          periodSeconds: 2
-          timeoutSeconds: 3
-          failureThreshold: 30
+          periodSeconds: 15
         volumeMounts:
         - name: redis-data
           mountPath: /data
-        - name: tmp
-          mountPath: /tmp
       volumes:
-      - name: tmp
-        emptyDir: {}
-  volumeClaimTemplates:
-  - metadata:
-      name: redis-data
-    spec:
-      accessModes: ["ReadWriteOnce"]
-      resources:
-        requests:
-          storage: 5Gi
+      - name: redis-data
+        persistentVolumeClaim:
+          claimName: redis-data-pvc
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: redis
-  namespace: uav-platform
-  labels:
-    app: redis
-    component: cache
+  namespace: uav-path-planning
 spec:
   selector:
     app: redis
   ports:
-  - name: redis
-    port: 6379
-    targetPort: redis
-    protocol: TCP
+  - port: 6379
+    targetPort: 6379
   type: ClusterIP
-  clusterIP: None
----
-apiVersion: policy/v1
-kind: PodDisruptionBudget
-metadata:
-  name: redis-pdb
-  namespace: uav-platform
-spec:
-  maxUnavailable: 0
-  selector:
-    matchLabels:
-      app: redis

@@ -1,246 +1,247 @@
 # UAV Edge SDK
 
-无人机边缘计算 SDK，提供高性能的路径规划和气象风险评估功能。
+无人机端侧 SDK，采用 **C++/Python 混合实现**，提供高性能的离线路径规划和气象风险评估功能。
 
-## 特性
+## 📋 功能特性
 
-- **高性能 C++ 核心**，使用 A* 算法实现快速路径规划
-- **气象风险评估**，多因素综合评估飞行风险
-- **飞控接口**，支持 MAVLink 协议通信
-- **Python 封装**，易于集成到 Python 项目
-- **自动降级**，C++ 模块不可用时自动切换到纯 Python 实现
+- 🚀 **高性能**: 核心算法使用 C++ 实现（PyBind11），比纯 Python 快 10-100 倍
+- 🐍 **易用性**: 提供纯 Python 封装，自动回退机制
+- 📡 **飞控支持**: 支持 PX4/ArduPilot 通过 MAVLink 协议通信
+- 🌦️ **气象评估**: 实时气象风险评估，支持批量评估
+- 🗺️ **路径规划**: A* 算法实现，支持静态障碍物避障
+- 🔧 **可扩展**: 模块化设计，易于扩展新功能
 
-## 安装
+## 🏗️ 架构设计
 
-### 从源码编译
+```
+uav-edge-sdk/
+├── include/              # C++ 头文件
+│   ├── path_planner.h    # 路径规划
+│   ├── risk_assessor.h   # 风险评估
+│   └── flight_controller.h # 飞控通信
+├── src/                  # C++ 源文件
+│   ├── path_planner.cpp
+│   ├── risk_assessor.cpp
+│   ├── flight_controller.cpp
+│   └── bindings.cpp      # PyBind11 绑定
+├── python/               # Python 封装层
+│   ├── edge_sdk.py       # 主 SDK 类
+│   ├── config.py         # 配置管理
+│   ├── logger.py         # 日志模块
+│   └── *_python.py       # 纯 Python 回退
+├── tests/                # 测试文件
+├── CMakeLists.txt        # CMake 构建配置
+└── README.md
+```
+
+## 🚀 快速开始
+
+### 环境要求
+
+- Python 3.8+
+- CMake 3.10+
+- C++ 编译器 (GCC/MSVC/Clang)
+- PyBind11
+
+### 构建 C++ 模块
 
 ```bash
-# 克隆仓库
-git clone https://github.com/your-repo/uav-edge-sdk.git
 cd uav-edge-sdk
 
-# 创建虚拟环境
-python -m venv venv
-source venv/bin/activate  # Linux/Mac
-# venv\Scripts\activate  # Windows
+# 创建构建目录
+mkdir build && cd build
 
-# 安装依赖
-pip install -r requirements.txt
+# 配置 CMake
+cmake .. -DCMAKE_BUILD_TYPE=Release
 
-# 编译 C++ 模块
-./build.sh  # Linux/Mac
-# build.bat  # Windows
+# 编译
+cmake --build . --config Release
 
-# 安装 SDK
-pip install -e .
+# 安装到 python 目录
+cmake --install .
 ```
 
-### 使用预编译轮子
+### Windows (MSVC)
 
 ```bash
-pip install edge-sdk
+mkdir build && cd build
+cmake .. -G "Visual Studio 16 2019" -A x64
+cmake --build . --config Release
 ```
 
-## 快速开始
+### Linux/macOS
 
-### 基本用法
+```bash
+mkdir build && cd build
+cmake ..
+make -j4
+make install
+```
+
+### Python 使用
+
+#### 基本用法
 
 ```python
-from edge_sdk import create_sdk
+from edge_sdk import EdgeSDK, create_sdk
 
 # 创建 SDK 实例
-sdk = create_sdk({
-    'grid_width': 100,    # 网格宽度(米)
-    'grid_height': 100,   # 网格高度(米)
-    'resolution': 1.0      # 分辨率(米/格)
+sdk = EdgeSDK({
+    'grid_width': 100,
+    'grid_height': 100,
+    'resolution': 1.0
 })
 
 # 路径规划
 path = sdk.plan_path(
     start=(0, 0),
     goal=(50, 50),
-    obstacles=[(10, 10), (10, 11), (11, 10)]
+    obstacles=[(10, 10), (10, 11)]
 )
-print(f"路径点数: {len(path)}")
+
+print(f"Path: {path}")
 
 # 气象风险评估
 weather = {
-    'wind_speed': 8.0,        # 风速 m/s
-    'wind_direction': 180,     # 风向 (°)
-    'temperature': 25.0,       # 温度 (°C)
-    'humidity': 65.0,          # 湿度 %
-    'visibility': 10.0,         # 能见度 km
-    'precipitation': 0.0,      # 降水量 mm/h
-    'has_thunderstorm': False  # 是否有雷暴
+    'wind_speed': 8.0,         # m/s
+    'wind_direction': 180,      # 度
+    'temperature': 20.0,         # °C
+    'humidity': 65.0,           # %
+    'visibility': 10.0,          # km
+    'precipitation': 0.0,       # mm/h
+    'has_thunderstorm': False
 }
-result = sdk.assess_weather_risk(weather)
-print(f"风险等级: {result['level']}")
-print(f"风险分数: {result['score']}")
+
+assessment = sdk.assess_weather_risk(weather)
+print(f"Risk: {assessment['level']} ({assessment['score']:.1f}/100)")
 ```
 
-### 便捷函数
+#### 飞控连接
 
 ```python
-from edge_sdk import plan_path, assess_weather
-
-# 快速路径规划
-path = plan_path((0, 0), (10, 10))
-
-# 快速气象评估
-weather = {'wind_speed': 5.0, 'wind_direction': 180, ...}
-result = assess_weather(weather)
-```
-
-### 飞控接口
-
-```python
-sdk = create_sdk({'serial_device': '/dev/ttyUSB0', 'baudrate': 57600})
-
 # 连接飞控
-if sdk.connect_flight_controller():
-    # 获取无人机状态
-    state = sdk.get_uav_state()
-    print(f"位置: {state['latitude']}, {state['longitude']}")
-    print(f"高度: {state['altitude']}m")
-    print(f"电量: {state['battery']}%")
-    
-    # 上传任务
-    waypoints = [
-        {'latitude': 30.0, 'longitude': 120.0, 'altitude': 100},
-        {'latitude': 30.1, 'longitude': 120.1, 'altitude': 100},
-    ]
-    sdk.upload_mission(waypoints)
-    
-    # 执行任务
-    sdk.execute_mission()
+sdk.connect_flight_controller()
+
+# 解锁
+sdk.arm()
+
+# 起飞到 10 米
+sdk.takeoff(10.0)
+
+# 上传任务
+waypoints = [
+    {'latitude': 31.23, 'longitude': 121.47, 'altitude': 20, 'speed': 10, 'action': True},
+    {'latitude': 31.24, 'longitude': 121.48, 'altitude': 25, 'speed': 10, 'action': False}
+]
+sdk.upload_mission(waypoints)
+
+# 执行任务
+sdk.execute_mission()
+
+# 降落
+sdk.land()
 ```
 
-## API 参考
+### 纯 Python 回退
+
+如果 C++ 模块未构建，SDK 会自动使用纯 Python 回退：
+
+```python
+# 自动检测，无需手动切换
+from edge_sdk import EdgeSDK
+sdk = EdgeSDK()  # 会自动选择 C++ 或 Python 实现
+```
+
+性能会有所下降，但功能完全一致。
+
+## 📚 API 文档
 
 ### EdgeSDK 类
-
-#### 构造函数
-
-```python
-sdk = EdgeSDK(config=None)
-```
-
-- `config`: 配置字典，可选键：
-  - `grid_width`: 网格宽度，默认 100
-  - `grid_height`: 网格高度，默认 100
-  - `resolution`: 分辨率，默认 1.0
-  - `serial_device`: 串口设备路径
-  - `baudrate`: 串口波特率
 
 #### 路径规划
 
 ```python
-path = sdk.plan_path(start, goal, obstacles=None)
+sdk.plan_path(start, goal, obstacles=None)
 ```
 
 - `start`: 起点坐标 `(x, y)`
 - `goal`: 终点坐标 `(x, y)`
 - `obstacles`: 障碍物列表 `[(x1, y1), (x2, y2), ...]`
-- 返回: 路径点列表 `[(x1, y1), (x2, y2), ...]`
+- 返回: 路径点列表
 
 #### 气象风险评估
 
 ```python
-result = sdk.assess_weather_risk(weather)
+sdk.assess_weather_risk(weather)
 ```
 
 - `weather`: 气象数据字典
   - `wind_speed`: 风速 (m/s)
-  - `wind_direction`: 风向 (°)
+  - `wind_direction`: 风向 (度)
   - `temperature`: 温度 (°C)
   - `humidity`: 湿度 (%)
   - `visibility`: 能见度 (km)
   - `precipitation`: 降水量 (mm/h)
   - `has_thunderstorm`: 是否有雷暴
-- 返回: 评估结果
-  - `level`: 风险等级 `'LOW'`, `'MEDIUM'`, `'HIGH'`, `'SEVERE'`
+- 返回: 风险评估字典
+  - `level`: 风险等级 ('LOW', 'MEDIUM', 'HIGH', 'SEVERE')
   - `score`: 风险分数 (0-100)
   - `warnings`: 警告信息列表
 
-## 项目结构
+#### 飞控控制
 
-```
-uav-edge-sdk/
-├── edge_sdk/              # Python 包
-│   ├── __init__.py
-│   ├── _core.py          # 核心封装
-│   ├── config.py         # 配置
-│   ├── logger.py          # 日志
-│   ├── path_planner_python.py    # Python 路径规划回退
-│   └── risk_assessor_python.py   # Python 风险评估回退
-├── include/               # C++ 头文件
-│   ├── path_planner.h
-│   ├── risk_assessor.h
-│   └── flight_controller.h
-├── src/                   # C++ 源文件
-│   ├── path_planner.cpp
-│   ├── risk_assessor.cpp
-│   ├── flight_controller.cpp
-│   └── bindings.cpp       # Python 绑定
-├── tests/                 # 测试
-├── CMakeLists.txt         # CMake 构建配置
-├── build.sh               # Linux/Mac 构建脚本
-├── build.bat              # Windows 构建脚本
-├── setup.py               # Python 安装配置
-└── README.md
+```python
+sdk.connect_flight_controller()  # 连接飞控
+sdk.disconnect_flight_controller()  # 断开连接
+sdk.arm()  # 解锁
+sdk.disarm()  # 上锁
+sdk.takeoff(altitude)  # 起飞
+sdk.land()  # 降落
+sdk.return_to_launch()  # 返航
+sdk.upload_mission(waypoints)  # 上传任务
+sdk.execute_mission()  # 执行任务
+sdk.get_uav_state()  # 获取无人机状态
 ```
 
-## 构建说明
-
-### Linux/Mac
+## 🧪 测试
 
 ```bash
-./build.sh
+# 运行测试
+cd tests
+python test_edge_sdk.py
+
+# 运行示例
+cd python
+python edge_sdk.py
 ```
 
-### Windows
-
-```cmd
-build.bat
-```
-
-### 手动构建
-
-```bash
-mkdir build && cd build
-cmake .. -DCMAKE_BUILD_TYPE=Release
-cmake --build . --config Release
-```
-
-## 性能对比
-
-| 功能 | C++ 模块 | Python 回退 | 加速比 |
-|------|----------|-------------|--------|
-| 路径规划 (100x100 网格) | ~1ms | ~50ms | 50x |
-| 风险评估 | ~0.1ms | ~1ms | 10x |
-
-## 依赖
-
-### Python 依赖
-
-- Python >= 3.8
-- numpy (可选，用于高性能计算)
+## 📦 依赖
 
 ### C++ 依赖
 
-- CMake >= 3.10
+- CMake 3.10+
 - C++14 兼容编译器
-- pybind11 (自动下载)
-- Python Development (Python.h)
+- PyBind11 (自动下载或手动安装)
 
-## 许可证
+### Python 依赖
 
-Apache License 2.0
+- Python 3.8+
 
-## 作者
+## 📄 许可证
 
-Dithiothreitol
+[Apache License 2.0](LICENSE)
 
-## 贡献
+## 👤 作者
 
-欢迎提交 Issue 和 Pull Request。
+**Dithiothreitol**
+
+## 🙏 致谢
+
+- 使用 [PyBind11](https://github.com/pybind/pybind11) 实现 C++/Python 绑定
+- 参考 [A* 算法](https://en.wikipedia.org/wiki/A*_search_algorithm) 实现路径规划
+- 参考 [MAVLink](https://mavlink.io/en/) 协议实现飞控通信
+---
+
+> **最后更新**: 2026-05-08  
+> **版本**: 2.1  
+> **维护者**: DITHIOTHREITOL

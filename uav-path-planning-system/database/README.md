@@ -1,35 +1,36 @@
 # Database - 数据库脚本
 
-##  概述
+## 📋 概述
 
 无人机路径规划系统的数据库脚本，包括初始化脚本、迁移脚本和备份。
 
-**数据库**: MySQL 8.0+
+**数据库**: MySQL 8.0+  
+**最后更新**: 2026-05-08
 
 ---
 
-##  目录结构
+## 📁 目录结构
 
 ```
 database/
- init.sql              # 数据库初始化脚本
- migrations/           # 数据库迁移脚本
-    V001__initial_schema.sql
-    V002__add_user_roles.sql
-    V003__add_performance_indexes.sql
- backups/              # 备份文件
-    2026-01-01/
-    2026-05-09/
- schema/               # 数据库Schema
-    users.sql
-    tasks.sql
-    drones.sql
- README.md             # 本文档
+├── init.sql              # 数据库初始化脚本
+├── migrations/           # 数据库迁移脚本
+│   ├── V001__initial_schema.sql
+│   ├── V002__add_user_roles.sql
+│   └── V003__add_performance_indexes.sql
+├── backups/            # 备份文件
+│   ├── 2026-01-01/
+│   └── 2026-05-08/
+├── schema/            # 数据库Schema
+│   ├── users.sql
+│   ├── tasks.sql
+│   └── drones.sql
+└── README.md         # 本文档
 ```
 
 ---
 
-##  快速开始
+## 🚀 快速开始
 
 ### 初始化数据库
 
@@ -57,7 +58,7 @@ mysql -h localhost -u root -p uav_platform < database/migrations/V001__initial_s
 
 ---
 
-##  数据库Schema
+## 📊 数据库Schema
 
 ### 主要表
 
@@ -71,7 +72,7 @@ mysql -h localhost -u root -p uav_platform < database/migrations/V001__initial_s
 
 ---
 
-##  数据库迁移
+## 🔄 数据库迁移
 
 ### Flyway 配置
 
@@ -97,7 +98,7 @@ CREATE TABLE new_feature (
 
 ---
 
-##  备份与恢复
+## 💾 备份与恢复
 
 ### 备份
 
@@ -121,7 +122,7 @@ mysql -h localhost -u root -p uav_platform < backup.sql
 
 ---
 
-## 🔒 安全配置
+## 🛡️ 安全配置
 
 ### 用户权限
 
@@ -145,7 +146,7 @@ ALTER USER 'root'@'localhost' IDENTIFIED BY 'NewStrongPassword123!';
 
 ---
 
-##  性能优化
+## 📈 性能优化
 
 ### 索引
 
@@ -168,7 +169,7 @@ OPTIMIZE TABLE tasks;
 
 ---
 
-##  测试数据库
+## 🧪 测试数据库
 
 ### H2 内存数据库
 
@@ -185,14 +186,16 @@ spring:
 
 ---
 
-##  相关文档
+## 📚 相关文档
 
 - [MySQL 官方文档](https://dev.mysql.com/doc/)
 - [Flyway 文档](https://flywaydb.org/documentation/)
 
-
 ---
 
-> **最后更新**: 2026-05-09  
+**最后更新**: 2026-05-08
+---
+
+> **最后更新**: 2026-05-08  
 > **版本**: 2.1  
 > **维护者**: DITHIOTHREITOL

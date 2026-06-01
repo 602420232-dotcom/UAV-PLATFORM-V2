@@ -1,7 +1,7 @@
 # 无人机管理接口
 
->  **注意**: 以下接口为计划中的 API 定义，当前版本尚未实现完整的 CRUD。
-> 当前可用的无人机接口 `GET /api/platform/drones`（PlatformController）。
+> ⚠️ **注意**: 以下接口为计划中的 API 定义，当前版本尚未实现完整 CRUD。
+> 当前可用的无人机接口：`GET /api/platform/drones`（PlatformController）
 
 ## 获取无人机列表
 
@@ -14,7 +14,7 @@ Authorization: Bearer <JWT令牌>
 
 ### 响应
 
-**成功**
+**成功：**
 
 ```json
 {
@@ -51,7 +51,7 @@ Authorization: Bearer <JWT令牌>
 }
 ```
 
-**失败**
+**失败：**
 
 ```json
 {
@@ -72,7 +72,7 @@ Authorization: Bearer <JWT令牌>
 
 ### 响应
 
-**成功**
+**成功：**
 
 ```json
 {
@@ -98,7 +98,7 @@ Authorization: Bearer <JWT令牌>
 }
 ```
 
-**失败**
+**失败：**
 
 ```json
 {
@@ -118,7 +118,7 @@ Content-Type: application/json
 Authorization: Bearer <JWT令牌>
 ```
 
-**请求体**
+**请求体：**
 
 ```json
 {
@@ -132,7 +132,7 @@ Authorization: Bearer <JWT令牌>
 
 ### 响应
 
-**成功**
+**成功：**
 
 ```json
 {
@@ -152,7 +152,7 @@ Authorization: Bearer <JWT令牌>
 }
 ```
 
-**失败**
+**失败：**
 
 ```json
 {
@@ -172,7 +172,7 @@ Content-Type: application/json
 Authorization: Bearer <JWT令牌>
 ```
 
-**请求体**
+**请求体：**
 
 ```json
 {
@@ -184,7 +184,7 @@ Authorization: Bearer <JWT令牌>
 
 ### 响应
 
-**成功**
+**成功：**
 
 ```json
 {
@@ -206,7 +206,7 @@ Authorization: Bearer <JWT令牌>
 }
 ```
 
-**失败**
+**失败：**
 
 ```json
 {
@@ -227,7 +227,7 @@ Authorization: Bearer <JWT令牌>
 
 ### 响应
 
-**成功**
+**成功：**
 
 ```json
 {
@@ -237,7 +237,7 @@ Authorization: Bearer <JWT令牌>
 }
 ```
 
-**失败**
+**失败：**
 
 ```json
 {
@@ -248,6 +248,6 @@ Authorization: Bearer <JWT令牌>
 ```
 ---
 
-> **最后更新**: 2026-05-09  
+> **最后更新**: 2026-05-08  
 > **版本**: 2.1  
 > **维护者**: DITHIOTHREITOL

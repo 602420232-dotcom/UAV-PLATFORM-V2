@@ -1,56 +1,48 @@
 package com.uav.model;
-
 import lombok.Data;
 import java.time.LocalDateTime;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 
 @Data
 @Entity
 @Table(name = "drones")
 public class Drone {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
+    
     private String name;
     private String model;
     private String serialNumber;
-
-    private Double maxSpeed;
-    private Double maxCapacity;
-    private Double maxBattery;
-    private Double cruiseSpeed;
-    private Double windResistance;
-
-    private String status;
-
-    @Column(name = "current_latitude")
+    
+    // 无人机参数
+    private Double maxSpeed; // 最大速度（m/s）
+    private Double maxCapacity; // 最大载重（kg）
+    private Double maxBattery; // 最大续航时间（分钟）
+    private Double cruiseSpeed; // 巡航速度（m/s）
+    private Double windResistance; // 抗风等级（m/s）
+    
+    // 状态
+    private String status; // IDLE, BUSY, MAINTENANCE, FAILED
+    
+    // 位置信息
     private Double currentLatitude;
-
-    @Column(name = "current_longitude")
     private Double currentLongitude;
-
     private Double currentAltitude;
-    private Double speed;
-    private Integer batteryLevel;
-
+    
+    // 电池电量
+    private Integer batteryLevel; // 百分比
+    
+    // 创建和更新时间
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-
+    
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
     }
-
+    
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();

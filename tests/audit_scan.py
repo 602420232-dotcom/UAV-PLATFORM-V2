@@ -1,4 +1,3 @@
-import logging
 #!/usr/bin/env python3
 """Full project audit scanner - produces issues report."""
 import os, re, json
@@ -27,7 +26,7 @@ for dp, dn, fn in os.walk(ROOT):
         try:
             if os.path.getsize(fp) == 0 and f.endswith(('.java','.py','.xml','.yml','.yaml','.properties','.json','.sh')):
                 issues['empty_files'].append(rel)
-        except OSError:
+        except:
             pass
         
         if not f.endswith(('.java','.py','.xml','.yml','.yaml','.properties','.sh','.json','.js','.ts','.vue','.css')):
@@ -36,11 +35,11 @@ for dp, dn, fn in os.walk(ROOT):
         try:
             with open(fp, 'r', encoding='utf-8') as fh:
                 content = fh.read(100000)
-        except UnicodeDecodeError:
+        except:
             try:
                 with open(fp, 'r', encoding='gbk') as fh:
                     content = fh.read(100000)
-            except (UnicodeDecodeError, OSError):
+            except:
                 continue
             
         # Check BOM
@@ -48,7 +47,7 @@ for dp, dn, fn in os.walk(ROOT):
             with open(fp, 'rb') as fh2:
                 if fh2.read(3) == b'\xef\xbb\xbf':
                     issues['bom_files'].append(rel)
-        except (OSError, PermissionError):
+        except:
             pass
         
         # Hardcoded secrets
@@ -77,12 +76,12 @@ for dp, dn, fn in os.walk(ROOT):
             issues['suppress_warnings'].append(rel)
 
 for cat, lst in issues.items():
-    logger.info(f"\n### {cat.upper()}: {len(lst)} items")
+    print(f'\n### {cat.upper()}: {len(lst)} items')
     for item in lst[:20]:
-        logger.info(f"  - {item}")
+        print(f'  - {item}')
     if len(lst) > 20:
-        logger.info(f"  ... and {len(lst)-20} more")
+        print(f'  ... and {len(lst)-20} more')
 
 with open(os.path.join(ROOT, 'tests', 'audit_scan_results.json'), 'w') as out:
     json.dump(issues, out, indent=2, ensure_ascii=False)
-logger.info("\n\nFull results saved to tests/audit_scan_results.json")
+print('\n\nFull results saved to tests/audit_scan_results.json')

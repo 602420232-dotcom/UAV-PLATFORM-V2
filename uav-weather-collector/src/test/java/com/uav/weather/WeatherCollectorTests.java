@@ -14,7 +14,6 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 
 @DisplayName("WeatherCollector 集成测试")
-@SuppressWarnings("null")
 class WeatherCollectorTests {
 
     private WeatherController weatherController;
@@ -24,7 +23,7 @@ class WeatherCollectorTests {
     void setUp() {
         weatherController = new WeatherController();
         weatherCollectorService = new WeatherCollectorService();
-        ReflectionTestUtils.setField(weatherController, "weatherService", weatherCollectorService);
+        ReflectionTestUtils.setField(weatherController, "weatherCollectorService", weatherCollectorService);
     }
 
     @Test

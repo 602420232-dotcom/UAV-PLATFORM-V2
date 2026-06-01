@@ -1,7 +1,7 @@
 # 任务管理接口
 
->  **注意**: 以下接口为计划中的 API 定义，当前版本尚未实现完整的 CRUD。
-> 当前可用的任务接口 `POST /api/platform/task`（PlatformController）。
+> ⚠️ **注意**: 以下接口为计划中的 API 定义，当前版本尚未实现完整 CRUD。
+> 当前可用的任务接口：`POST /api/platform/task`（PlatformController）
 
 ## 获取任务列表
 
@@ -14,7 +14,7 @@ Authorization: Bearer <JWT令牌>
 
 ### 响应
 
-**成功**
+**成功：**
 
 ```json
 {
@@ -23,7 +23,7 @@ Authorization: Bearer <JWT令牌>
   "data": [
     {
       "id": 1,
-      "name": "巡逻任务",
+      "name": "巡逻任务1",
       "description": "区域巡逻任务",
       "status": "PENDING",
       "startTime": "2024-01-01T00:00:00Z",
@@ -43,7 +43,7 @@ Authorization: Bearer <JWT令牌>
 }
 ```
 
-**失败**
+**失败：**
 
 ```json
 {
@@ -64,7 +64,7 @@ Authorization: Bearer <JWT令牌>
 
 ### 响应
 
-**成功**
+**成功：**
 
 ```json
 {
@@ -72,7 +72,7 @@ Authorization: Bearer <JWT令牌>
   "message": "获取任务详情成功",
   "data": {
     "id": 1,
-    "name": "巡逻任务",
+    "name": "巡逻任务1",
     "description": "区域巡逻任务",
     "status": "PENDING",
     "startTime": "2024-01-01T00:00:00Z",
@@ -99,7 +99,7 @@ Authorization: Bearer <JWT令牌>
 }
 ```
 
-**失败**
+**失败：**
 
 ```json
 {
@@ -119,7 +119,7 @@ Content-Type: application/json
 Authorization: Bearer <JWT令牌>
 ```
 
-**请求体**
+**请求体：**
 
 ```json
 {
@@ -146,7 +146,7 @@ Authorization: Bearer <JWT令牌>
 
 ### 响应
 
-**成功**
+**成功：**
 
 ```json
 {
@@ -164,7 +164,7 @@ Authorization: Bearer <JWT令牌>
 }
 ```
 
-**失败**
+**失败：**
 
 ```json
 {
@@ -184,7 +184,7 @@ Content-Type: application/json
 Authorization: Bearer <JWT令牌>
 ```
 
-**请求体**
+**请求体：**
 
 ```json
 {
@@ -197,7 +197,7 @@ Authorization: Bearer <JWT令牌>
 
 ### 响应
 
-**成功**
+**成功：**
 
 ```json
 {
@@ -215,7 +215,7 @@ Authorization: Bearer <JWT令牌>
 }
 ```
 
-**失败**
+**失败：**
 
 ```json
 {
@@ -236,7 +236,7 @@ Authorization: Bearer <JWT令牌>
 
 ### 响应
 
-**成功**
+**成功：**
 
 ```json
 {
@@ -246,7 +246,7 @@ Authorization: Bearer <JWT令牌>
 }
 ```
 
-**失败**
+**失败：**
 
 ```json
 {
@@ -257,6 +257,6 @@ Authorization: Bearer <JWT令牌>
 ```
 ---
 
-> **最后更新**: 2026-05-09  
+> **最后更新**: 2026-05-08  
 > **版本**: 2.1  
 > **维护者**: DITHIOTHREITOL

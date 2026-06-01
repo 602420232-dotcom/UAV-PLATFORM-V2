@@ -15,45 +15,22 @@ spec:
       labels:
         app: data-assimilation-service
     spec:
-      securityContext:
-        runAsNonRoot: true
-        runAsUser: 1001
-        fsGroup: 1001
       containers:
         - name: data-assimilation
-          image: trae-data-assimilation:latest
+          image: uav-registry/data-assimilation-service:latest
           ports:
             - containerPort: 8084
               name: http
-          envFrom:
-            - configMapRef:
-                name: uav-platform-config
           env:
-            - name: SPRING_DATASOURCE_URL
-              valueFrom:
-                configMapKeyRef:
-                  name: uav-platform-config
-                  key: SPRING_DATASOURCE_URL_DATA_ASSIMILATION
-            - name: SPRING_DATASOURCE_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: uav-platform-secrets
-                  key: spring.datasource.password
+            - name: NACOS_SERVER
+              value: nacos:8848
+            - name: DB_HOST
+              value: mysql
             - name: DB_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: uav-platform-secrets
-                  key: spring.datasource.password
-            - name: PYTHON_TIMEOUT
-              valueFrom:
-                configMapKeyRef:
-                  name: uav-platform-config
-                  key: PYTHON_TIMEOUT_ASSIMILATION
-            - name: JAVA_OPTS
-              valueFrom:
-                configMapKeyRef:
-                  name: uav-platform-config
-                  key: JAVA_OPTS_DATA_ASSIMILATION
+                  name: uav-secrets
+                  key: db-password
           livenessProbe:
             httpGet: { path: /actuator/health, port: 8084 }
             initialDelaySeconds: 30
@@ -63,13 +40,8 @@ spec:
             initialDelaySeconds: 20
             periodSeconds: 5
           resources:
-            limits: { memory: 2Gi, cpu: 2000m }
-            requests: { memory: 1Gi, cpu: 500m }
-  strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxUnavailable: 1
-      maxSurge: 1
+            limits: { memory: 512Mi, cpu: 500m }
+            requests: { memory: 256Mi, cpu: 200m }
 ---
 apiVersion: v1
 kind: Service

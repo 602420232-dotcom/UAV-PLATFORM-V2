@@ -1,6 +1,6 @@
 # UAV Path Planning System - Quick Reference Card
 
-##  快速开始
+## 🚀 快速开始
 
 ### 启动所有服务
 ```bash
@@ -17,13 +17,13 @@ docker-compose ps
 |------|-----|
 | 前端 | http://localhost:3000 |
 | API Gateway | http://localhost:8088 |
-| Grafana | http://localhost:3030 |
+| Grafana | http://localhost:3000 |
 | Prometheus | http://localhost:9090 |
 | Kibana | http://localhost:5601 |
 
 ---
 
-##  常用命令
+## 🔧 常用命令
 
 ### Java服务
 ```bash
@@ -63,7 +63,7 @@ docker-compose restart service-name
 
 ---
 
-##  API端点
+## 📡 API端点
 
 ### 认证
 ```bash
@@ -125,7 +125,7 @@ POST /api/assimilation/execute
 
 ---
 
-## 安全配置
+## 🛡️ 安全配置
 
 ### JWT密钥配置
 ```bash
@@ -144,7 +144,7 @@ export DB_PASSWORD=your_secure_password
 
 ---
 
-##  熔断器管理
+## 📊 熔断器管理
 
 ### 查看熔断器状态
 ```bash
@@ -168,7 +168,7 @@ curl -X POST http://localhost:8080/api/admin/circuit-breaker/reset/meteor-foreca
 
 ---
 
-##  故障排查
+## 🔍 故障排查
 
 ### 服务无法启动
 ```bash
@@ -205,7 +205,7 @@ curl -X POST http://localhost:8080/api/admin/circuit-breaker/reset/service-name
 
 ---
 
-##  监控查询
+## 📈 监控查询
 
 ### Prometheus查询
 ```promql
@@ -233,7 +233,7 @@ resilience4j_circuitbreaker_state
 
 ---
 
-##  部署
+## 🔄 部署
 
 ### 开发环境
 ```bash
@@ -251,7 +251,7 @@ kubectl get pods -n uav-platform
 
 ---
 
-##  日志查看
+## 📝 日志查看
 
 ### 应用日志
 ```bash
@@ -282,7 +282,7 @@ GET uav-logs-*/_search
 
 ---
 
-##  测试
+## 🧪 测试
 
 ### 运行所有测试
 ```bash
@@ -303,33 +303,33 @@ pytest test_performance.py -v -s
 
 ---
 
-##  文档索引
+## 📚 文档索引
 
 | 需要什么 | 查看这个 |
 |---------|---------|
 | 项目概览 | [README.md](README.md) |
-| 部署指南 | [deployment/DEPLOYMENT.md](deployment/DEPLOYMENT.md) |
-| 架构设计 | [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md) |
-| 熔断器使用 | [CIRCUIT_BREAKER_GUIDE.md](guides/CIRCUIT_BREAKER_GUIDE.md) |
-| 监控配置 | [deployments/monitoring/README.md](deployment/README.md) |
+| 部署指南 | [DEPLOYMENT.md](DEPLOYMENT.md) |
+| 架构设计 | [docs/PROJECT_STRUCTURE.md](docs/PROJECT_STRUCTURE.md) |
+| 熔断器使用 | [docs/CIRCUIT_BREAKER_GUIDE.md](docs/CIRCUIT_BREAKER_GUIDE.md) |
+| 监控配置 | [docs/deployments/monitoring/README.md](docs/deployments/monitoring/README.md) |
 | 更新日志 | [CHANGELOG.md](CHANGELOG.md) |
-| 故障排除 | [TROUBLESHOOTING.md](guides/TROUBLESHOOTING.md) |
 
 ---
 
-##  关键链接
+## 🔗 关键链接
 
-- Grafana: http://localhost:3030 (credentials configured via env)
+- Grafana: http://localhost:3000 (admin/changeme123)
 - Prometheus: http://localhost:9090
-- Kibana: http://localhost:5601 (credentials configured via env)
+- Kibana: http://localhost:5601 (elastic/changeme123)
 - Alertmanager: http://localhost:9093
 - Jaeger: http://localhost:16686
 
-------
+---
 
+**最后更新**: 2026-05-08  
+**版本**: 2.0.0
+---
 
-
-> **最后更新**: 2026-06-01  
-> **版本**: 2.2  
+> **最后更新**: 2026-05-08  
+> **版本**: 2.1  
 > **维护者**: DITHIOTHREITOL
-

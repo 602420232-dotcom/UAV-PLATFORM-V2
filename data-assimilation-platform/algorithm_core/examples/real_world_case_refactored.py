@@ -1,9 +1,6 @@
 """
 WRF数据真实案例贝叶斯同化演示（重构版）
 展示如何使用贝叶斯同化系统的各个模块
-
-注意: 此文件是 real_world_case.py 的重构尝试。
-通用工具函数已迁移至 common.py。
 """
 
 import os
@@ -12,9 +9,11 @@ import logging
 import numpy as np
 from datetime import datetime
 
+# 设置环境变量
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 
+# 导入核心库模块
 src_path = os.path.join(os.path.dirname(__file__), '..', 'src')
 sys.path.insert(0, src_path)
 
@@ -26,9 +25,8 @@ from bayesian_assimilation import ( # type: ignore
     TimeSeriesAnalyzer,
     PerformanceMetrics,
     WRFDataAdapter,
-    ObservationAdapter,
+    ObservationAdapter
 )
-from common import create_synthetic_data
 
 # 配置日志
 logging.basicConfig(

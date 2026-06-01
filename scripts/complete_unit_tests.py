@@ -1,4 +1,3 @@
-import logging
 """
 Unit Test Completion Script
 Complete TODO sections in auto-generated test files
@@ -98,20 +97,20 @@ def complete_todo_in_file(file_path: str) -> Dict:
 def main():
     """Main function"""
     print("=" * 60)
-    logger.info("Unit Test Completion Script")
+    print("Unit Test Completion Script")
     print("=" * 60)
     
     # Find test files
     root_dir = r"d:\Developer\workplace\py\iteam\trae\data-assimilation-platform"
     test_files = find_test_files(root_dir)
     
-    logger.info(f"\nFound {len(test_files)} test files\n")
+    print(f"\nFound {len(test_files)} test files\n")
     
     # Complete TODOs
     results = []
     for i, test_file in enumerate(test_files, 1):
         if i % 10 == 0:
-            logger.info(f"Progress: {i}/{len(test_files)}...")
+            print(f"Progress: {i}/{len(test_files)}...")
         
         result = complete_todo_in_file(test_file)
         results.append(result)
@@ -121,10 +120,10 @@ def main():
     no_todos = sum(1 for r in results if r['status'] == 'NO_TODOS')
     errors = sum(1 for r in results if r['status'] == 'ERROR')
     
-    logger.info(f"\nCompletion complete!")
-    logger.info(f"Files completed: {success}")
-    logger.info(f"Files no TODOs: {no_todos}")
-    logger.info(f"Files with errors: {errors}")
+    print(f"\nCompletion complete!")
+    print(f"Files completed: {success}")
+    print(f"Files no TODOs: {no_todos}")
+    print(f"Files with errors: {errors}")
     
     # Save report
     report_file = os.path.join(root_dir, 'test_completion_report.txt')
@@ -146,9 +145,9 @@ def main():
                 f.write(f"✓ {result['file']}\n")
                 f.write(f"  Completed: {result['completed']} TODOs\n")
     
-    logger.info(f"\nReport: {report_file}")
+    print(f"\nReport: {report_file}")
     print("\n" + "=" * 60)
-    logger.info("Note: Some TODOs may require manual completion")
+    print("Note: Some TODOs may require manual completion")
     print("=" * 60)
 
 if __name__ == '__main__':

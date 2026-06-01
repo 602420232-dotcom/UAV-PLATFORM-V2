@@ -145,11 +145,7 @@ class RealtimeRiskAssessor:
                 "drone_id": event.drone_id, "wind_speed": event.wind_speed,
                 "wind_gust": event.wind_gust, "timestamp": event.timestamp
             })
-        self.executor.submit(self._evaluate_risk, event).add_done_callback(
-            lambda f: f.exception() and logger.error(
-                f"Risk evaluation failed: {f.exception()}"
-            )
-        )
+        self.executor.submit(self._evaluate_risk, event)
 
     def _evaluate_risk(self, event: WeatherEvent):
         risk_score = 0.0

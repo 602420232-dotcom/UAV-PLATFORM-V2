@@ -1,19 +1,7 @@
 package com.uav.model;
-
-import lombok.Data;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinTable;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.Table;
 import java.util.Set;
+import jakarta.persistence.*;
 
-@Data
 @Entity
 @Table(name = "roles")
 public class Role {
@@ -28,20 +16,39 @@ public class Role {
     @Column(nullable = false)
     private String description;
     
-    /**
-     * 关联的用户
-     */
     @ManyToMany(mappedBy = "roles")
     private Set<User> users;
     
-    /**
-     * 关联的权限
-     */
-    @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(
-        name = "role_permissions",
-        joinColumns = @JoinColumn(name = "role_id"),
-        inverseJoinColumns = @JoinColumn(name = "permission_id")
-    )
-    private Set<Permission> permissions;
+    // Getters and Setters
+    public Long getId() {
+        return id;
+    }
+    
+    public void setId(Long id) {
+        this.id = id;
+    }
+    
+    public String getName() {
+        return name;
+    }
+    
+    public void setName(String name) {
+        this.name = name;
+    }
+    
+    public String getDescription() {
+        return description;
+    }
+    
+    public void setDescription(String description) {
+        this.description = description;
+    }
+    
+    public Set<User> getUsers() {
+        return users;
+    }
+    
+    public void setUsers(Set<User> users) {
+        this.users = users;
+    }
 }

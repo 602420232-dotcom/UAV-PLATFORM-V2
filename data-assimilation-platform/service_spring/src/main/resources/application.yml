@@ -1,10 +1,6 @@
 server:
   port: 8094
 
-spring:
-  application:
-    name: bayesian-assimilation-service
-
 resilience4j:
   timelimiter:
     configs:
@@ -41,14 +37,14 @@ resilience4j:
         
         # 忽略的异常（不计入失败）
         ignore-exceptions:
-          - com.uav.bayesian.exception.BusinessException
+          - com.bayesian.exception.BusinessException
         
         # 记录的异常（计入失败）
         record-exceptions:
           - java.util.concurrent.TimeoutException
           - java.net.ConnectException
           - org.springframework.web.reactive.function.client.WebClientResponseException
-          - com.uav.bayesian.exception.AssimilationException
+          - com.bayesian.exception.AssimilationException
       
       # 同化计算专用配置（更严格）
       assimilation:
@@ -91,7 +87,7 @@ resilience4j:
           - java.net.ConnectException
           - org.springframework.web.client.HttpServerErrorException.ServiceUnavailable
         ignore-exceptions:
-          - com.uav.bayesian.exception.ValidationException  # 参数错误不重试
+          - com.bayesian.exception.ValidationException  # 参数错误不重试
 
     instances:
       assimilationRetry:
@@ -124,8 +120,8 @@ resilience4j:
 # Python服务配置
 python:
   service:
-    url: ${PYTHON_SERVICE_URL:http://python-assimilation:8000}
-    timeout: ${PYTHON_SERVICE_TIMEOUT:30000}
+    url: http://localhost:8000
+    timeout: 30000
 
 # Actuator监控端点
 management:

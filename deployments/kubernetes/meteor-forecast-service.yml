@@ -2,11 +2,11 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: meteor-forecast-service
-  namespace: uav-platform
+  namespace: uav-path-planning
   labels:
     app: meteor-forecast-service
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: meteor-forecast-service
@@ -15,79 +15,90 @@ spec:
       labels:
         app: meteor-forecast-service
     spec:
-      securityContext:
-        runAsNonRoot: true
-        runAsUser: 1001
-        fsGroup: 1001
       containers:
-        - name: meteor-forecast
-          image: trae-meteor-forecast:latest
-          imagePullPolicy: IfNotPresent
-          ports:
-            - containerPort: 8082
-          envFrom:
-            - configMapRef:
-                name: uav-platform-config
-          env:
-            - name: SPRING_DATASOURCE_URL
-              valueFrom:
-                configMapKeyRef:
-                  name: uav-platform-config
-                  key: SPRING_DATASOURCE_URL_METEOR_FORECAST
-            - name: SPRING_DATASOURCE_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  key: spring.datasource.password
-                  name: uav-platform-secrets
-            - name: DB_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  key: spring.datasource.password
-                  name: uav-platform-secrets
-            - name: PYTHON_TIMEOUT
-              valueFrom:
-                configMapKeyRef:
-                  name: uav-platform-config
-                  key: PYTHON_TIMEOUT_FORECAST
-            - name: JAVA_OPTS
-              valueFrom:
-                configMapKeyRef:
-                  name: uav-platform-config
-                  key: JAVA_OPTS_METEOR_FORECAST
-          resources:
-            requests:
-              memory: "256Mi"
-              cpu: "200m"
-            limits:
-              memory: "1Gi"
-              cpu: "1"
-          readinessProbe:
-            httpGet:
-              path: /actuator/health
-              port: 8082
-            initialDelaySeconds: 30
-            periodSeconds: 10
-          livenessProbe:
-            httpGet:
-              path: /actuator/health
-              port: 8082
-            initialDelaySeconds: 60
-            periodSeconds: 30
+      - name: meteor-forecast-service
+        image: meteor-forecast-service:latest
+        ports:
+        - containerPort: 8082
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "prod"
+        - name: MODEL_PATH
+          value: "/models"
+        - name: DATA_PATH
+          value: "/data/forecast"
+        resources:
+          requests:
+            cpu: "1"
+            memory: "2Gi"
+          limits:
+            cpu: "4"
+            memory: "4Gi"
+        readinessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8082
+          initialDelaySeconds: 60
+          periodSeconds: 20
+        livenessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8082
+          initialDelaySeconds: 120
+          periodSeconds: 60
+        volumeMounts:
+        - name: model-data
+          mountPath: /models
+        - name: forecast-data
+          mountPath: /data/forecast
+      volumes:
+      - name: model-data
+        persistentVolumeClaim:
+          claimName: model-data-pvc
+      - name: forecast-data
+        persistentVolumeClaim:
+          claimName: forecast-data-pvc
   strategy:
     type: RollingUpdate
     rollingUpdate:
-      maxUnavailable: 0
+      maxUnavailable: 1
       maxSurge: 1
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: meteor-forecast-service
-  namespace: uav-platform
+  namespace: uav-path-planning
 spec:
   selector:
     app: meteor-forecast-service
   ports:
-    - port: 8082
-      targetPort: 8082
+  - port: 8082
+    targetPort: 8082
   type: ClusterIP
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: meteor-forecast-service-hpa
+  namespace: uav-path-planning
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: meteor-forecast-service
+  minReplicas: 2
+  maxReplicas: 5
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80

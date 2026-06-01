@@ -1,8 +1,8 @@
-﻿apiVersion: autoscaling/v2
+apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: api-gateway-hpa
-  namespace: uav-platform
+  namespace: uav-system
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
@@ -28,7 +28,7 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: uav-platform-hpa
-  namespace: uav-platform
+  namespace: uav-system
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
@@ -54,7 +54,7 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: wrf-processor-hpa
-  namespace: uav-platform
+  namespace: uav-system
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
@@ -80,7 +80,7 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: path-planning-hpa
-  namespace: uav-platform
+  namespace: uav-system
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
@@ -106,7 +106,7 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: data-assimilation-hpa
-  namespace: uav-platform
+  namespace: uav-system
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
@@ -132,7 +132,7 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: meteor-forecast-hpa
-  namespace: uav-platform
+  namespace: uav-system
 spec:
   scaleTargetRef:
     apiVersion: apps/v1

@@ -1,15 +1,12 @@
 spring:
   application:
     name: api-gateway
-
-# Nacos disabled for local dev — routes use direct URLs
-# To enable: uncomment the nacos dependency in pom.xml and the config below
-#  cloud:
-#    nacos:
-#      discovery:
-#        server-addr: ${NACOS_SERVER:nacos:8848}
-#        namespace: ${NACOS_NAMESPACE:public}
-#      config:
-#        server-addr: ${NACOS_SERVER:nacos:8848}
-#        namespace: ${NACOS_NAMESPACE:public}
-#        file-extension: yml
+  cloud:
+    nacos:
+      discovery:
+        server-addr: ${NACOS_SERVER:nacos:8848}
+        namespace: ${NACOS_NAMESPACE:public}
+      config:
+        server-addr: ${NACOS_SERVER:nacos:8848}
+        namespace: ${NACOS_NAMESPACE:public}
+        file-extension: yml

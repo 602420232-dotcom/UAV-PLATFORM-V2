@@ -1,6 +1,6 @@
 # 历史数据接口
 
->  **注意**: 以下接口为计划中的 API 定义，当前版本尚未实现历史数据功能，待后续版本开发。
+> ⚠️ **注意**: 以下接口为计划中的 API 定义，当前版本尚未实现。历史数据功能待后续版本开发。
 
 ## 获取历史任务记录
 
@@ -11,17 +11,17 @@ GET /api/v1/history/tasks
 Authorization: Bearer <JWT令牌>
 ```
 
-**查询参数**
+**查询参数：**
 
-- `startDate`: 开始日期（ISO格式，如 2024-01-01T00:00:00Z）
-- `endDate`: 结束日期（ISO格式，如 2024-01-31T23:59:59Z）
-- `status`: 任务状态（PENDING, IN_PROGRESS, COMPLETED, FAILED）
-- `page`: 页码（默认 1）
-- `size`: 每页大小（默认 10）
+- `startDate`: 开始日期 (ISO格式，如 2024-01-01T00:00:00Z)
+- `endDate`: 结束日期 (ISO格式，如 2024-01-31T23:59:59Z)
+- `status`: 任务状态 (如 COMPLETED, FAILED)
+- `page`: 页码 (默认 1)
+- `size`: 每页大小 (默认 10)
 
 ### 响应
 
-**成功**
+**成功：**
 
 ```json
 {
@@ -34,7 +34,7 @@ Authorization: Bearer <JWT令牌>
     "items": [
       {
         "id": 1,
-        "name": "巡逻任务",
+        "name": "巡逻任务1",
         "status": "COMPLETED",
         "startTime": "2024-01-01T00:00:00Z",
         "endTime": "2024-01-01T02:00:00Z",
@@ -56,7 +56,7 @@ Authorization: Bearer <JWT令牌>
 }
 ```
 
-**失败**
+**失败：**
 
 ```json
 {
@@ -75,17 +75,17 @@ GET /api/v1/history/paths
 Authorization: Bearer <JWT令牌>
 ```
 
-**查询参数**
+**查询参数：**
 
-- `startDate`: 开始日期（ISO格式）
-- `endDate`: 结束日期（ISO格式）
+- `startDate`: 开始日期 (ISO格式)
+- `endDate`: 结束日期 (ISO格式)
 - `droneId`: 无人机ID
-- `page`: 页码（默认 1）
-- `size`: 每页大小（默认 10）
+- `page`: 页码 (默认 1)
+- `size`: 每页大小 (默认 10)
 
 ### 响应
 
-**成功**
+**成功：**
 
 ```json
 {
@@ -126,7 +126,7 @@ Authorization: Bearer <JWT令牌>
 }
 ```
 
-**失败**
+**失败：**
 
 ```json
 {
@@ -145,16 +145,16 @@ GET /api/v1/history/drones/{droneId}/status
 Authorization: Bearer <JWT令牌>
 ```
 
-**查询参数**
+**查询参数：**
 
-- `startDate`: 开始日期（ISO格式）
-- `endDate`: 结束日期（ISO格式）
-- `page`: 页码（默认 1）
-- `size`: 每页大小（默认 10）
+- `startDate`: 开始日期 (ISO格式)
+- `endDate`: 结束日期 (ISO格式)
+- `page`: 页码 (默认 1)
+- `size`: 每页大小 (默认 10)
 
 ### 响应
 
-**成功**
+**成功：**
 
 ```json
 {
@@ -194,7 +194,7 @@ Authorization: Bearer <JWT令牌>
 }
 ```
 
-**失败**
+**失败：**
 
 ```json
 {
@@ -213,17 +213,17 @@ GET /api/v1/history/weather
 Authorization: Bearer <JWT令牌>
 ```
 
-**查询参数**
+**查询参数：**
 
-- `startDate`: 开始日期（ISO格式）
-- `endDate`: 结束日期（ISO格式）
+- `startDate`: 开始日期 (ISO格式)
+- `endDate`: 结束日期 (ISO格式)
 - `latitude`: 纬度
 - `longitude`: 经度
-- `radius`: 半径（公里）
+- `radius`: 半径 (公里)
 
 ### 响应
 
-**成功**
+**成功：**
 
 ```json
 {
@@ -256,7 +256,7 @@ Authorization: Bearer <JWT令牌>
 }
 ```
 
-**失败**
+**失败：**
 
 ```json
 {
@@ -267,6 +267,6 @@ Authorization: Bearer <JWT令牌>
 ```
 ---
 
-> **最后更新**: 2026-05-09  
+> **最后更新**: 2026-05-08  
 > **版本**: 2.1  
 > **维护者**: DITHIOTHREITOL

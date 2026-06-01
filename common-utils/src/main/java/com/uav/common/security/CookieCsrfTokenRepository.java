@@ -3,9 +3,9 @@ package com.uav.common.security;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
-import org.springframework.stereotype.Component;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.security.web.csrf.CsrfTokenRepository;
 import org.springframework.security.web.csrf.DefaultCsrfToken;
@@ -13,9 +13,10 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.util.WebUtils;
 
 import java.util.UUID;
-@Slf4j
-@Component
+
 public class CookieCsrfTokenRepository implements CsrfTokenRepository {
+
+    private static final Logger log = LoggerFactory.getLogger(CookieCsrfTokenRepository.class);
 
     static final String DEFAULT_CSRF_COOKIE_NAME = "XSRF-TOKEN";
     static final String DEFAULT_CSRF_HEADER_NAME = "X-XSRF-TOKEN";
@@ -24,7 +25,7 @@ public class CookieCsrfTokenRepository implements CsrfTokenRepository {
     private String cookieName = DEFAULT_CSRF_COOKIE_NAME;
     private String headerName = DEFAULT_CSRF_HEADER_NAME;
     private String parameterName = DEFAULT_CSRF_PARAMETER_NAME;
-    private boolean cookieHttpOnly = true;
+    private boolean cookieHttpOnly = false;
     private String cookiePath = "/";
     private String cookieDomain;
     private Boolean secure;
@@ -87,7 +88,6 @@ public class CookieCsrfTokenRepository implements CsrfTokenRepository {
     }
 
     @Override
-    @SuppressWarnings("null")
     public CsrfToken loadToken(HttpServletRequest request) {
         Cookie cookie = WebUtils.getCookie(request, this.cookieName);
         if (cookie == null) {
@@ -111,26 +111,6 @@ public class CookieCsrfTokenRepository implements CsrfTokenRepository {
     public static CookieCsrfTokenRepository withHttpOnly(boolean httpOnly) {
         CookieCsrfTokenRepository repository = new CookieCsrfTokenRepository();
         repository.setCookieHttpOnly(httpOnly);
-        return repository;
-    }
-
-    /**
-     * 创建一个禁用 HttpOnly 的 CsrfTokenRepository（用于需要 JS 访问的场景）
-     * @return 配置了 cookieHttpOnly=false 的 CookieCsrfTokenRepository
-     */
-    public static CookieCsrfTokenRepository withHttpOnlyDisabled() {
-        CookieCsrfTokenRepository repository = new CookieCsrfTokenRepository();
-        repository.setCookieHttpOnly(false);
-        return repository;
-    }
-
-    /**
-     * 创建一个启用 HttpOnly 的 CsrfTokenRepository（安全推荐）
-     * @return 配置了 cookieHttpOnly=true 的 CookieCsrfTokenRepository
-     */
-    public static CookieCsrfTokenRepository withHttpOnlyEnabled() {
-        CookieCsrfTokenRepository repository = new CookieCsrfTokenRepository();
-        repository.setCookieHttpOnly(true);
         return repository;
     }
 

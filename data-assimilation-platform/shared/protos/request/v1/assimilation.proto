@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package request.v1;
 
-option java_package = "com.uav.bayesian.request.v1";
+option java_package = "com.bayesian.request.v1";
 option java_multiple_files = true;
 
 import "common/v1/types.proto";

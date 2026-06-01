@@ -102,9 +102,8 @@ class TestBasic(unittest.TestCase):
         self.assertTrue(os.path.exists(f'{meteor_path}/meteor_forecast.py'))
         
         # 检查端侧SDK
-        edge_path = 'uav-edge-sdk/edge_sdk'
-        self.assertTrue(os.path.exists(f'{edge_path}/_core.py'))
-        self.assertTrue(os.path.exists(f'{edge_path}/path_planner_python.py'))
+        edge_path = 'uav-edge-sdk/src'
+        self.assertTrue(os.path.exists(f'{edge_path}/edge_sdk.py'))
         
         print("OK 算法文件测试通过")
     

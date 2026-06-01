@@ -1,4 +1,4 @@
-﻿# 教程
+# 教程
 
 ## 入门教程
 
@@ -37,8 +37,8 @@ analysis, variance = assim.assimilate_3dvar(
     obs_locations=obs_locations
 )
 
-print(f"分析场形状 {analysis.shape}")
-print(f"方差场形状 {variance.shape}")
+print(f"分析场形状: {analysis.shape}")
+print(f"方差场形状: {variance.shape}")
 ```
 
 ### 3. 可视化结果
@@ -160,7 +160,6 @@ curl -X POST http://localhost:8000/assimilate \
 ```
 ---
 
-> **最后更新**: 2026-05-09  
+> **最后更新**: 2026-05-08  
 > **版本**: 2.1  
 > **维护者**: DITHIOTHREITOL
-

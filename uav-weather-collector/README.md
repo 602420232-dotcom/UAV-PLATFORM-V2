@@ -2,7 +2,7 @@
 
 ## 概述
 
-无人机气象信息收集模块(uav-weather-collector)对接多源气象数据，为路径规划提供实时气象数据支撑。
+无人机气象信息收集模块（uav-weather-collector），对接多源气象数据，为路径规划提供实时气象数据支撑。
 
 ## 技术栈
 
@@ -28,7 +28,7 @@
 
 ## 配置
 
-详见 `src/main/resources/application.yml`
+详见 `src/main/resources/application.yml`。
 
 ## 构建与运行
 
@@ -39,9 +39,8 @@ mvn clean package -DskipTests -pl uav-weather-collector -am
 # 运行
 mvn spring-boot:run -pl uav-weather-collector
 ```
-
 ---
 
-> **最后更新**: 2026-06-01  
+> **最后更新**: 2026-05-08  
 > **版本**: 2.1  
 > **维护者**: DITHIOTHREITOL

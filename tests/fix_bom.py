@@ -1,4 +1,3 @@
-import logging
 #!/usr/bin/env python3
 """Fix UTF-8 BOM in files."""
 import os, sys
@@ -19,9 +18,9 @@ for dp, dn, fn in os.walk(ROOT):
                 bom_files.append(fp)
                 with open(fp, 'wb') as fh:
                     fh.write(data[3:])
-        except OSError:
+        except:
             pass
 
-logger.info(f"Fixed {len(bom_files)} BOM files:")
+print(f'Fixed {len(bom_files)} BOM files:')
 for f in bom_files:
-    logger.info(f"  {os.path.relpath(f, ROOT)}")
+    print(f'  {os.path.relpath(f, ROOT)}')

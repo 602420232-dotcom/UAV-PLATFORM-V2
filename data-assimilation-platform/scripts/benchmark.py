@@ -1,15 +1,14 @@
-"""
+# Type annotations added: 2026-05-08 13:22:43
+from typing import Dict, List, Any, Optional, Callable, Tuple
+
+﻿"""
 性能基准测试脚本
 用法: python benchmark.py [--grid small|medium|large]
 """
 import argparse
-import logging
 import time
 import sys
 import os
-
-logger = logging.getLogger(__name__)
-
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../algorithm_core/src'))
 
 import numpy as np
@@ -47,5 +46,5 @@ def main():
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
     main()
+

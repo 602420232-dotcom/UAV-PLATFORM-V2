@@ -15,10 +15,6 @@ spec:
       labels:
         app: backend-spring
     spec:
-      securityContext:
-        runAsNonRoot: true
-        runAsUser: 1001
-        fsGroup: 1001
       containers:
         - name: backend
           image: uav-registry/backend-spring:v1.0.0
@@ -29,7 +25,7 @@ spec:
             - name: SERVER_PORT
               value: "8089"
             - name: SPRING_DATASOURCE_URL
-              value: jdbc:mysql://mysql:3306/uav_platform?useSSL=true&requireSSL=true
+              value: jdbc:mysql://mysql:3306/uav_platform?useSSL=false
             - name: SPRING_DATASOURCE_USERNAME
               value: uav
             - name: SPRING_DATASOURCE_PASSWORD
@@ -39,8 +35,6 @@ spec:
                   key: db-password
             - name: SPRING_REDIS_HOST
               value: redis
-            - name: JAVA_OPTS
-              value: "-Xms512m -Xmx1g -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+UseStringDeduplication"
           livenessProbe:
             httpGet: { path: /actuator/health, port: 8089 }
             initialDelaySeconds: 30

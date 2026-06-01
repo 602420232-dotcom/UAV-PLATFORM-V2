@@ -15,15 +15,18 @@ class ModelTests {
         user.setId(1L);
         user.setUsername("testuser");
         user.setPassword("encryptedPass");
+        user.setRole("ADMIN");
+        user.setName("测试用户");
         user.setEmail("test@example.com");
-        user.setFullName("测试用户");
+        user.setPhone("13800138000");
 
         assertEquals(1L, user.getId());
         assertEquals("testuser", user.getUsername());
         assertEquals("encryptedPass", user.getPassword());
+        assertEquals("ADMIN", user.getRole());
+        assertEquals("测试用户", user.getName());
         assertEquals("test@example.com", user.getEmail());
-        assertEquals("测试用户", user.getFullName());
-        assertTrue(user.isEnabled());
+        assertEquals("13800138000", user.getPhone());
     }
 
     @Test
@@ -40,21 +43,21 @@ class ModelTests {
     @DisplayName("Drone模型测试")
     void testDroneModel() {
         Drone drone = new Drone();
-        drone.setId(1L);
+        drone.setId("UAV-001");
         drone.setStatus("active");
-        drone.setCurrentLatitude(39.9);
-        drone.setCurrentLongitude(116.4);
-        drone.setCurrentAltitude(100.0);
+        drone.setLatitude(39.9);
+        drone.setLongitude(116.4);
+        drone.setAltitude(100.0);
         drone.setSpeed(15.0);
-        drone.setBatteryLevel(85);
+        drone.setBattery(85);
 
-        assertEquals(1L, drone.getId());
+        assertEquals("UAV-001", drone.getId());
         assertEquals("active", drone.getStatus());
-        assertEquals(39.9, drone.getCurrentLatitude());
-        assertEquals(116.4, drone.getCurrentLongitude());
-        assertEquals(100.0, drone.getCurrentAltitude());
+        assertEquals(39.9, drone.getLatitude());
+        assertEquals(116.4, drone.getLongitude());
+        assertEquals(100.0, drone.getAltitude());
         assertEquals(15.0, drone.getSpeed());
-        assertEquals(85, drone.getBatteryLevel());
+        assertEquals(85, drone.getBattery());
     }
 
     @Test
@@ -92,7 +95,7 @@ class ModelTests {
     @Test
     @DisplayName("WeatherData模型测试")
     void testWeatherDataModel() {
-        WeatherData weather = new WeatherData();
+        com.uav.model.WeatherData weather = new com.uav.model.WeatherData();
         weather.setId(300L);
         weather.setLatitude(39.9);
         weather.setLongitude(116.4);

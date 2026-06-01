@@ -2,41 +2,31 @@ server:
   port: 8086
   ssl:
     enabled: ${SSL_ENABLED:false}
-    key-store: ${SSL_KEY_STORE:}
-    key-store-password: ${SSL_KEY_STORE_PASSWORD:}
-    key-alias: ${SSL_KEY_ALIAS:}
 
 spring:
-  main:
-    allow-bean-definition-overriding: true
   datasource:
-    url: jdbc:mysql://${DB_HOST:localhost}:3306/uav_weather?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai
+    url: jdbc:mysql://${DB_HOST:mysql}:3306/uav_weather?useSSL=false&serverTimezone=UTC
     username: ${DB_USER:uav}
-    password: ${DB_PASSWORD:***}
+    password: ${DB_PASSWORD:uav123}
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
-      ddl-auto: ${JPA_DDL_AUTO:update}
+      ddl-auto: update
     show-sql: false
-  data:
-    redis:
-      host: ${REDIS_HOST:redis}
-      port: ${REDIS_PORT:6379}
-      timeout: 3000
-
-
+  redis:
+    host: ${REDIS_HOST:redis}
+    port: ${REDIS_PORT:6379}
+    timeout: 3000
 
 management:
-  server:
-    port: ${MANAGEMENT_SERVER_PORT:}
   endpoints:
     web:
       exposure:
         include: health,info,prometheus
   endpoint:
     health:
-      show-details: ${MANAGEMENT_HEALTH_DETAILS:when-authorized}
+      show-details: when-authorized
 
 logging:
   level:
-    '[com.uav.weather]': INFO
+    com.uav.weather: INFO

@@ -99,7 +99,7 @@ class MeteorologicalQualityControl:
         return humidity
     
     @staticmethod
-    def detect_outliers(data: Dict[str, Any], threshold: float = 3.0):
+    def detect_outliers(data: Dict[str, Any], threshold=3.0: Any):
         """检测异常值"""
         mean = np.mean(data)
         std = np.std(data)
@@ -135,7 +135,7 @@ class MeteorologicalQualityControl:
         return wind_speed
     
     @staticmethod
-    def check_time_consistency(time_series_data: float, max_change: float = 10.0):
+    def check_time_consistency(time_series_data: float, max_change=10.0: Any):
         """检查时间一致性，确保气象数据随时间合理变化"""
         if len(time_series_data) < 2:
             return time_series_data
@@ -283,7 +283,7 @@ class TimeSeriesAnalyzer:
     """时间序列分析模块"""
     
     @staticmethod
-    def generate_time_series_data(domain_size: int, n_time_steps: int = 6):
+    def generate_time_series_data(domain_size: int, n_time_steps=6: float):
         """生成时间序列数据"""
         time_series = []
         
@@ -985,7 +985,7 @@ def enhanced_risk_assessment(analysis, variance, precipitation_data=None, precip
         'composite_risk': composite_risk
     }
 
-def probabilistic_risk_assessment(analysis: Any, variance: Any, confidence_level: float = 0.95):
+def probabilistic_risk_assessment(analysis: Any, variance: Any, confidence_level=0.95: str):
     """概率风险评估"""
     # 计算置信区间
     z_score = 1.96  # 95%置信水平

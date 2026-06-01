@@ -19,9 +19,8 @@
 mvn clean package -pl uav-path-planning-system/backend-spring -am -DskipTests
 mvn spring-boot:run -pl uav-path-planning-system/backend-spring
 ```
-
 ---
 
-> **最后更新**: 2026-05-09  
+> **最后更新**: 2026-05-08  
 > **版本**: 2.1  
 > **维护者**: DITHIOTHREITOL

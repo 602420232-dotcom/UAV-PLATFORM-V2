@@ -5,7 +5,7 @@ services:
     image: mysql:8.0
     container_name: uav-mysql-dev
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-changeme123}
       MYSQL_DATABASE: ${MYSQL_DATABASE:-uav_platform}
     ports:
       - "3306:3306"
@@ -19,14 +19,9 @@ services:
     deploy:
       resources:
         limits: { memory: 512M }
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
 
   redis:
-    image: redis:6.2-alpine
+    image: redis:6.2
     container_name: uav-redis-dev
     ports:
       - "6379:6379"
@@ -38,37 +33,17 @@ services:
     deploy:
       resources:
         limits: { memory: 256M }
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
 
   nacos:
     image: nacos/nacos-server:v2.3.0
     container_name: uav-nacos-dev
     environment:
       - MODE=standalone
-      - JVM_XMS=256m
-      - JVM_XMX=512m
-      - JVM_XMN=128m
-      - PREFER_HOST_MODE=hostname
     ports:
       - "8848:8848"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8848/nacos/v1/console/health/readiness"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 60s
     deploy:
       resources:
         limits: { memory: 512M }
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
 
 volumes:
   mysql-dev-data:

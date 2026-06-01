@@ -9,7 +9,7 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-RUN pip install --no-cache-dir fastapi uvicorn websockets kafka-python pika 
+RUN pip install --no-cache-dir fastapi uvicorn websockets kafka-python pika 2>/dev/null || true
 
 COPY . .
 RUN chown -R appuser:appuser /app

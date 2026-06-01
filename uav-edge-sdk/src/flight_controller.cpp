@@ -1,24 +1,7 @@
-#include "flight_controller.h"
+﻿#include "flight_controller.h"
 #include "logger.h"
 #include <thread>
 #include <chrono>
-
-/*
- * FLIGHT CONTROLLER — 模拟实现 (MOCK IMPLEMENTATION)
- *
- * 当前版本为模拟飞控接口，用于开发和测试环境。
- * 生产环境需替换为真实 MAVLink 协议实现，参考：
- *   - MAVLink v2 Protocol: https://mavlink.io/en/
- *   - ArduPilot: https://ardupilot.org/
- *   - PX4 Autopilot: https://px4.io/
- *
- * 需要实现的核心功能：
- *   1. 串口连接与参数协商 (connect/disconnect)
- *   2. MAVLink 消息编解码 (HEARTBEAT, ATTITUDE, GLOBAL_POSITION_INT 等)
- *   3. 飞行模式切换 (GUIDED, AUTO, RTL, LAND)
- *   4. 航点上传与任务管理 (MISSION_ITEM, MISSION_COUNT 等)
- *   5. 遥测数据流解析 (telemetry streaming)
- */
 
 namespace uav_sdk {
 

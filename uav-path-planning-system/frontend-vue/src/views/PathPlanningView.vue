@@ -33,32 +33,23 @@
                     </a-upload>
                   </a-col>
                 </a-row>
-                <a-list :data-source="taskPoints">
-                  <template #renderItem="{ item }">
-                    <a-list-item>
-                      <a-list-item-meta :title="item.name" :description="`${item.lat.toFixed(4)}, ${item.lng.toFixed(4)}`" />
-                      <a-button size="small" danger @click="() => removeTaskPoint(item.id)">
-                        删除
-                      </a-button>
-                    </a-list-item>
-                  </template>
-                </a-list>
+                <a-list :data-source="taskPoints" :render-item="renderTaskItem" />
               </a-form-item>
               
               <!-- 无人机配置 -->
               <a-form-item label="无人机">
                 <a-select v-model:value="selectedDrone" placeholder="选择无人机">
-                  <a-select-option value="1">无人机1</a-select-option>
-                  <a-select-option value="2">无人机2</a-select-option>
-                  <a-select-option value="3">无人机3</a-select-option>
+                  <a-option value="1">无人机1</a-option>
+                  <a-option value="2">无人机2</a-option>
+                  <a-option value="3">无人机3</a-option>
                 </a-select>
               </a-form-item>
               
               <!-- 气象数据选择 -->
               <a-form-item label="气象数据">
                 <a-select v-model:value="selectedWeather" placeholder="选择气象数据">
-                  <a-select-option value="latest">最新数据</a-select-option>
-                  <a-select-option value="custom">自定义数据</a-select-option>
+                  <a-option value="latest">最新数据</a-option>
+                  <a-option value="custom">自定义数据</a-option>
                 </a-select>
               </a-form-item>
               
@@ -117,9 +108,9 @@
             </a-form-item>
             <a-form-item label="历史方案">
               <a-select v-model:value="selectedPlan" placeholder="选择历史方案">
-                <a-select-option v-for="plan in savedPlans" :key="plan.id" :value="plan.id">
+                <a-option v-for="plan in savedPlans" :key="plan.id" :value="plan.id">
                   {{ plan.name }}
-                </a-select-option>
+                </a-option>
               </a-select>
               <a-button style="margin-left: 8px" @click="loadPlan" :disabled="!selectedPlan">
                 加载
@@ -220,12 +211,15 @@ import {
   SaveOutlined, DownloadOutlined, PrinterOutlined 
 } from '@ant-design/icons-vue'
 import { Empty, message } from 'ant-design-vue'
-import { demoData } from '../utils/demoData'
 import L from 'leaflet'
 
 // 响应式数据
 const formState = ref({})
-const taskPoints = ref(demoData.pathPlanning.defaultTaskPoints)
+const taskPoints = ref([
+  { id: 1, name: '任务点1', lat: 39.9042, lng: 116.4074, demand: 1 },
+  { id: 2, name: '任务点2', lat: 39.9142, lng: 116.4174, demand: 2 },
+  { id: 3, name: '任务点3', lat: 39.9242, lng: 116.4274, demand: 1 }
+])
 const selectedDrone = ref('1')
 const selectedWeather = ref('latest')
 const riskThreshold = ref(3.0)
@@ -233,18 +227,26 @@ const loading = ref(false)
 const planningResult = ref(null)
 let map = null
 
-// 图层组（用于高效管理标记）
-let baseMarkerLayer = null
-let taskMarkerLayer = null
-let routeLayer = null
-
 // 实时数据
-const realtimeData = ref(demoData.pathPlanning.defaultRealtimeData)
+const realtimeData = ref({
+  windSpeed: 5.2,
+  windDirection: 135,
+  temperature: 22,
+  humidity: 65,
+  droneStatus: '正常',
+  taskProgress: 0,
+  riskLevel: '低',
+  alertCount: 0
+})
 
 // 方案管理
 const planForm = ref({ name: '' })
 const selectedPlan = ref('')
-const savedPlans = ref(demoData.pathPlanning.defaultSavedPlans)
+const savedPlans = ref([
+  { id: 1, name: '方案1' },
+  { id: 2, name: '方案2' },
+  { id: 3, name: '方案3' }
+])
 
 // 方法
 const addTaskPoint = () => {
@@ -259,7 +261,16 @@ const addTaskPoint = () => {
   updateMap()
 }
 
-
+const renderTaskItem = (task) => {
+  return (
+    <a-list-item>
+      <a-list-item-meta title={task.name} description={`${task.lat.toFixed(4)}, ${task.lng.toFixed(4)}`} />
+      <a-button size="small" danger @click={() => removeTaskPoint(task.id)}>
+        删除
+      </a-button>
+    </a-list-item>
+  )
+}
 
 const removeTaskPoint = (id) => {
   taskPoints.value = taskPoints.value.filter(task => task.id !== id)
@@ -274,8 +285,26 @@ const executePlanning = async () => {
     
     // 模拟结果
     planningResult.value = {
-      ...demoData.pathPlanning.mockResult,
-      taskCount: taskPoints.value.length
+      droneCount: 2,
+      taskCount: taskPoints.value.length,
+      totalDistance: 1500,
+      totalTime: 25,
+      routes: [
+        {
+          droneId: 1,
+          path: ['基地', '任务点1', '任务点3', '基地'],
+          distance: 800,
+          time: 12,
+          riskLevel: '低'
+        },
+        {
+          droneId: 2,
+          path: ['基地', '任务点2', '基地'],
+          distance: 700,
+          time: 13,
+          riskLevel: '低'
+        }
+      ]
     }
     
     // 更新地图
@@ -348,30 +377,29 @@ const initMap = () => {
     attribution: '&copy; OpenStreetMap contributors'
   }).addTo(map)
   
-  // 创建图层组
-  baseMarkerLayer = L.layerGroup().addTo(map)
-  taskMarkerLayer = L.layerGroup().addTo(map)
-  routeLayer = L.layerGroup().addTo(map)
-  
   // 添加基地标记
-  L.marker([39.9042, 116.4074]).addTo(baseMarkerLayer).bindPopup('基地')
+  L.marker([39.9042, 116.4074]).addTo(map).bindPopup('基地')
   
   // 添加任务点标记
   taskPoints.value.forEach(task => {
-    L.marker([task.lat, task.lng]).addTo(taskMarkerLayer).bindPopup(task.name)
+    L.marker([task.lat, task.lng]).addTo(map).bindPopup(task.name)
   })
 }
 
 const updateMap = () => {
   if (!map) return
   
-  // 只清除任务点图层和路径图层（保留基地标记）
-  taskMarkerLayer.clearLayers()
-  routeLayer.clearLayers()
+  // 清除现有标记
+  map.eachLayer(layer => {
+    if (layer instanceof L.Marker) {
+      map.removeLayer(layer)
+    }
+  })
   
-  // 重新添加任务点标记
+  // 重新添加标记
+  L.marker([39.9042, 116.4074]).addTo(map).bindPopup('基地')
   taskPoints.value.forEach(task => {
-    L.marker([task.lat, task.lng]).addTo(taskMarkerLayer).bindPopup(task.name)
+    L.marker([task.lat, task.lng]).addTo(map).bindPopup(task.name)
   })
   
   // 添加路径
@@ -390,7 +418,7 @@ const updateMap = () => {
       L.polyline(pathCoords, {
         color: colors[index % colors.length],
         weight: 3
-      }).addTo(routeLayer)
+      }).addTo(map)
     })
   }
 }

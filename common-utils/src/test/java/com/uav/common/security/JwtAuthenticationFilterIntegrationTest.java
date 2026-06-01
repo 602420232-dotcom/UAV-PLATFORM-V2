@@ -1,5 +1,8 @@
 package com.uav.common.security;
 
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -11,10 +14,12 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import jakarta.servlet.FilterChain;
-import java.util.List;
-import java.util.Optional;
+import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
+import java.util.Date;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -24,11 +29,7 @@ import static org.mockito.Mockito.*;
 @DisplayName("JwtAuthenticationFilter 集成测试")
 class JwtAuthenticationFilterIntegrationTest {
 
-    @Mock
-    private JwtTokenProvider jwtTokenProvider;
-
-    @Mock
-    private JwtProperties jwtProperties;
+    private static final String TEST_SECRET = "abcdefghijklmnopqrstuvwxyz0123456789";
 
     @Mock
     private FilterChain filterChain;
@@ -37,11 +38,21 @@ class JwtAuthenticationFilterIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        when(jwtProperties.isEnabled()).thenReturn(true);
-        when(jwtProperties.getHeader()).thenReturn("Authorization");
-        when(jwtProperties.getTokenPrefix()).thenReturn("Bearer ");
-        jwtAuthenticationFilter = new JwtAuthenticationFilter(jwtTokenProvider, jwtProperties, Optional.empty());
+        jwtAuthenticationFilter = new JwtAuthenticationFilter();
+        ReflectionTestUtils.setField(jwtAuthenticationFilter, "jwtSecret", TEST_SECRET);
+        ReflectionTestUtils.setField(jwtAuthenticationFilter, "jwtEnabled", true);
         SecurityContextHolder.clearContext();
+    }
+
+    private String createValidToken() {
+        SecretKey key = Keys.hmacShaKeyFor(TEST_SECRET.getBytes(StandardCharsets.UTF_8));
+        return Jwts.builder()
+                .setSubject("admin")
+                .claim("roles", java.util.List.of("ROLE_ADMIN"))
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + 3600_000))
+                .signWith(key, SignatureAlgorithm.HS256)
+                .compact();
     }
 
     @Test
@@ -82,8 +93,6 @@ class JwtAuthenticationFilterIntegrationTest {
     @Test
     @DisplayName("无效 Token 应返回 401")
     void invalidToken_shouldReturn401() throws Exception {
-        when(jwtTokenProvider.validateAndGetClaims("invalid-token")).thenThrow(new RuntimeException("Invalid token"));
-
         MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/drones");
         request.addHeader("Authorization", "Bearer invalid-token");
         MockHttpServletResponse response = new MockHttpServletResponse();
@@ -97,13 +106,7 @@ class JwtAuthenticationFilterIntegrationTest {
     @Test
     @DisplayName("有效的 Token 应设置认证上下文")
     void validToken_shouldSetAuthentication() throws Exception {
-        String token = "valid.jwt.token";
-        io.jsonwebtoken.Claims claims = mock(io.jsonwebtoken.Claims.class);
-        when(claims.getSubject()).thenReturn("admin");
-        when(claims.get("tenant_id", String.class)).thenReturn("tenant-001");
-        when(claims.get("roles", java.util.List.class)).thenReturn(java.util.List.of("ROLE_ADMIN"));
-        when(jwtTokenProvider.validateAndGetClaims(token)).thenReturn(claims);
-
+        String token = createValidToken();
         MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/drones");
         request.addHeader("Authorization", "Bearer " + token);
         MockHttpServletResponse response = new MockHttpServletResponse();

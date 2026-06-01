@@ -6,8 +6,8 @@
 
 - Python 3.8+
 - Git
-- Docker可选用于容器化开发
-- CUDA Toolkit 12.x可选用于 GPU 加速
+- Docker（可选，用于容器化开发）
+- CUDA Toolkit 12.x（可选，用于 GPU 加速）
 
 ### 克隆项目
 
@@ -27,7 +27,7 @@ venv\Scripts\activate     # Windows
 ### 安装依赖
 
 ```bash
-# 基础安装可编辑模式
+# 基础安装（可编辑模式）
 cd algorithm_core
 pip install -e .
 
@@ -46,32 +46,32 @@ cp .env.example .env
 
 ```
 algorithm_core/
- src/bayesian_assimilation/
--   accelerators/      # 硬件加速模块
--   adapters/          # 数据适配器
--   api/               # API 接口
--   components/        # 通用组件
--   core/              # 核心算法基类
--   data_sources/      # 数据源
--   models/            # 同化模型
--   parallel/          # 并行计算
--   quality_control/   # 质量控制
--   risk_assessment/   # 风险评估
--   time_series/       # 时间序列
--   utils/             # 工具函数
--   visualization/     # 可视化
--   workflows/         # 工作流
- configs/               # 配置文件
- benchmarks/            # 性能测试
- tests/                 # 单元测试
- examples/              # 示例代码
+├── src/bayesian_assimilation/
+│   ├── accelerators/      # 硬件加速模块
+│   ├── adapters/          # 数据适配器
+│   ├── api/               # API 接口
+│   ├── components/        # 通用组件
+│   ├── core/              # 核心算法基类
+│   ├── data_sources/      # 数据源
+│   ├── models/            # 同化模型
+│   ├── parallel/          # 并行计算
+│   ├── quality_control/   # 质量控制
+│   ├── risk_assessment/   # 风险评估
+│   ├── time_series/       # 时间序列
+│   ├── utils/             # 工具函数
+│   ├── visualization/     # 可视化
+│   └── workflows/         # 工作流
+├── configs/               # 配置文件
+├── benchmarks/            # 性能测试
+├── tests/                 # 单元测试
+└── examples/              # 示例代码
 ```
 
 ## 编码规范
 
 ### Python 代码规范
 
-- **格式化**：使用 Black行长度 100
+- **格式化**：使用 Black，行长度 100
 - **导入排序**：使用 isort，profile=black
 - **类型检查**：使用 mypy
 - **Lint**：使用 flake8
@@ -102,10 +102,10 @@ pytest --cov=bayesian_assimilation --cov-report=html
 
 ## Git 工作流
 
-1. `dev` 分支创建功能分支`git checkout -b feature/xxx`
-2. 提交代码遵循 Conventional Commits 规范
-3. 推送分支`git push origin feature/xxx`
-4. 创建 Pull Request `dev` 分支
+1. 从 `dev` 分支创建功能分支：`git checkout -b feature/xxx`
+2. 提交代码：遵循 Conventional Commits 规范
+3. 推送分支：`git push origin feature/xxx`
+4. 创建 Pull Request 到 `dev` 分支
 
 ### Commit 规范
 
@@ -165,11 +165,10 @@ print(profiler.report())
 | 问题 | 解决方案 |
 |------|----------|
 | 导入失败 | 确保在 `algorithm_core` 目录下执行 `pip install -e .` |
-| GPU 不可选| 检查CUDA 版本回退到 CPU 模式 |
+| GPU 不可用 | 检查 CUDA 版本，回退到 CPU 模式 |
 | 内存不足 | 启用并行计算或降低数据分辨率 |
 ---
 
-> **最后更新**: 2026-05-09  
+> **最后更新**: 2026-05-08  
 > **版本**: 2.1  
 > **维护者**: DITHIOTHREITOL
-

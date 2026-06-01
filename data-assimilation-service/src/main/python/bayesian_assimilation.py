@@ -15,31 +15,27 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(level
 logger = logging.getLogger(__name__)
 
 class BayesianAssimilation:
-    """Bayesian assimilation implementing 3D-VAR, EnKF, and hybrid methods."""
-
+    """
+    贝叶斯同化类
+    """
+    
     def __init__(self, background_error: float = 0.1, observation_error: float = 0.05):
-        """Initialize Bayesian assimilation.
-
-        Args:
-            background_error: Background field error standard deviation.
-            observation_error: Observation error standard deviation.
+        """
+        初始化贝叶斯同化
+        :param background_error: 背景场误差
+        :param observation_error: 观测误差
         """
         self.background_error = background_error
         self.observation_error = observation_error
-
-    def _three_dimensional_var(
-        self,
-        background: Dict[str, np.ndarray],
-        observations: Dict[str, np.ndarray],
-    ) -> Tuple[Dict[str, np.ndarray], Dict[str, np.ndarray]]:
-        """3D-VAR assimilation method.
-
-        Args:
-            background: Background field dict (variable name -> array).
-            observations: Observation data dict.
-
-        Returns:
-            Tuple of (analysis field dict, uncertainty dict).
+    
+    def _three_dimensional_var(self, 
+                              background: Dict[str, np.ndarray], 
+                              observations: Dict[str, np.ndarray]) -> Tuple[Dict[str, np.ndarray], Dict[str, np.ndarray]]:
+        """
+        3D-VAR同化方法
+        :param background: 背景场
+        :param observations: 观测数据
+        :return: 分析场和不确定性
         """
         analysis = {}
         uncertainty = {}
@@ -71,36 +67,39 @@ class BayesianAssimilation:
         
         return analysis, uncertainty
     
-    def _ensemble_kalman_filter(
-        self,
-        background: Dict[str, np.ndarray],
-        observations: Dict[str, np.ndarray],
-    ) -> Tuple[Dict[str, np.ndarray], Dict[str, np.ndarray]]:
-        """Ensemble Kalman Filter (EnKF) assimilation method.
-
-        Args:
-            background: Background field dict.
-            observations: Observation data dict.
-
-        Returns:
-            Tuple of (analysis field dict, uncertainty dict).
+    def _ensemble_kalman_filter(self, 
+                               background: Dict[str, np.ndarray], 
+                               observations: Dict[str, np.ndarray]) -> Tuple[Dict[str, np.ndarray], Dict[str, np.ndarray]]:
+        """
+        集合卡尔曼滤波(EnKF)同化方法
+        :param background: 背景场
+        :param observations: 观测数据
+        :return: 分析场和不确定性
         """
         analysis = {}
         uncertainty = {}
-
-        # Simplified EnKF with a single ensemble member
+        
+        # 简化的EnKF实现（使用单个集合成员）
         for var in background:
             if var in observations:
+                # 确保观测数据与背景场形状一致
                 if background[var].shape != observations[var].shape:
                     logger.warning(f"{var} 数据形状不一致，使用背景场")
                     analysis[var] = background[var]
                     uncertainty[var] = np.full_like(background[var], self.background_error ** 2)
                     continue
-
+                
+                # 计算背景场协方差
                 B = np.var(background[var])
                 R = self.observation_error ** 2
+                
+                # 增益矩阵
                 K = B / (B + R)
+                
+                # 分析场
                 analysis[var] = background[var] + K * (observations[var] - background[var])
+                
+                # 分析误差方差
                 uncertainty[var] = (1 - K) * B
             else:
                 analysis[var] = background[var]
@@ -108,19 +107,14 @@ class BayesianAssimilation:
         
         return analysis, uncertainty
     
-    def _hybrid_method(
-        self,
-        background: Dict[str, np.ndarray],
-        observations: Dict[str, np.ndarray],
-    ) -> Tuple[Dict[str, np.ndarray], Dict[str, np.ndarray]]:
-        """Hybrid assimilation method (3D-VAR + EnKF weighted average).
-
-        Args:
-            background: Background field dict.
-            observations: Observation data dict.
-
-        Returns:
-            Tuple of (analysis field dict, uncertainty dict).
+    def _hybrid_method(self, 
+                      background: Dict[str, np.ndarray], 
+                      observations: Dict[str, np.ndarray]) -> Tuple[Dict[str, np.ndarray], Dict[str, np.ndarray]]:
+        """
+        混合同化方法（3D-VAR + EnKF）
+        :param background: 背景场
+        :param observations: 观测数据
+        :return: 分析场和不确定性
         """
         # 首先使用3D-VAR
         var_analysis, var_uncertainty = self._three_dimensional_var(background, observations)
@@ -138,21 +132,16 @@ class BayesianAssimilation:
         
         return analysis, uncertainty
     
-    def assimilate(
-        self,
-        background: Dict[str, np.ndarray],
-        observations: Dict[str, np.ndarray],
-        method: str = 'hybrid',
-    ) -> Dict:
-        """Execute Bayesian assimilation using the specified method.
-
-        Args:
-            background: Background field dict.
-            observations: Observation data dict.
-            method: Assimilation method ('3dvar', 'enkf', or 'hybrid').
-
-        Returns:
-            Dict with 'success' (bool) and either 'data' or 'error' key.
+    def assimilate(self, 
+                  background: Dict[str, np.ndarray], 
+                  observations: Dict[str, np.ndarray], 
+                  method: str = 'hybrid') -> Dict:
+        """
+        执行贝叶斯同化
+        :param background: 背景场
+        :param observations: 观测数据
+        :param method: 同化方法 ('3dvar', 'enkf', 'hybrid')
+        :return: 同化结果
         """
         try:
             if method == '3dvar':
@@ -182,9 +171,7 @@ class BayesianAssimilation:
                 }
             }
             
-        except (ValueError, IndexError, KeyError, TypeError, AttributeError, RuntimeError) as e:
-
-            
+        except Exception as e:
             logger.error(f"同化失败: {e}")
             return {
                 'success': False,
@@ -192,14 +179,7 @@ class BayesianAssimilation:
             }
 
 def load_input(file_index):
-    """Load JSON input data from a file specified by CLI argument.
-
-    Args:
-        file_index: Index in sys.argv pointing to the file path.
-
-    Returns:
-        Parsed dict from the JSON file, or empty dict if missing.
-    """
+    """从文件加载JSON输入数据，防止命令注入"""
     if len(sys.argv) <= file_index:
         return {}
     file_path = sys.argv[file_index]
@@ -208,13 +188,11 @@ def load_input(file_index):
 
 
 def main():
-    """CLI entry point for Bayesian assimilation commands.
-
-    Supports subcommands: 'execute', 'variance', 'batch'.
-    Reads JSON input from a file passed as the second CLI argument.
+    """
+    主函数
     """
     if len(sys.argv) < 2:
-        logger.debug(json.dumps({
+        print(json.dumps({
             'success': False,
             'error': '缺少命令参数'
         }))
@@ -225,7 +203,7 @@ def main():
     if command == 'execute':
         # 执行同化
         if len(sys.argv) < 3:
-            logger.debug(json.dumps({
+            print(json.dumps({
                 'success': False,
                 'error': '缺少输入数据'
             }))
@@ -248,10 +226,10 @@ def main():
             
             assimilator = BayesianAssimilation()
             result = assimilator.assimilate(background_np, observations_np, method)
-            logger.debug(json.dumps(result))
+            print(json.dumps(result))
             
-        except (ValueError, KeyError, TypeError, IndexError, json.JSONDecodeError, AttributeError) as e:
-            logger.debug(json.dumps({
+        except Exception as e:
+            print(json.dumps({
                 'success': False,
                 'error': str(e)
             }))
@@ -259,7 +237,7 @@ def main():
     elif command == 'variance':
         # 获取方差场
         if len(sys.argv) < 3:
-            logger.debug(json.dumps({
+            print(json.dumps({
                 'success': False,
                 'error': '缺少输入数据'
             }))
@@ -287,13 +265,13 @@ def main():
             for var in uncertainty:
                 uncertainty_serializable[var] = uncertainty[var].tolist()
             
-            logger.debug(json.dumps({
+            print(json.dumps({
                 'success': True,
                 'data': uncertainty_serializable
             }))
             
-        except (ValueError, KeyError, TypeError, IndexError, json.JSONDecodeError, AttributeError) as e:
-            logger.debug(json.dumps({
+        except Exception as e:
+            print(json.dumps({
                 'success': False,
                 'error': str(e)
             }))
@@ -301,7 +279,7 @@ def main():
     elif command == 'batch':
         # 批量处理
         if len(sys.argv) < 3:
-            logger.debug(json.dumps({
+            print(json.dumps({
                 'success': False,
                 'error': '缺少输入数据'
             }))
@@ -331,19 +309,19 @@ def main():
                 result = assimilator.assimilate(background_np, observations_np, method)
                 results.append(result)
             
-            logger.debug(json.dumps({
+            print(json.dumps({
                 'success': True,
                 'data': results
             }))
             
-        except (ValueError, KeyError, TypeError, IndexError, json.JSONDecodeError, AttributeError) as e:
-            logger.debug(json.dumps({
+        except Exception as e:
+            print(json.dumps({
                 'success': False,
                 'error': str(e)
             }))
             
     else:
-        logger.debug(json.dumps({
+        print(json.dumps({
             'success': False,
             'error': '未知命令'
         }))

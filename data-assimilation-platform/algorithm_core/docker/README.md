@@ -1,13 +1,13 @@
-﻿# 贝叶斯同化系统 Docker 部署指南
+# 贝叶斯同化系统 Docker 部署指南
 
 ## 目录结构
 
 ```
 docker/
- Dockerfile          # Docker 镜像构建文件
- docker-compose.yml  # Docker Compose 编排文件
- entrypoint.sh      # 容器启动脚本
- README.md          # 本文档
+├── Dockerfile          # Docker 镜像构建文件
+├── docker-compose.yml  # Docker Compose 编排文件
+├── entrypoint.sh      # 容器启动脚本
+└── README.md          # 本文件
 ```
 
 ## 快速开始
@@ -56,7 +56,7 @@ docker run -it bayesian_assimilation:latest bash
 
 ## 数据挂载
 
-可以将宿主机的目录挂载到容器中
+可以将宿主机的目录挂载到容器中：
 
 ```bash
 docker run -p 8000:8000 \
@@ -67,7 +67,7 @@ docker run -p 8000:8000 \
 
 ## 环境变量
 
-| 变量名| 默认值| 说明 |
+| 变量名 | 默认值 | 说明 |
 |--------|--------|------|
 | PYTHONUNBUFFERED | 1 | 实时输出日志 |
 | LOG_LEVEL | INFO | 日志级别 |
@@ -120,10 +120,9 @@ curl -X POST http://localhost:8000/risk-assessment \
 1. 确保 Docker 已安装并运行
 2. 容器默认以 root 用户运行
 3. 数据卷权限需要根据实际情况调整
-4. 生产环境建议使用反向代理如 Nginx
+4. 生产环境建议使用反向代理（如 Nginx）
 ---
 
-> **最后更新**: 2026-05-09  
+> **最后更新**: 2026-05-08  
 > **版本**: 2.1  
 > **维护者**: DITHIOTHREITOL
-

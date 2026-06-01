@@ -1,23 +1,19 @@
 spring:
-  main:
-    allow-bean-definition-overriding: true
   application:
     name: data-assimilation-service
   
   # 数据库配置
   datasource:
-    url: jdbc:mysql://${DB_HOST:localhost}:3306/data_assimilation?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai
+    url: jdbc:mysql://localhost:3306/data_assimilation?useSSL=false&serverTimezone=UTC
     username: ${DB_USER:root}
-    password: ${DB_PASSWORD:***}
+    password: ${DB_PASSWORD}  # 移除默认值，强制要求配置
     driver-class-name: com.mysql.cj.jdbc.Driver
   
   # JPA配置
   jpa:
     hibernate:
-      ddl-auto: ${JPA_DDL_AUTO:update}
+      ddl-auto: update
     show-sql: false
-
-
 
 # 服务器配置
 server:
@@ -30,20 +26,18 @@ server:
 
 # Actuator 健康检查
 management:
-  server:
-    port: ${MANAGEMENT_SERVER_PORT:}
   endpoints:
     web:
       exposure:
         include: health,info,prometheus
   endpoint:
     health:
-      show-details: ${MANAGEMENT_HEALTH_DETAILS:when-authorized}
+      show-details: when-authorized
 
 # 同化服务配置
 assimilation:
   # Python脚本路径
-  python-script: /app/src/main/python/bayesian_assimilation.py
+  python-script: ${user.dir}/src/main/python/bayesian_assimilation.py
   # 处理超时时间
   timeout: 60000
   # 算法参数

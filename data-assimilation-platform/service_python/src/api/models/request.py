@@ -1,24 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import List, Optional, Dict, Any
-
-
-class AssimilationRequest(BaseModel):
-    """同化请求模型"""
-    background: Dict[str, Any]
-    observations: Dict[str, Any]
-    config: Optional[Dict[str, Any]] = None
-
-
-class QualityControlRequest(BaseModel):
-    """质量控制请求模型"""
-    data: Dict[str, Any]
-    data_type: str = 'all'
-
-
-class RiskAssessmentRequest(BaseModel):
-    """风险评估请求模型"""
-    wind_speed: List[List[List[float]]]
-    variance: Optional[List[List[List[float]]]] = None
+from typing import List, Optional
 
 
 class SelfImproveRequest(BaseModel):

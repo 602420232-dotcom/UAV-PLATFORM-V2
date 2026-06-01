@@ -31,7 +31,7 @@ export class EnhancedVisualizer {
       polyline: {
         positions: positions,
         width: 3,
-        material: new Cesium.Color(color.red, color.green, color.blue, 0.8),
+        material: color.withAlpha(0.8),
         clampToGround: false,
         zIndex: 10
       },
@@ -65,9 +65,9 @@ export class EnhancedVisualizer {
           },
           ellipsoid: {
             radii: new Cesium.Cartesian3(500, 500, 200),
-            material: Cesium.Color.fromCssColorString('#00d4ff').clone().setAlpha(0.05),
+            material: Cesium.Color.fromCssColorString('#00d4ff').withAlpha(0.05),
             outline: true,
-            outlineColor: Cesium.Color.fromCssColorString('#00d4ff').clone().setAlpha(0.2)
+            outlineColor: Cesium.Color.fromCssColorString('#00d4ff').withAlpha(0.2)
           }
         });
         this.droneEntities.set(drone.id, entity);
@@ -87,7 +87,7 @@ export class EnhancedVisualizer {
         polyline: {
           positions: Cesium.Cartesian3.fromDegreesArray([w.lon, w.lat, endLon, endLat]),
           width: 2,
-          material: Cesium.Color.fromCssColorString(w.color).clone().setAlpha(0.6),
+          material: Cesium.Color.fromCssColorString(w.color).withAlpha(0.6),
           arrows: Cesium.ArrowStyle.END,
           clampToGround: true
         }
@@ -109,7 +109,7 @@ export class EnhancedVisualizer {
           scale: 1.5,
           pixelOffset: new Cesium.Cartesian2(0, -30)
         },
-        point: { pixelSize: 20, color: Cesium.Color.RED.clone().setAlpha(0.5) }
+        point: { pixelSize: 20, color: Cesium.Color.RED.withAlpha(0.5) }
       });
       this.conflictWarnings.push(entity);
     });

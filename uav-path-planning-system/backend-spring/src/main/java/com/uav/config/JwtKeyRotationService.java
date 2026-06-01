@@ -12,10 +12,10 @@ import org.springframework.stereotype.Component;
 
 import java.security.Key;
 import java.security.KeyPair;
+import java.security.KeyPairGenerator;
 import java.security.KeyStore;
+import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
-import java.security.PublicKey;
-import javax.crypto.SecretKey;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -199,7 +199,13 @@ public class JwtKeyRotationService {
     }
 
     private KeyPair generateKeyPair() {
-        return Jwts.SIG.RS256.keyPair().build();
+        try {
+            KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
+            keyGen.initialize(2048);
+            return keyGen.generateKeyPair();
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("RSA algorithm not available", e);
+        }
     }
 
     public String extractUsername(String token) {
@@ -246,21 +252,11 @@ public class JwtKeyRotationService {
     }
 
     private Claims parseTokenWithKey(String token, Key key) {
-        if (key instanceof SecretKey) {
-            return Jwts.parser()
-                .verifyWith((SecretKey) key)
-                .build()
-                .parseSignedClaims(token)
-                .getPayload();
-        } else if (key instanceof PublicKey) {
-            return Jwts.parser()
-                .verifyWith((PublicKey) key)
-                .build()
-                .parseSignedClaims(token)
-                .getPayload();
-        } else {
-            throw new IllegalArgumentException("Unsupported key type for verification: " + key.getClass().getName());
-        }
+        return Jwts.parserBuilder()
+            .setSigningKey(key)
+            .build()
+            .parseClaimsJws(token)
+            .getBody();
     }
 
     private Boolean isTokenExpired(String token) {
@@ -283,20 +279,20 @@ public class JwtKeyRotationService {
             throw new IllegalArgumentException("Invalid key version: " + keyVersion);
         }
         return Jwts.builder()
-            .claims(claims)
-            .subject(userDetails.getUsername())
-            .issuedAt(new Date(System.currentTimeMillis()))
-            .expiration(new Date(System.currentTimeMillis() + expiration))
+            .setClaims(claims)
+            .setSubject(userDetails.getUsername())
+            .setIssuedAt(new Date(System.currentTimeMillis()))
+            .setExpiration(new Date(System.currentTimeMillis() + expiration))
             .signWith(key)
             .compact();
     }
 
     private String createToken(Map<String, Object> claims, String subject) {
         return Jwts.builder()
-            .claims(claims)
-            .subject(subject)
-            .issuedAt(new Date(System.currentTimeMillis()))
-            .expiration(new Date(System.currentTimeMillis() + expiration))
+            .setClaims(claims)
+            .setSubject(subject)
+            .setIssuedAt(new Date(System.currentTimeMillis()))
+            .setExpiration(new Date(System.currentTimeMillis() + expiration))
             .signWith(getSigningKey())
             .compact();
     }
