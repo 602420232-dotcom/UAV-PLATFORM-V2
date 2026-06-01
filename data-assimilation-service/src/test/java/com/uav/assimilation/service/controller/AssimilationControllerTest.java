@@ -1,7 +1,7 @@
 package com.uav.assimilation.service.controller;
 
 import com.uav.common.dto.AssimilationRequest;
-import com.uav.common.feign.PythonScriptInvoker;
+import com.uav.common.script.PythonScriptInvoker;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

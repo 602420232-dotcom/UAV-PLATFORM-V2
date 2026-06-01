@@ -6,6 +6,6 @@ void main() {
   testWidgets('App renders smoke test', (WidgetTester tester) async {
     await tester.pumpWidget(const UAVApp());
 
-    expect(find.text('无人机路径规划系统'), findsWidgets);
+    expect(find.text('UAV Path Planning'), findsWidgets);
   });
 }

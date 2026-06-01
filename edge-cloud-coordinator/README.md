@@ -61,6 +61,6 @@ python -m edge-cloud-coordinator.coordinator
 
 ---
 
-> **最后更新**: 2026-05-09  
+> **最后更新**: 2026-06-01  
 > **版本**: 2.1  
 > **维护者**: DITHIOTHREITOL

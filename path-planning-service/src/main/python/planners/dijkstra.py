@@ -19,14 +19,17 @@ class DijkstraPlanner(BasePlanner):
         self.grid_size = grid_size
 
     def _grid_to_world(self, grid_pos: Tuple[int, int]) -> Tuple[float, float]:
+        """Convert grid coordinates to world coordinates."""
         return (grid_pos[0] - self.grid_size[0] / 2,
                 grid_pos[1] - self.grid_size[1] / 2)
 
     def _world_to_grid(self, world_pos: Tuple[float, float]) -> Tuple[int, int]:
+        """Convert world coordinates to grid coordinates."""
         return (int(world_pos[0] + self.grid_size[0] / 2),
                 int(world_pos[1] + self.grid_size[1] / 2))
 
     def _in_bounds(self, pos: Tuple[int, int]) -> bool:
+        """Check if a grid position is within bounds."""
         return (0 <= pos[0] < self.grid_size[0] and
                 0 <= pos[1] < self.grid_size[1])
 

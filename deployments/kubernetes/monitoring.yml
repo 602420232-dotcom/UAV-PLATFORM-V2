@@ -1,32 +1,11 @@
-# 监控配置 - 使用K8s Secrets管理敏感信息
+# 监控配置 - 使用K8s Secrets管理敏感信息（见 monitoring-secrets.yml）
+# 部署前请先应用 secrets: kubectl apply -f monitoring-secrets.yml
 apiVersion: v1
 kind: Namespace
 metadata:
   name: monitoring
   labels:
     app: monitoring
----
-# Grafana密码Secret
-apiVersion: v1
-kind: Secret
-metadata:
-  name: grafana-secrets
-  namespace: monitoring
-type: Opaque
-stringData:
-  admin-user: ${GRAFANA_ADMIN_USER}
-  admin-password: ${GRAFANA_ADMIN_PASSWORD}
----
-# Elasticsearch密码Secret
-apiVersion: v1
-kind: Secret
-metadata:
-  name: elasticsearch-secrets
-  namespace: monitoring
-type: Opaque
-stringData:
-  elastic-username: elastic
-  elastic-password: ${ELASTIC_PASSWORD}
 ---
 # Prometheus配置
 apiVersion: apps/v1

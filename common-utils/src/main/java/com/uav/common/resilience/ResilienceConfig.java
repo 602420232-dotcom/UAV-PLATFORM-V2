@@ -6,8 +6,6 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.retry.RetryRegistry;
-import io.github.resilience4j.timelimiter.TimeLimiterConfig;
-import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -176,19 +174,6 @@ public class ResilienceConfig {
     }
     
     /**
-     * 配置 TimeLimiterRegistry
-     */
-    @Bean
-    public TimeLimiterRegistry timeLimiterRegistry() {
-        TimeLimiterConfig defaultConfig = TimeLimiterConfig.custom()
-                .timeoutDuration(Duration.ofSeconds(5))
-                .cancelRunningFuture(true)
-                .build();
-        
-        return TimeLimiterRegistry.of(defaultConfig);
-    }
-    
-    /**
      * 创建带有超时和重试的 RestTemplate
      */
     @Bean
@@ -205,12 +190,12 @@ public class ResilienceConfig {
      */
     @PostConstruct
     public void init() {
-        log.info("========================================");
-        log.info("Resilience4j Circuit Breaker 配置已加载");
-        log.info("应用名称: {}", applicationName);
-        log.info("失败率阈值: {}%", failureRateThreshold);
-        log.info("熔断器等待时间: {}", waitDurationInOpenState);
-        log.info("滑动窗口大小: {}", slidingWindowSize);
-        log.info("========================================");
+        log.debug("========================================");
+        log.debug("Resilience4j Circuit Breaker 配置已加载");
+        log.debug("应用名称: {}", applicationName);
+        log.debug("失败率阈值: {}%", failureRateThreshold);
+        log.debug("熔断器等待时间: {}", waitDurationInOpenState);
+        log.debug("滑动窗口大小: {}", slidingWindowSize);
+        log.debug("========================================");
     }
 }

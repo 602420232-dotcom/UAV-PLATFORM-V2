@@ -5,10 +5,14 @@ REST API for global weather forecasting using the FengWu ONNX model.
 Provides endpoints for submitting ERA5 data and retrieving forecasts.
 
 Security: API Key authentication required for all endpoints except /health
+          CORS must be restricted to known service origins in production.
 """
+
+from __future__ import annotations
 
 import logging
 import os
+import sys
 import time
 from contextlib import asynccontextmanager
 from typing import Optional
@@ -20,6 +24,9 @@ from pydantic import BaseModel, Field
 
 from inference_engine import get_engine, FengWuEngine
 
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'common-utils', 'src', 'main', 'python'))
+from security_middleware import SecurityMiddleware
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
@@ -28,17 +35,60 @@ logger = logging.getLogger("fengwu-service")
 
 
 # ─── Security Configuration ──────────────────────────────────────────────────
-_API_KEY = os.getenv("FENGWU_API_KEY", "")
-_ALLOWED_ORIGINS = os.getenv("CORS_ORIGINS", "localhost:3000,localhost:8080").split(",")
 
-def verify_api_key(x_api_key: str = Header(..., alias="X-API-Key")):
-    """Verify API Key from request header."""
+# Production mode check — if FENGWU_ENV=production, API key is REQUIRED
+_FENGWU_ENV = os.getenv("FENGWU_ENV", "development").lower()
+_IS_PRODUCTION = _FENGWU_ENV == "production"
+
+_API_KEY = os.getenv("FENGWU_API_KEY", "")
+if not _API_KEY:
+    if _IS_PRODUCTION:
+        raise RuntimeError(
+            "FENGWU_API_KEY is required in production mode. "
+            "Set FENGWU_API_KEY environment variable before starting the service."
+        )
+    logger.warning(
+        "⚠  FENGWU_API_KEY not set \u2014 authentication DISABLED. "
+        "Set FENGWU_API_KEY environment variable for production."
+    )
+
+
+def verify_api_key(
+    x_api_key: str = Header(default="", alias="X-API-Key"),
+):
     if not _API_KEY:
-        logger.warning("⚠️  FENGWU_API_KEY not configured — authentication disabled")
         return True
+
+    if not x_api_key:
+        logger.warning("Authentication failed: missing X-API-Key header")
+        raise HTTPException(status_code=401, detail="Missing X-API-Key header")
+
     if x_api_key != _API_KEY:
+        logger.warning("Authentication failed: invalid API key")
         raise HTTPException(status_code=401, detail="Invalid API Key")
+
     return True
+
+
+# ─── CORS Configuration ──────────────────────────────────────────────────────
+# Must be set via CORS_ORIGINS environment variable.
+# Development defaults allow localhost origins only.
+_cors_origins_str = os.getenv("CORS_ORIGINS")
+if _cors_origins_str:
+    _ALLOWED_ORIGINS = [o.strip() for o in _cors_origins_str.split(",")]
+    logger.info("CORS configured for origins: %s", _ALLOWED_ORIGINS)
+else:
+    _ALLOWED_ORIGINS = ["http://localhost:3000", "http://localhost:8080"]
+    if _IS_PRODUCTION:
+        raise RuntimeError(
+            "CORS_ORIGINS is required in production mode. "
+            "Set CORS_ORIGINS environment variable before starting the service."
+        )
+    logger.warning(
+        "CORS_ORIGINS not set, using development defaults: %s. "
+        "Set CORS_ORIGINS environment variable for production.",
+        _ALLOWED_ORIGINS,
+    )
 
 
 # ─── Lifespan: load model on startup ───────────────────────────────────────
@@ -61,23 +111,29 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS configuration - restrict origins in production
-if os.getenv("ENVIRONMENT") == "production":
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=_ALLOWED_ORIGINS,
-        allow_methods=["GET", "POST"],
-        allow_headers=["Authorization", "Content-Type", "X-API-Key"],
-    )
-    logger.info(f"🔒 Production CORS enabled for origins: {_ALLOWED_ORIGINS}")
+# CORS configuration - restrict to explicit origins
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=_ALLOWED_ORIGINS,
+    allow_methods=["GET", "POST"],
+    allow_headers=["Authorization", "Content-Type", "X-API-Key"],
+)
+logger.info(f"🔒 CORS enabled for origins: {_ALLOWED_ORIGINS}")
+
+# JWT 认证中间件（与 Java 后端共享 JWT_SECRET，补充 API Key 认证）
+_jwt_secret = os.getenv("JWT_SECRET", "") or os.getenv("JWT_SECRET_KEY", "")
+_jwt_middleware = SecurityMiddleware(
+    secret_key=_jwt_secret,
+    algorithm="HS512",
+)
+if _jwt_secret:
+    _jwt_middleware.protect_app(app, public_paths=["/health", "/actuator/health", "/health/ready"])
+    logger.info("JWT authentication enabled")
 else:
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=["*"],
-        allow_methods=["*"],
-        allow_headers=["*"],
+    logger.warning(
+        "JWT_SECRET not set — authentication DISABLED. "
+        "Set JWT_SECRET environment variable to enable JWT auth."
     )
-    logger.warning("⚠️  Development CORS mode — allow all origins")
 
 
 # ─── Models ─────────────────────────────────────────────────────────────────
@@ -131,6 +187,12 @@ async def health():
         model_path=engine.model_path if engine else "N/A",
         uptime_seconds=time.time() - _start_time,
     )
+
+
+@app.get("/actuator/health", response_model=HealthResponse)
+async def actuator_health():
+    """Spring Boot Actuator 兼容的健康检查端点。"""
+    return await health()
 
 
 @app.get("/health/ready")
@@ -265,5 +327,4 @@ async def model_info():
     }
 
 
-# Required for lifespan
-import os
+

@@ -573,6 +573,20 @@ pre { background:#111; padding:1rem; border-radius:8px; overflow-x:auto; white-s
 </div>
 
 <script>
+function createToast(msg) {
+  const t = document.createElement('div');
+  t.textContent = msg;
+  Object.assign(t.style, {
+    position: 'fixed', bottom: '20px', right: '20px',
+    background: '#333', color: '#fff', padding: '12px 20px',
+    borderRadius: '8px', zIndex: 9999, fontSize: '14px',
+    boxShadow: '0 4px 12px rgba(0,0,0,0.3)', maxWidth: '400px',
+    wordBreak: 'break-all'
+  });
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
 let chart;
 let currentPage = 'monitor';
 
@@ -693,7 +707,7 @@ async function loadProcs() {
 async function killProc(pid) {
   if (!confirm('确定要终止进程 ' + pid + ' 吗？')) return;
   const res = await fetch('/api/action/kill-proc', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({pid}) });
-  alert((await res.json()).msg || '操作完成');
+  createToast((await res.json()).msg || '操作完成');
   loadProcs();
 }
 
@@ -737,7 +751,7 @@ async function loadDocker() {
 async function dockerAction(id, action) {
   const res = await fetch('/api/docker/' + id + '/' + action, { method: 'POST' });
   const d = await res.json();
-  if (d.ok) { setTimeout(loadDocker, 2000); } else { alert('失败: ' + d.error); }
+  if (d.ok) { setTimeout(loadDocker, 2000); } else { createToast('失败: ' + d.error); }
 }
 
 async function loadHistory() {
@@ -791,7 +805,7 @@ async function saveAndSource() {
     body: JSON.stringify({content}) 
   });
   const d = await res.json();
-  alert(d.msg || d.error);
+  createToast(d.msg || d.error);
   btn.disabled = false;
   btn.innerText = '💾 保存';
 }

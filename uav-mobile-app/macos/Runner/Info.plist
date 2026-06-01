@@ -28,5 +28,33 @@
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	
+	<!-- App Transport Security (ATS) Configuration -->
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<!-- 允许 HTTP 连接到 localhost（开发环境） -->
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+		
+		<!-- 例外域名配置 -->
+		<key>NSExceptionDomains</key>
+		<dict>
+			<!-- localhost 例外 -->
+			<key>localhost</key>
+			<dict>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<true/>
+				<key>NSIncludesSubdomains</key>
+				<true/>
+			</dict>
+			
+			<!-- 127.0.0.1 例外 -->
+			<key>127.0.0.1</key>
+			<dict>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<true/>
+			</dict>
+		</dict>
+	</dict>
 </dict>
 </plist>

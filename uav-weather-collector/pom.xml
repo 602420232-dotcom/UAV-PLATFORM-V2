@@ -21,7 +21,6 @@
         <dependency>
             <groupId>com.uav</groupId>
             <artifactId>common-utils</artifactId>
-            <version>1.0.0</version>
         </dependency>
         
         <dependency>

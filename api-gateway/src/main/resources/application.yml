@@ -10,14 +10,37 @@ spring:
   cloud:
     gateway:
       routes:
+        # 认证路由（无需 JWT 验证，先通过再转发）
+        - id: uav-backend-auth
+          uri: http://backend-spring:8089
+          predicates:
+            - Path=/api/v1/auth/**
+          filters:
+            - StripPrefix=0
+          order: -1
+
+        # 平台 API 路由（需要 JWT 验证）
         - id: uav-platform-all
           uri: http://uav-platform:8080
           predicates:
             - Path=/api/**
+          filters:
+            - name: JwtAuth
+            - name: RequestRateLimiter
+              args:
+                key-resolver: "#{@userKeyResolver}"
+                redis-rate-limiter:
+                  replenishRate: 60
+                  burstCapacity: 100
+            - StripPrefix=0
+
+        # Actuator 健康检查（无需 JWT 验证）
         - id: actuator-health
           uri: http://uav-platform:8080
           predicates:
             - Path=/actuator/**
+          filters:
+            - StripPrefix=0
       discovery:
         locator:
           enabled: true

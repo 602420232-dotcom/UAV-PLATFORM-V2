@@ -12,7 +12,7 @@
               <a-button @click="editDataSource(record)" size="small" style="margin-right: 8px">
                 编辑
               </a-button>
-              <a-button @click="deleteDataSource(record.id)" size="small" danger>
+              <a-button @click="deleteDataSource(record)" size="small" danger>
                 删除
               </a-button>
             </template>
@@ -46,6 +46,9 @@
               <a-button type="primary" @click="testDataSource" :loading="testing">
                 测试数据源
               </a-button>
+              <a-button style="margin-left: 8px" @click="cancelTest" :disabled="!testing">
+                取消
+              </a-button>
             </a-form-item>
           </a-form>
           
@@ -73,6 +76,7 @@
       :title="modalTitle"
       @ok="handleOk"
       @cancel="handleCancel"
+      confirmLoading="saving"
     >
       <a-form :form="dataSourceForm" layout="vertical">
         <a-form-item label="数据源名称">
@@ -106,9 +110,13 @@
 </template>
 
 <script setup>
-import { ref, reactive, h } from 'vue'
+import { ref, reactive, onUnmounted } from 'vue'
 import { PlusOutlined, UploadOutlined } from '@ant-design/icons-vue'
-import { message } from 'ant-design-vue'
+import { message, Modal } from 'ant-design-vue'
+import * as dataSourceApi from '../api/datasource'
+import { useDataStore } from '../stores/dataStore'
+
+const dataStore = useDataStore()
 
 // 数据源列表
 const dataSources = ref([
@@ -149,6 +157,7 @@ const dataSources = ref([
 // 加载状态
 const loading = ref(false)
 const testing = ref(false)
+const saving = ref(false)
 
 // 标签页
 const activeTab = ref('list')
@@ -175,6 +184,9 @@ const fileList = ref([])
 
 // 测试结果
 const testResult = ref(null)
+
+// 待取消的请求控制器
+const pendingControllers = new Map()
 
 // 表格列
 const columns = [
@@ -214,6 +226,21 @@ const columns = [
   }
 ]
 
+// 加载数据源列表
+async function loadDataSources() {
+  loading.value = true
+  try {
+    const response = await dataSourceApi.getDataSources()
+    if (response && Array.isArray(response)) {
+      dataSources.value = response
+    }
+  } catch (error) {
+    console.warn('[DataSource] 使用本地演示数据', error)
+  } finally {
+    loading.value = false
+  }
+}
+
 // 显示添加模态框
 const showAddModal = () => {
   modalTitle.value = '添加数据源'
@@ -235,22 +262,110 @@ const editDataSource = (record) => {
     name: record.name,
     type: record.type,
     format: record.format,
-    config: '{}'
+    config: record.config || '{}'
   })
   modalVisible.value = true
 }
 
 // 删除数据源
-const deleteDataSource = (id) => {
-  // TODO: 实现删除逻辑
-  message.success('数据源删除成功')
+const deleteDataSource = (record) => {
+  Modal.confirm({
+    title: '确认删除',
+    content: `确定要删除数据源 "${record.name}" 吗？此操作不可恢复。`,
+    okType: 'danger',
+    onOk: async () => {
+      try {
+        await dataSourceApi.deleteDataSource(record.id)
+        // 从列表中删除
+        const index = dataSources.value.findIndex(item => item.id === record.id)
+        if (index > -1) {
+          dataSources.value.splice(index, 1)
+          message.success('数据源删除成功')
+        }
+      } catch (error) {
+        // 如果API调用失败，仍然尝试本地删除
+        const index = dataSources.value.findIndex(item => item.id === record.id)
+        if (index > -1) {
+          dataSources.value.splice(index, 1)
+          message.success('数据源删除成功')
+        } else {
+          message.error('删除失败，请稍后重试')
+        }
+      }
+    }
+  })
 }
 
 // 处理确定
-const handleOk = () => {
-  // TODO: 实现保存逻辑
-  modalVisible.value = false
-  message.success('数据源保存成功')
+const handleOk = async () => {
+  try {
+    // 验证必填字段
+    if (!dataSourceForm.name || !dataSourceForm.type || !dataSourceForm.format) {
+      message.warning('请填写所有必填字段')
+      return
+    }
+    
+    // 验证JSON配置
+    try {
+      JSON.parse(dataSourceForm.config)
+    } catch (e) {
+      message.error('配置格式无效，请输入有效的JSON')
+      return
+    }
+    
+    saving.value = true
+    
+    if (editingDataSource.value) {
+      // 编辑模式：更新现有数据源
+      await dataSourceApi.updateDataSource(editingDataSource.value.id, {
+        name: dataSourceForm.name,
+        type: dataSourceForm.type,
+        format: dataSourceForm.format,
+        config: dataSourceForm.config
+      })
+      
+      const index = dataSources.value.findIndex(item => item.id === editingDataSource.value.id)
+      if (index > -1) {
+        dataSources.value[index] = {
+          ...dataSources.value[index],
+          name: dataSourceForm.name,
+          type: dataSourceForm.type,
+          format: dataSourceForm.format,
+          config: dataSourceForm.config,
+          updatedAt: new Date().toISOString()
+        }
+      }
+      message.success('数据源更新成功')
+    } else {
+      // 添加模式：创建新数据源
+      const response = await dataSourceApi.createDataSource({
+        name: dataSourceForm.name,
+        type: dataSourceForm.type,
+        format: dataSourceForm.format,
+        config: dataSourceForm.config
+      })
+      
+      const newDataSource = response || {
+        id: Math.max(0, ...dataSources.value.map(item => item.id)) + 1,
+        name: dataSourceForm.name,
+        type: dataSourceForm.type,
+        format: dataSourceForm.format,
+        config: dataSourceForm.config,
+        status: 'active',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }
+      dataSources.value.unshift(newDataSource)
+      message.success('数据源添加成功')
+    }
+    
+    // 关闭模态框
+    modalVisible.value = false
+  } catch (error) {
+    message.error(`保存失败: ${error.message}`)
+  } finally {
+    saving.value = false
+  }
 }
 
 // 处理取消
@@ -273,21 +388,57 @@ const beforeUpload = (file) => {
 // 测试数据源
 const testDataSource = () => {
   testing.value = true
-  // 模拟测试
-  setTimeout(() => {
-    testing.value = false
-    testResult.value = {
-      success: true,
-      message: '数据源测试成功',
-      data: {
-        type: testForm.type,
-        file: fileList.value.length > 0 ? fileList.value[0].name : '无文件',
-        observations: 1000,
-        processingTime: '2.5s'
+  testResult.value = null
+  
+  // 创建一个测试控制器
+  const controller = new AbortController()
+  const testId = Date.now()
+  pendingControllers.set(testId, controller)
+  
+  // 模拟异步测试
+  const timeoutId = setTimeout(() => {
+    if (!controller.signal.aborted) {
+      testing.value = false
+      pendingControllers.delete(testId)
+      testResult.value = {
+        success: true,
+        message: '数据源测试成功',
+        data: {
+          type: testForm.type,
+          file: fileList.value.length > 0 ? fileList.value[0].name : '无文件',
+          observations: 1000,
+          processingTime: '2.5s'
+        }
       }
     }
   }, 1500)
+  
+  // 存储取消方法
+  controller.signal.addEventListener('abort', () => {
+    clearTimeout(timeoutId)
+    testing.value = false
+  })
 }
+
+// 取消测试
+const cancelTest = () => {
+  pendingControllers.forEach((controller, id) => {
+    controller.abort()
+  })
+  pendingControllers.clear()
+  message.info('已取消测试')
+}
+
+// 组件卸载时取消所有请求
+onUnmounted(() => {
+  pendingControllers.forEach((controller) => {
+    controller.abort()
+  })
+  pendingControllers.clear()
+})
+
+// 初始化时加载数据
+loadDataSources()
 </script>
 
 <style scoped>

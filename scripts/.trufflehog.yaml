@@ -1,0 +1,108 @@
+# =============================================================================
+# TruffleHog Configuration - UAV Platform
+# =============================================================================
+# Configuration for trufflehog secret scanning.
+# Used by: trufflehog filesystem --config .trufflehog.yaml .
+#
+# Install: pip install trufflehog  or  brew install trufflehog
+# Run:     trufflehog filesystem --config .trufflehog.yaml .
+# =============================================================================
+
+# Scan depth - use deeper for full repo scans, default for diffs
+max_depth: 50
+
+# Exclude these paths
+exclude_paths:
+  - node_modules/
+  - target/
+  - build/
+  - .git/
+  - __pycache__/
+  - venv/
+  - .venv/
+  - .pixi/
+  - data/
+  - logs/
+  - results/
+  - outputs/
+  - test_output/
+  - .gradle/
+  - .dart_tool/
+  - .pub-cache/
+  - coverage/
+  - htmlcov/
+  - .pytest_cache/
+
+# Exclude file patterns
+exclude_globs:
+  - "*.min.js"
+  - "*.min.css"
+  - "*.lock"
+  - "package-lock.json"
+  - "yarn.lock"
+  - "*.svg"
+  - "*.png"
+  - "*.jpg"
+  - "*.jpeg"
+  - "*.gif"
+  - "*.ico"
+  - "*.woff"
+  - "*.woff2"
+  - "*.eot"
+  - "*.ttf"
+  - "*.map"
+  - "*.class"
+  - "*.so"
+  - "*.dylib"
+  - "*.dll"
+
+# Custom regex patterns
+custom_regexes:
+  # UAV Platform specific patterns
+  uav_jwt_pattern: "UAV_JWT_[A-Za-z0-9+/=]{20,}"
+  uav_api_key_pattern: "UAV_API_KEY_[A-Za-z0-9+/=]{20,}"
+  
+  # Private key patterns
+  rsa_private_key: "-----BEGIN RSA PRIVATE KEY-----"
+  ec_private_key: "-----BEGIN EC PRIVATE KEY-----"
+  pgp_private_key: "-----BEGIN PGP PRIVATE KEY-----"
+  ssh_private_key: "-----BEGIN OPENSSH PRIVATE KEY-----"
+  
+  # Cloud provider keys
+  aws_access_key: "(A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}"
+  gcp_service_account: "[0-9]+-compute@developer\\.gserviceaccount\\.com"
+  azure_connection_string: "DefaultEndpointsProtocol=https;AccountName=[^;]+;AccountKey=[^;]+"
+  
+  # Database connection strings
+  mysql_connection: "mysql://[^:]+:[^@]+@"
+  postgres_connection: "postgres://[^:]+:[^@]+@"
+  mongodb_connection: "mongodb://[^:]+:[^@]+@"
+  redis_connection: "redis://[^:]+:[^@]+@"
+  
+  # Tokens
+  jwt_token: "eyJ[A-Za-z0-9_-]{10,}\\.[A-Za-z0-9_-]{10,}\\.[A-Za-z0-9_-]{10,}"
+  github_token: "gh[pousr]_[A-Za-z0-9_]{36,}"
+  gitlab_token: "glpat-[A-Za-z0-9_-]{20,}"
+  slack_token: "xox[baprs]-[0-9]{10,13}-[0-9]{10,13}-[a-zA-Z0-9]{24,}"
+  npm_token: "npm_[A-Za-z0-9]{36}"
+  heroku_api_key: "[hH][eE][rR][oO][kK][uU].{0,30}[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}"
+
+# Entropy detection
+entropy:
+  # Minimum Shannon entropy to flag strings (0-8, higher = more selective)
+  min_entropy: 4.5
+  
+  # Only check strings of this minimum length
+  min_string_length: 20
+  
+  # Skip high-entropy strings that match these patterns (false positive reduction)
+  skip:
+    - "^[a-fA-F0-9]{32}$"  # MD5 hashes
+    - "^[a-fA-F0-9]{40}$"  # SHA1 hashes
+    - "^[a-fA-F0-9]{64}$"  # SHA256 hashes
+    - "^\\d{4}-\\d{2}-\\d{2}T"  # ISO dates
+    - "^[a-zA-Z0-9+/]{20,}={0,2}$"  # Generic base64 (too many FPs)
+
+# Output
+verbose: false
+json: false

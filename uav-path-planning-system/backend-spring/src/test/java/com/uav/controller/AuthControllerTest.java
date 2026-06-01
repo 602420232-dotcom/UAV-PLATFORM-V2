@@ -60,13 +60,13 @@ class AuthControllerTest {
     @InjectMocks
     private AuthController authController;
 
-    private AuthController.LoginRequest validRequest;
+    private com.uav.dto.request.LoginRequest validRequest;
 
     @BeforeEach
     void setUp() {
-        validRequest = new AuthController.LoginRequest();
-        validRequest.username = "testuser";
-        validRequest.password = "testpass";
+        validRequest = new com.uav.dto.request.LoginRequest();
+        validRequest.setUsername("testuser");
+        validRequest.setPassword("testpass");
     }
 
     @Test
@@ -145,7 +145,7 @@ class AuthControllerTest {
             .build();
 
         when(userDetailsService.loadUserByUsername("testuser")).thenReturn(userDetails);
-        when(jwtUtil.generateToken(userDetails)).thenReturn("test-token");
+        when(jwtUtil.generateAccessToken(any(), any(), any())).thenReturn("test-token");
 
         ResponseEntity<?> response = authController.login(validRequest, httpServletRequest);
 

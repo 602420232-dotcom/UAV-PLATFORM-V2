@@ -29,11 +29,17 @@ wheels/
 *.egg
 MANIFEST
 
+# Python pip compile / lock
+requirements.lock
+Pipfile.lock
+
 # Virtual environments
 venv/
 env/
 ENV/
 .venv/
+.conda/
+.condarc
 
 # PyInstaller
 *.manifest
@@ -109,6 +115,16 @@ uav-mobile-app/.pub-cache/
 uav-mobile-app/.pub/
 uav-mobile-app/build/
 
+# Android / Flutter auto-generated
+uav-mobile-app/android/.gradle/
+uav-mobile-app/android/app/src/main/res/xml/backup_rules.xml
+uav-mobile-app/android/app/src/main/res/xml/data_extraction_rules.xml
+uav-mobile-app/android/app/src/main/res/xml/network_security_config.xml
+
+# iOS generated
+uav-mobile-app/ios/Pods/
+uav-mobile-app/ios/.symlinks/
+
 # -----------------
 # Node.js / Vue
 # -----------------
@@ -117,11 +133,25 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .npm
+.pnpm
 .eslintcache
 .node_repl_history
 *.tgz
 .yarn-integrity
 .cache/
+yarn.lock
+package-lock.json
+
+# -----------------
+# Go
+# -----------------
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+go.work
+go.work.sum
 
 # -----------------
 # IDE - General
@@ -141,6 +171,9 @@ yarn-error.log*
 .DS_Store
 Thumbs.db
 desktop.ini/
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
 
 # -----------------
 # Project Specific IDE
@@ -148,49 +181,123 @@ desktop.ini/
 .codebuddy/
 .cursor/
 .observatory/
+.history/
+.hg/
 
 # Eclipse IDE
 .classpath
 .project
 .metadata
 .factorypath
-
+.springBeans
 
 # -----------------
-# Project Specific
+# Environment & Secrets - 按环境分层
 # -----------------
-# 环境变量文件
+# 根目录 .env 文件
 .env
 .env.local
 .env.*.local
 
+# 按环境命名的 .env 文件（各环境下发）
+.env.dev
+.env.test
+.env.staging
+.env.production
+.env.development
+.env.preproduction
+
+# .env 模板文件
+.env.template
+.env.example
+!.env.example
+.env.*.template
+.env.*.example
+
+# 前端 .env 文件（含敏感 token）
+**/frontend-vue/.env
+**/frontend-vue/.env.*
+**/frontend-vue/.env.local
+
+# 密钥管理工具生成的备份文件
+*.bak.*
+*.bak
+*.backup.*
+*.backup
+
 # 敏感配置
 **/secrets.yml
 **/credentials.yml
+**/vault.yml
 
+# 本地 K8s 配置
+kind-config.yaml
+kind-config*.yaml
+**/kind-config.yaml
+minikube-config
+
+# -----------------
+# Githooks & Scripts
+# -----------------
+.githooks/
+.githooks/*
+
+# -----------------
+#  构建产物缓存文件
+# -----------------
+*.swp
+*.swo
+*~
+*.orig
+*.rej
+*.tmp
+*.temp
+*.pid
+*.seed
+*.pid.lock
+*.part
+*.crdownload
+
+# 日志文件
+logs/
+*.log
+!**/src/main/resources/logback-spring.xml
+
+# -----------------
 # 数据文件
+# -----------------
 data/
 *.nc
 *.h5
 *.hdf5
+*.npy
+*.npz
 
 # 模型文件
 *.pkl
 *.model
+*.onnx
+*.pt
+*.pth
+*.bin
 
+# -----------------
 # 测试输出
+# -----------------
 test-output/
 htmlcov/
 .coverage/
 .pytest_cache/
+.coverage.*
+*.cover
+.coverage.data
+.mypy_cache/
+.ruff_cache/
 
 # 结果文件
 results/
 outputs/
 test_output/
-*.npy
-*.png
-*.jpg
 !examples/**/output/*.png
 
 # Docker
@@ -205,6 +312,9 @@ data-assimilation-platform/algorithm_core/examples/output/
 data-assimilation-platform/algorithm_core/examples/test_output/
 tools/mypanel/node_modules
 
+# 各子模块 node_modules（兜底）
+**/node_modules/
+
 # -----------------
 # Pixi
 # -----------------
@@ -217,17 +327,25 @@ tools/mypanel/node_modules
 # Trae AI
 .trae/
 
-*.pid
-*.seed
-*.pid.lock
+# Windows 系统文件
+sl.exe
+*.lnk
+
+# coverage 输出
 coverage/
 .nyc_output/
-*.orig
-*.rej
+
+# Maven backup
+pom.xml.backup.*
+pom.xml.bak
+**/pom.xml.backup.*
+**/pom.xml.bak
 *.bak
-*.tmp
-*.temp
-sl.exe
-logs/
-*.log
-!**/src/main/resources/logback-spring.xml
+
+# Temporary analysis files
+GITIGNORE_ANALYSIS.md
+PROJECT_CHECK_COMPLETE.md
+QUICK_FIX_GUIDE.md
+SPRING_BOOT_VERSION_CHECK.md
+BUILD_VERIFICATION.md
+WINDOWS_BUILD_README.md

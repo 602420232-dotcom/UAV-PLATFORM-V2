@@ -41,11 +41,11 @@ class SecurityLevel(Enum):
 @dataclass
 class SecurityConfig:
     level: SecurityLevel = SecurityLevel.JWT
-    jwt_secret: str = ""
+    jwt_secret: Optional[str] = None
     jwt_expiry_seconds: int = 3600
     mtls_cert_path: str = ""
     mtls_key_path: str = ""
-    encryption_key: str = ""
+    encryption_key: Optional[str] = None
 
 
 class JWTProvider:

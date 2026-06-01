@@ -5,13 +5,11 @@ import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.retry.Retry;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import jakarta.annotation.Resource;
 import java.util.Objects;
 import java.util.function.Supplier;
 
@@ -23,33 +21,30 @@ import java.util.function.Supplier;
 @Service
 public class CircuitBreakerService {
     
-    @Autowired
-    @Qualifier("resilientRestTemplate")
-    private RestTemplate restTemplate;
-    
-    @Resource
-    @Qualifier("meteorForecastCircuitBreaker")
-    private CircuitBreaker meteorForecastCircuitBreaker;
-    
-    @Resource
-    @Qualifier("pathPlanningCircuitBreaker")
-    private CircuitBreaker pathPlanningCircuitBreaker;
-    
-    @Resource
-    @Qualifier("dataAssimilationCircuitBreaker")
-    private CircuitBreaker dataAssimilationCircuitBreaker;
-    
-    @Resource
-    @Qualifier("meteorForecastRetry")
-    private Retry meteorForecastRetry;
-    
-    @Resource
-    @Qualifier("pathPlanningRetry")
-    private Retry pathPlanningRetry;
-    
-    @Resource
-    @Qualifier("dataAssimilationRetry")
-    private Retry dataAssimilationRetry;
+    private final RestTemplate restTemplate;
+    private final CircuitBreaker meteorForecastCircuitBreaker;
+    private final CircuitBreaker pathPlanningCircuitBreaker;
+    private final CircuitBreaker dataAssimilationCircuitBreaker;
+    private final Retry meteorForecastRetry;
+    private final Retry pathPlanningRetry;
+    private final Retry dataAssimilationRetry;
+
+    public CircuitBreakerService(
+            @Qualifier("resilientRestTemplate") RestTemplate restTemplate,
+            @Qualifier("meteorForecastCircuitBreaker") CircuitBreaker meteorForecastCircuitBreaker,
+            @Qualifier("pathPlanningCircuitBreaker") CircuitBreaker pathPlanningCircuitBreaker,
+            @Qualifier("dataAssimilationCircuitBreaker") CircuitBreaker dataAssimilationCircuitBreaker,
+            @Qualifier("meteorForecastRetry") Retry meteorForecastRetry,
+            @Qualifier("pathPlanningRetry") Retry pathPlanningRetry,
+            @Qualifier("dataAssimilationRetry") Retry dataAssimilationRetry) {
+        this.restTemplate = restTemplate;
+        this.meteorForecastCircuitBreaker = meteorForecastCircuitBreaker;
+        this.pathPlanningCircuitBreaker = pathPlanningCircuitBreaker;
+        this.dataAssimilationCircuitBreaker = dataAssimilationCircuitBreaker;
+        this.meteorForecastRetry = meteorForecastRetry;
+        this.pathPlanningRetry = pathPlanningRetry;
+        this.dataAssimilationRetry = dataAssimilationRetry;
+    }
     
     /**
      * 调用气象预报服务（带熔断和重试）

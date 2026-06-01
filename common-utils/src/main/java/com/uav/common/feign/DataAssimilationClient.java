@@ -14,7 +14,7 @@ import java.util.Map;
  */
 @FeignClient(name = "data-assimilation-service", url = "${services.data-assimilation.url:http://data-assimilation:8084}",
         fallback = DataAssimilationClientFallback.class)
-public interface DataAssimilationClient {
+public interface DataAssimilationClient extends HealthCheckable {
 
     /**
      * 执行数据同化

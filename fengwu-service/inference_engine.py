@@ -6,9 +6,13 @@ Input: Two consecutive 6-hour ERA5 frames (69×721×1440)
 Output: Up to 56 forecast steps (14 days, 6-hour intervals)
 """
 
+from __future__ import annotations
+
 import os
 import time
 import logging
+import threading
+import atexit
 from pathlib import Path
 from typing import Optional
 
@@ -172,19 +176,35 @@ class FengWuEngine:
         return surface
 
 
-# Global engine instance
+# Global engine instance with thread safety
 _engine: Optional[FengWuEngine] = None
+_engine_lock = threading.Lock()
+
+
+def _cleanup_engine() -> None:
+    """Cleanup global engine instance on program exit."""
+    global _engine
+    if _engine is not None:
+        logger.info("Shutting down FengWu engine")
+        if _engine._session is not None:
+            del _engine._session
+        _engine = None
+
+
+atexit.register(_cleanup_engine)
 
 
 def get_engine() -> Optional[FengWuEngine]:
     global _engine
     if _engine is None:
-        _engine = FengWuEngine(
-            model_path=os.environ.get("FENGWU_MODEL_PATH", "/app/model/fengwu_v2.onnx"),
-            data_mean_path=os.environ.get("FENGWU_MEAN_PATH", "/app/model/data_mean.npy"),
-            data_std_path=os.environ.get("FENGWU_STD_PATH", "/app/model/data_std.npy"),
-            use_gpu=os.environ.get("FENGWU_USE_GPU", "false").lower() == "true",
-            intra_threads=int(os.environ.get("FENGWU_THREADS", "4")),
-        )
-        _engine.load()
+        with _engine_lock:
+            if _engine is None:
+                _engine = FengWuEngine(
+                    model_path=os.environ.get("FENGWU_MODEL_PATH", "/app/model/fengwu_v2.onnx"),
+                    data_mean_path=os.environ.get("FENGWU_MEAN_PATH", "/app/model/data_mean.npy"),
+                    data_std_path=os.environ.get("FENGWU_STD_PATH", "/app/model/data_std.npy"),
+                    use_gpu=os.environ.get("FENGWU_USE_GPU", "false").lower() == "true",
+                    intra_threads=int(os.environ.get("FENGWU_THREADS", "4")),
+                )
+                _engine.load()
     return _engine

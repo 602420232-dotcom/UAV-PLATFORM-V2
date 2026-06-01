@@ -1,6 +1,6 @@
 package com.uav.meteor.forecast.controller;
 import com.uav.common.dto.ForecastRequest;
-import com.uav.common.feign.PythonScriptInvoker;
+import com.uav.common.script.PythonScriptInvoker;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Value;
 import java.util.Map;
@@ -46,10 +46,7 @@ public class ForecastController {
 
     @GetMapping("/models")
     public Map<String, Object> getModels() {
-        return Map.of(
-            "success", true,
-            "data", Map.of("lstm_model", "LSTM时间序列预测模型", "xgb_model", "XGBoost数据订正模型")
-        );
+        return pythonScriptInvoker.executeAsMap(pythonScriptPath, "model_info", Map.of());
     }
 
     @GetMapping("/get")
@@ -74,5 +71,35 @@ public class ForecastController {
             "lng", lng
         );
         return pythonScriptInvoker.executeAsMap(pythonScriptPath, "get_realtime_weather", params);
+    }
+    
+    @PostMapping("/train")
+    public Map<String, Object> trainModel(@RequestBody Map<String, Object> request) {
+        return pythonScriptInvoker.executeAsMap(pythonScriptPath, "train_full", request);
+    }
+    
+    @PostMapping("/improve")
+    public Map<String, Object> improveModel(@RequestBody Map<String, Object> request) {
+        return pythonScriptInvoker.executeAsMap(pythonScriptPath, "improve", request);
+    }
+    
+    @PostMapping("/save")
+    public Map<String, Object> saveModels(@RequestBody(required = false) Map<String, String> request) {
+        String version = request != null ? request.get("version") : null;
+        if (version != null) {
+            return pythonScriptInvoker.executeAsMap(pythonScriptPath, "save_models", Map.of("version", version));
+        } else {
+            return pythonScriptInvoker.executeAsMap(pythonScriptPath, "save_models", Map.of());
+        }
+    }
+    
+    @PostMapping("/load")
+    public Map<String, Object> loadModels(@RequestBody(required = false) Map<String, String> request) {
+        String version = request != null ? request.get("version") : null;
+        if (version != null) {
+            return pythonScriptInvoker.executeAsMap(pythonScriptPath, "load_models", Map.of("version", version));
+        } else {
+            return pythonScriptInvoker.executeAsMap(pythonScriptPath, "load_models", Map.of());
+        }
     }
 }

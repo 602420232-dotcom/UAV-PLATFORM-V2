@@ -7,6 +7,7 @@ UAV Edge SDK - 纯 Python 风险评估器（回退模块）
 """
 
 from typing import Dict, List, Any
+import threading
 
 
 class RiskLevel:
@@ -32,6 +33,7 @@ class RiskAssessorFallback:
     """
     
     def __init__(self):
+        self._lock = threading.Lock()
         self.wind_speed_threshold = 10.0
         self.visibility_threshold = 3.0
         self.min_temperature = -20.0
@@ -175,11 +177,14 @@ class RiskAssessorFallback:
         return advice
     
     def set_wind_speed_threshold(self, threshold: float):
-        self.wind_speed_threshold = threshold
-    
+        with self._lock:
+            self.wind_speed_threshold = threshold
+
     def set_visibility_threshold(self, threshold: float):
-        self.visibility_threshold = threshold
-    
+        with self._lock:
+            self.visibility_threshold = threshold
+
     def set_temperature_range(self, min_temp: float, max_temp: float):
-        self.min_temperature = min_temp
-        self.max_temperature = max_temp
+        with self._lock:
+            self.min_temperature = min_temp
+            self.max_temperature = max_temp

@@ -1,10 +1,10 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../config/app_config.dart';
-import '../../models/system_status.dart';
-import '../../providers/app_providers.dart';
 import '../../services/monitoring_service.dart';
+import '../../providers/app_providers.dart';
 
 class MonitoringPage extends ConsumerStatefulWidget {
   const MonitoringPage({super.key});
@@ -18,14 +18,35 @@ class _MonitoringPageState extends ConsumerState<MonitoringPage> {
   String? _error;
   Map<String, dynamic>? _health;
   List<Map<String, dynamic>> _services = [];
-  List<Map<String, dynamic>> _algoPerf = [];
+  final List<Map<String, dynamic>> _algoPerf = const [];
   int _activeServices = 0;
   int _activeTasks = 0;
+  Timer? _refreshTimer;
 
   @override
   void initState() {
     super.initState();
     _loadData();
+    _startAutoRefresh();
+  }
+
+  @override
+  void dispose() {
+    _stopAutoRefresh();
+    super.dispose();
+  }
+
+  void _startAutoRefresh() {
+    _refreshTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+      if (mounted) {
+        _loadData();
+      }
+    });
+  }
+
+  void _stopAutoRefresh() {
+    _refreshTimer?.cancel();
+    _refreshTimer = null;
   }
 
   Future<void> _loadData() async {
@@ -35,30 +56,16 @@ class _MonitoringPageState extends ConsumerState<MonitoringPage> {
     });
 
     try {
-      final monitorService = MonitoringService();
+      final monitorService = AppMonitoringService();
 
-      final results = await Future.wait([
-        monitorService.getHealthCheck().catchError((_) => <String, dynamic>{}),
-        monitorService.getServices().catchError((_) => <ServiceStatus>[]),
-        monitorService.getAlgorithmPerformance().catchError((_) => <AlgorithmPerformance>[]),
-      ]);
-
-      final health = results[0] as Map<String, dynamic>;
-      final services = (results[1] as List).map((s) {
-        if (s is Map<String, dynamic>) return s;
-        return <String, dynamic>{};
-      }).toList();
-      final algoPerf = (results[2] as List).map((a) {
-        if (a is Map<String, dynamic>) return a;
-        return <String, dynamic>{};
-      }).toList();
+      final systemStatus = await monitorService.getSystemStatus();
+      final serviceStatusList = await monitorService.getServiceStatus();
 
       setState(() {
         _isLoading = false;
-        _health = health;
-        _services = services;
-        _algoPerf = algoPerf;
-        _activeServices = services.where((s) => s['isOnline'] == true).length;
+        _health = systemStatus.toJson();
+        _services = serviceStatusList.map((s) => s.toJson()).toList();
+        _activeServices = _services.where((s) => s['isOnline'] == true).length;
         _activeTasks = ref.read(tasksProvider).valueOrNull?.where((t) => t.status == '执行中').length ?? 0;
       });
     } catch (e) {

@@ -11,6 +11,8 @@ License: Apache 2.0
 
 import sys
 import os
+import threading
+import concurrent.futures
 from typing import List, Tuple, Dict, Any, Optional
 import logging
 
@@ -55,6 +57,8 @@ class EdgeSDK:
         """
         self.logger = get_logger(__name__)
         self.config = config or {}
+        self._lock = threading.Lock()
+        self._use_fallback = False
         
         # 初始化 C++ 模块
         self._init_cpp_modules()
@@ -63,41 +67,40 @@ class EdgeSDK:
     
     def _init_cpp_modules(self):
         """初始化 C++ 模块"""
-        if HAS_CPP_MODULE:
-            try:
-                # 初始化路径规划器
-                grid_width = self.config.get('grid_width', 100)
-                grid_height = self.config.get('grid_height', 100)
-                resolution = self.config.get('resolution', 1.0)
-                
-                self.planner = edge_sdk_cpp.PathPlanner(
-                    grid_width, grid_height, resolution
-                )
-                
-                # 初始化风险评估器
-                self.risk_assessor = edge_sdk_cpp.RiskAssessor()
-                
-                # 初始化飞控接口
-                serial_device = self.config.get('serial_device', 'COM3')
-                baudrate = self.config.get('baudrate', 57600)
-                
-                self.flight_controller = edge_sdk_cpp.FlightController(
-                    serial_device, baudrate
-                )
-                
-                self.logger.info("C++ modules initialized successfully")
-                
-            except Exception as e:
-                self.logger.error(f"Failed to initialize C++ modules: {e}")
+        with self._lock:
+            if HAS_CPP_MODULE:
+                try:
+                    grid_width = self.config.get('grid_width', 100)
+                    grid_height = self.config.get('grid_height', 100)
+                    resolution = self.config.get('resolution', 1.0)
+
+                    self.planner = edge_sdk_cpp.PathPlanner(
+                        grid_width, grid_height, resolution
+                    )
+
+                    self.risk_assessor = edge_sdk_cpp.RiskAssessor()
+
+                    serial_device = self.config.get('serial_device', 'COM3')
+                    baudrate = self.config.get('baudrate', 57600)
+
+                    self.flight_controller = edge_sdk_cpp.FlightController(
+                        serial_device, baudrate
+                    )
+
+                    self.logger.info("C++ modules initialized successfully")
+
+                except Exception as e:
+                    self.logger.error(f"Failed to initialize C++ modules: {e}")
+                    self._use_fallback = True
+            else:
                 self._use_fallback = True
-        else:
-            self._use_fallback = True
-            self._init_python_fallback()
-    
+                self._init_python_fallback()
+
     def _init_python_fallback(self):
         """初始化纯 Python 回退模块"""
-        from .path_planner_python import PathPlannerFallback
-        from .risk_assessor_python import RiskAssessorFallback
+        with self._lock:
+            from .path_planner_python import PathPlannerFallback
+            from .risk_assessor_python import RiskAssessorFallback
         
         self.logger.warning("Using pure Python fallback (slower performance)")
         
@@ -112,54 +115,65 @@ class EdgeSDK:
         self,
         start: Tuple[int, int],
         goal: Tuple[int, int],
-        obstacles: Optional[List[Tuple[int, int]]] = None
+        obstacles: Optional[List[Tuple[int, int]]] = None,
+        timeout_seconds: float = 5.0,
+        max_retries: int = 2,
     ) -> List[Tuple[int, int]]:
         """
-        规划路径
-        
+        Plan a path from start to goal with timeout and retry.
+
         Args:
-            start: 起点坐标 (x, y)
-            goal: 终点坐标 (x, y)
-            obstacles: 障碍物列表 [(x1, y1), (x2, y2), ...]
-        
+            start: Starting (x, y) coordinate.
+            goal: Target (x, y) coordinate.
+            obstacles: List of obstacle (x, y) coordinates.
+            timeout_seconds: Max seconds per planning attempt.
+            max_retries: Number of retries on timeout or failure.
+
         Returns:
-            路径点列表 [(x1, y1), (x2, y2), ...]
+            List of (x, y) waypoints, or empty list on failure.
         """
         if obstacles is None:
             obstacles = []
-        
+
         self.logger.info(f"Planning path from {start} to {goal}")
-        
-        try:
-            path = self.planner.plan(start, goal, obstacles)
-            self.logger.info(f"Path found with {len(path)} waypoints")
-            return path
-            
-        except Exception as e:
-            self.logger.error(f"Path planning failed: {e}")
-            return []
-    
+
+        for attempt in range(1 + max_retries):
+            try:
+                with self._lock:
+                    with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
+                        future = pool.submit(self.planner.plan, start, goal, obstacles)
+                        path = future.result(timeout=timeout_seconds)
+
+                if path:
+                    self.logger.info(f"Path found with {len(path)} waypoints (attempt {attempt + 1})")
+                    return path
+
+                self.logger.warning(f"Path not found (attempt {attempt + 1})")
+
+            except concurrent.futures.TimeoutError:
+                self.logger.warning(
+                    f"Path planning timed out after {timeout_seconds}s "
+                    f"(attempt {attempt + 1}/{1 + max_retries})"
+                )
+            except Exception as e:
+                self.logger.error(
+                    f"Path planning failed (attempt {attempt + 1}): {e}"
+                )
+                if attempt == max_retries:
+                    return []
+
+            if attempt < max_retries:
+                self.logger.info(f"Retrying path planning...")
+
+        return []
+
     def assess_weather_risk(self, weather: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        评估气象风险
-        
-        Args:
-            weather: 气象数据字典，包含：
-                - wind_speed (float): 风速 m/s
-                - wind_direction (float): 风向 度
-                - temperature (float): 温度 °C
-                - humidity (float): 湿度 %
-                - visibility (float): 能见度 km
-                - precipitation (float): 降水量 mm/h
-                - has_thunderstorm (bool): 是否有雷暴
-        
-        Returns:
-            风险评估结果字典
-        """
+        """..."""
         self.logger.info("Assessing weather risk")
-        
+
         try:
-            assessment = self.risk_assessor.assess(weather)
+            with self._lock:
+                assessment = self.risk_assessor.assess(weather)
             
             # 转换结果为 Python 字典
             level_map = {
@@ -184,54 +198,55 @@ class EdgeSDK:
             }
     
     def connect_flight_controller(self) -> bool:
-        """连接飞控"""
+        """Connect to flight controller."""
         try:
-            return self.flight_controller.connect()
+            with self._lock:
+                return self.flight_controller.connect()
         except Exception as e:
             self.logger.error(f"Failed to connect flight controller: {e}")
             return False
-    
+
     def disconnect_flight_controller(self):
-        """断开飞控连接"""
+        """Disconnect from flight controller."""
         try:
             self.flight_controller.disconnect()
         except Exception as e:
             self.logger.error(f"Failed to disconnect flight controller: {e}")
-    
+
     def arm(self) -> bool:
-        """解锁电机"""
+        """Arm motors."""
         try:
             return self.flight_controller.arm()
         except Exception as e:
             self.logger.error(f"Failed to arm: {e}")
             return False
-    
+
     def disarm(self) -> bool:
-        """上锁电机"""
+        """Disarm motors."""
         try:
             return self.flight_controller.disarm()
         except Exception as e:
             self.logger.error(f"Failed to disarm: {e}")
             return False
-    
+
     def takeoff(self, altitude: float) -> bool:
-        """起飞"""
+        """Takeoff to target altitude."""
         try:
             return self.flight_controller.takeoff(altitude)
         except Exception as e:
             self.logger.error(f"Failed to takeoff: {e}")
             return False
-    
+
     def land(self) -> bool:
-        """降落"""
+        """Land the drone."""
         try:
             return self.flight_controller.land()
         except Exception as e:
             self.logger.error(f"Failed to land: {e}")
             return False
-    
+
     def get_uav_state(self) -> Dict[str, Any]:
-        """获取无人机状态"""
+        """Get current UAV state."""
         try:
             state = self.flight_controller.get_state()
             return {

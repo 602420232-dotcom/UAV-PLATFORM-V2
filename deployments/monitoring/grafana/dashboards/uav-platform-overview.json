@@ -2,64 +2,350 @@
   "dashboard": {
     "title": "UAV Platform Overview",
     "uid": "uav-platform-overview",
-    "version": 1,
+    "version": 2,
+    "tags": ["uav-platform", "production"],
+    "timezone": "browser",
+    "editable": true,
     "panels": [
       {
         "id": 1,
         "title": "Service Health",
         "type": "stat",
-        "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0},
+        "gridPos": {"h": 4, "w": 4, "x": 0, "y": 0},
+        "description": "All backend service uptime status",
         "targets": [
           {
             "expr": "up{job=~\"uav-platform|data-assimilation|meteor-forecast|path-planning|wrf-processor|uav-weather\"}",
             "legendFormat": "{{job}}"
           }
-        ]
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "palette-classic"},
+            "thresholds": {
+              "steps": [
+                {"color": "red", "value": null},
+                {"color": "green", "value": 1}
+              ]
+            }
+          }
+        }
       },
       {
         "id": 2,
-        "title": "HTTP Request Rate",
-        "type": "graph",
-        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 4},
+        "title": "Active Alerts",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 4, "x": 4, "y": 0},
+        "description": "Number of currently firing alerts",
         "targets": [
           {
-            "expr": "rate(http_server_requests_seconds_count[5m])",
-            "legendFormat": "{{job}} - {{uri}}"
+            "expr": "count(ALERTS{alertstate=\"firing\"})",
+            "legendFormat": "Firing"
           }
-        ]
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": null},
+                {"color": "yellow", "value": 1},
+                {"color": "red", "value": 5}
+              ]
+            }
+          }
+        }
       },
       {
         "id": 3,
-        "title": "JVM Memory Usage",
+        "title": "Request Rate",
         "type": "graph",
-        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 4},
+        "gridPos": {"h": 8, "w": 8, "x": 0, "y": 4},
+        "description": "HTTP request rate per second across all services",
         "targets": [
           {
-            "expr": "jvm_memory_used_bytes{area=\"heap\"}",
-            "legendFormat": "{{job}} - {{id}}"
+            "expr": "sum(rate(http_server_requests_seconds_count[5m]))",
+            "legendFormat": "Total"
           }
         ]
       },
       {
         "id": 4,
-        "title": "Error Rate",
+        "title": "Response Time P50",
         "type": "graph",
-        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 12},
+        "gridPos": {"h": 8, "w": 8, "x": 8, "y": 4},
+        "description": "P50 (median) response time in seconds",
         "targets": [
           {
-            "expr": "rate(http_server_requests_seconds_count{status=~\"5..\"}[5m])",
-            "legendFormat": "{{job}} - {{status}}"
+            "expr": "histogram_quantile(0.50, sum(rate(http_server_requests_seconds_bucket[5m])) by (le, job))",
+            "legendFormat": "{{job}}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "s"
+          }
+        }
+      },
+      {
+        "id": 5,
+        "title": "Response Time P90",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 8, "x": 16, "y": 4},
+        "description": "P90 response time in seconds",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.90, sum(rate(http_server_requests_seconds_bucket[5m])) by (le, job))",
+            "legendFormat": "{{job}}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "s"
+          }
+        }
+      },
+      {
+        "id": 6,
+        "title": "Response Time P99",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 8, "x": 0, "y": 12},
+        "description": "P99 response time in seconds",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.99, sum(rate(http_server_requests_seconds_bucket[5m])) by (le, job))",
+            "legendFormat": "{{job}}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "s"
+          }
+        }
+      },
+      {
+        "id": 7,
+        "title": "Error Rate %",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 8, "x": 8, "y": 12},
+        "description": "HTTP 5xx error rate as percentage of total requests",
+        "targets": [
+          {
+            "expr": "sum(rate(http_server_requests_seconds_count{status=~\"5..\"}[5m])) by (job) / sum(rate(http_server_requests_seconds_count[5m])) by (job) * 100",
+            "legendFormat": "{{job}}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent"
+          }
+        }
+      },
+      {
+        "id": 8,
+        "title": "Timeout Rate",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 8, "x": 16, "y": 12},
+        "description": "Request timeout rate (408/504 errors)",
+        "targets": [
+          {
+            "expr": "sum(rate(http_server_requests_seconds_count{status=~\"408|504\"}[5m])) by (job)",
+            "legendFormat": "{{job}}"
           }
         ]
       },
       {
-        "id": 5,
-        "title": "Response Time P95",
+        "id": 9,
+        "title": "JVM Memory Usage",
         "type": "graph",
-        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 12},
+        "gridPos": {"h": 8, "w": 8, "x": 0, "y": 20},
+        "description": "JVM heap memory usage across services",
         "targets": [
           {
-            "expr": "histogram_quantile(0.95, rate(http_server_requests_seconds_bucket[5m]))",
+            "expr": "jvm_memory_used_bytes{area=\"heap\"}",
+            "legendFormat": "{{job}} - {{id}}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "bytes"
+          }
+        }
+      },
+      {
+        "id": 10,
+        "title": "CPU Usage",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 8, "x": 8, "y": 20},
+        "description": "System CPU usage",
+        "targets": [
+          {
+            "expr": "cpu_usage_percent",
+            "legendFormat": "{{instance}}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent"
+          }
+        }
+      },
+      {
+        "id": 11,
+        "title": "GC Pause Time",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 8, "x": 16, "y": 20},
+        "description": "JVM GC pause time",
+        "targets": [
+          {
+            "expr": "rate(jvm_gc_pause_seconds_sum[5m])",
+            "legendFormat": "{{job}}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "s"
+          }
+        }
+      },
+      {
+        "id": 12,
+        "title": "Circuit Breaker Status",
+        "type": "table",
+        "gridPos": {"h": 6, "w": 8, "x": 0, "y": 28},
+        "description": "Resilience4j circuit breaker states",
+        "targets": [
+          {
+            "expr": "resilience4j_circuitbreaker_state",
+            "legendFormat": "{{name}} - {{state}}"
+          }
+        ]
+      },
+      {
+        "id": 13,
+        "title": "MySQL Connections",
+        "type": "graph",
+        "gridPos": {"h": 6, "w": 8, "x": 8, "y": 28},
+        "description": "MySQL connection usage vs max connections",
+        "targets": [
+          {
+            "expr": "mysql_global_status_threads_connected",
+            "legendFormat": "Connected"
+          },
+          {
+            "expr": "mysql_global_variables_max_connections",
+            "legendFormat": "Max"
+          }
+        ]
+      },
+      {
+        "id": 14,
+        "title": "Redis Memory Usage",
+        "type": "graph",
+        "gridPos": {"h": 6, "w": 8, "x": 16, "y": 28},
+        "description": "Redis memory usage relative to max",
+        "targets": [
+          {
+            "expr": "redis_memory_used_bytes",
+            "legendFormat": "Used"
+          },
+          {
+            "expr": "redis_memory_max_bytes",
+            "legendFormat": "Max"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "bytes"
+          }
+        }
+      },
+      {
+        "id": 15,
+        "title": "Business: Auth Failures",
+        "type": "graph",
+        "gridPos": {"h": 6, "w": 8, "x": 0, "y": 34},
+        "description": "Authentication failure rate",
+        "targets": [
+          {
+            "expr": "rate(authentication_failures_total[5m])",
+            "legendFormat": "Failures/min"
+          }
+        ]
+      },
+      {
+        "id": 16,
+        "title": "Business: Path Planning",
+        "type": "graph",
+        "gridPos": {"h": 6, "w": 8, "x": 8, "y": 34},
+        "description": "Path planning request rate and status",
+        "targets": [
+          {
+            "expr": "rate(path_planning_requests_total[5m])",
+            "legendFormat": "{{status}}"
+          }
+        ]
+      },
+      {
+        "id": 17,
+        "title": "Business: Feign Client Errors",
+        "type": "graph",
+        "gridPos": {"h": 6, "w": 8, "x": 16, "y": 34},
+        "description": "Service-to-service call error rate",
+        "targets": [
+          {
+            "expr": "rate(feign_client_errors_total[5m])",
+            "legendFormat": "{{client}}"
+          }
+        ]
+      },
+      {
+        "id": 18,
+        "title": "Disk Usage",
+        "type": "gauge",
+        "gridPos": {"h": 4, "w": 4, "x": 8, "y": 0},
+        "description": "System disk usage",
+        "targets": [
+          {
+            "expr": "disk_usage_percent",
+            "legendFormat": "{{instance}}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "max": 100,
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": null},
+                {"color": "yellow", "value": 80},
+                {"color": "red", "value": 90}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 19,
+        "title": "Weather Data Age",
+        "type": "graph",
+        "gridPos": {"h": 6, "w": 8, "x": 0, "y": 40},
+        "description": "Weather data staleness in seconds",
+        "targets": [
+          {
+            "expr": "time() - weather_data_last_timestamp_seconds",
+            "legendFormat": "Age (s)"
+          }
+        ]
+      },
+      {
+        "id": 20,
+        "title": "Request Prediction (1h)",
+        "type": "graph",
+        "gridPos": {"h": 6, "w": 8, "x": 8, "y": 40},
+        "description": "Predicted request rate in 1 hour",
+        "targets": [
+          {
+            "expr": "predict_linear(rate(http_server_requests_seconds_count[1h])[1h:5m], 3600)",
             "legendFormat": "{{job}}"
           }
         ]
@@ -69,6 +355,32 @@
     "time": {
       "from": "now-1h",
       "to": "now"
+    },
+    "templating": {
+      "list": [
+        {
+          "name": "job",
+          "type": "query",
+          "query": "label_values(up, job)",
+          "refresh": 1,
+          "includeAll": true,
+          "multi": true
+        }
+      ]
+    },
+    "annotations": {
+      "list": [
+        {
+          "name": "Deployments",
+          "type": "tags",
+          "tags": ["deploy", "release"],
+          "iconColor": "blue"
+        },
+        {
+          "name": "Alerts",
+          "type": "dashboard"
+        }
+      ]
     }
   }
 }

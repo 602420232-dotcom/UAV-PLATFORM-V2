@@ -1,8 +1,12 @@
 package com.uav.platform.controller;
 
+import com.uav.common.annotation.StubController;
 import com.uav.common.security.JwtTokenProvider;
+import com.uav.platform.dto.DataSourceRequest;
 import com.uav.platform.dto.DroneRequest;
+import com.uav.platform.dto.ForecastRequest;
 import com.uav.platform.dto.LoginRequest;
+import com.uav.platform.dto.PlanningRequest;
 import com.uav.platform.dto.TaskRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +19,24 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+/**
+ * 演示/联调用 API Controller
+ * <p>
+ * 本控制器提供模拟的 REST 端点，用于前端开发和联调测试。
+ * 所有端点返回硬编码的 Mock 数据，不含真实的业务逻辑。
+ * <p>
+ * 计划替换：
+ * - 无人机管理 → uav-platform-service 真实服务
+ * - 气象服务 → meteor-forecast-service / wrf-processor-service
+ * - 路径规划 → path-planning-service
+ * - 数据同化 → data-assimilation-service
+ * - 用户认证 → backend-spring 真实 auth 端点
+ */
+@StubController(
+    reason = "前端联调和演示环境使用",
+    plannedReplacement = "各微服务真实 Controller",
+    plannedBy = "Q3-2026"
+)
 @RestController
 public class ApiV1Controller {
 
@@ -25,12 +47,22 @@ public class ApiV1Controller {
     }
 
     /** Map builder that allows null values (unlike Map.of) */
-    @SuppressWarnings("unchecked")
     private static <K, V> Map<K, V> map(K k1, V v1, Object... rest) {
         Map<K, V> map = new LinkedHashMap<>();
         map.put(k1, v1);
+        if (rest.length % 2 != 0) {
+            throw new IllegalArgumentException("Number of arguments must be even");
+        }
         for (int i = 0; i < rest.length; i += 2) {
-            map.put((K) rest[i], (V) rest[i + 1]);
+            Object keyObj = rest[i];
+            Object valueObj = rest[i + 1];
+            try {
+                K key = (K) keyObj;
+                V value = (V) valueObj;
+                map.put(key, value);
+            } catch (ClassCastException e) {
+                throw new IllegalArgumentException("Type mismatch in map arguments at index " + i, e);
+            }
         }
         return map;
     }
@@ -258,9 +290,9 @@ public class ApiV1Controller {
     }
 
     @PostMapping("/api/forecast/predict")
-    public ResponseEntity<Map<String, Object>> forecastPredict(@RequestBody Map<String, Object> req) {
+    public ResponseEntity<Map<String, Object>> forecastPredict(@Valid @RequestBody ForecastRequest req) {
         return ResponseEntity.ok(Map.of("code", 200, "data", Map.of(
-            "method", req.getOrDefault("method", "fengwu"),
+            "method", req.getMethod() != null ? req.getMethod() : "fengwu",
             "predictionId", "PRED-" + UUID.randomUUID().toString().substring(0, 8),
             "status", "completed",
             "results", Map.of("temperature", 23.1, "humidity", 62, "windSpeed", 4.2)
@@ -268,9 +300,9 @@ public class ApiV1Controller {
     }
 
     @PostMapping("/api/forecast/correct")
-    public ResponseEntity<Map<String, Object>> forecastCorrect(@RequestBody Map<String, Object> req) {
+    public ResponseEntity<Map<String, Object>> forecastCorrect(@Valid @RequestBody ForecastRequest req) {
         return ResponseEntity.ok(Map.of("code", 200, "data", Map.of(
-            "method", req.getOrDefault("method", "kalman"),
+            "method", req.getMethod() != null ? req.getMethod() : "kalman",
             "corrected", true,
             "confidence", 0.87
         ), "message", "success"));
@@ -278,7 +310,7 @@ public class ApiV1Controller {
 
     // ==================== Planning ====================
     @PostMapping("/api/planning/full")
-    public ResponseEntity<Map<String, Object>> fullPlanning(@RequestBody Map<String, Object> req) {
+    public ResponseEntity<Map<String, Object>> fullPlanning(@Valid @RequestBody PlanningRequest req) {
         return ResponseEntity.ok(Map.of("code", 200, "data", Map.of(
             "algorithm", "full",
             "planId", "PLAN-" + UUID.randomUUID().toString().substring(0, 8),
@@ -301,16 +333,17 @@ public class ApiV1Controller {
     }
 
     @PostMapping("/api/planning/vrptw")
-    public ResponseEntity<Map<String, Object>> vrptwPlanning(@RequestBody Map<String, Object> req) {
+    public ResponseEntity<Map<String, Object>> vrptwPlanning(@Valid @RequestBody PlanningRequest req) {
         return ResponseEntity.ok(Map.of("code", 200, "data", Map.of(
             "algorithm", "vrptw", "status", "completed",
             "planId", "VRPTW-" + UUID.randomUUID().toString().substring(0, 8),
-            "totalDistance", 3800.0, "numVehicles", req.getOrDefault("drones", List.of()) instanceof List<?> l ? l.size() : 1
+            "totalDistance", 3800.0,
+            "numVehicles", req.getDrones() instanceof List<?> l ? l.size() : 1
         ), "message", "success"));
     }
 
     @PostMapping("/api/planning/astar")
-    public ResponseEntity<Map<String, Object>> astarPlanning(@RequestBody Map<String, Object> req) {
+    public ResponseEntity<Map<String, Object>> astarPlanning(@Valid @RequestBody PlanningRequest req) {
         return ResponseEntity.ok(Map.of("code", 200, "data", Map.of(
             "algorithm", "astar", "status", "completed",
             "planId", "ASTAR-" + UUID.randomUUID().toString().substring(0, 8),
@@ -319,7 +352,7 @@ public class ApiV1Controller {
     }
 
     @PostMapping("/api/planning/dwa")
-    public ResponseEntity<Map<String, Object>> dwaPlanning(@RequestBody Map<String, Object> req) {
+    public ResponseEntity<Map<String, Object>> dwaPlanning(@Valid @RequestBody PlanningRequest req) {
         return ResponseEntity.ok(Map.of("code", 200, "data", Map.of(
             "algorithm", "dwa", "status", "completed",
             "planId", "DWA-" + UUID.randomUUID().toString().substring(0, 8),

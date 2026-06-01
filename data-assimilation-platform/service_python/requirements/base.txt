@@ -3,3 +3,5 @@ uvicorn>=0.23.0
 pydantic>=2.0.0
 httpx>=0.24.0
 python-multipart>=0.0.5
+pyjwt>=2.8.0
+cryptography>=41.0.0

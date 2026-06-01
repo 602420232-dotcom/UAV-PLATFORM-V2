@@ -2,9 +2,9 @@
   <a-card title="无人机管理" class="drones-card">
     <a-row :gutter="[16, 16]">
       <a-col :span="24">
-        <a-spin :spinning="loading">
+        <a-spin :spinning="store.loading.drones">
           <a-row :gutter="[16, 16]">
-            <a-col :xs="24" :sm="12" :lg="8" v-for="drone in drones" :key="drone.id">
+            <a-col :xs="24" :sm="12" :lg="8" v-for="drone in store.drones" :key="drone.id">
               <a-card hoverable>
                 <template #title>
                   <span>
@@ -31,34 +31,14 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { message } from 'ant-design-vue'
-import { getDrones } from '../api/drones'
+import { onMounted } from 'vue'
+import { useDataStore } from '../stores/dataStore'
 
-const drones = ref([])
-const loading = ref(false)
+const store = useDataStore()
 
-const loadDrones = async () => {
-  loading.value = true
-  try {
-    const res = await getDrones()
-    drones.value = Array.isArray(res) ? res : (res.data || res.content || [])
-  } catch (e) {
-    // 后端未连接或需要认证时，静默使用演示数据
-    if (e.message !== 'BACKEND_UNAVAILABLE' && e.message !== 'AUTH_REQUIRED') {
-      console.error('[DronesView] 加载失败:', e.message)
-    }
-    drones.value = [
-      { id: 'UAV-001', name: '无人机1', type: 'multirotor', status: '在线', battery: 85, location: '39.90, 116.40' },
-      { id: 'UAV-002', name: '无人机2', type: 'multirotor', status: '执行任务', battery: 60, location: '39.91, 116.41' },
-      { id: 'UAV-003', name: '无人机3', type: 'fixed-wing', status: '待命', battery: 90, location: '39.92, 116.42' },
-    ]
-  } finally {
-    loading.value = false
-  }
-}
-
-onMounted(loadDrones)
+onMounted(() => {
+  store.fetchDrones()
+})
 </script>
 
 <style scoped>

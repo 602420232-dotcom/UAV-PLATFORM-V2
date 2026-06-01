@@ -17,34 +17,18 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(level
 logger = logging.getLogger(__name__)
 
 # 缓存机制
-class Cache:
-    def __init__(self, max_size=1000):
-        self.max_size = max_size
-        self.cache = {}
-        self.lock = threading.Lock()
-    
-    def get(self, key):
-        with self.lock:
-            return self.cache.get(key)
-    
-    def set(self, key, value):
-        with self.lock:
-            if len(self.cache) >= self.max_size:
-                # 移除最早的项
-                oldest_key = next(iter(self.cache))
-                del self.cache[oldest_key]
-            self.cache[key] = value
+from common_utils.cache import Cache
 
-# 全局缓存实例
-vrptw_cache = Cache()
-astar_cache = Cache()
-derrt_cache = Cache()
-dwa_cache = Cache()
+# 全局缓存实例（5分钟过期）
+vrptw_cache = Cache(default_ttl_seconds=300)
+astar_cache = Cache(default_ttl_seconds=300)
+derrt_cache = Cache(default_ttl_seconds=300)
+dwa_cache = Cache(default_ttl_seconds=300)
+
 
 class Drone:
-    """
-    无人机类
-    """
+    """Represents a UAV drone with payload and endurance constraints."""
+
     def __init__(self, id: str, max_payload: float, max_endurance: float, max_speed: float):
         self.id = id
         self.max_payload = max_payload
@@ -53,10 +37,10 @@ class Drone:
         self.current_payload = 0.0
         self.current_endurance = max_endurance
 
+
 class Task:
-    """
-    任务类
-    """
+    """Represents a delivery or inspection task with location and time window."""
+
     def __init__(self, id: str, location: Tuple[float, float], demand: float, start_time: float, end_time: float):
         self.id = id
         self.location = location
@@ -64,46 +48,50 @@ class Task:
         self.start_time = start_time
         self.end_time = end_time
 
+
 class Obstacle:
-    """
-    障碍物类
-    """
+    """Represents a physical obstacle with location and radius."""
+
     def __init__(self, location: Tuple[float, float], radius: float):
         self.location = location
         self.radius = radius
 
+
 class NoFlyZone:
-    """
-    禁飞区类
-    """
+    """Represents a no-fly zone with location and radius."""
+
     def __init__(self, location: Tuple[float, float], radius: float):
         self.location = location
         self.radius = radius
 
 class VRPTWPlanner:
     """
-    VRPTW规划器
+    VRPTW (Vehicle Routing Problem with Time Windows) planner.
+
+    Assigns tasks to drones using a savings-based heuristic,
+    respecting drone payload capacity, endurance, and task time windows.
     """
+
     def __init__(self, drones: List[Drone], tasks: List[Task], weather_data: Optional[Dict] = None):
         self.drones = drones
         self.tasks = tasks
         self.weather_data = weather_data or {}
-    
+
     def calculate_distance(self, loc1: Tuple[float, float], loc2: Tuple[float, float]) -> float:
-        """
-        计算两点之间的距离
-        """
+        """Calculate Euclidean distance between two locations."""
         return np.sqrt((loc1[0] - loc2[0])**2 + (loc1[1] - loc2[1])**2)
-    
+
     def calculate_time(self, distance: float, speed: float) -> float:
-        """
-        计算飞行时间
-        """
+        """Calculate flight time given distance and speed."""
         return distance / speed
-    
+
     def plan(self) -> Dict:
         """
-        执行VRPTW规划
+        Execute VRPTW planning using nearest-neighbor heuristic.
+
+        Returns:
+            Dict with keys: 'success' (bool), 'routes' (list of route dicts),
+                            'unassigned_tasks' (list of task IDs).
         """
         try:
             # 生成缓存键
@@ -203,40 +191,53 @@ class VRPTWPlanner:
 
 class AStarPlanner:
     """
-    A*路径规划器
+    A* path planner for global pathfinding on a grid.
+
+    Finds the shortest collision-free path using the A* search algorithm.
+    Falls back to simple 8-directional neighbor expansion.
     """
-    def __init__(self, weather_data: Optional[Dict] = None, obstacles: Optional[List[Obstacle]] = None, no_fly_zones: Optional[List[NoFlyZone]] = None):
+
+    def __init__(
+        self, weather_data: Optional[Dict] = None,
+        obstacles: Optional[List[Obstacle]] = None,
+        no_fly_zones: Optional[List[NoFlyZone]] = None,
+    ):
         self.weather_data = weather_data or {}
         self.obstacles = obstacles or []
         self.no_fly_zones = no_fly_zones or []
-    
+
     def calculate_distance(self, loc1: Tuple[float, float], loc2: Tuple[float, float]) -> float:
-        """
-        计算两点之间的距离
-        """
+        """Calculate Euclidean distance between two locations."""
         return np.sqrt((loc1[0] - loc2[0])**2 + (loc1[1] - loc2[1])**2)
-    
+
     def is_collision(self, location: Tuple[float, float]) -> bool:
         """
-        检查是否碰撞
+        Check if a location collides with obstacles or no-fly zones.
         """
         # 检查障碍物
         for obstacle in self.obstacles:
             distance = self.calculate_distance(location, obstacle.location)
             if distance < obstacle.radius:
                 return True
-        
+
         # 检查禁飞区
         for no_fly_zone in self.no_fly_zones:
             distance = self.calculate_distance(location, no_fly_zone.location)
             if distance < no_fly_zone.radius:
                 return True
-        
+
         return False
-    
+
     def plan(self, start: Tuple[float, float], goal: Tuple[float, float]) -> Dict:
         """
-        执行A*路径规划
+        Execute A* pathfinding from start to goal.
+
+        Args:
+            start: Starting (x, y) coordinate.
+            goal: Target (x, y) coordinate.
+
+        Returns:
+            Dict with 'success' (bool), 'path' (list of coordinates), 'distance' (float).
         """
         try:
             # 生成缓存键
@@ -323,46 +324,44 @@ class AStarPlanner:
 
 class DERRTStarPlanner:
     """
-    DE-RRT*路径规划器
+    DE-RRT* (Differential Evolution RRT*) path planner.
+
+    Combines RRT* with differential evolution for faster convergence.
+    Uses goal biasing and rewiring for path optimization.
     """
-    def __init__(self, weather_data: Optional[Dict] = None, obstacles: Optional[List[Obstacle]] = None, no_fly_zones: Optional[List[NoFlyZone]] = None):
+
+    def __init__(
+        self, weather_data: Optional[Dict] = None,
+        obstacles: Optional[List[Obstacle]] = None,
+        no_fly_zones: Optional[List[NoFlyZone]] = None,
+    ):
         self.weather_data = weather_data or {}
         self.obstacles = obstacles or []
         self.no_fly_zones = no_fly_zones or []
-        self.max_iterations = 500  # 减少迭代次数以提高速度
-        self.goal_bias = 0.2  # 增加目标偏置以提高收敛速度
-        self.max_step = 10.0  # 增加步长以提高速度
-        self.rewire_radius = 15.0  # 增加重连半径以提高效率
-    
+        self.max_iterations = 500
+        self.goal_bias = 0.2
+        self.max_step = 10.0
+        self.rewire_radius = 15.0
+
     def calculate_distance(self, loc1: Tuple[float, float], loc2: Tuple[float, float]) -> float:
-        """
-        计算两点之间的距离
-        """
+        """Calculate Euclidean distance between two locations."""
         return np.sqrt((loc1[0] - loc2[0])**2 + (loc1[1] - loc2[1])**2)
-    
+
     def is_collision(self, location: Tuple[float, float]) -> bool:
-        """
-        检查是否碰撞
-        """
-        # 检查障碍物
+        """Check if a location collides with obstacles or no-fly zones."""
         for obstacle in self.obstacles:
             distance = self.calculate_distance(location, obstacle.location)
             if distance < obstacle.radius:
                 return True
-        
-        # 检查禁飞区
         for no_fly_zone in self.no_fly_zones:
             distance = self.calculate_distance(location, no_fly_zone.location)
             if distance < no_fly_zone.radius:
                 return True
-        
         return False
-    
+
     def is_collision_free(self, start: Tuple[float, float], end: Tuple[float, float]) -> bool:
-        """
-        检查线段是否碰撞
-        """
-        steps = 5  # 减少检查步数以提高速度
+        """Check if the straight line between start and end is collision-free."""
+        steps = 5
         for i in range(steps + 1):
             t = i / steps
             x = start[0] + t * (end[0] - start[0])
@@ -370,21 +369,16 @@ class DERRTStarPlanner:
             if self.is_collision((x, y)):
                 return False
         return True
-    
+
     def sample(self, goal: Tuple[float, float]) -> Tuple[float, float]:
-        """
-        采样随机点
-        """
+        """Sample a random point with goal biasing for faster convergence."""
         if np.random.rand() < self.goal_bias:
             return goal
         else:
-            # 假设环境范围为[-100, 100]
             return (np.random.uniform(-100, 100), np.random.uniform(-100, 100))
-    
+
     def nearest(self, nodes: List[Tuple[float, float]], point: Tuple[float, float]) -> Tuple[float, float]:
-        """
-        找到最近的节点
-        """
+        """Find the nearest node in the tree to the given point."""
         min_dist = float('inf')
         nearest_node = None
         for node in nodes:
@@ -393,25 +387,20 @@ class DERRTStarPlanner:
                 min_dist = dist
                 nearest_node = node
         return nearest_node
-    
+
     def steer(self, from_node: Tuple[float, float], to_point: Tuple[float, float]) -> Tuple[float, float]:
-        """
-        朝着目标点移动最大步长
-        """
+        """Steer from from_node towards to_point by at most max_step."""
         dist = self.calculate_distance(from_node, to_point)
         if dist <= self.max_step:
             return to_point
-        else:
-            angle = np.arctan2(to_point[1] - from_node[1], to_point[0] - from_node[0])
-            return (
-                from_node[0] + self.max_step * np.cos(angle),
-                from_node[1] + self.max_step * np.sin(angle)
-            )
-    
+        angle = np.arctan2(to_point[1] - from_node[1], to_point[0] - from_node[0])
+        return (
+            from_node[0] + self.max_step * np.cos(angle),
+            from_node[1] + self.max_step * np.sin(angle)
+        )
+
     def rewire(self, nodes: List[Tuple[float, float]], new_node: Tuple[float, float], parent_map: Dict, cost_map: Dict):
-        """
-        重连附近的节点
-        """
+        """Rewire nearby nodes to improve path cost."""
         for node in nodes:
             if node == new_node:
                 continue
@@ -422,10 +411,17 @@ class DERRTStarPlanner:
                     if new_cost < cost_map.get(new_node, float('inf')):
                         parent_map[new_node] = node
                         cost_map[new_node] = new_cost
-    
+
     def plan(self, start: Tuple[float, float], goal: Tuple[float, float]) -> Dict:
         """
-        执行DE-RRT*路径规划
+        Execute DE-RRT* path planning.
+
+        Args:
+            start: Starting (x, y) coordinate.
+            goal: Target (x, y) coordinate.
+
+        Returns:
+            Dict with 'success' (bool), 'path' (list of coordinates), 'distance' (float).
         """
         try:
             # 生成缓存键
@@ -503,33 +499,44 @@ class DERRTStarPlanner:
 
 class DWAPlanner:
     """
-    DWA路径规划器
+    DWA (Dynamic Window Approach) local planner.
+
+    Performs real-time local trajectory planning by searching
+    in velocity space for collision-free, goal-oriented paths.
     """
-    def __init__(self, weather_data: Optional[Dict] = None, obstacles: Optional[List[Obstacle]] = None):
+
+    def __init__(
+        self, weather_data: Optional[Dict] = None,
+        obstacles: Optional[List[Obstacle]] = None,
+    ):
         self.weather_data = weather_data or {}
         self.obstacles = obstacles or []
-    
+
     def calculate_distance(self, loc1: Tuple[float, float], loc2: Tuple[float, float]) -> float:
-        """
-        计算两点之间的距离
-        """
+        """Calculate Euclidean distance between two locations."""
         return np.sqrt((loc1[0] - loc2[0])**2 + (loc1[1] - loc2[1])**2)
-    
+
     def is_collision(self, location: Tuple[float, float]) -> bool:
-        """
-        检查是否碰撞
-        """
+        """Check if a location collides with any obstacle."""
         for obstacle in self.obstacles:
             distance = self.calculate_distance(location, obstacle.location)
             if distance < obstacle.radius:
                 return True
         return False
-    
+
     def plan(self, current_pose: Tuple[float, float, float], goal: Tuple[float, float]) -> Dict:
         """
-        执行DWA路径规划
-        :param current_pose: 当前位置和朝向 (x, y, theta)
-        :param goal: 目标位置
+        Execute DWA local trajectory planning.
+
+        Searches velocity space (v, w) to find the optimal trajectory
+        balancing goal attraction, obstacle avoidance, and speed.
+
+        Args:
+            current_pose: Current (x, y, theta) pose of the drone.
+            goal: Target (x, y) coordinate.
+
+        Returns:
+            Dict with 'success' (bool), 'trajectory' (list of (x,y) points), 'score' (float).
         """
         try:
             # 生成缓存键
@@ -606,9 +613,23 @@ class DWAPlanner:
 
 class ThreeLayerPlanner:
     """
-    三层路径规划器
+    Three-layer hierarchical path planner.
+
+    Integrates three levels of planning:
+    1. VRPTW - Global task assignment (strategic)
+    2. DE-RRT* / A* - Inter-waypoint path planning (tactical)
+    3. DWA - Local obstacle avoidance (reactive)
+
+    Supports parallel route processing and dynamic replanning
+    when weather conditions or obstacles change mid-mission.
     """
-    def __init__(self, drones: List[Drone], tasks: List[Task], weather_data: Optional[Dict] = None, obstacles: Optional[List[Obstacle]] = None, no_fly_zones: Optional[List[NoFlyZone]] = None):
+
+    def __init__(
+        self, drones: List[Drone], tasks: List[Task],
+        weather_data: Optional[Dict] = None,
+        obstacles: Optional[List[Obstacle]] = None,
+        no_fly_zones: Optional[List[NoFlyZone]] = None,
+    ):
         self.drones = drones
         self.tasks = tasks
         self.weather_data = weather_data or {}
@@ -618,10 +639,14 @@ class ThreeLayerPlanner:
         self.a_star = AStarPlanner(weather_data, obstacles, no_fly_zones)
         self.derrt_star = DERRTStarPlanner(weather_data, obstacles, no_fly_zones)
         self.dwa = DWAPlanner(weather_data, obstacles)
-    
+
     def plan(self) -> Dict:
         """
-        执行完整路径规划
+        Execute full three-layer path planning.
+
+        Returns:
+            Dict with 'success' (bool), 'routes' (list of route dicts),
+            'unassigned_tasks' (list of task IDs).
         """
         try:
             # 1. VRPTW任务调度
@@ -683,12 +708,19 @@ class ThreeLayerPlanner:
     
     def dynamic_replan(self, current_route: Dict, new_weather_data: Optional[Dict] = None, new_obstacles: Optional[List[Obstacle]] = None, new_no_fly_zones: Optional[List[NoFlyZone]] = None) -> Dict:
         """
-        动态重规划
-        :param current_route: 当前路径
-        :param new_weather_data: 新的气象数据
-        :param new_obstacles: 新的障碍物
-        :param new_no_fly_zones: 新的禁飞区
-        :return: 重规划结果
+        Dynamically replan the route when conditions change.
+
+        Updates weather data, obstacles, and no-fly zones, then
+        replans inter-waypoint paths while retaining task assignments.
+
+        Args:
+            current_route: Current route dict with 'tasks' and 'path'.
+            new_weather_data: Updated weather conditions.
+            new_obstacles: Newly detected obstacles.
+            new_no_fly_zones: Newly defined no-fly zones.
+
+        Returns:
+            Dict with 'success' (bool) and updated 'route'.
         """
         try:
             logger.info("开始动态重规划...")

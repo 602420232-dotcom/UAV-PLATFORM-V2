@@ -220,15 +220,12 @@ import {
   SaveOutlined, DownloadOutlined, PrinterOutlined 
 } from '@ant-design/icons-vue'
 import { Empty, message } from 'ant-design-vue'
+import { demoData } from '../utils/demoData'
 import L from 'leaflet'
 
 // 响应式数据
 const formState = ref({})
-const taskPoints = ref([
-  { id: 1, name: '任务点1', lat: 39.9042, lng: 116.4074, demand: 1 },
-  { id: 2, name: '任务点2', lat: 39.9142, lng: 116.4174, demand: 2 },
-  { id: 3, name: '任务点3', lat: 39.9242, lng: 116.4274, demand: 1 }
-])
+const taskPoints = ref(demoData.pathPlanning.defaultTaskPoints)
 const selectedDrone = ref('1')
 const selectedWeather = ref('latest')
 const riskThreshold = ref(3.0)
@@ -242,25 +239,12 @@ let taskMarkerLayer = null
 let routeLayer = null
 
 // 实时数据
-const realtimeData = ref({
-  windSpeed: 5.2,
-  windDirection: 135,
-  temperature: 22,
-  humidity: 65,
-  droneStatus: '正常',
-  taskProgress: 0,
-  riskLevel: '低',
-  alertCount: 0
-})
+const realtimeData = ref(demoData.pathPlanning.defaultRealtimeData)
 
 // 方案管理
 const planForm = ref({ name: '' })
 const selectedPlan = ref('')
-const savedPlans = ref([
-  { id: 1, name: '方案1' },
-  { id: 2, name: '方案2' },
-  { id: 3, name: '方案3' }
-])
+const savedPlans = ref(demoData.pathPlanning.defaultSavedPlans)
 
 // 方法
 const addTaskPoint = () => {
@@ -290,26 +274,8 @@ const executePlanning = async () => {
     
     // 模拟结果
     planningResult.value = {
-      droneCount: 2,
-      taskCount: taskPoints.value.length,
-      totalDistance: 1500,
-      totalTime: 25,
-      routes: [
-        {
-          droneId: 1,
-          path: ['基地', '任务点1', '任务点3', '基地'],
-          distance: 800,
-          time: 12,
-          riskLevel: '低'
-        },
-        {
-          droneId: 2,
-          path: ['基地', '任务点2', '基地'],
-          distance: 700,
-          time: 13,
-          riskLevel: '低'
-        }
-      ]
+      ...demoData.pathPlanning.mockResult,
+      taskCount: taskPoints.value.length
     }
     
     // 更新地图

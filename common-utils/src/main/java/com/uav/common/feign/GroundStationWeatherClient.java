@@ -11,6 +11,16 @@ import java.util.Map;
 /**
  * 地面气象站服务Feign Client
  * 用于声明式调用地面气象站数据服务
+ * 
+ * ⚠️ 未来扩展占位符
+ * 对应服务 ground-station-weather-service 模块尚不存在，当前保留作为架构扩展点。
+ * 
+ * 注意事项：
+ * 1. 此 FeignClient 目前不会被实际调用（无对应服务实例）
+ * 2. 当未来实现 ground-station-weather-service 时，需确保服务名和端点路径与此定义一致
+ * 3. 移除前需确认无其他模块注入此 Client
+ *
+ * @see WeatherCollectorCircuitBreakerService 使用了此 Client 但配置了熔断保护
  */
 @FeignClient(name = "ground-station-weather-service", url = "${services.ground-station-weather.url:http://ground-station-weather:8083}",
         fallback = GroundStationWeatherClientFallback.class)

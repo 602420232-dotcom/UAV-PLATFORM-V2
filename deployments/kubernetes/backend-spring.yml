@@ -15,6 +15,10 @@ spec:
       labels:
         app: backend-spring
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        fsGroup: 1001
       containers:
         - name: backend
           image: uav-registry/backend-spring:v1.0.0

@@ -1,15 +1,20 @@
 package com.uav.config;
 
 import jakarta.annotation.PostConstruct;
+import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
+@Data
 @Configuration
 @ConfigurationProperties(prefix = "jwt")
 public class JwtProperties {
 
     private String secret;
-    private long expiration = 86400000;
+    private String refreshSecret;
+    private long accessExpiration = 7200;
+    private long refreshExpiration = 2592000;
+    private String issuer = "uav-platform";
     private boolean enabled = true;
 
     @PostConstruct
@@ -25,30 +30,16 @@ public class JwtProperties {
                         + "可以使用: openssl rand -base64 64 生成安全密钥");
                 }
             }
+            if (refreshSecret == null || refreshSecret.isEmpty()) {
+                String envRefreshSecret = System.getenv("JWT_REFRESH_SECRET");
+                if (envRefreshSecret != null && !envRefreshSecret.isEmpty()) {
+                    refreshSecret = envRefreshSecret;
+                } else {
+                    throw new IllegalStateException(
+                        "JWT刷新密钥未配置。请设置环境变量 JWT_REFRESH_SECRET 或配置项 jwt.refresh-secret。"
+                        + "可以使用: openssl rand -base64 64 生成安全密钥");
+                }
+            }
         }
-    }
-
-    public String getSecret() {
-        return secret;
-    }
-
-    public void setSecret(String secret) {
-        this.secret = secret;
-    }
-
-    public long getExpiration() {
-        return expiration;
-    }
-
-    public void setExpiration(long expiration) {
-        this.expiration = expiration;
-    }
-
-    public boolean isEnabled() {
-        return enabled;
-    }
-
-    public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
     }
 }

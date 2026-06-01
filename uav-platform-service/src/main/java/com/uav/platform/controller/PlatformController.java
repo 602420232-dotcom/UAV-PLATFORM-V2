@@ -1,10 +1,14 @@
 package com.uav.platform.controller;
 
+import com.uav.common.annotation.StubController;
 import com.uav.common.exception.ServiceUnavailableException;
 import com.uav.common.feign.DataAssimilationClient;
+import com.uav.common.feign.HealthCheckable;
 import com.uav.common.feign.MeteorForecastClient;
 import com.uav.common.feign.PathPlanningClient;
 import com.uav.common.feign.WrfProcessorClient;
+import com.uav.platform.dto.PlanRequest;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -13,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -66,14 +71,13 @@ public class PlatformController {
      * @return 路径规划结果
      */
     @PostMapping("/plan")
-    public Map<String, Object> plan(@RequestBody Map<String, Object> request) {
+    public Map<String, Object> plan(@Valid @RequestBody PlanRequest request) {
         log.info("Received path planning request: drones={}, tasks={}", 
-                getCollectionSize(request.get("drones")),
-                getCollectionSize(request.get("tasks")));
+                getCollectionSize(request.getDrones()),
+                getCollectionSize(request.getTasks()));
 
         try {
-            // 1. 获取气象数据
-            Object weatherPayload = request.get("weatherData");
+            Object weatherPayload = request.getWeatherData();
             if (weatherPayload == null) {
                 return Map.of("code", 400, "message", "气象数据不能为空");
             }
@@ -105,11 +109,11 @@ public class PlatformController {
 
             // 4. 执行路径规划
             Map<String, Object> planningRequest = Map.of(
-                    "drones", request.get("drones"),
-                    "tasks", request.get("tasks"),
+                    "drones", request.getDrones(),
+                    "tasks", request.getTasks(),
                     "weather_data", forecastResponse.get("data"),
-                    "obstacles", request.get("obstacles"),
-                    "no_fly_zones", request.get("noFlyZones")
+                    "obstacles", request.getObstacles(),
+                    "no_fly_zones", request.getNoFlyZones()
             );
             Map<String, Object> planningResponse = pathPlanningClient.planFull(planningRequest);
             if (!isSuccess(planningResponse)) {
@@ -156,9 +160,10 @@ public class PlatformController {
      * @param request 任务请求
      * @return 操作结果
      */
+    @StubController(reason = "任务管理功能待集成真实服务", plannedReplacement = "uav-task-service", plannedBy = "Q3-2026")
     @PostMapping("/task")
     public Map<String, Object> manageTask(@RequestBody Map<String, Object> request) {
-        log.info("Managing task: {}", request.get("taskId"));
+        log.warn("[STUB] manageTask called - returning mock success");
         return Map.of("code", 200, "message", "任务管理成功");
     }
 
@@ -167,10 +172,11 @@ public class PlatformController {
      * 
      * @return 无人机列表
      */
+    @StubController(reason = "无人机列表数据待对接持久化层", plannedReplacement = "uav-drone-service", plannedBy = "Q3-2026")
     @GetMapping("/drones")
     public Map<String, Object> getDrones() {
-        log.debug("Getting drones list");
-        return Map.of("code", 200, "data", Map.of("drones", Map.of()));
+        log.warn("[STUB] getDrones called - returning empty list");
+        return Map.of("code", 200, "data", Map.of("drones", List.of()));
     }
 
     /**
@@ -214,18 +220,10 @@ public class PlatformController {
         return 1;
     }
 
-    private boolean checkServiceHealth(Object client) {
+    private boolean checkServiceHealth(HealthCheckable client) {
         try {
-            if (client instanceof WrfProcessorClient) {
-                return ((WrfProcessorClient) client).health().get("status") != null;
-            } else if (client instanceof DataAssimilationClient) {
-                return ((DataAssimilationClient) client).health().get("status") != null;
-            } else if (client instanceof MeteorForecastClient) {
-                return ((MeteorForecastClient) client).health().get("status") != null;
-            } else if (client instanceof PathPlanningClient) {
-                return ((PathPlanningClient) client).health().get("status") != null;
-            }
-            return false;
+            Map<String, Object> response = client.health();
+            return response.get("status") != null;
         } catch (Exception e) {
             log.warn("Health check failed for {}: {}", client.getClass().getSimpleName(), e.getMessage());
             return false;

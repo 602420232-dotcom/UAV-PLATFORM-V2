@@ -20,15 +20,15 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(level
 logger = logging.getLogger(__name__)
 
 class DQNPlanner:
-    """
-    DQN路径规划器
-    """
+    """DQN-based path planning with experience replay."""
+
     def __init__(self, state_size=6, action_size=4, model_path=None):
-        """
-        初始化DQN规划器
-        :param state_size: 状态空间大小
-        :param action_size: 动作空间大小
-        :param model_path: 模型保存路径
+        """Initialize DQN planner.
+
+        Args:
+            state_size: Dimension of the state space.
+            action_size: Number of possible actions.
+            model_path: Directory path for model persistence.
         """
         self.state_size = state_size
         self.action_size = action_size
@@ -149,15 +149,15 @@ class DQNPlanner:
         return np.argmax(act_values[0])
 
 class PPOPlanner:
-    """
-    PPO路径规划器
-    """
+    """PPO-based path planning with clipped surrogate objective."""
+
     def __init__(self, state_size=6, action_size=4, model_path=None):
-        """
-        初始化PPO规划器
-        :param state_size: 状态空间大小
-        :param action_size: 动作空间大小
-        :param model_path: 模型保存路径
+        """Initialize PPO planner.
+
+        Args:
+            state_size: Dimension of the state space.
+            action_size: Number of possible actions.
+            model_path: Directory path for model persistence.
         """
         self.state_size = state_size
         self.action_size = action_size

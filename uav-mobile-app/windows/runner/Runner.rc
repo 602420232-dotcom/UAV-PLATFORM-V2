@@ -89,14 +89,16 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "com.example" "\0"
-            VALUE "FileDescription", "uav_path_planning_app" "\0"
+            VALUE "CompanyName", "UAV Path Planning Team" "\0"
+            VALUE "FileDescription", "UAV Path Planning Desktop Application for Windows" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
             VALUE "InternalName", "uav_path_planning_app" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2026 com.example. All rights reserved." "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2026 UAV Path Planning Team. All rights reserved." "\0"
             VALUE "OriginalFilename", "uav_path_planning_app.exe" "\0"
-            VALUE "ProductName", "uav_path_planning_app" "\0"
+            VALUE "ProductName", "UAV Path Planning" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
+            VALUE "FileVersion", VERSION_AS_STRING "\0"
+            VALUE "BuildInformation", "Windows Desktop Build" "\0"
         END
     END
     BLOCK "VarFileInfo"

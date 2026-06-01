@@ -1,6 +1,6 @@
 package com.uav.controller;
 
-import com.uav.common.feign.PythonScriptInvoker;
+import com.uav.common.script.PythonScriptInvoker;
 import com.uav.model.PathPlan;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

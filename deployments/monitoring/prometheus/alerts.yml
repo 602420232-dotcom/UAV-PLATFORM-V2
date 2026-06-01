@@ -1,9 +1,13 @@
-# Prometheus Alert Rules
+# UAV Platform Prometheus Alert Rules
+# Covers system resource, service health, database, cache, business, and scaling dimensions
 groups:
-  - name: uav_platform_alerts
+  # ============================================================
+  # Group 1: Infrastructure & System Resource Alerts
+  # ============================================================
+  - name: uav_infrastructure_alerts
     interval: 30s
     rules:
-      # High CPU usage
+      # ---------- CPU ----------
       - alert: HighCPUUsage
         expr: cpu_usage_percent > 80
         for: 5m
@@ -11,11 +15,12 @@ groups:
           severity: warning
           component: infrastructure
         annotations:
-          summary: "High CPU usage detected"
-          description: "CPU usage is above 80% for more than 5 minutes"
+          summary: "{{ $labels.instance }} CPU 使用率过高"
+          description: "CPU 使用率已超过 80% 持续 5 分钟（当前值: {{ $value | humanizePercentage }}）"
+          impact: "可能导致服务响应变慢、请求排队增加"
+          recommended_action: "1. 检查是否有异常进程占用 CPU\n2. 考虑水平扩展服务实例\n3. 检查近期是否有大量并发请求"
           runbook_url: "https://wiki.example.com/runbooks/high-cpu"
 
-      # Very high CPU usage
       - alert: CriticalCPUUsage
         expr: cpu_usage_percent > 95
         for: 2m
@@ -23,10 +28,25 @@ groups:
           severity: critical
           component: infrastructure
         annotations:
-          summary: "Critical CPU usage detected"
-          description: "CPU usage is above 95% for more than 2 minutes"
+          summary: "{{ $labels.instance }} CPU 使用率严重过高"
+          description: "CPU 使用率已超过 95% 持续 2 分钟（当前值: {{ $value | humanizePercentage }}）"
+          impact: "服务可能出现请求超时、拒绝服务，影响所有依赖该服务的业务"
+          recommended_action: "1. 立即检查进程状态（top/htop）\n2. 紧急扩容或重启异常服务\n3. 检查日志定位资源泄漏"
+          runbook_url: "https://wiki.example.com/runbooks/critical-cpu"
 
-      # High memory usage
+      - alert: InstanceDown
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: infrastructure
+        annotations:
+          summary: "{{ $labels.instance }} 实例宕机"
+          description: "实例 {{ $labels.instance }}（job: {{ $labels.job }}）已离线超过 1 分钟"
+          impact: "该实例承载的服务完全不可用，影响所有依赖该服务的业务功能"
+          recommended_action: "1. 检查实例状态（docker ps / kubectl get pods）\n2. 查看日志定位原因\n3. 重启实例并观察恢复情况"
+
+      ---------- Memory ----------
       - alert: HighMemoryUsage
         expr: memory_usage_percent > 85
         for: 5m
@@ -34,10 +54,11 @@ groups:
           severity: warning
           component: infrastructure
         annotations:
-          summary: "High memory usage detected"
-          description: "Memory usage is above 85% for more than 5 minutes"
+          summary: "{{ $labels.instance }} 内存使用率过高"
+          description: "内存使用率已超过 85% 持续 5 分钟（当前值: {{ $value | humanizePercentage }}）"
+          impact: "可能触发 OOM Killer，导致服务进程被强制终止"
+          recommended_action: "1. 检查 JVM 堆内存配置（-Xmx）\n2. 分析内存泄漏可能\n3. 考虑扩容或调整资源配额"
 
-      # Critical memory usage
       - alert: CriticalMemoryUsage
         expr: memory_usage_percent > 95
         for: 1m
@@ -45,10 +66,12 @@ groups:
           severity: critical
           component: infrastructure
         annotations:
-          summary: "Critical memory usage detected"
-          description: "Memory usage is above 95% for more than 1 minute"
+          summary: "{{ $labels.instance }} 内存使用率严重过高"
+          description: "内存使用率已超过 95% 持续 1 分钟（当前值: {{ $value | humanizePercentage }}）"
+          impact: "即将触发 OOM Killer，服务随时可能宕机"
+          recommended_action: "1. 立即检查内存使用分布\n2. 紧急扩容或重启服务\n3. 排查内存泄漏（heap dump 分析）"
 
-      # High disk usage
+      # ---------- Disk ----------
       - alert: HighDiskUsage
         expr: disk_usage_percent > 85
         for: 5m
@@ -56,10 +79,11 @@ groups:
           severity: warning
           component: infrastructure
         annotations:
-          summary: "High disk usage detected"
-          description: "Disk usage is above 85%"
+          summary: "{{ $labels.instance }} 磁盘使用率过高"
+          description: "磁盘使用率已超过 85%（当前值: {{ $value | humanizePercentage }}, 挂载点: {{ $labels.mountpoint }}）"
+          impact: "可能导致日志无法写入、数据库存储空间不足"
+          recommended_action: "1. 清理历史日志和临时文件\n2. 检查数据归档策略\n3. 扩容存储空间"
 
-      # Disk space critical
       - alert: DiskSpaceCritical
         expr: disk_usage_percent > 95
         for: 1m
@@ -67,13 +91,55 @@ groups:
           severity: critical
           component: infrastructure
         annotations:
-          summary: "Disk space critical"
-          description: "Disk usage is above 95%"
+          summary: "{{ $labels.instance }} 磁盘空间严重不足"
+          description: "磁盘使用率已超过 95%（当前值: {{ $value | humanizePercentage }}, 挂载点: {{ $labels.mountpoint }}）"
+          impact: "即将导致服务无法写入日志、数据库写入失败、服务宕机"
+          recommended_action: "1. 立即清理磁盘空间\n2. 检查是否有日志文件异常增长\n3. 扩容存储"
 
+      - alert: DiskIOHighLatency
+        expr: rate(node_disk_io_time_seconds_total[5m]) > 0.5
+        for: 10m
+        labels:
+          severity: warning
+          component: infrastructure
+        annotations:
+          summary: "{{ $labels.instance }} 磁盘 IO 延迟过高"
+          description: "磁盘 IO 等待时间占比超过 50%"
+          impact: "影响数据库查询性能、日志写入效率"
+          recommended_action: "1. 检查磁盘健康状态\n2. 分析 IO 密集型进程\n3. 考虑升级 SSD 或分布存储"
+
+      # ---------- Network ----------
+      - alert: NetworkBandwidthHigh
+        expr: rate(node_network_receive_bytes_total[5m]) > 1e9
+        for: 10m
+        labels:
+          severity: warning
+          component: infrastructure
+        annotations:
+          summary: "{{ $labels.instance }} 网络带宽使用率过高"
+          description: "网络入站流量超过 1GB/s（当前值: {{ $value | humanize1024 }}B/s）"
+          impact: "可能导致网络延迟增加、请求超时"
+          recommended_action: "1. 检查是否有大数据传输任务\n2. 考虑带宽扩容\n3. 检查异常流量（DDoS 可能）"
+
+      - alert: NetworkErrorsHigh
+        expr: rate(node_network_receive_errors_total[5m]) > 0.01
+        for: 10m
+        labels:
+          severity: warning
+          component: infrastructure
+        annotations:
+          summary: "{{ $labels.instance }} 网络错误率过高"
+          description: "网络接收错误率超过 1%"
+          impact: "数据传输可靠性下降，可能导致请求重试增加"
+          recommended_action: "1. 检查网卡硬件状态\n2. 检查网络链路质量\n3. 检查 MTU 配置"
+
+  # ============================================================
+  # Group 2: Service & Application Health Alerts
+  # ============================================================
   - name: uav_service_alerts
     interval: 30s
     rules:
-      # Service down
+      # ---------- Service Availability ----------
       - alert: ServiceDown
         expr: up == 0
         for: 1m
@@ -81,68 +147,164 @@ groups:
           severity: critical
           component: service
         annotations:
-          summary: "Service is down"
-          description: "{{ $labels.job }} has been down for more than 1 minute"
+          summary: "{{ $labels.job }} 服务宕机"
+          description: "服务 {{ $labels.job }}（实例: {{ $labels.instance }}）已离线超过 1 分钟"
+          impact: "该服务对外 API 完全不可用，依赖该服务的链路全部中断"
+          recommended_action: "1. 检查服务容器/进程状态\n2. 查看日志定位宕机原因\n3. 重启服务并通知依赖方"
 
-      # High error rate
+      - alert: ServiceHealthCheckFailed
+        expr: probe_success == 0
+        for: 2m
+        labels:
+          severity: critical
+          component: service
+        annotations:
+          summary: "{{ $labels.job }} 健康检查失败"
+          description: "服务 {{ $labels.job }} 健康检查端点返回失败超过 2 分钟"
+          impact: "服务可能处于亚健康状态，部分功能不可用"
+          recommended_action: "1. 检查服务内部状态（数据库连接、线程池等）\n2. 查看健康检查详细日志\n3. 检查依赖服务是否正常"
+
+      # ---------- Circuit Breaker ----------
+      - alert: CircuitBreakerOpen
+        expr: resilience4j_circuitbreaker_state{state="open"} == 1
+        for: 1m
+        labels:
+          severity: critical
+          component: service
+        annotations:
+          summary: "{{ $labels.name }} 熔断器已打开"
+          description: "服务 {{ $labels.name }} 的熔断器已打开，请求被拒绝"
+          impact: "调用 {{ $labels.name }} 的请求将立即失败，相关业务功能降级或不可用"
+          recommended_action: "1. 检查熔断目标服务是否正常\n2. 在目标服务恢复后等待熔断器自动半开\n3. 如急需恢复可手动重置熔断器"
+
+      - alert: CircuitBreakerHighFailureRate
+        expr: resilience4j_circuitbreaker_state{state="half_open"} == 1
+        for: 5m
+        labels:
+          severity: warning
+          component: service
+        annotations:
+          summary: "{{ $labels.name }} 熔断器处于半开状态"
+          description: "熔断器处于半开状态，部分请求被放行测试"
+          recommended_action: "观察熔断器是否能自动关闭，若持续在半开状态需人工介入"
+
+      # ---------- API Error Rate ----------
       - alert: HighErrorRate
-        expr: rate(http_requests_total{status=~"5.."}[5m]) > 0.05
+        expr: sum(rate(http_server_requests_seconds_count{status=~"5.."}[5m])) by (job, uri) / sum(rate(http_server_requests_seconds_count[5m])) by (job, uri) > 0.05
         for: 5m
         labels:
           severity: warning
           component: application
         annotations:
-          summary: "High error rate detected"
-          description: "Error rate is above 5% for more than 5 minutes"
+          summary: "{{ $labels.job }} 接口错误率过高"
+          description: "{{ $labels.uri }} 错误率已超过 5% 持续 5 分钟（当前值: {{ $value | humanizePercentage }}）"
+          impact: "用户体验下降，部分请求失败"
+          recommended_action: "1. 检查该接口日志定位错误类型\n2. 检查依赖服务是否正常\n3. 查看近期是否有代码变更"
 
-      # Very high error rate
       - alert: CriticalErrorRate
-        expr: rate(http_requests_total{status=~"5.."}[5m]) > 0.20
+        expr: sum(rate(http_server_requests_seconds_count{status=~"5.."}[5m])) by (job) / sum(rate(http_server_requests_seconds_count[5m])) by (job) > 0.20
         for: 2m
         labels:
           severity: critical
           component: application
         annotations:
-          summary: "Critical error rate detected"
-          description: "Error rate is above 20% for more than 2 minutes"
+          summary: "{{ $labels.job }} 服务错误率严重过高"
+          description: "服务 {{ $labels.job }} 错误率已超过 20% 持续 2 分钟（当前值: {{ $value | humanizePercentage }}）"
+          impact: "服务大面积不可用，严重影响用户体验和业务"
+          recommended_action: "1. 立即回滚最近的代码变更\n2. 检查依赖服务集群状态\n3. 启动应急预案"
 
-      # High response time
-      - alert: HighResponseTime
-        expr: http_request_duration_seconds{quantile="0.95"} > 2
+      # ---------- Response Time ----------
+      - alert: HighP95ResponseTime
+        expr: histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket[5m])) by (le, job, uri)) > 2
         for: 5m
         labels:
           severity: warning
           component: application
         annotations:
-          summary: "High response time detected"
-          description: "95th percentile response time is above 2 seconds"
+          summary: "{{ $labels.job }} P95 响应时间过高"
+          description: "{{ $labels.uri }} 的 P95 响应时间已超过 2 秒（当前值: {{ $value | humanizeDuration }}）"
+          impact: "大部分用户体验下降，页面加载变慢"
+          recommended_action: "1. 检查该接口的性能瓶颈\n2. 分析数据库查询效率\n3. 检查是否需增加缓存"
 
-      # Critical response time
-      - alert: CriticalResponseTime
-        expr: http_request_duration_seconds{quantile="0.99"} > 5
+      - alert: HighP99ResponseTime
+        expr: histogram_quantile(0.99, sum(rate(http_server_requests_seconds_bucket[5m])) by (le, job, uri)) > 5
         for: 2m
         labels:
           severity: critical
           component: application
         annotations:
-          summary: "Critical response time detected"
-          description: "99th percentile response time is above 5 seconds"
+          summary: "{{ $labels.job }} P99 响应时间严重过高"
+          description: "{{ $labels.uri }} 的 P99 响应时间已超过 5 秒（当前值: {{ $value | humanizeDuration }}）"
+          impact: "极端情况用户体验极差，可能导致请求超时"
+          recommended_action: "1. 检查依赖服务是否超时\n2. 分析慢查询和锁争用\n3. 考虑接口超时时间配置"
 
-      # High request rate
+      # ---------- Request Rate ----------
       - alert: HighRequestRate
-        expr: rate(http_requests_total[5m]) > 1000
+        expr: sum(rate(http_server_requests_seconds_count[5m])) by (job) > 1000
         for: 5m
         labels:
           severity: info
           component: application
         annotations:
-          summary: "High request rate"
-          description: "Request rate is above 1000 req/s"
+          summary: "{{ $labels.job }} 请求量激增"
+          description: "服务 {{ $labels.job }} 请求速率超过 1000 req/s（当前值: {{ $value | humanize }} req/s）"
+          impact: "可能需要关注扩容"
+          recommended_action: "1. 确认是否为正常流量增长\n2. 检查是否需要自动扩容\n3. 关注资源使用率是否同步增长"
 
-  - name: database_alerts
+      - alert: RequestSurge
+        expr: (sum(rate(http_server_requests_seconds_count[5m])) by (job) - sum(rate(http_server_requests_seconds_count[30m])) by (job)) / sum(rate(http_server_requests_seconds_count[30m])) by (job) > 2
+        for: 5m
+        labels:
+          severity: warning
+          component: application
+        annotations:
+          summary: "{{ $labels.job }} 请求量突增"
+          description: "服务 {{ $labels.job }} 请求量较 30 分钟前增长超过 200%"
+          recommended_action: "1. 检查是否有异常流量\n2. 确认是否因外部触发导致\n3. 检查是否需要限流"
+
+      # ---------- JVM Health ----------
+      - alert: HighGCUsage
+        expr: rate(jvm_gc_pause_seconds_sum[5m]) / rate(jvm_gc_pause_seconds_count[5m]) > 1
+        for: 10m
+        labels:
+          severity: warning
+          component: jvm
+        annotations:
+          summary: "{{ $labels.job }} GC 暂停时间过长"
+          description: "GC 平均暂停时间超过 1 秒（当前值: {{ $value | humanizeDuration }}）"
+          impact: "服务可能出现 STW 停顿，影响请求处理"
+          recommended_action: "1. 检查 GC 配置（-XX:+UseG1GC）\n2. 分析堆内存使用模式\n3. 考虑调整 GC 参数"
+
+      - alert: HighOldGenUsage
+        expr: jvm_memory_used_bytes{area="heap",id="Tenured Gen"} / jvm_memory_max_bytes{area="heap",id="Tenured Gen"} * 100 > 80
+        for: 10m
+        labels:
+          severity: warning
+          component: jvm
+        annotations:
+          summary: "{{ $labels.job }} 老年代使用率过高"
+          description: "老年代使用率超过 80%（当前值: {{ $value | humanizePercentage }}）"
+          impact: "即将触发 Full GC，可能导致服务暂停"
+          recommended_action: "1. 检查是否有内存泄漏\n2. 分析对象生命周期\n3. 考虑调整堆内存分配"
+
+      - alert: ThreadPoolExhausted
+        expr: jvm_threads_daemon / jvm_threads_peak > 0.9
+        for: 5m
+        labels:
+          severity: critical
+          component: jvm
+        annotations:
+          summary: "{{ $labels.job }} 线程池即将耗尽"
+          description: "线程使用率已超过 90%（当前值: {{ $value | humanizePercentage }}）"
+          impact: "新请求无法被处理，服务即将拒绝连接"
+          recommended_action: "1. 检查是否有线程泄漏\n2. 分析线程 dump 定位阻塞点\n3. 考虑调整线程池配置"
+
+  # ============================================================
+  # Group 3: Database Alerts
+  # ============================================================
+  - name: uav_database_alerts
     interval: 30s
     rules:
-      # MySQL down
       - alert: MySQLDown
         expr: mysql_up == 0
         for: 1m
@@ -150,10 +312,11 @@ groups:
           severity: critical
           component: database
         annotations:
-          summary: "MySQL is down"
-          description: "MySQL database has been down for more than 1 minute"
+          summary: "MySQL 数据库宕机"
+          description: "MySQL 数据库（{{ $labels.instance }}）已宕机超过 1 分钟"
+          impact: "所有依赖数据库的服务无法正常服务"
+          recommended_action: "1. 检查 MySQL 容器/进程状态\n2. 查看 MySQL 错误日志\n3. 如为主库宕机考虑主从切换"
 
-      # High MySQL connection usage
       - alert: MySQLHighConnectionUsage
         expr: mysql_global_status_threads_connected / mysql_global_variables_max_connections * 100 > 80
         for: 5m
@@ -161,10 +324,11 @@ groups:
           severity: warning
           component: database
         annotations:
-          summary: "High MySQL connection usage"
-          description: "MySQL connection usage is above 80%"
+          summary: "MySQL 连接数使用率过高"
+          description: "连接使用率已超过 80%（当前值: {{ $value | humanizePercentage }}）"
+          impact: "新连接可能被拒绝，影响服务可用性"
+          recommended_action: "1. 检查应用连接池配置\n2. 排查未释放的连接\n3. 考虑增加 max_connections"
 
-      # Slow queries
       - alert: MySQLSlowQueries
         expr: rate(mysql_global_status_slow_queries[5m]) > 10
         for: 5m
@@ -172,13 +336,29 @@ groups:
           severity: warning
           component: database
         annotations:
-          summary: "Many slow queries detected"
-          description: "More than 10 slow queries per second"
+          summary: "MySQL 慢查询过多"
+          description: "慢查询速率超过 10/s（当前值: {{ $value }} /s）"
+          impact: "数据库性能下降，影响查询响应时间"
+          recommended_action: "1. 开启 slow_query_log 记录慢 SQL\n2. 分析索引使用情况\n3. 优化查询语句"
 
-  - name: cache_alerts
+      - alert: MySQLReplicationLag
+        expr: mysql_slave_status_seconds_behind_master > 30
+        for: 5m
+        labels:
+          severity: warning
+          component: database
+        annotations:
+          summary: "MySQL 主从复制延迟"
+          description: "从库落后主库 {{ $value }} 秒"
+          impact: "从库读取的数据可能不是最新的"
+          recommended_action: "1. 检查从库负载\n2. 分析大事务或 DDL 操作\n3. 考虑升级从库硬件"
+
+  # ============================================================
+  # Group 4: Cache (Redis) Alerts
+  # ============================================================
+  - name: uav_cache_alerts
     interval: 30s
     rules:
-      # Redis down
       - alert: RedisDown
         expr: redis_up == 0
         for: 1m
@@ -186,10 +366,11 @@ groups:
           severity: critical
           component: cache
         annotations:
-          summary: "Redis is down"
-          description: "Redis cache has been down for more than 1 minute"
+          summary: "Redis 宕机"
+          description: "Redis 缓存服务（{{ $labels.instance }}）已宕机超过 1 分钟"
+          impact: "所有依赖缓存的接口性能大幅下降，可能直接穿透到数据库"
+          recommended_action: "1. 检查 Redis 容器/进程状态\n2. 查看 Redis 日志\n3. 如有哨兵/集群模式，触发故障转移"
 
-      # High Redis memory usage
       - alert: RedisHighMemoryUsage
         expr: redis_memory_used_bytes / redis_memory_max_bytes * 100 > 80
         for: 5m
@@ -197,24 +378,30 @@ groups:
           severity: warning
           component: cache
         annotations:
-          summary: "High Redis memory usage"
-          description: "Redis memory usage is above 80%"
+          summary: "Redis 内存使用率过高"
+          description: "Redis 内存使用率已超过 80%（当前值: {{ $value | humanizePercentage }}）"
+          impact: "可能触发内存淘汰策略（eviction），导致缓存命中率下降"
+          recommended_action: "1. 检查内存淘汰策略配置（maxmemory-policy）\n2. 分析 key 的内存分布\n3. 考虑扩容或清理过期 key"
 
-      # Redis high connection usage
-      - alert: RedisHighConnectionUsage
-        expr: redis_connected_clients > 1000
-        for: 5m
+      - alert: RedisHitRateLow
+        expr: rate(redis_keyspace_hits_total[5m]) / (rate(redis_keyspace_hits_total[5m]) + rate(redis_keyspace_misses_total[5m])) * 100 < 80
+        for: 15m
         labels:
           severity: warning
           component: cache
         annotations:
-          summary: "High Redis connection count"
-          description: "Redis has more than 1000 connected clients"
+          summary: "Redis 缓存命中率过低"
+          description: "缓存命中率已低于 80%（当前值: {{ $value | humanizePercentage }}）"
+          impact: "大量请求直击数据库，增加数据库负载"
+          recommended_action: "1. 检查缓存键前缀设计\n2. 分析缓存预热是否到位\n3. 延长热点数据过期时间"
 
-  - name: business_alerts
+  # ============================================================
+  # Group 5: Business Logic Alerts
+  # ============================================================
+  - name: uav_business_alerts
     interval: 60s
     rules:
-      # High authentication failures
+      # ---------- Authentication ----------
       - alert: HighAuthFailureRate
         expr: rate(authentication_failures_total[5m]) > 10
         for: 10m
@@ -222,10 +409,10 @@ groups:
           severity: warning
           component: security
         annotations:
-          summary: "High authentication failure rate"
-          description: "Authentication failures are above 10/minute for 10 minutes"
+          summary: "认证失败率过高"
+          description: "认证失败速率超过 10次/分钟 持续 10 分钟（当前值: {{ $value }}/min）"
+          recommended_action: "1. 检查是否有用户反馈登录问题\n2. 查看 JWT 密钥是否过期或被轮换\n3. 检查认证服务日志"
 
-      # Possible brute force attack
       - alert: PossibleBruteForceAttack
         expr: increase(authentication_failures_total[5m]) > 50
         for: 5m
@@ -233,35 +420,113 @@ groups:
           severity: critical
           component: security
         annotations:
-          summary: "Possible brute force attack detected"
-          description: "More than 50 authentication failures in 5 minutes"
+          summary: "检测到可能的暴力破解攻击"
+          description: "5 分钟内认证失败次数超过 50 次（当前值: {{ $value }} 次）"
+          impact: "账户安全受到威胁"
+          recommended_action: "1. 立即实施 IP 临时封禁\n2. 通知安全团队介入\n3. 检查是否存在弱口令账户"
 
-      # Weather data collection failure
+      # ---------- Weather Data ----------
       - alert: WeatherDataCollectionFailure
-        expr: weather_data_collection_total{status="failure"} / weather_data_collection_total > 0.1
+        expr: sum(rate(weather_data_collection_failures_total[15m])) by (source) / sum(rate(weather_data_collection_attempts_total[15m])) by (source) > 0.1
         for: 15m
         labels:
           severity: warning
           component: business
         annotations:
-          summary: "Weather data collection failure"
-          description: "Weather data collection failure rate is above 10%"
+          summary: "气象数据采集失败率过高"
+          description: "数据源 {{ $labels.source }} 采集失败率超过 10% 持续 15 分钟"
+          impact: "预测模型使用的是旧数据，可能导致路径规划精度下降"
+          recommended_action: "1. 检查外部气象数据源是否可用\n2. 检查采集服务的网络连接\n3. 切换到备用数据源"
 
-      # UAV path planning failure
-      - alert: PathPlanningFailure
-        expr: path_planning_requests_total{status="failure"} / path_planning_requests_total > 0.05
+      - alert: WeatherDataAgeHigh
+        expr: time() - weather_data_last_timestamp_seconds > 3600
         for: 10m
         labels:
           severity: warning
           component: business
         annotations:
-          summary: "Path planning failure rate increased"
-          description: "Path planning failure rate is above 5%"
+          summary: "气象数据已过期"
+          description: "最近一次气象数据更新距今已超过 1 小时"
+          impact: "路径规划基于过期气象数据"
+          recommended_action: "1. 检查数据采集服务是否正常运行\n2. 检查外部数据源是否有更新\n3. 手动触发一次数据同步"
 
-  - name: scaling_alerts
+      # ---------- Path Planning ----------
+      - alert: PathPlanningFailureRate
+        expr: sum(rate(path_planning_requests_total{status="failure"}[10m])) by (service) / sum(rate(path_planning_requests_total[10m])) by (service) > 0.05
+        for: 10m
+        labels:
+          severity: warning
+          component: business
+        annotations:
+          summary: "{{ $labels.service }} 路径规划失败率过高"
+          description: "路径规划失败率已超过 5%（当前值: {{ $value | humanizePercentage }}）"
+          impact: "无人机任务调度受到影响"
+          recommended_action: "1. 检查路径规划服务的输入参数\n2. 查看算法引擎日志\n3. 检查禁飞区和障碍物数据是否更新"
+
+      - alert: PathPlanningTimeout
+        expr: sum(rate(path_planning_requests_total{status="timeout"}[10m])) by (service) > 0
+        for: 10m
+        labels:
+          severity: warning
+          component: business
+        annotations:
+          summary: "{{ $labels.service }} 路径规划超时"
+          description: "路径规划请求出现超时"
+          recommended_action: "1. 检查算法执行时间\n2. 考虑增加超时阈值\n3. 优化算法效率"
+
+      # ---------- UAV Status ----------
+      - alert: DroneBatteryLow
+        expr: drone_battery_percent < 20
+        for: 2m
+        labels:
+          severity: warning
+          component: business
+        annotations:
+          summary: "无人机 {{ $labels.drone_id }} 电量不足"
+          description: "无人机 {{ $labels.drone_id }} 电量低于 20%（当前值: {{ $value }}%）"
+          recommended_action: "1. 提醒操作员准备更换电池\n2. 检查是否需要调整任务计划\n3. 确保降落区域可用"
+
+      - alert: DroneOffline
+        expr: drone_online == 0
+        for: 5m
+        labels:
+          severity: critical
+          component: business
+        annotations:
+          summary: "无人机 {{ $labels.drone_id }} 离线"
+          description: "无人机 {{ $labels.drone_id }} 已离线超过 5 分钟"
+          recommended_action: "1. 检查通信链路是否正常\n2. 检查无人机电量状态\n3. 启动紧急搜回程序"
+
+      # ---------- Service Integration ----------
+      - alert: ServiceChainFailure
+        expr: sum(rate(feign_client_errors_total[5m])) by (client, method) > 10
+        for: 5m
+        labels:
+          severity: warning
+          component: integration
+        annotations:
+          summary: "{{ $labels.client }} 服务间调用失败"
+          description: "Feign 客户端 {{ $labels.client }} 调用失败次数超过 10 次/5分钟"
+          impact: "服务链上的部分功能不可用"
+          recommended_action: "1. 检查目标服务状态\n2. 检查网络连接\n3. 查看熔断器状态"
+
+      - alert: ServiceTimeout
+        expr: sum(rate(http_server_requests_seconds_count{status="408"}[5m])) by (job) > 0
+        for: 5m
+        labels:
+          severity: warning
+          component: integration
+        annotations:
+          summary: "{{ $labels.job }} 请求超时"
+          description: "服务 {{ $labels.job }} 出现请求超时"
+          recommended_action: "1. 检查依赖服务的响应时间\n2. 检查服务超时配置\n3. 分析慢请求根因"
+
+  # ============================================================
+  # Group 6: Scaling & Capacity Alerts
+  # ============================================================
+  - name: uav_scaling_alerts
     interval: 60s
     rules:
-      # High CPU, consider scaling
       - alert: ConsiderScalingUp
         expr: cpu_usage_percent > 70
         for: 10m
@@ -269,10 +534,10 @@ groups:
           severity: info
           component: scaling
         annotations:
-          summary: "High CPU usage, consider scaling up"
-          description: "CPU usage has been above 70% for 10 minutes"
+          summary: "{{ $labels.instance }} 建议扩容"
+          description: "CPU 使用率已超过 70% 持续 10 分钟"
+          recommended_action: "考虑增加服务实例数量"
 
-      # Low CPU, consider scaling down
       - alert: ConsiderScalingDown
         expr: cpu_usage_percent < 20
         for: 30m
@@ -280,5 +545,118 @@ groups:
           severity: info
           component: scaling
         annotations:
-          summary: "Low CPU usage, consider scaling down"
-          description: "CPU usage has been below 20% for 30 minutes"
+          summary: "{{ $labels.instance }} 建议缩容"
+          description: "CPU 使用率已低于 20% 持续 30 分钟"
+          recommended_action: "考虑减少服务实例数量以节约资源"
+
+      - alert: RequestRatePrediction
+        expr: predict_linear(rate(http_server_requests_seconds_count[1h])[1h:5m], 3600) > 2000
+        for: 10m
+        labels:
+          severity: info
+          component: scaling
+        annotations:
+          summary: "{{ $labels.job }} 请求量趋势预测"
+          description: "预计 1 小时后请求量将超过 2000 req/s"
+          recommended_action: "提前准备扩容量"
+
+  # ============================================================
+  # Group 7: Security Alerts
+  # ============================================================
+  - name: uav_security_alerts
+    interval: 60s
+    rules:
+      - alert: TLSCertificateExpiring
+        expr: probe_ssl_earliest_cert_expiry - time() < 864000
+        for: 1h
+        labels:
+          severity: critical
+          component: security
+        annotations:
+          summary: "TLS 证书即将过期"
+          description: "证书将在 {{ $value | humanizeDuration }} 后过期"
+          impact: "证书过期后 HTTPS 访问将不可用"
+          recommended_action: "1. 立即申请新证书\n2. 在过期前完成证书替换\n3. 检查自动续签配置"
+
+      - alert: TLSCertificateExpiringSoon
+        expr: probe_ssl_earliest_cert_expiry - time() < 2592000
+        for: 24h
+        labels:
+          severity: warning
+          component: security
+        annotations:
+          summary: "TLS 证书即将在一个月内过期"
+          description: "证书将在 {{ $value | humanizeDuration }} 后过期"
+          recommended_action: "安排证书替换计划"
+
+      - alert: UnauthorizedAccessAttempts
+        expr: increase(http_requests_total{status="401"}[15m]) > 100
+        for: 5m
+        labels:
+          severity: warning
+          component: security
+        annotations:
+          summary: "大量未授权访问尝试"
+          description: "15 分钟内 401 错误超过 100 次"
+          recommended_action: "1. 检查是否有异常访问\n2. 检查 JWT 鉴权是否正常\n3. 考虑实施 IP 限流"
+
+  # ============================================================
+  # Group 8: API Performance Monitoring (P50/P90/P99)
+  # ============================================================
+  - name: uav_api_performance
+    interval: 30s
+    rules:
+      - alert: P50ResponseTimeDegradation
+        expr: histogram_quantile(0.50, sum(rate(http_server_requests_seconds_bucket[5m])) by (le, job, uri)) > 0.5
+        for: 10m
+        labels:
+          severity: warning
+          component: performance
+        annotations:
+          summary: "{{ $labels.job }} P50 响应时间异常"
+          description: "{{ $labels.uri }} 的 P50 响应时间已超过 500ms（当前值: {{ $value | humanizeDuration }}）"
+          recommended_action: "1. 检查该接口的查询逻辑\n2. 分析数据库是否存在慢查询\n3. 评估缓存策略是否合理"
+
+      - alert: P90ResponseTimeDegradation
+        expr: histogram_quantile(0.90, sum(rate(http_server_requests_seconds_bucket[5m])) by (le, job, uri)) > 1.5
+        for: 5m
+        labels:
+          severity: warning
+          component: performance
+        annotations:
+          summary: "{{ $labels.job }} P90 响应时间异常"
+          description: "{{ $labels.uri }} 的 P90 响应时间已超过 1.5s（当前值: {{ $value | humanizeDuration }}）"
+          recommended_action: "1. 分析该接口的回源逻辑\n2. 检查是否存在锁等待\n3. 评估是否需要异步化改造"
+
+      - alert: P99ResponseTimeDegradation
+        expr: histogram_quantile(0.99, sum(rate(http_server_requests_seconds_bucket[5m])) by (le, job, uri)) > 5
+        for: 2m
+        labels:
+          severity: critical
+          component: performance
+        annotations:
+          summary: "{{ $labels.job }} P99 响应时间异常"
+          description: "{{ $labels.uri }} 的 P99 响应时间已超过 5s（当前值: {{ $value | humanizeDuration }}）"
+          recommended_action: "1. 立即排查慢请求根因\n2. 检查外部依赖服务是否异常\n3. 考虑熔断降级策略"
+
+      - alert: TimeoutRateHigh
+        expr: sum(rate(http_server_requests_seconds_count{status=~"408|504"}[5m])) by (job) / sum(rate(http_server_requests_seconds_count[5m])) by (job) > 0.01
+        for: 5m
+        labels:
+          severity: warning
+          component: performance
+        annotations:
+          summary: "{{ $labels.job }} 超时率过高"
+          description: "超时率已超过 1%（当前值: {{ $value | humanizePercentage }}）"
+          recommended_action: "1. 检查下游服务的响应时间\n2. 检查服务超时配置是否合理\n3. 分析是否是网络延迟导致"
+
+      - alert: SlowApiDetection
+        expr: http_server_requests_seconds_max > 10
+        for: 5m
+        labels:
+          severity: warning
+          component: performance
+        annotations:
+          summary: "{{ $labels.job }} 存在慢 API"
+          description: "{{ $labels.uri }} 最大响应时间超过 10 秒"
+          recommended_action: "检查该 API 是否需要异步处理或增加超时配置"

@@ -66,5 +66,41 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>需要访问您的位置以在地图上显示无人机位置</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>需要访问您的位置以在后台继续跟踪无人机位置</string>
+	
+	<!-- App Transport Security (ATS) Configuration -->
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<!-- 允许 HTTP 连接到 localhost（开发环境） -->
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+		
+		<!-- 允许任意加载（可选，用于开发环境） -->
+		<key>NSAllowsArbitraryLoads</key>
+		<false/>
+		
+		<!-- 例外域名配置 -->
+		<key>NSExceptionDomains</key>
+		<dict>
+			<!-- localhost 例外 -->
+			<key>localhost</key>
+			<dict>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<true/>
+				<key>NSIncludesSubdomains</key>
+				<true/>
+			</dict>
+			
+			<!-- 127.0.0.1 例外 -->
+			<key>127.0.0.1</key>
+			<dict>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<true/>
+			</dict>
+		</dict>
+	</dict>
 </dict>
 </plist>

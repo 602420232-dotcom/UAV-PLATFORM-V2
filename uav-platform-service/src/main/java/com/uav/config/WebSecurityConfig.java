@@ -17,11 +17,6 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @EnableWebSecurity
 public class WebSecurityConfig {
 
-    @Bean
-    public JwtAuthenticationFilter jwtAuthenticationFilter() {
-        return new JwtAuthenticationFilter();
-    }
-
     /**
      * API 安全过滤链 — JWT 认证。
      * 公开: 登录/健康检查。其余 /api/** 需要有效 JWT Bearer Token。

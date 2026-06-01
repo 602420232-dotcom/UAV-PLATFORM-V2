@@ -1,34 +1,29 @@
 # Type annotations added: 2026-05-08 13:22:43
-from typing import Dict, List, Any, Optional, Callable, Tuple
-
 """
 CUDA加速示例
 演示如何使用NVIDIA CUDA进行GPU加速计算
+
+注意: 通用工具函数 (create_synthetic_data, check_cuda_available)
+已迁移到 examples/common.py，本文件保留向后兼容的导入。
 """
+
+from typing import Any
 
 import numpy as np
 import logging
 import sys
 import os
 
-# 添加模块路径
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 src_path = os.path.join(project_root, 'src')
 if src_path not in sys.path:
     sys.path.insert(0, src_path)
 
-# 安装说明：在终端执行以下命令
-# cd d:\Developer\workplace\py\iteam\trae\data-assimilation-platform\algorithm_core
-# pip install -e .
-# 安装CUDA依赖：
-# pip install cupy-cuda11x  # 或：
-# pip install pycuda
-# pip install numba cuda-python
-
 from bayesian_assimilation.core.assimilator import BayesianAssimilator # type: ignore
 from bayesian_assimilation.utils.config import AssimilationConfig # type: ignore
 from bayesian_assimilation.accelerators import CUDAAccelerator, CuPyAccelerator, PyCUDAccelerator # type: ignore
+from common import create_synthetic_data, check_cuda_available
 
 logging.basicConfig(
     level=logging.INFO,
@@ -37,28 +32,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def check_cuda_available():
-    """检查CUDA是否可用"""
-    try:
-        cuda_acc = CUDAAccelerator()
-        if cuda_acc.initialize():
-            logger.info("✅ CUDA可用")
-            return True
-        else:
-            logger.info("⚠️ CUDA不可用")
-            return False
-    except ImportError:
-        logger.info("⚠️ CUDA相关库未安装")
-        return False
-
-
-def create_synthetic_data(domain_size: int, resolution: Any, n_obs: int = 20):
-    """创建合成数据"""
-    nx = int(domain_size[0] / resolution) + 1
-    ny = int(domain_size[1] / resolution) + 1
-    nz = int(domain_size[2] / resolution) + 1
-
-    logger.info(f"创建数据: {nx}×{ny}×{nz} = {nx*ny*nz:,} 点")
+def demo_cpu_baseline():
     logger.info(f"观测数: {n_obs}")
 
     x, y, z = np.meshgrid(

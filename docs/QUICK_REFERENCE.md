@@ -329,7 +329,7 @@ pytest test_performance.py -v -s
 
 
 
-> **最后更新**: 2026-05-30  
+> **最后更新**: 2026-06-01  
 > **版本**: 2.2  
 > **维护者**: DITHIOTHREITOL
 

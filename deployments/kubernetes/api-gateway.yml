@@ -15,10 +15,6 @@ spec:
       labels:
         app: api-gateway
     spec:
-      securityContext:
-        runAsNonRoot: true
-        runAsUser: 1001
-        fsGroup: 1001
       containers:
         - name: api-gateway
           image: trae-api-gateway:latest
@@ -29,21 +25,6 @@ spec:
             - configMapRef:
                 name: uav-platform-config
           env:
-            - name: NACOS_SERVER
-              valueFrom:
-                configMapKeyRef:
-                  name: uav-platform-config
-                  key: NACOS_SERVER
-            - name: REDIS_HOST
-              valueFrom:
-                configMapKeyRef:
-                  name: uav-platform-config
-                  key: REDIS_HOST
-            - name: REDIS_PORT
-              valueFrom:
-                configMapKeyRef:
-                  name: uav-platform-config
-                  key: REDIS_PORT
             - name: JAVA_OPTS
               valueFrom:
                 configMapKeyRef:

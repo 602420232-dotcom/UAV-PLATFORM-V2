@@ -1,0 +1,40 @@
+package com.uav.dto.response;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class LoginResponse {
+
+    private Integer code;
+    private String message;
+    private LoginData data;
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class LoginData {
+        private String accessToken;
+        private String refreshToken;
+        private Long expiresIn;
+        private String tokenType;
+        private UserInfo user;
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class UserInfo {
+        private Long id;
+        private String username;
+        private String email;
+        private String fullName;
+    }
+}

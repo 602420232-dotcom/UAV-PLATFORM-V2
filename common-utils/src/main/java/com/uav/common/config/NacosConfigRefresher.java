@@ -13,7 +13,9 @@ import org.springframework.stereotype.Component;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 @Slf4j
@@ -97,6 +99,18 @@ public class NacosConfigRefresher {
 
     @PreDestroy
     public void cleanup() {
+        log.info("Shutting down NacosConfigRefresher");
         listeners.clear();
+        if (executor instanceof ExecutorService es) {
+            es.shutdown();
+            try {
+                if (!es.awaitTermination(5, TimeUnit.SECONDS)) {
+                    es.shutdownNow();
+                }
+            } catch (InterruptedException e) {
+                es.shutdownNow();
+                Thread.currentThread().interrupt();
+            }
+        }
     }
 }

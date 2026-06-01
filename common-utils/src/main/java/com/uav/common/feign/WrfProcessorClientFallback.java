@@ -1,7 +1,9 @@
 package com.uav.common.feign;
 
+import com.uav.common.dto.WrfParseRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -65,8 +67,29 @@ public class WrfProcessorClientFallback implements WrfProcessorClient {
     }
 
     @Override
-    public Map<String, Object> parseWrfData(Map<String, Object> request) {
+    public Map<String, Object> parseWrfData(WrfParseRequest request) {
         log.warn("WrfProcessorClientFallback: parseWrfData降级执行, request={}", request);
+        Map<String, Object> fallbackResponse = new HashMap<>();
+        fallbackResponse.put("status", "degraded");
+        fallbackResponse.put("message", "WRF数据解析服务暂不可用，请稍后重试");
+        fallbackResponse.put("fallback", true);
+        return fallbackResponse;
+    }
+
+    @Override
+    public Map<String, Object> parseWrfData(Map<String, Object> data) {
+        log.warn("WrfProcessorClientFallback: parseWrfData降级执行, data={}", data);
+        Map<String, Object> fallbackResponse = new HashMap<>();
+        fallbackResponse.put("status", "degraded");
+        fallbackResponse.put("message", "WRF数据解析服务暂不可用，请稍后重试");
+        fallbackResponse.put("fallback", true);
+        return fallbackResponse;
+    }
+
+    @Override
+    public Map<String, Object> parseWrfFile(MultipartFile file, int height) {
+        log.warn("WrfProcessorClientFallback: parseWrfFile降级执行, file={}, height={}", 
+            (file != null ? file.getOriginalFilename() : "null"), height);
         Map<String, Object> fallbackResponse = new HashMap<>();
         fallbackResponse.put("status", "degraded");
         fallbackResponse.put("message", "WRF数据解析服务暂不可用，请稍后重试");

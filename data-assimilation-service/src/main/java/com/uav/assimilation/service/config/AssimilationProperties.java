@@ -7,7 +7,7 @@ import org.springframework.context.annotation.Configuration;
 @ConfigurationProperties(prefix = "assimilation")
 public class AssimilationProperties {
 
-    private String pythonScript = "${user.dir}/src/main/python/bayesian_assimilation.py";
+    private String pythonScript;
     private int timeout = 60000;
     private Algorithm algorithm = new Algorithm();
 

@@ -11,7 +11,7 @@ const routes = [
   {
     path: '/path-planning',
     name: 'pathPlanning',
-    component: () => import(/* webpackChunkName: "planning" */ '../views/PathPlanningView.vue'),
+    component: () => import('../views/PathPlanningView.vue'),
     meta: { title: '路径规划' }
   },
   {
@@ -51,6 +51,12 @@ const routes = [
     meta: { title: '数据源管理' }
   },
   {
+    path: '/assimilation',
+    name: 'assimilation',
+    component: () => import('../views/AssimilationView.vue'),
+    meta: { title: '数据同化' }
+  },
+  {
     path: '/example',
     name: 'example',
     component: () => import('../views/ExampleView.vue'),
@@ -59,7 +65,7 @@ const routes = [
   {
     path: '/smart-cockpit',
     name: 'smartCockpit',
-    component: () => import(/* webpackChunkName: "cockpit" */ '../views/SmartCockpit.vue'),
+    component: () => import('../views/SmartCockpit.vue'),
     meta: { title: '智能驾驶舱' }
   },
   // 404 页面

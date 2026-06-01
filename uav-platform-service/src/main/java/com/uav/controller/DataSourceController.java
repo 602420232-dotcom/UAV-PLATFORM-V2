@@ -1,7 +1,9 @@
 package com.uav.controller;
 import com.uav.config.SecurityAuditConfig;
 import com.uav.common.exception.DataNotFoundException;
+import com.uav.platform.dto.DataSourceRequest;
 import com.uav.service.DataSourceService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import java.util.List;
 import java.util.Map;
@@ -47,17 +49,17 @@ public class DataSourceController {
     }
 
     @PostMapping
-    public ResponseEntity<Map<String, Object>> createDataSource(@RequestBody Map<String, Object> requestBody) {
+    public ResponseEntity<Map<String, Object>> createDataSource(@Valid @RequestBody DataSourceRequest requestBody) {
         String username = securityAuditConfig.getCurrentUsername();
-        Map<String, Object> dataSource = dataSourceService.createDataSource(requestBody);
-        securityAuditConfig.logUserActivity(username, "创建数据源", "成功创建数据源: " + requestBody.get("name"));
+        Map<String, Object> dataSource = dataSourceService.createDataSource(toMap(requestBody));
+        securityAuditConfig.logUserActivity(username, "创建数据源", "成功创建数据源: " + requestBody.getName());
         return ResponseEntity.ok(Map.of("code", 200, "message", "创建数据源成功", "data", dataSource));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Map<String, Object>> updateDataSource(@PathVariable Long id, @RequestBody Map<String, Object> requestBody) {
+    public ResponseEntity<Map<String, Object>> updateDataSource(@PathVariable Long id, @Valid @RequestBody DataSourceRequest requestBody) {
         String username = securityAuditConfig.getCurrentUsername();
-        Map<String, Object> dataSource = dataSourceService.updateDataSource(id, requestBody);
+        Map<String, Object> dataSource = dataSourceService.updateDataSource(id, toMap(requestBody));
         if (dataSource == null) {
             throw new DataNotFoundException("DataSource", id);
         }
@@ -77,10 +79,10 @@ public class DataSourceController {
     }
 
     @PostMapping("/test")
-    public ResponseEntity<Map<String, Object>> testDataSource(@RequestBody Map<String, Object> requestBody) {
+    public ResponseEntity<Map<String, Object>> testDataSource(@Valid @RequestBody DataSourceRequest requestBody) {
         String username = securityAuditConfig.getCurrentUsername();
-        Map<String, Object> result = dataSourceService.testDataSource(requestBody);
-        securityAuditConfig.logUserActivity(username, "测试数据源", "成功测试数据源: " + requestBody.get("type"));
+        Map<String, Object> result = dataSourceService.testDataSource(toMap(requestBody));
+        securityAuditConfig.logUserActivity(username, "测试数据源", "成功测试数据源: " + requestBody.getType());
         return ResponseEntity.ok(Map.of("code", 200, "message", "测试数据源成功", "data", result));
     }
 
@@ -90,5 +92,15 @@ public class DataSourceController {
         List<Map<String, Object>> types = dataSourceService.getDataSourceTypes();
         securityAuditConfig.logUserActivity(username, "获取数据源类型", "成功获取数据源类型列表");
         return ResponseEntity.ok(Map.of("code", 200, "message", "获取数据源类型成功", "data", types));
+    }
+
+    private Map<String, Object> toMap(DataSourceRequest dto) {
+        Map<String, Object> map = new java.util.LinkedHashMap<>();
+        map.put("name", dto.getName());
+        map.put("type", dto.getType());
+        map.put("format", dto.getFormat());
+        map.put("config", dto.getConfig());
+        map.put("description", dto.getDescription());
+        return map;
     }
 }

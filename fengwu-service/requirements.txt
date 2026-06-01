@@ -2,3 +2,5 @@ fastapi>=0.110.0
 uvicorn[standard]>=0.29.0
 onnxruntime>=1.17.0
 numpy>=1.26.0
+pyjwt>=2.8.0
+cryptography>=41.0.0

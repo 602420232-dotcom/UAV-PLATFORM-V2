@@ -4,9 +4,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.multipart.MultipartFile;
+
+import com.uav.wrf.processor.service.WrfDataService;
 
 import java.util.Map;
 
@@ -15,16 +18,6 @@ import static org.mockito.Mockito.*;
 
 /**
  * WrfController单元测试
- *
- * <p>测试WRF文件处理控制器的安全验证功能</p>
- * <ul>
- *   <li>文件名验证</li>
- *   <li>文件类型验证</li>
- *   <li>路径遍历防护</li>
- * </ul>
- *
- * @author UAV Team
- * @version 1.0.0
  */
 @ExtendWith(MockitoExtension.class)
 @DisplayName("WrfController安全测试")
@@ -34,9 +27,12 @@ class WrfControllerTest {
     private WrfController wrfController;
     private MultipartFile mockFile;
 
+    @Mock
+    private WrfDataService wrfDataService;
+
     @BeforeEach
     void setUp() {
-        wrfController = new WrfController();
+        wrfController = new WrfController(wrfDataService);
         assertNotNull(wrfController);
         ReflectionTestUtils.setField(wrfController, "pythonScriptPath", "wrf_processor.py");
         ReflectionTestUtils.setField(wrfController, "dataPath", "./data");

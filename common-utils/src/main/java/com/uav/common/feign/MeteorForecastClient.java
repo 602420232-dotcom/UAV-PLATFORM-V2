@@ -13,7 +13,7 @@ import java.util.Map;
  */
 @FeignClient(name = "meteor-forecast-service", url = "${services.meteor-forecast.url:http://meteor-forecast:8082}",
         fallback = MeteorForecastClientFallback.class)
-public interface MeteorForecastClient {
+public interface MeteorForecastClient extends HealthCheckable {
 
     /**
      * 气象预测

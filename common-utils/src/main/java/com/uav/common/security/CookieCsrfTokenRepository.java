@@ -24,7 +24,7 @@ public class CookieCsrfTokenRepository implements CsrfTokenRepository {
     private String cookieName = DEFAULT_CSRF_COOKIE_NAME;
     private String headerName = DEFAULT_CSRF_HEADER_NAME;
     private String parameterName = DEFAULT_CSRF_PARAMETER_NAME;
-    private boolean cookieHttpOnly = false;
+    private boolean cookieHttpOnly = true;
     private String cookiePath = "/";
     private String cookieDomain;
     private Boolean secure;
@@ -111,6 +111,26 @@ public class CookieCsrfTokenRepository implements CsrfTokenRepository {
     public static CookieCsrfTokenRepository withHttpOnly(boolean httpOnly) {
         CookieCsrfTokenRepository repository = new CookieCsrfTokenRepository();
         repository.setCookieHttpOnly(httpOnly);
+        return repository;
+    }
+
+    /**
+     * 创建一个禁用 HttpOnly 的 CsrfTokenRepository（用于需要 JS 访问的场景）
+     * @return 配置了 cookieHttpOnly=false 的 CookieCsrfTokenRepository
+     */
+    public static CookieCsrfTokenRepository withHttpOnlyDisabled() {
+        CookieCsrfTokenRepository repository = new CookieCsrfTokenRepository();
+        repository.setCookieHttpOnly(false);
+        return repository;
+    }
+
+    /**
+     * 创建一个启用 HttpOnly 的 CsrfTokenRepository（安全推荐）
+     * @return 配置了 cookieHttpOnly=true 的 CookieCsrfTokenRepository
+     */
+    public static CookieCsrfTokenRepository withHttpOnlyEnabled() {
+        CookieCsrfTokenRepository repository = new CookieCsrfTokenRepository();
+        repository.setCookieHttpOnly(true);
         return repository;
     }
 

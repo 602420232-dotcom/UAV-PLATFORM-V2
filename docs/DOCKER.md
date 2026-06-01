@@ -178,8 +178,20 @@ docker-compose logs -f [service-name]
 ### Q: 服务启动顺序重要吗？
 是的，建议先启动基础设施，再启动微服务，最后启动网关。
 
+### Q: FengWu 服务启动失败怎么办？
+1. **检查模型挂载路径**：确认 `docker-compose.yml` 中 fengwu 服务的 volumes 配置指向正确的本地模型目录
+2. **检查模型文件**：确保模型目录包含 fengwu_v2.onnx、data_mean.npy、data_std.npy 三个必需文件
+3. **查看服务日志**：
+   ```bash
+   docker-compose logs fengwu
+   ```
+4. **更多排查方法**：参考 `docs/FENGWU_DEPLOY.md`
+
+### Q: FengWu 模型加载慢怎么办？
+FengWu 模型首次加载需要 30-60 秒。如需提高响应速度，可通过修改 `docker-compose.yml` 中的 `FENGWU_THREADS` 环境变量调整线程数，或使用 GPU 加速部署（详见 `docs/FENGWU_DEPLOY.md`）。
+
 ---
 
-> **最后更新**: 2026-05-09  
-> **版本**: 2.1  
+> **最后更新**: 2026-06-01  
+> **版本**: 2.2  
 > **维护者**: DITHIOTHREITOL

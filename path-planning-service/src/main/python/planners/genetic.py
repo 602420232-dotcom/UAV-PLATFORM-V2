@@ -25,6 +25,7 @@ class GeneticAlgorithmPlanner(BasePlanner):
         self.num_waypoints = 10
 
     def generate_individual(self) -> List[Tuple[float, float]]:
+        """Generate a random path from start to goal via waypoints."""
         individual = [self.start]
         for _ in range(self.num_waypoints):
             t = random.random()
@@ -35,6 +36,7 @@ class GeneticAlgorithmPlanner(BasePlanner):
         return individual
 
     def calculate_fitness(self, individual: List[Tuple[float, float]]) -> float:
+        """Evaluate path fitness: shorter and collision-free paths score higher."""
         total_distance = sum(
             self.calculate_distance(individual[i], individual[i + 1])
             for i in range(len(individual) - 1)
@@ -47,6 +49,7 @@ class GeneticAlgorithmPlanner(BasePlanner):
 
     def select_parents(self, population: List[List[Tuple[float, float]]],
                        fitnesses: List[float]):
+        """Select two parent individuals using fitness-proportional (roulette wheel) selection."""
         total_fitness = sum(fitnesses)
         probabilities = [f / total_fitness for f in fitnesses]
         return (
@@ -56,10 +59,12 @@ class GeneticAlgorithmPlanner(BasePlanner):
 
     @staticmethod
     def crossover(parent1, parent2):
+        """Perform single-point crossover between two parent paths."""
         point = random.randint(1, len(parent1) - 2)
         return parent1[:point] + parent2[point:]
 
     def mutate(self, individual):
+        """Apply random mutation to waypoints with given mutation_rate."""
         mutated = individual.copy()
         for i in range(1, len(mutated) - 1):
             if random.random() < self.mutation_rate:
@@ -70,6 +75,7 @@ class GeneticAlgorithmPlanner(BasePlanner):
         return mutated
 
     def _validate_path(self, path):
+        """Check if a path is collision-free and return total distance."""
         total_distance = 0
         for i in range(len(path) - 1):
             if self.is_path_collision(path[i], path[i + 1]):

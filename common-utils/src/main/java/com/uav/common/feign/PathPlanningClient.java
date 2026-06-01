@@ -12,7 +12,7 @@ import java.util.Map;
  */
 @FeignClient(name = "path-planning-service", url = "${services.path-planning.url:http://path-planning:8083}",
         fallback = PathPlanningClientFallback.class)
-public interface PathPlanningClient {
+public interface PathPlanningClient extends HealthCheckable {
 
     /**
      * VRP路径规划

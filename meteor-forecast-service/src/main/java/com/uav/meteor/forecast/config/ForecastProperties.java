@@ -7,8 +7,8 @@ import org.springframework.context.annotation.Configuration;
 @ConfigurationProperties(prefix = "forecast")
 public class ForecastProperties {
 
-    private String modelPath = "${user.dir}/models";
-    private String pythonScript = "${user.dir}/src/main/python/meteor_forecast.py";
+    private String modelPath;
+    private String pythonScript;
     private int timeout = 60000;
 
     public String getModelPath() {

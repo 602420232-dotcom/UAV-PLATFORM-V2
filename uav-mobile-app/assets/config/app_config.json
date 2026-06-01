@@ -1,0 +1,15 @@
+{
+  "app_name": "UAV Path Planning",
+  "version": "1.0.0",
+  "api_base_url": "http://localhost:8080",
+  "enable_offline_mode": true,
+  "max_cache_size_mb": 100,
+  "enable_telemetry": false,
+  "map_settings": {
+    "default_zoom": 10,
+    "default_center": {
+      "lat": 39.9042,
+      "lng": 116.4074
+    }
+  }
+}

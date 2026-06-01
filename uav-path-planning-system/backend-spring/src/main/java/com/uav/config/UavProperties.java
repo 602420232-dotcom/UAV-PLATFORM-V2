@@ -45,7 +45,8 @@ public class UavProperties {
     }
 
     public static class Python {
-        private String scriptPath = "${user.dir}/algorithm-core";
+        private static final String USER_DIR = System.getProperty("user.dir");
+        private String scriptPath = USER_DIR + "/algorithm-core";
         private int timeout = 30000;
 
         public String getScriptPath() {
@@ -66,7 +67,8 @@ public class UavProperties {
     }
 
     public static class Wrf {
-        private String dataPath = "${user.dir}/data/wrf";
+        private static final String USER_DIR = System.getProperty("user.dir");
+        private String dataPath = USER_DIR + "/data/wrf";
         private int updateInterval = 300;
 
         public String getDataPath() {

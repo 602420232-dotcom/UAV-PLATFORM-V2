@@ -4,27 +4,40 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.quality.Strictness;
+import org.mockito.junit.jupiter.MockitoSettings;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.util.ReflectionTestUtils;
+
+import com.uav.wrf.processor.service.WrfDataService;
 
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 @DisplayName("WrfController 增强测试")
 @SuppressWarnings("null")
 class WrfControllerEnhancedTest {
 
     private WrfController wrfController;
 
+    @Mock
+    private WrfDataService wrfDataService;
+
     @BeforeEach
     void setUp() {
-        wrfController = new WrfController();
+        wrfController = new WrfController(wrfDataService);
         ReflectionTestUtils.setField(wrfController, "pythonScriptPath", "wrf_processor.py");
         ReflectionTestUtils.setField(wrfController, "dataPath", "./data");
         ReflectionTestUtils.setField(wrfController, "timeout", 30000);
+
+        when(wrfDataService.getWeatherData(anyString())).thenReturn(Map.of("success", true, "data", Map.of()));
+        when(wrfDataService.getStatistics(anyString())).thenReturn(Map.of("success", true, "data", Map.of()));
     }
 
     @Test

@@ -4,9 +4,9 @@ spring:
 
   # 数据库配置
   datasource:
-    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:uav_path_planning}?useSSL=true&requireSSL=true&serverTimezone=UTC
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:uav_path_planning}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
     username: ${DB_USER:root}
-    password: ${DB_PASSWORD:***
+    password: ${DB_PASSWORD:***}
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       maximum-pool-size: ${DB_POOL_MAX_SIZE:20}
@@ -52,8 +52,15 @@ server:
 # JWT配置
 jwt:
   secret: ${JWT_SECRET}
-  expiration: ${JWT_EXPIRATION:86400000}
+  refresh-secret: ${JWT_REFRESH_SECRET}
+  expiration: ${JWT_ACCESS_EXPIRATION:7200000}
+  refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000}
+  issuer: ${JWT_ISSUER:uav-platform}
   enabled: ${JWT_ENABLED:true}
+  cookie-name: ${JWT_COOKIE_NAME:access_token}
+  refresh-cookie-name: ${JWT_REFRESH_COOKIE_NAME:refresh_token}
+  cookie-max-age: ${JWT_COOKIE_MAX_AGE:86400}
+  refresh-cookie-max-age: ${JWT_REFRESH_COOKIE_MAX_AGE:604800}
 
 # 自定义配置
 uav:
@@ -73,6 +80,13 @@ uav:
   grpc:
     host: ${GRPC_HOST:localhost}
     port: ${GRPC_PORT:50051}
+
+  demo:
+    enabled: ${DEMO_ENABLED:false}
+    max-concurrent-sessions: ${DEMO_MAX_SESSIONS:100}
+    api-rate-limit: ${DEMO_API_RATE_LIMIT:100}
+    session-duration: ${DEMO_SESSION_DURATION:3600}
+    data-isolation: ${DEMO_DATA_ISOLATION:true}
 
 logging:
   level:

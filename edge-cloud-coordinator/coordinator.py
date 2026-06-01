@@ -34,6 +34,11 @@ class EdgeCloudCoordinator:
     """边云协同计算框架"""
 
     def __init__(self, node_id: str = "edge_001"):
+        """Initialize the edge-cloud coordinator.
+
+        Args:
+            node_id: Unique identifier for this edge node.
+        """
         self.node_id = node_id
         self.task_queue: List[EdgeTask] = []
         self.completed_tasks: List[dict] = []
@@ -43,12 +48,31 @@ class EdgeCloudCoordinator:
         self.offline_buffer: List[dict] = []
 
     def submit_task(self, task: EdgeTask) -> str:
+        """Submit a task to the queue, sorted by priority.
+
+        Args:
+            task: EdgeTask to be processed.
+
+        Returns:
+            Task ID string.
+        """
         self.task_queue.append(task)
         self.task_queue.sort(key=lambda t: t.priority, reverse=True)
         logger.info(f"任务提交: {task.task_id} ({task.task_type.value})")
         return task.task_id
 
     def process_task(self, task: EdgeTask) -> dict:
+        """Process a task on cloud or edge based on its type.
+
+        Global path and batch processing go to cloud;
+        local avoidance and sensor fusion stay on edge.
+
+        Args:
+            task: EdgeTask to process.
+
+        Returns:
+            Result dict with 'node' and 'result' or 'error' keys.
+        """
         if task.task_type in (TaskType.GLOBAL_PATH, TaskType.BATCH_PROCESSING):
             return self._cloud_processing(task)
         return self._edge_processing(task)
@@ -63,6 +87,14 @@ class EdgeCloudCoordinator:
         return {'node': 'cloud', 'error': '未知任务类型'}
 
     def _edge_processing(self, task: EdgeTask) -> dict:
+        """Process a task on the edge side.
+
+        Args:
+            task: EdgeTask (LOCAL_AVOIDANCE or SENSOR_FUSION).
+
+        Returns:
+            Dict with node info and result.
+        """
         if task.task_type == TaskType.LOCAL_AVOIDANCE:
             obstacles = task.data.get('obstacles', [])
             current_pos: Tuple[float, float] = task.data.get('current_position', (0, 0))
@@ -86,6 +118,14 @@ class EdgeCloudCoordinator:
         return local_path
 
     def _sensor_fusion(self, sensor_data: dict) -> dict:
+        """Fuse multiple sensor readings into a unified view.
+
+        Args:
+            sensor_data: Dict of sensor readings.
+
+        Returns:
+            Fused sensor data dict.
+        """
         fused: dict = {'position': None, 'velocity': None, 'confidence': 1.0}
         if 'gps' in sensor_data and 'imu' in sensor_data:
             gps_pos = sensor_data['gps'].get('position', (0, 0))

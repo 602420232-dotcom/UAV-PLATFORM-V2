@@ -29,12 +29,15 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/admin/circuit-breaker")
 public class CircuitBreakerController {
-    
-    @Autowired
-    private CircuitBreakerRegistry circuitBreakerRegistry;
-    
-    @Autowired
-    private CircuitBreakerService circuitBreakerService;
+
+    private final CircuitBreakerRegistry circuitBreakerRegistry;
+    private final CircuitBreakerService circuitBreakerService;
+
+    public CircuitBreakerController(CircuitBreakerRegistry circuitBreakerRegistry,
+                                    CircuitBreakerService circuitBreakerService) {
+        this.circuitBreakerRegistry = circuitBreakerRegistry;
+        this.circuitBreakerService = circuitBreakerService;
+    }
     
     /**
      * 获取所有熔断器状态

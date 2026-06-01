@@ -8,6 +8,7 @@ UAV Edge SDK - 纯 Python 路径规划器（回退模块）
 """
 
 import heapq
+import threading
 from typing import List, Tuple, Optional
 
 
@@ -41,27 +42,32 @@ class PathPlannerFallback:
     """
     
     def __init__(self, grid_width: int = 100, grid_height: int = 100, resolution: float = 1.0):
+        self._lock = threading.Lock()
         self.grid_width = grid_width
         self.grid_height = grid_height
         self.resolution = resolution
         self.obstacles = []
     
     def set_grid_size(self, width: int, height: int):
-        self.grid_width = width
-        self.grid_height = height
-    
+        with self._lock:
+            self.grid_width = width
+            self.grid_height = height
+
     def set_resolution(self, resolution: float):
-        self.resolution = resolution
-    
+        with self._lock:
+            self.resolution = resolution
+
     def is_valid(self, point: Tuple[int, int]) -> bool:
         x, y = point
         return 0 <= x < self.grid_width and 0 <= y < self.grid_height
-    
+
     def is_obstacle(self, point: Tuple[int, int]) -> bool:
-        return point in self.obstacles
-    
+        with self._lock:
+            return point in self.obstacles
+
     def clear_obstacles(self):
-        self.obstacles = []
+        with self._lock:
+            self.obstacles = []
     
     def _heuristic(self, a: Tuple[int, int], b: Tuple[int, int]) -> float:
         """曼哈顿距离启发式"""
@@ -98,7 +104,8 @@ class PathPlannerFallback:
             路径点列表
         """
         # 设置障碍物
-        self.obstacles = obstacles if obstacles is not None else []
+        with self._lock:
+            self.obstacles = obstacles if obstacles is not None else []
         
         # 检查起点终点
         if not self.is_valid(start) or not self.is_valid(goal):

@@ -1,4 +1,4 @@
-﻿apiVersion: apps/v1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: frontend-vue
@@ -14,17 +14,39 @@ spec:
     metadata:
       labels:
         app: frontend-vue
+      annotations:
+        prometheus.io/scrape: "false"
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        fsGroup: 1001
+        seccompProfile:
+          type: RuntimeDefault
+        supplementalGroups:
+        - 1001
       containers:
       - name: frontend-vue
         image: trae-frontend:latest
+        imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 80
+          name: http
+          protocol: TCP
+        envFrom:
+        - configMapRef:
+            name: uav-platform-config
         env:
         - name: VUE_APP_API_URL
-          value: "http://uav-platform:8080/api"
+          valueFrom:
+            configMapKeyRef:
+              name: uav-platform-config
+              key: VUE_APP_API_URL
         - name: VUE_APP_WEBSOCKET_URL
-          value: "ws://uav-platform:8080/ws"
+          valueFrom:
+            configMapKeyRef:
+              name: uav-platform-config
+              key: VUE_APP_WEBSOCKET_URL
         resources:
           requests:
             cpu: "100m"
@@ -32,33 +54,87 @@ spec:
           limits:
             cpu: "300m"
             memory: "256Mi"
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        - name: nginx-cache
+          mountPath: /var/cache/nginx
+        - name: nginx-run
+          mountPath: /var/run
         readinessProbe:
           httpGet:
             path: /
-            port: 80
-          initialDelaySeconds: 20
-          periodSeconds: 10
+            port: http
+            scheme: HTTP
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          successThreshold: 1
+          failureThreshold: 3
         livenessProbe:
           httpGet:
             path: /
-            port: 80
-          initialDelaySeconds: 40
-          periodSeconds: 30
+            port: http
+            scheme: HTTP
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 3
+        startupProbe:
+          httpGet:
+            path: /
+            port: http
+            scheme: HTTP
+          initialDelaySeconds: 5
+          periodSeconds: 2
+          timeoutSeconds: 3
+          failureThreshold: 30
+      volumes:
+      - name: tmp
+        emptyDir: {}
+      - name: nginx-cache
+        emptyDir: {}
+      - name: nginx-run
+        emptyDir: {}
   strategy:
     type: RollingUpdate
     rollingUpdate:
       maxUnavailable: 1
       maxSurge: 1
+  minReadySeconds: 10
+  revisionHistoryLimit: 10
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: frontend-vue
   namespace: uav-platform
+  labels:
+    app: frontend-vue
 spec:
   selector:
     app: frontend-vue
   ports:
-  - port: 80
-    targetPort: 80
+  - name: http
+    port: 80
+    targetPort: http
+    protocol: TCP
   type: ClusterIP
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: frontend-vue-pdb
+  namespace: uav-platform
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: frontend-vue

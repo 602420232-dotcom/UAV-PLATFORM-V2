@@ -22,10 +22,12 @@ from coordinator import EdgeCloudCoordinator, EdgeTask, TaskType
 from federated_learning import FederatedLearning, DroneClient
 from security_validation import sanitize_task_id, validate_task_data, safe_get
 
+import socket
 import sys
 import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'common-utils', 'src', 'main', 'python'))
 from errors import AppError, ErrorCode, Result, handle_errors
+from security_middleware import SecurityMiddleware
 
 logger = logging.getLogger(__name__)
 
@@ -40,28 +42,21 @@ if HAS_FASTAPI:
         redoc_url="/redoc"
     )
     
-    # CORS配置 - 生产环境必须通过环境变量CORS_ORIGINS限制
+    # CORS配置 - 必须通过环境变量CORS_ORIGINS设置明确的源域名列表
+    # CI/CD: 使用 scripts/check-production-env.sh 检查生产环境配置
     import os
-    environment = os.environ.get("ENVIRONMENT", "development")
     cors_origins_str = os.environ.get("CORS_ORIGINS")
-    
-    if environment == "production":
-        if not cors_origins_str:
-            raise ValueError(
-                "CORS_ORIGINS environment variable must be set in production environment. "
-                "Example: CORS_ORIGINS=https://example.com,https://api.example.com"
-            )
-        cors_origins = cors_origins_str.split(",")
-        allow_credentials = True
-        logger.info(f"Production CORS configured for origins: {cors_origins}")
-    else:
-        cors_origins = cors_origins_str.split(",") if cors_origins_str else ["*"]
-        allow_credentials = False if cors_origins == ["*"] else True
-        if cors_origins == ["*"]:
-            logger.warning(
-                "CORS is configured to allow all origins (*). "
-                "This is acceptable for development but should be restricted in production."
-            )
+    if not cors_origins_str:
+        cors_origins_str = "http://localhost:3000,http://localhost:5173,http://localhost:8080"
+        logger.warning(
+            "CORS_ORIGINS not set, using development defaults: %s. "
+            "Set CORS_ORIGINS environment variable for production. "
+            "Run scripts/check-production-env.sh to validate production config.",
+            cors_origins_str,
+        )
+    cors_origins = cors_origins_str.split(",")
+    allow_credentials = True
+    logger.info("CORS configured for origins: %s", cors_origins)
     
     app.add_middleware(
         CORSMiddleware,
@@ -74,12 +69,35 @@ if HAS_FASTAPI:
     # 全局限流器
     coordinator = EdgeCloudCoordinator()
     federated_learning = FederatedLearning(min_clients=2)
+    
+    # JWT 认证中间件（与 Java 后端共享 JWT_SECRET）
+    _jwt_secret = os.getenv("JWT_SECRET", "") or os.getenv("JWT_SECRET_KEY", "")
+    if _jwt_secret:
+        _auth_middleware = SecurityMiddleware(
+            secret_key=_jwt_secret,
+            algorithm="HS512",
+            demo_enabled=os.getenv("DEMO_ENABLED", "false").lower() == "true",
+        )
+        _auth_middleware.protect_app(
+            app,
+            public_paths=["/", "/docs", "/redoc", "/openapi.json"],
+        )
+        logger.info("JWT authentication enabled")
+    else:
+        logger.warning(
+            "JWT_SECRET not set — authentication DISABLED for all endpoints. "
+            "Set JWT_SECRET environment variable to enable."
+        )
 
 # ==================== Pydantic Models ====================
 
 class TaskSubmitRequest(BaseModel):
     """任务提交请求"""
-    task_type: str = Field(..., description="任务类型: global_path, local_avoidance, sensor_fusion, model_update, batch_processing")
+    task_type: str = Field(
+        ...,
+        description="任务类型: global_path, local_avoidance, "
+                    "sensor_fusion, model_update, batch_processing",
+    )
     priority: int = Field(default=5, ge=1, le=10, description="优先级 1-10")
     data: Dict = Field(default_factory=dict, description="任务数据")
     deadline: float = Field(default=60.0, description="截止时间（秒）")
@@ -144,6 +162,36 @@ class FLTrainRequest(BaseModel):
 
 
 # ==================== API Routes ====================
+
+# ==================== 辅助函数 ====================
+
+_CLOUD_HOST = os.environ.get("CLOUD_HOST", "cloud.uav-platform.com")
+_CLOUD_PORT = int(os.environ.get("CLOUD_PORT", "443"))
+_EDGE_HOST = os.environ.get("EDGE_HOST", "edge.uav-platform.local")
+_EDGE_PORT = int(os.environ.get("EDGE_PORT", "8080"))
+
+
+def _check_tcp_connect(host: str, port: int, timeout: float = 2.0) -> bool:
+    """通过 TCP 连接检测远程服务是否可达。"""
+    try:
+        with socket.create_connection((host, port), timeout=timeout):
+            return True
+    except (socket.timeout, ConnectionRefusedError, OSError):
+        return False
+
+
+def _check_cloud_connected() -> bool:
+    """检测云端连接状态。"""
+    if not _CLOUD_HOST or _CLOUD_HOST == "cloud.uav-platform.com" and not os.environ.get("CLOUD_HOST"):
+        logger.debug("CLOUD_HOST not configured, connection check skipped")
+        return False
+    return _check_tcp_connect(_CLOUD_HOST, _CLOUD_PORT)
+
+
+def _check_edge_connected() -> bool:
+    """检测边缘节点连接状态。"""
+    return _check_tcp_connect(_EDGE_HOST, _EDGE_PORT)
+
 
 if HAS_FASTAPI:
     
@@ -277,8 +325,8 @@ if HAS_FASTAPI:
             node_id=coordinator.node_id,
             queue_size=len(coordinator.task_queue),
             completed_count=len(coordinator.completed_tasks),
-            cloud_connected=True,  # TODO: 实现真实连接检测
-            edge_connected=True,
+            cloud_connected=_check_cloud_connected(),
+            edge_connected=_check_edge_connected(),
             buffer_size=len(coordinator.offline_buffer)
         )
     

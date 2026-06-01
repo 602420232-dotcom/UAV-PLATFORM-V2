@@ -3,6 +3,9 @@ kind: ConfigMap
 metadata:
   name: uav-platform-config
   namespace: uav-platform
+  labels:
+    app: uav-platform
+    component: config
 data:
   # 通用服务配置
   SPRING_PROFILES_ACTIVE: "prod"
@@ -18,6 +21,10 @@ data:
   # 数据库用户名
   SPRING_DATASOURCE_USERNAME: "uav"
   
+  # 前端配置
+  VUE_APP_API_URL: "http://api-gateway:8088/api"
+  VUE_APP_WEBSOCKET_URL: "ws://api-gateway:8088/ws"
+  
   # 服务间通信 URL（K8s 服务名）
   SERVICES_WRF_PROCESSOR_URL: "http://wrf-processor-service:8081/api/wrf"
   SERVICES_DATA_ASSIMILATION_URL: "http://data-assimilation-service:8084/api/assimilation"
@@ -28,12 +35,14 @@ data:
   KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
   
   # 各服务数据库 URL
-  SPRING_DATASOURCE_URL_UAV_PLATFORM: "jdbc:mysql://mysql:3306/uav_platform?useSSL=true&requireSSL=true&serverTimezone=UTC"
-  SPRING_DATASOURCE_URL_WRF_PROCESSOR: "jdbc:mysql://mysql:3306/wrf_processor?useSSL=true&requireSSL=true&serverTimezone=UTC"
-  SPRING_DATASOURCE_URL_DATA_ASSIMILATION: "jdbc:mysql://mysql:3306/data_assimilation?useSSL=true&requireSSL=true&serverTimezone=UTC"
-  SPRING_DATASOURCE_URL_METEOR_FORECAST: "jdbc:mysql://mysql:3306/meteor_forecast?useSSL=true&requireSSL=true&serverTimezone=UTC"
-  SPRING_DATASOURCE_URL_PATH_PLANNING: "jdbc:mysql://mysql:3306/path_planning?useSSL=true&requireSSL=true&serverTimezone=UTC"
-  SPRING_DATASOURCE_URL_UAV_WEATHER: "jdbc:mysql://mysql:3306/uav_weather?useSSL=true&requireSSL=true&serverTimezone=UTC"
+  # K8s 集群内网通信（ClusterIP），MySQL 与其他服务在同一内部网络，
+  # 不使用 SSL（内网隔离环境风险可控）。如需 SSL，需配置 MySQL 服务端证书。
+  SPRING_DATASOURCE_URL_UAV_PLATFORM: "jdbc:mysql://mysql:3306/uav_platform?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC"
+  SPRING_DATASOURCE_URL_WRF_PROCESSOR: "jdbc:mysql://mysql:3306/wrf_processor?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC"
+  SPRING_DATASOURCE_URL_DATA_ASSIMILATION: "jdbc:mysql://mysql:3306/data_assimilation?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC"
+  SPRING_DATASOURCE_URL_METEOR_FORECAST: "jdbc:mysql://mysql:3306/meteor_forecast?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC"
+  SPRING_DATASOURCE_URL_PATH_PLANNING: "jdbc:mysql://mysql:3306/path_planning?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC"
+  SPRING_DATASOURCE_URL_UAV_WEATHER: "jdbc:mysql://mysql:3306/uav_weather?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC"
   
   # Python 超时配置
   PYTHON_TIMEOUT_WRF: "60000"
@@ -50,9 +59,19 @@ data:
   JAVA_OPTS_PATH_PLANNING: "-Xms512m -Xmx1g -XX:+UseG1GC -XX:MaxGCPauseMillis=100 -XX:+UseStringDeduplication -XX:+ParallelRefProcEnabled"
   JAVA_OPTS_UAV_WEATHER: "-Xms256m -Xmx512m -XX:+UseG1GC -XX:MaxGCPauseMillis=200"
   
-  # 安全用户密码默认值
-  SECURITY_USER_PASSWORD: "changeme"
+  # 安全用户密码 — 通过 Kubernetes Secret 或 External Secrets Operator 注入
+  # 请勿在此处设置明文密码！生产环境使用：
+  #   kubectl create secret generic uav-secrets --from-literal=SECURITY_USER_PASSWORD=<your-password>
+  # 或部署 External Secrets Operator + AWS Secrets Manager / HashiCorp Vault
+  SECURITY_USER_PASSWORD: ""
   
   # FengWu 配置
+  FENGWU_MODEL_PATH: "/app/model/fengwu_v2.onnx"
+  FENGWU_MEAN_PATH: "/app/model/data_mean.npy"
+  FENGWU_STD_PATH: "/app/model/data_std.npy"
   FENGWU_USE_GPU: "false"
   FENGWU_THREADS: "4"
+  
+  # 日志级别配置
+  LOG_LEVEL_ROOT: "INFO"
+  LOG_LEVEL_ORG_SPRINGFRAMEWORK: "INFO"

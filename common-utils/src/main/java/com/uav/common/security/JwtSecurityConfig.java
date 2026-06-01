@@ -11,9 +11,10 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(name = "uav.security.jwt-enabled", havingValue = "true")
 public class JwtSecurityConfig {
 
-    @Bean
-    public JwtAuthenticationFilter jwtAuthenticationFilter() {
-        return new JwtAuthenticationFilter();
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    public JwtSecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
+        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
     }
 
     @Bean
@@ -27,7 +28,7 @@ public class JwtSecurityConfig {
                 .requestMatchers("/api/public/**", "/api/auth/**").permitAll()
                 .anyRequest().authenticated()
             )
-            .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 }

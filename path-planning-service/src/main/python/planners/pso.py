@@ -27,6 +27,7 @@ class ParticleSwarmOptimizationPlanner(BasePlanner):
         self.num_waypoints = 10
 
     def calculate_fitness(self, path: List[Tuple[float, float]]) -> float:
+        """Evaluate path fitness: shorter paths with fewer collisions score higher."""
         total_distance = sum(
             self.calculate_distance(path[i], path[i + 1])
             for i in range(len(path) - 1)
@@ -38,6 +39,7 @@ class ParticleSwarmOptimizationPlanner(BasePlanner):
         return 1 / (total_distance + collision_penalty + 1e-6)
 
     def _generate_path(self):
+        """Generate a random path from start to goal via waypoints."""
         path = [self.start]
         for _ in range(self.num_waypoints):
             t = random.random()
@@ -48,6 +50,7 @@ class ParticleSwarmOptimizationPlanner(BasePlanner):
         return path
 
     def _validate_path(self, path):
+        """Check if a path is collision-free and return total distance."""
         total_distance = 0
         for i in range(len(path) - 1):
             if self.is_path_collision(path[i], path[i + 1]):

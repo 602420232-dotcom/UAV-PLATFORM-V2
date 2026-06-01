@@ -1,4 +1,4 @@
-﻿﻿apiVersion: apps/v1
+﻿﻿﻿﻿apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: uav-platform-service
@@ -20,11 +20,15 @@ spec:
         image: trae-uav-platform:latest
         ports:
         - containerPort: 8080
+        envFrom:
+        - configMapRef:
+            name: uav-platform-config
         env:
-        - name: SPRING_PROFILES_ACTIVE
-          value: "prod"
         - name: SPRING_DATASOURCE_URL
-          value: "jdbc:mysql://mysql:3306/uav_platform?useSSL=true&requireSSL=true&serverTimezone=UTC"
+          valueFrom:
+            configMapKeyRef:
+              name: uav-platform-config
+              key: SPRING_DATASOURCE_URL_UAV_PLATFORM
         - name: SPRING_DATASOURCE_USERNAME
           valueFrom:
             secretKeyRef:
@@ -35,10 +39,6 @@ spec:
             secretKeyRef:
               name: uav-platform-secrets
               key: spring.datasource.password
-        - name: SPRING_REDIS_HOST
-          value: "redis"
-        - name: SPRING_REDIS_PORT
-          value: "6379"
         - name: SPRING_REDIS_PASSWORD
           valueFrom:
             secretKeyRef:
@@ -60,13 +60,25 @@ spec:
               name: uav-platform-secrets
               key: redis.password
         - name: WRF_PROCESSOR_URL
-          value: "http://wrf-processor-service:8081"
+          valueFrom:
+            configMapKeyRef:
+              name: uav-platform-config
+              key: SERVICES_WRF_PROCESSOR_URL
         - name: METEOR_FORECAST_URL
-          value: "http://meteor-forecast-service:8082"
+          valueFrom:
+            configMapKeyRef:
+              name: uav-platform-config
+              key: SERVICES_METEOR_FORECAST_URL
         - name: PATH_PLANNING_URL
-          value: "http://path-planning-service:8083"
+          valueFrom:
+            configMapKeyRef:
+              name: uav-platform-config
+              key: SERVICES_PATH_PLANNING_URL
         - name: JAVA_OPTS
-          value: "-Xms512m -Xmx1g -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+UseStringDeduplication"
+          valueFrom:
+            configMapKeyRef:
+              name: uav-platform-config
+              key: JAVA_OPTS_UAV_PLATFORM
         resources:
           requests:
             cpu: "100m"
@@ -74,8 +86,6 @@ spec:
           limits:
             cpu: "1000m"
             memory: "1536Mi"
-        - name: JAVA_OPTS
-          value: "-Xms512m -Xmx1g -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+UseStringDeduplication"
         readinessProbe:
           httpGet:
             path: /actuator/health

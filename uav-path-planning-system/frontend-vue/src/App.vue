@@ -19,45 +19,9 @@
         @click="handleMenuClick"
         class="mobile-menu"
       >
-        <a-menu-item key="/">
-          <template #icon><HomeOutlined /></template>
-          首页
-        </a-menu-item>
-        <a-menu-item key="/smart-cockpit">
-          <template #icon><RadarChartOutlined /></template>
-          智能驾驶舱
-        </a-menu-item>
-        <a-menu-item key="/path-planning">
-          <template #icon><OrderedListOutlined /></template>
-          路径规划
-        </a-menu-item>
-        <a-menu-item key="/weather">
-          <template #icon><CloudOutlined /></template>
-          气象数据
-        </a-menu-item>
-        <a-menu-item key="/tasks">
-          <template #icon><CheckCircleOutlined /></template>
-          任务管理
-        </a-menu-item>
-        <a-menu-item key="/drones">
-          <template #icon><RocketOutlined /></template>
-          无人机管理
-        </a-menu-item>
-        <a-menu-item key="/history">
-          <template #icon><HistoryOutlined /></template>
-          历史记录
-        </a-menu-item>
-        <a-menu-item key="/data-sources">
-          <template #icon><DatabaseOutlined /></template>
-          数据源管理
-        </a-menu-item>
-        <a-menu-item key="/monitoring">
-          <template #icon><DashboardOutlined /></template>
-          系统监控
-        </a-menu-item>
-        <a-menu-item key="/example">
-          <template #icon><BookOutlined /></template>
-          功能示范
+        <a-menu-item v-for="item in menuItems" :key="item.path">
+          <template #icon><component :is="item.icon" /></template>
+          {{ item.label }}
         </a-menu-item>
       </a-menu>
     </a-drawer>
@@ -77,65 +41,11 @@
         :selected-keys="[currentRoute]"
         class="nav-menu desktop-menu"
       >
-        <a-menu-item key="/">
+        <a-menu-item v-for="item in menuItems" :key="item.path">
           <template #icon>
-            <HomeOutlined />
+            <component :is="item.icon" />
           </template>
-          首页
-        </a-menu-item>
-        <a-menu-item key="/smart-cockpit">
-          <template #icon>
-            <RadarChartOutlined />
-          </template>
-          智能驾驶舱
-        </a-menu-item>
-        <a-menu-item key="/path-planning">
-          <template #icon>
-            <OrderedListOutlined />
-          </template>
-          路径规划
-        </a-menu-item>
-        <a-menu-item key="/weather">
-          <template #icon>
-            <CloudOutlined />
-          </template>
-          气象数据
-        </a-menu-item>
-        <a-menu-item key="/tasks">
-          <template #icon>
-            <CheckCircleOutlined />
-          </template>
-          任务管理
-        </a-menu-item>
-        <a-menu-item key="/drones">
-          <template #icon>
-            <RocketOutlined />
-          </template>
-          无人机管理
-        </a-menu-item>
-        <a-menu-item key="/history">
-          <template #icon>
-            <HistoryOutlined />
-          </template>
-          历史记录
-        </a-menu-item>
-        <a-menu-item key="/data-sources">
-          <template #icon>
-            <DatabaseOutlined />
-          </template>
-          数据源管理
-        </a-menu-item>
-        <a-menu-item key="/monitoring">
-          <template #icon>
-            <DashboardOutlined />
-          </template>
-          系统监控
-        </a-menu-item>
-        <a-menu-item key="/example">
-          <template #icon>
-            <BookOutlined />
-          </template>
-          功能示范
+          {{ item.label }}
         </a-menu-item>
       </a-menu>
     </a-layout-header>
@@ -170,13 +80,29 @@ import {
   DashboardOutlined,
   BookOutlined,
   RadarChartOutlined,
-  MenuOutlined
+  MenuOutlined,
+  FunctionOutlined
 } from '@ant-design/icons-vue'
 
 const route = useRoute()
 const router = useRouter()
 const currentRoute = ref('/')
 const drawerVisible = ref(false)
+
+// 共享菜单项配置
+const menuItems = [
+  { path: '/', label: '首页', icon: HomeOutlined },
+  { path: '/smart-cockpit', label: '智能驾驶舱', icon: RadarChartOutlined },
+  { path: '/path-planning', label: '路径规划', icon: OrderedListOutlined },
+  { path: '/weather', label: '气象数据', icon: CloudOutlined },
+  { path: '/assimilation', label: '数据同化', icon: FunctionOutlined },
+  { path: '/tasks', label: '任务管理', icon: CheckCircleOutlined },
+  { path: '/drones', label: '无人机管理', icon: RocketOutlined },
+  { path: '/history', label: '历史记录', icon: HistoryOutlined },
+  { path: '/data-sources', label: '数据源管理', icon: DatabaseOutlined },
+  { path: '/monitoring', label: '系统监控', icon: DashboardOutlined },
+  { path: '/example', label: '功能示范', icon: BookOutlined }
+]
 
 // 监听路由变化
 watch(() => route.path, (newPath) => {

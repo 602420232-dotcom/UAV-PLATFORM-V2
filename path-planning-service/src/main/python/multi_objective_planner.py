@@ -115,8 +115,9 @@ class MultiObjectivePlanner:
             if obj_range == 0:
                 continue
             for j in range(1, len(front) - 1):
-                solutions[front[j]].crowding_distance += \
-                    (solutions[front[j + 1]].objectives[obj_idx] - solutions[front[j - 1]].objectives[obj_idx]) / obj_range
+                diff = (solutions[front[j + 1]].objectives[obj_idx]
+                        - solutions[front[j - 1]].objectives[obj_idx])
+                solutions[front[j]].crowding_distance += diff / obj_range
 
     def select(self, solutions: List[Solution]) -> List[Solution]:
         """锦标赛选择"""

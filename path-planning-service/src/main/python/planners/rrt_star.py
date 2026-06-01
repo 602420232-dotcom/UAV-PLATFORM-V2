@@ -34,11 +34,13 @@ class RRTP(BasePlanner):
         self.nodes: List[Node] = []
 
     def get_random_point(self) -> Tuple[float, float]:
+        """Sample a random point with 10% goal bias for faster convergence."""
         if random.random() < 0.1:
             return self.goal
         return (random.uniform(-50, 50), random.uniform(-50, 50))
 
     def get_nearest_node(self, point: Tuple[float, float]) -> Node:
+        """Find the tree node nearest to the given point."""
         min_distance = float('inf')
         nearest_node = None
         for node in self.nodes:
@@ -49,6 +51,7 @@ class RRTP(BasePlanner):
         return nearest_node
 
     def steer(self, from_node: Node, to_point: Tuple[float, float]) -> Tuple[float, float]:
+        """Steer from a node towards a point, limited by step_size."""
         distance = self.calculate_distance(from_node.position, to_point)
         if distance <= self.step_size:
             return to_point
@@ -62,6 +65,7 @@ class RRTP(BasePlanner):
         )
 
     def get_near_nodes(self, point: Tuple[float, float], radius: float) -> List[Node]:
+        """Find all nodes within a given radius of a point."""
         return [node for node in self.nodes
                 if self.calculate_distance(node.position, point) <= radius]
 

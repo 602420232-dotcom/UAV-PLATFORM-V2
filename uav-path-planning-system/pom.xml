@@ -13,8 +13,8 @@
 
     <artifactId>uav-path-planning-system</artifactId>
     <packaging>pom</packaging>
-    <name>UAV Path Planning System</name>
-    <description>无人机路径规划系统 - 完整的端到端解决方案</description>
+    <name>UAV Path Planning System :: Module</name>
+    <description>无人机路径规划系统 - 后端聚合模块</description>
 
     <modules>
         <module>backend-spring</module>

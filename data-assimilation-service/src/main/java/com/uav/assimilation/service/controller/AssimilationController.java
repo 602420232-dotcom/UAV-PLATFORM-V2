@@ -1,6 +1,6 @@
 package com.uav.assimilation.service.controller;
 import com.uav.common.dto.AssimilationRequest;
-import com.uav.common.feign.PythonScriptInvoker;
+import com.uav.common.script.PythonScriptInvoker;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Value;
 import java.util.Map;
