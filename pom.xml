@@ -91,10 +91,22 @@
             
             <!-- 公共依赖管理 (从 common-dependencies 合并) -->
             
-            <!-- Web基础 -->
+            <!-- Web基础 - 使用 Undertow (替代Tomcat, 更高并发/更低内存) -->
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-starter-web</artifactId>
+                <version>${spring-boot.version}</version>
+                <exclusions>
+                    <!-- 排除Tomcat，使用Undertow -->
+                    <exclusion>
+                        <groupId>org.springframework.boot</groupId>
+                        <artifactId>spring-boot-starter-tomcat</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-undertow</artifactId>
                 <version>${spring-boot.version}</version>
             </dependency>
             

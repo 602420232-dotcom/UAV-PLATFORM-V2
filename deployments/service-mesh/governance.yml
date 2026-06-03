@@ -1,171 +1,59 @@
-apiVersion: networking.istio.io/v1beta1
-kind: VirtualService
-metadata:
-  name: uav-platform-vs
-  namespace: uav-platform
-spec:
-  hosts:
-    - uav-platform
-    - api-gateway
-  http:
-    - match:
-        - uri:
-            prefix: /api/v1
-      route:
-        - destination:
-            host: uav-platform
-            port:
-              number: 8080
-          weight: 100
-      retries:
-        attempts: 3
-        perTryTimeout: 2s
-        retryOn: connect-failure,refused-stream,503,504
-      timeout: 10s
-      corsPolicy:
-        allowOrigins:
-          - regex: ".*"
-        allowMethods:
-          - GET
-          - POST
-          - PUT
-          - DELETE
-        allowHeaders:
-          - authorization
-          - content-type
-        maxAge: "24h"
-    - match:
-        - uri:
-            prefix: /api/planning
-      route:
-        - destination:
-            host: path-planning
-            port:
-              number: 8083
-          weight: 90
-        - destination:
-            host: path-planning
-            port:
-              number: 8083
-            subset: v2
-          weight: 10
-      retries:
-        attempts: 2
-        perTryTimeout: 5s
-
----
-apiVersion: networking.istio.io/v1beta1
-kind: DestinationRule
-metadata:
-  name: uav-platform-dr
-  namespace: uav-platform
-spec:
-  host: "*.uav-platform"
-  trafficPolicy:
-    loadBalancer:
-      simple: ROUND_ROBIN
-    connectionPool:
-      tcp:
-        maxConnections: 100
-        connectTimeout: 3s
-      http:
-        http1MaxPendingRequests: 50
-        http2MaxRequests: 100
-        maxRequestsPerConnection: 10
-    outlierDetection:
-      consecutive5xxErrors: 5
-      interval: 10s
-      baseEjectionTime: 30s
-      maxEjectionPercent: 50
-    retries:
-      attempts: 3
-      perTryTimeout: 3s
-  subsets:
-    - name: v1
-      labels:
-        version: v1
-    - name: v2
-      labels:
-        version: v2
-
----
-apiVersion: networking.istio.io/v1beta1
-kind: ServiceEntry
-metadata:
-  name: kafka-mesh
-  namespace: uav-platform
-spec:
-  hosts:
-    - kafka.uav-platform.svc.cluster.local
-  ports:
-    - number: 9092
-      name: tcp-kafka
-      protocol: TCP
-  resolution: DNS
-
----
-apiVersion: networking.istio.io/v1beta1
-kind: EnvoyFilter
-metadata:
-  name: circuit-breaker-filter
-  namespace: uav-platform
-spec:
-  workloadSelector:
-    labels:
-      app: api-gateway
-  configPatches:
-    - applyTo: HTTP_FILTER
-      match:
-        context: GATEWAY
-        listener:
-          filterChain:
-            filter:
-              name: envoy.filters.network.http_connection_manager
-              subFilter:
-                name: envoy.filters.http.router
-      patch:
-        operation: INSERT_BEFORE
-        value:
-          name: envoy.filters.http.circuit_breaker
-          typed_config:
-            "@type": type.googleapis.com/envoy.extensions.filters.http.circuit_breaker.v3.CircuitBreaker
-            priority: DEFAULT
-            max_connections: 500
-            max_pending_requests: 100
-            max_requests: 200
-            max_retries: 5
-
----
-apiVersion: telemetry.istio.io/v1alpha1
-kind: Telemetry
-metadata:
-  name: uam-tracing
-  namespace: uav-platform
-spec:
-  selector:
-    matchLabels:
-      app: uav-platform
-  tracing:
-    - providers:
-        - name: jaeger
-      randomSamplingPercentage: 100.0
-    - customTags:
-        environment:
-          literal:
-            value: production
-        service_version:
-          header:
-            name: x-service-version
-
----
-apiVersion: networking.istio.io/v1beta1
+apiVersion: security.istio.io/v1beta1
 kind: PeerAuthentication
 metadata:
   name: uav-platform-mtls
-  namespace: uav-platform
+  namespace: uav-path-planning
 spec:
   mtls:
     mode: STRICT
-  selector:
-    matchLabels:
-      app: uav-platform
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: uav-platform-mtls-dr
+  namespace: uav-path-planning
+spec:
+  host: "*.uav-path-planning.svc.cluster.local"
+  trafficPolicy:
+    tls:
+      mode: ISTIO_MUTUAL
+---
+# Circuit breaker configuration
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: uav-platform-circuit-breaker
+  namespace: uav-path-planning
+spec:
+  host: "*.uav-path-planning.svc.cluster.local"
+  trafficPolicy:
+    connectionPool:
+      tcp:
+        maxConnections: 100
+      http:
+        http1MaxPendingRequests: 50
+        maxRequestsPerConnection: 10
+    outlierDetection:
+      consecutive5xxErrors: 5
+      interval: 30s
+      baseEjectionTime: 60s
+      maxEjectionPercent: 50
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: uav-platform-canary
+  namespace: uav-path-planning
+spec:
+  hosts:
+  - uav-platform
+  http:
+  - route:
+    - destination:
+        host: uav-platform
+        subset: stable
+      weight: 90
+    - destination:
+        host: uav-platform
+        subset: canary
+      weight: 10

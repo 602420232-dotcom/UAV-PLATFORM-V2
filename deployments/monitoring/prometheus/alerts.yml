@@ -282,3 +282,79 @@ groups:
         annotations:
           summary: "Low CPU usage, consider scaling down"
           description: "CPU usage has been below 20% for 30 minutes"
+
+  - name: tracing_alerts
+    interval: 30s
+    rules:
+      - alert: JaegerServiceDown
+        expr: jaeger_requests_total == 0
+        for: 5m
+        labels:
+          severity: critical
+          component: tracing
+        annotations:
+          summary: "Jaeger tracing is down"
+          description: "Jaeger has not received any spans for 5 minutes"
+
+      - alert: HighTraceLatency
+        expr: histogram_quantile(0.95, sum(rate(jaeger_span_duration_seconds_bucket[5m])) by (le, service)) > 3
+        for: 5m
+        labels:
+          severity: warning
+          component: tracing
+        annotations:
+          summary: "High trace latency detected"
+          description: "95th percentile trace latency for {{ $labels.service }} is above 3 seconds"
+
+      - alert: HighTraceErrorRate
+        expr: sum(rate(jaeger_span_errors_total[5m])) by (service) / sum(rate(jaeger_span_duration_seconds_count[5m])) by (service) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+          component: tracing
+        annotations:
+          summary: "High trace error rate"
+          description: "Error rate in traces for {{ $labels.service }} is above 5%"
+
+  - name: log_alerts
+    interval: 30s
+    rules:
+      - alert: ElasticsearchDown
+        expr: elasticsearch_cluster_health_status == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: logging
+        annotations:
+          summary: "Elasticsearch is down"
+          description: "Elasticsearch cluster health status is red"
+
+      - alert: ElasticsearchDiskSpaceLow
+        expr: elasticsearch_filesystem_data_available_bytes / elasticsearch_filesystem_data_total_bytes * 100 < 15
+        for: 5m
+        labels:
+          severity: warning
+          component: logging
+        annotations:
+          summary: "Elasticsearch disk space low"
+          description: "Elasticsearch has less than 15% disk space available"
+
+      - alert: HighErrorLogRate
+        expr: rate(log_entries_total{level="error"}[5m]) > 10
+        for: 5m
+        labels:
+          severity: warning
+          component: logging
+        annotations:
+          summary: "High error log rate"
+          description: "Error log rate is above 10 entries per minute"
+
+      - alert: HighWarningLogRate
+        expr: rate(log_entries_total{level="warn"}[5m]) > 50
+        for: 10m
+        labels:
+          severity: info
+          component: logging
+        annotations:
+          summary: "High warning log rate"
+          description: "Warning log rate is above 50 entries per minute"

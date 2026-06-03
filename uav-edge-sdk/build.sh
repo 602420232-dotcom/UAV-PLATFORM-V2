@@ -1,72 +1,87 @@
 #!/bin/bash
-# UAV Edge SDK - Linux/macOS Build Script
-
+# UAV Edge SDK - Build Script
+# Builds the C++ pybind11 module for maximum performance
 set -e
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR"
+
 echo "============================================"
-echo "  UAV Edge SDK - Build Script"
+echo "  UAV Edge SDK Build Script"
 echo "============================================"
 echo ""
 
-# Check if CMake is installed
-if ! command -v cmake &> /dev/null; then
-    echo "[ERROR] CMake not found!"
-    echo "Please install CMake:"
-    echo "  Ubuntu/Debian: sudo apt-get install cmake"
-    echo "  macOS: brew install cmake"
-    echo ""
-    exit 1
-fi
+# Check prerequisites
+echo "[1/5] Checking prerequisites..."
 
-# Check if C++ compiler is installed
-if ! command -v g++ &> /dev/null && ! command -v clang++ &> /dev/null; then
-    echo "[ERROR] C++ compiler not found!"
-    echo "Please install GCC or Clang:"
-    echo "  Ubuntu/Debian: sudo apt-get install build-essential"
-    echo "  macOS: brew install gcc"
-    echo ""
-    exit 1
-fi
+command -v cmake >/dev/null 2>&1 || { echo "ERROR: cmake is required but not installed."; exit 1; }
+echo "  ✓ cmake: $(cmake --version | head -1)"
 
-echo "[INFO] CMake found"
-command -v g++ &> /dev/null && echo "[INFO] GCC found" || echo "[INFO] Clang found"
-echo ""
+command -v python3 >/dev/null 2>&1 || { echo "ERROR: python3 is required but not installed."; exit 1; }
+echo "  ✓ python3: $(python3 --version)"
+
+# Check pybind11
+python3 -c "import pybind11" 2>/dev/null || {
+    echo "  Installing pybind11..."
+    pip3 install pybind11
+}
+echo "  ✓ pybind11: $(python3 -c 'import pybind11; print(pybind11.__version__)')"
+
+# Check numpy
+python3 -c "import numpy" 2>/dev/null || {
+    echo "  Installing numpy..."
+    pip3 install numpy
+}
 
 # Create build directory
-if [ ! -d "build" ]; then
-    echo "[INFO] Creating build directory..."
-    mkdir -p build
-fi
+echo ""
+echo "[2/5] Creating build directory..."
+mkdir -p build
 
-cd build
-
-# Configure CMake
-echo "[INFO] Configuring CMake..."
-cmake .. -DCMAKE_BUILD_TYPE=Release
+# Configure
+echo ""
+echo "[3/5] Configuring with CMake..."
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
 
 # Build
 echo ""
-echo "[INFO] Building C++ module..."
-make -j$(nproc)
+echo "[4/5] Building C++ module..."
+cmake --build build --config Release -j$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 4)
 
-# Install
+# Copy module
 echo ""
-echo "[INFO] Installing to python directory..."
-make install
+echo "[5/5] Installing Python module..."
+if [ -f "build/edge_sdk_cpp.pyd" ]; then
+    cp build/edge_sdk_cpp.pyd edge_sdk/
+    echo "  ✓ Installed edge_sdk_cpp.pyd (Windows)"
+elif [ -f "build/edge_sdk_cpp.so" ]; then
+    cp build/edge_sdk_cpp.so edge_sdk/
+    echo "  ✓ Installed edge_sdk_cpp.so (Linux)"
+else
+    # Try to find in subdirectories
+    find build -name "edge_sdk_cpp.*" -exec cp {} edge_sdk/ \;
+    echo "  ✓ C++ module built and installed"
+fi
+
+# Verify
+echo ""
+echo "Verifying build..."
+python3 -c "
+from edge_sdk._core import HAS_CPP_MODULE
+if HAS_CPP_MODULE:
+    print('  ✓ C++ module loaded successfully!')
+    from edge_sdk import create_sdk
+    sdk = create_sdk()
+    print('  ✓ EdgeSDK initialized with C++ acceleration')
+else:
+    print('  ⚠ C++ module not loaded. Check build output above.')
+"
 
 echo ""
 echo "============================================"
-echo "  Build Complete!"
+echo "  Build complete!"
 echo "============================================"
-echo ""
-echo "You can now use the C++ module in Python:"
-echo ""
-echo "  from edge_sdk import EdgeSDK"
-echo "  sdk = EdgeSDK()"
 echo ""
 echo "To run tests:"
+echo "  cd tests && python test_edge_sdk.py"
 echo ""
-echo "  cd tests"
-echo "  python test_edge_sdk.py"
-echo ""
-echo "============================================"
