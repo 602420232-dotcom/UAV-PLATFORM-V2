@@ -2,7 +2,7 @@
   <a-layout style="min-height: 100vh">
     <!-- 顶部导航栏 -->
     <a-layout-header class="header">
-      <div class="logo">无人机路径规划系统</div>
+      <div class="logo">{{ $t('title') }}</div>
       <a-menu
         mode="horizontal"
         :selected-keys="[currentRoute]"
@@ -12,57 +12,58 @@
           <template #icon>
             <HomeOutlined />
           </template>
-          首页
+          {{ $t('nav.home') }}
         </a-menu-item>
         <a-menu-item key="/path-planning">
           <template #icon>
             <OrderedListOutlined />
           </template>
-          路径规划
+          {{ $t('nav.planning') }}
         </a-menu-item>
         <a-menu-item key="/weather">
           <template #icon>
             <CloudOutlined />
           </template>
-          气象数据
+          {{ $t('nav.weather') }}
         </a-menu-item>
         <a-menu-item key="/tasks">
           <template #icon>
             <CheckCircleOutlined />
           </template>
-          任务管理
+          {{ $t('nav.tasks') }}
         </a-menu-item>
         <a-menu-item key="/drones">
           <template #icon>
             <RocketOutlined />
           </template>
-          无人机管理
+          {{ $t('nav.drones') }}
         </a-menu-item>
         <a-menu-item key="/history">
           <template #icon>
             <HistoryOutlined />
           </template>
-          历史记录
+          {{ $t('nav.history') }}
         </a-menu-item>
         <a-menu-item key="/data-sources">
           <template #icon>
             <DatabaseOutlined />
           </template>
-          数据源管理
+          {{ $t('nav.dataSources') }}
         </a-menu-item>
         <a-menu-item key="/monitoring">
           <template #icon>
             <DashboardOutlined />
           </template>
-          系统监控
+          {{ $t('nav.monitoring') }}
         </a-menu-item>
         <a-menu-item key="/example">
           <template #icon>
             <BookOutlined />
           </template>
-          功能示范
+          {{ $t('nav.cockpit') }}
         </a-menu-item>
       </a-menu>
+      <LanguageSwitcher />
     </a-layout-header>
 
     <!-- 内容区域 -->
@@ -76,7 +77,7 @@
 
     <!-- 底部 -->
     <a-layout-footer class="footer">
-      无人机路径规划系统 ©2024
+      {{ $t('title') }} ©2024
     </a-layout-footer>
   </a-layout>
 </template>
@@ -84,6 +85,7 @@
 <script setup>
 import { ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
+import LanguageSwitcher from './components/LanguageSwitcher.vue'
 import {
   HomeOutlined,
   OrderedListOutlined,

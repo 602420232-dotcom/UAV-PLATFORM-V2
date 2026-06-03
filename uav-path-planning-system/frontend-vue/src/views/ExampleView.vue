@@ -556,6 +556,12 @@ const handleResize = () => {
 onMounted(() => {
   window.addEventListener('resize', handleResize)
 })
+
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize)
+  if (map) map.remove()
+})
+
 </script>
 
 <style scoped>

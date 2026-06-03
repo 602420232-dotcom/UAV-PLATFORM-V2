@@ -1,0 +1,10 @@
+{
+  "urls": [
+    { "url": "/api/platform/v3/api-docs", "name": "UAV Platform Service" },
+    { "url": "/api/wrf/v3/api-docs", "name": "WRF Processor Service" },
+    { "url": "/api/forecast/v3/api-docs", "name": "Meteor Forecast Service" },
+    { "url": "/api/planning/v3/api-docs", "name": "Path Planning Service" },
+    { "url": "/api/assimilation/v3/api-docs", "name": "Data Assimilation Service" },
+    { "url": "/api/weather/v3/api-docs", "name": "Weather Collector Service" }
+  ]
+}

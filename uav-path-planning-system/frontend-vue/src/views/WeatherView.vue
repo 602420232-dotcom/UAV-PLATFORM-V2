@@ -10,12 +10,12 @@
             </a-form-item>
             <a-form-item label="高度">
               <a-select v-model:value="selectedHeight" style="width: 100%">
-                <a-option value="10">10m</a-option>
-                <a-option value="50">50m</a-option>
-                <a-option value="100">100m</a-option>
-                <a-option value="200">200m</a-option>
-                <a-option value="500">500m</a-option>
-                <a-option value="1000">1000m</a-option>
+                <a-select-option value="10">10m</a-select-option>
+                <a-select-option value="50">50m</a-select-option>
+                <a-select-option value="100">100m</a-select-option>
+                <a-select-option value="200">200m</a-select-option>
+                <a-select-option value="500">500m</a-select-option>
+                <a-select-option value="1000">1000m</a-select-option>
               </a-select>
             </a-form-item>
             <a-form-item label="气象要素">
@@ -35,6 +35,9 @@
                 </template>
                 加载气象数据
               </a-button>
+            </a-form-item>
+            <a-form-item label="显示热力图">
+              <a-switch v-model:checked="showHeatmap" />
             </a-form-item>
           </a-form>
         </a-card>
@@ -92,7 +95,9 @@ import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { CloudOutlined } from '@ant-design/icons-vue'
 import { Empty } from 'ant-design-vue'
 import L from 'leaflet'
+import 'leaflet.heat'
 import * as echarts from 'echarts'
+import { addWeatherHeatmap } from '../utils/visualization'
 
 // 响应式数据
 const formState = ref({})
@@ -101,8 +106,10 @@ const selectedHeight = ref('100')
 const selectedElements = ref(['wind', 'temperature', 'risk'])
 const weatherData = ref(null)
 const chartRef = ref(null)
+const showHeatmap = ref(false)
 let weatherMap = null
 let chart = null
+let heatmapLayer = null
 
 // 方法
 const loadWeatherData = async () => {
@@ -181,6 +188,37 @@ const getWindColor = (speed) => {
   return '#f5222d'
 }
 
+// 从风场数据生成热力图演示数据
+const generateHeatmapData = () => {
+  const data = []
+  const centerLat = 39.9042
+  const centerLng = 116.4074
+  for (let i = -5; i <= 5; i++) {
+    for (let j = -5; j <= 5; j++) {
+      const lat = centerLat + i * 0.015
+      const lng = centerLng + j * 0.015
+      const dist = Math.sqrt(i * i + j * j)
+      const intensity = Math.max(0, 1 - dist / 7) * (0.5 + Math.random() * 0.5)
+      data.push([lat, lng, intensity])
+    }
+  }
+  return data
+}
+
+// 监听热力图开关
+watch(showHeatmap, (val) => {
+  if (!weatherMap) return
+  if (val) {
+    const data = generateHeatmapData()
+    heatmapLayer = addWeatherHeatmap(weatherMap, data)
+  } else {
+    if (heatmapLayer && weatherMap.hasLayer(heatmapLayer)) {
+      weatherMap.removeLayer(heatmapLayer)
+    }
+    heatmapLayer = null
+  }
+})
+
 const initChart = () => {
   if (chartRef.value) {
     chart = echarts.init(chartRef.value)
@@ -224,19 +262,22 @@ const updateChart = () => {
 }
 
 // 生命周期
+const handleResize = () => {
+  if (chart) {
+    chart.resize()
+  }
+}
+
 onMounted(() => {
   initWeatherMap()
   initChart()
   
   // 监听窗口大小变化
-  window.addEventListener('resize', () => {
-    if (chart) {
-      chart.resize()
-    }
-  })
+  window.addEventListener('resize', handleResize)
 })
 
 onUnmounted(() => {
+  window.removeEventListener('resize', handleResize)
   if (weatherMap) {
     weatherMap.remove()
   }

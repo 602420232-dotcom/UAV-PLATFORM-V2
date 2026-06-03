@@ -22,7 +22,7 @@
                       name="file"
                       :show-upload-list="false"
                       :before-upload="handleExcelUpload"
-                      accept=".xlsx,.xls"
+                      accept=".csv,.xlsx,.xls"
                     >
                       <a-button>
                         <template #icon>
@@ -39,9 +39,9 @@
               <!-- 无人机配置 -->
               <a-form-item label="无人机">
                 <a-select v-model:value="selectedDrone" placeholder="选择无人机">
-                  <a-option value="1">无人机1</a-option>
-                  <a-option value="2">无人机2</a-option>
-                  <a-option value="3">无人机3</a-option>
+                  <a-select-option value="1">无人机1</a-select-option>
+                  <a-select-option value="2">无人机2</a-select-option>
+                  <a-select-option value="3">无人机3</a-select-option>
                 </a-select>
               </a-form-item>
               
@@ -72,6 +72,33 @@
           </div>
         </a-card>
         
+        <!-- 禁飞区管理 -->
+        <a-card title="禁飞区管理" style="margin-top: 16px">
+          <a-collapse v-model:activeKey="noFlyCollapseActive" :bordered="false">
+            <a-collapse-panel key="noFlyPanel" header="禁飞区列表">
+              <a-button type="primary" size="small" style="margin-bottom: 8px" @click="openNoFlyModal">
+                <template #icon><PlusOutlined /></template>
+                添加禁飞区
+              </a-button>
+              <a-list :data-source="noFlyZones" :locale="{ emptyText: '暂无禁飞区' }">
+                <template #renderItem="{ item }">
+                  <a-list-item>
+                    <a-list-item-meta
+                      :title="item.name"
+                      :description="item.type === 'circle' ? `圆形 · 半径 ${item.radius}m` : '多边形禁飞区'"
+                    />
+                    <template #actions>
+                      <a-button size="small" danger @click="removeNoFlyZone(item.id)">
+                        <template #icon><CloseOutlined /></template>
+                      </a-button>
+                    </template>
+                  </a-list-item>
+                </template>
+              </a-list>
+            </a-collapse-panel>
+          </a-collapse>
+        </a-card>
+
         <!-- 方案管理 -->
         <a-card title="方案管理" style="margin-top: 16px">
           <a-form :model="planForm" layout="vertical">
@@ -182,16 +209,18 @@
             <a-divider />
             <div class="routes-list">
               <h4>路径详情</h4>
-              <a-list v-for="(route, index) in planningResult.routes" :key="index">
-                <a-list-item>
-                  <a-list-item-meta title="无人机" description="无人机" />
-                  <div>
-                    <p>路径: {{ route.path.join(' → ') }}</p>
-                    <p>距离: {{ route.distance }}m</p>
-                    <p>时间: {{ route.time }}min</p>
-                    <p v-if="route.riskLevel">风险等级: {{ route.riskLevel }}</p>
-                  </div>
-                </a-list-item>
+              <a-list :data-source="planningResult.routes">
+                <template #renderItem="{ item, index }">
+                  <a-list-item :key="index">
+                    <a-list-item-meta :title="`无人机 ${item.droneId}`" :description="`无人机 ${item.droneId}`" />
+                    <div>
+                      <p>路径: {{ item.path.join(' → ') }}</p>
+                      <p>距离: {{ item.distance }}m</p>
+                      <p>时间: {{ item.time }}min</p>
+                      <p v-if="item.riskLevel">风险等级: {{ item.riskLevel }}</p>
+                    </div>
+                  </a-list-item>
+                </template>
               </a-list>
             </div>
           </div>
@@ -202,24 +231,72 @@
       </a-col>
     </a-row>
   </a-card>
+
+  <!-- 添加禁飞区模态框 -->
+  <a-modal
+    v-model:visible="showNoFlyModal"
+    title="添加禁飞区"
+    @ok="submitNoFlyZone"
+    @cancel="closeNoFlyModal"
+  >
+    <a-form layout="vertical">
+      <a-form-item label="禁飞区名称">
+        <a-input v-model:value="noFlyForm.name" placeholder="输入禁飞区名称" />
+      </a-form-item>
+      <a-form-item label="禁飞区类型">
+        <a-select v-model:value="noFlyForm.type">
+          <a-select-option value="circle">圆形</a-select-option>
+          <a-select-option value="polygon">多边形</a-select-option>
+        </a-select>
+      </a-form-item>
+      <template v-if="noFlyForm.type === 'circle'">
+        <a-form-item label="中心纬度">
+          <a-input-number v-model:value="noFlyForm.lat" :min="-90" :max="90" :step="0.001" style="width: 100%" />
+        </a-form-item>
+        <a-form-item label="中心经度">
+          <a-input-number v-model:value="noFlyForm.lng" :min="-180" :max="180" :step="0.001" style="width: 100%" />
+        </a-form-item>
+        <a-form-item label="半径（米）">
+          <a-input-number v-model:value="noFlyForm.radius" :min="10" :max="10000" :step="10" style="width: 100%" />
+        </a-form-item>
+      </template>
+      <template v-else>
+        <a-form-item label="多边形坐标点（JSON 数组）">
+          <a-textarea v-model:value="noFlyForm.points" placeholder='[[39.91, 116.41], [39.92, 116.42], [39.93, 116.41]]' :rows="4" />
+        </a-form-item>
+      </template>
+    </a-form>
+  </a-modal>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, h } from 'vue'
 import { 
   PlusOutlined, PlayCircleOutlined, UploadOutlined, 
-  SaveOutlined, DownloadOutlined, PrinterOutlined 
+  SaveOutlined, DownloadOutlined, PrinterOutlined,
+  CloseOutlined
 } from '@ant-design/icons-vue'
 import { Empty, message } from 'ant-design-vue'
 import L from 'leaflet'
+import { addNoFlyZone } from '../utils/visualization'
 
 // 响应式数据
 const formState = ref({})
 const taskPoints = ref([
-  { id: 1, name: '任务点1', lat: 39.9042, lng: 116.4074, demand: 1 },
-  { id: 2, name: '任务点2', lat: 39.9142, lng: 116.4174, demand: 2 },
-  { id: 3, name: '任务点3', lat: 39.9242, lng: 116.4274, demand: 1 }
+  { id: 1, name: '任务点1', lat: 39.9042, lng: 116.4074, demand: 1, startTime: '08:00', endTime: '18:00', serviceTime: 10 },
+  { id: 2, name: '任务点2', lat: 39.9142, lng: 116.4174, demand: 2, startTime: '09:00', endTime: '17:00', serviceTime: 15 },
+  { id: 3, name: '任务点3', lat: 39.9242, lng: 116.4274, demand: 1, startTime: '08:30', endTime: '16:30', serviceTime: 20 }
 ])
+
+// 禁飞区管理
+const noFlyZones = ref([
+  { id: 1, name: '禁飞区A', type: 'circle', center: [39.9142, 116.4174], radius: 200, points: [] },
+  { id: 2, name: '禁飞区B', type: 'circle', center: [39.9242, 116.4274], radius: 150, points: [] }
+])
+const zoneLayers = ref([])
+const showNoFlyModal = ref(false)
+const noFlyForm = ref({ name: '', type: 'circle', lat: 39.91, lng: 116.41, radius: 200, points: '' })
+const noFlyCollapseActive = ref(['noFlyPanel'])
 const selectedDrone = ref('1')
 const selectedWeather = ref('latest')
 const riskThreshold = ref(3.0)
@@ -256,20 +333,27 @@ const addTaskPoint = () => {
     name: `任务点${newId}`,
     lat: 39.9 + Math.random() * 0.1,
     lng: 116.4 + Math.random() * 0.1,
-    demand: 1
+    demand: 1,
+    startTime: '08:00',
+    endTime: '18:00',
+    serviceTime: 10
   })
   updateMap()
 }
 
 const renderTaskItem = (task) => {
-  return (
-    <a-list-item>
-      <a-list-item-meta title={task.name} description={`${task.lat.toFixed(4)}, ${task.lng.toFixed(4)}`} />
-      <a-button size="small" danger @click={() => removeTaskPoint(task.id)}>
-        删除
-      </a-button>
-    </a-list-item>
-  )
+  const timeInfo = `${task.startTime || '08:00'} - ${task.endTime || '18:00'} (服务: ${task.serviceTime || 10}min)`
+  return h('a-list-item', [
+    h('a-list-item-meta', {
+      title: task.name,
+      description: `${task.lat.toFixed(4)}, ${task.lng.toFixed(4)} | ${timeInfo}`
+    }),
+    h('a-button', {
+      size: 'small',
+      danger: true,
+      onClick: () => removeTaskPoint(task.id)
+    }, '删除')
+  ])
 }
 
 const removeTaskPoint = (id) => {
@@ -318,17 +402,46 @@ const executePlanning = async () => {
 }
 
 const handleExcelUpload = (file) => {
-  // 模拟Excel导入
-  message.success('Excel导入成功')
-  // 模拟导入数据
-  taskPoints.value = [
-    { id: 1, name: '任务点1', lat: 39.9042, lng: 116.4074, demand: 1 },
-    { id: 2, name: '任务点2', lat: 39.9142, lng: 116.4174, demand: 2 },
-    { id: 3, name: '任务点3', lat: 39.9242, lng: 116.4274, demand: 1 },
-    { id: 4, name: '任务点4', lat: 39.9342, lng: 116.4374, demand: 2 },
-    { id: 5, name: '任务点5', lat: 39.9442, lng: 116.4474, demand: 1 }
-  ]
-  updateMap()
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    try {
+      const text = e.target.result
+      const lines = text.split('\n').filter(line => line.trim())
+      if (lines.length < 2) {
+        message.error('CSV文件为空或格式不正确')
+        return
+      }
+      // 跳过表头行，从第2行开始解析
+      const newPoints = []
+      let id = 1
+      for (let i = 1; i < lines.length; i++) {
+        const parts = lines[i].split(',').map(s => s.trim())
+        if (parts.length >= 3) {
+          const name = parts[0] || `任务点${id}`
+          const lat = parseFloat(parts[1])
+          const lng = parseFloat(parts[2])
+          const demand = parseInt(parts[3]) || 1
+          const startTime = parts[4] || '08:00'
+          const endTime = parts[5] || '18:00'
+          const serviceTime = parseInt(parts[6]) || 10
+          if (!isNaN(lat) && !isNaN(lng)) {
+            newPoints.push({ id, name, lat, lng, demand, startTime, endTime, serviceTime })
+            id++
+          }
+        }
+      }
+      if (newPoints.length > 0) {
+        taskPoints.value = newPoints
+        updateMap()
+        message.success(`成功导入 ${newPoints.length} 个任务点`)
+      } else {
+        message.error('未解析到有效数据')
+      }
+    } catch (err) {
+      message.error('文件解析失败')
+    }
+  }
+  reader.readAsText(file)
   return false // 阻止自动上传
 }
 
@@ -337,6 +450,19 @@ const savePlan = () => {
     message.error('请输入方案名称')
     return
   }
+  const planData = {
+    name: planForm.value.name,
+    taskPoints: taskPoints.value,
+    timestamp: new Date().toISOString()
+  }
+  const blob = new Blob([JSON.stringify(planData, null, 2)], { type: 'application/json' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `${planForm.value.name}.json`
+  a.click()
+  URL.revokeObjectURL(url)
+
   const newPlan = {
     id: savedPlans.value.length + 1,
     name: planForm.value.name
@@ -347,22 +473,53 @@ const savePlan = () => {
 }
 
 const exportPlan = () => {
+  if (taskPoints.value.length === 0) {
+    message.error('没有可导出的任务点')
+    return
+  }
+  let csv = '名称,纬度,经度,需求量,开始时间,结束时间,服务时间(min)\n'
+  taskPoints.value.forEach(tp => {
+    csv += `${tp.name},${tp.lat},${tp.lng},${tp.demand},${tp.startTime || ''},${tp.endTime || ''},${tp.serviceTime || ''}\n`
+  })
+  const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `${planForm.value.name || '任务点数据'}.csv`
+  a.click()
+  URL.revokeObjectURL(url)
   message.success('方案导出成功')
 }
 
 const printPlan = () => {
-  message.success('方案打印成功')
+  window.print()
 }
 
 const loadPlan = () => {
-  message.success('方案加载成功')
-  // 模拟加载方案
-  taskPoints.value = [
-    { id: 1, name: '任务点A', lat: 39.9042, lng: 116.4074, demand: 1 },
-    { id: 2, name: '任务点B', lat: 39.9142, lng: 116.4174, demand: 2 },
-    { id: 3, name: '任务点C', lat: 39.9242, lng: 116.4274, demand: 1 }
-  ]
-  updateMap()
+  const input = document.createElement('input')
+  input.type = 'file'
+  input.accept = '.json'
+  input.onchange = (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      try {
+        const data = JSON.parse(event.target.result)
+        if (data.taskPoints && Array.isArray(data.taskPoints)) {
+          taskPoints.value = data.taskPoints
+          updateMap()
+          message.success('方案加载成功')
+        } else {
+          message.error('无效的方案文件')
+        }
+      } catch (err) {
+        message.error('文件解析失败')
+      }
+    }
+    reader.readAsText(file)
+  }
+  input.click()
 }
 
 const deletePlan = () => {
@@ -437,10 +594,84 @@ const updateRealtimeData = () => {
   }
 }
 
+// 禁飞区管理方法
+const openNoFlyModal = () => {
+  noFlyForm.value = { name: '', type: 'circle', lat: 39.91, lng: 116.41, radius: 200, points: '' }
+  showNoFlyModal.value = true
+}
+
+const closeNoFlyModal = () => {
+  showNoFlyModal.value = false
+}
+
+const submitNoFlyZone = () => {
+  const form = noFlyForm.value
+  if (!form.name) {
+    message.error('请输入禁飞区名称')
+    return
+  }
+  let newZone
+  if (form.type === 'circle') {
+    newZone = {
+      id: Date.now(),
+      name: form.name,
+      type: 'circle',
+      center: [form.lat, form.lng],
+      radius: form.radius,
+      points: []
+    }
+  } else {
+    let points
+    try {
+      points = JSON.parse(form.points)
+      if (!Array.isArray(points) || points.length < 3) {
+        message.error('多边形至少需要3个顶点')
+        return
+      }
+    } catch {
+      message.error('坐标点格式错误，请输入有效的 JSON 数组')
+      return
+    }
+    newZone = {
+      id: Date.now(),
+      name: form.name,
+      type: 'polygon',
+      center: [],
+      radius: 0,
+      points
+    }
+  }
+  noFlyZones.value.push(newZone)
+  showNoFlyModal.value = false
+  updateNoFlyZones()
+}
+
+const removeNoFlyZone = (id) => {
+  noFlyZones.value = noFlyZones.value.filter(z => z.id !== id)
+  updateNoFlyZones()
+}
+
+const updateNoFlyZones = () => {
+  if (!map) return
+  // 清除旧禁飞区图层
+  zoneLayers.value.forEach(layer => {
+    if (map.hasLayer(layer)) {
+      map.removeLayer(layer)
+    }
+  })
+  zoneLayers.value = []
+  // 添加新禁飞区图层
+  noFlyZones.value.forEach(zone => {
+    const layer = addNoFlyZone(map, zone)
+    zoneLayers.value.push(layer)
+  })
+}
+
 // 生命周期
 let updateInterval = null
 onMounted(() => {
   initMap()
+  updateNoFlyZones()
   updateInterval = setInterval(updateRealtimeData, 5000)
 })
 

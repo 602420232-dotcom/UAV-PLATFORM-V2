@@ -69,7 +69,7 @@
     
     <!-- 添加/编辑数据源模态框 -->
     <a-modal
-      v-model:visible="modalVisible"
+      v-model:open="modalVisible"
       :title="modalTitle"
       @ok="handleOk"
       @cancel="handleCancel"
@@ -106,9 +106,9 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, h } from 'vue'
 import { PlusOutlined, UploadOutlined } from '@ant-design/icons-vue'
-import { message } from 'ant-design-vue'
+import { message, Modal } from 'ant-design-vue'
 
 // 数据源列表
 const dataSources = ref([
@@ -212,9 +212,9 @@ const columns = [
     dataIndex: 'status',
     key: 'status',
     customRender: (text) => {
-      return text === 'active' ? 
-        <a-tag color="green">活跃</a-tag> : 
-        <a-tag color="red">禁用</a-tag>
+      return text === 'active'
+        ? h('a-tag', { color: 'green' }, '活跃')
+        : h('a-tag', { color: 'red' }, '禁用')
     }
   },
   {
@@ -257,15 +257,53 @@ const editDataSource = (record) => {
 
 // 删除数据源
 const deleteDataSource = (id) => {
-  // TODO: 实现删除逻辑
-  message.success('数据源删除成功')
+  Modal.confirm({
+    title: '确认删除',
+    content: '确定要删除该数据源吗？此操作不可恢复。',
+    okText: '确认删除',
+    okType: 'danger',
+    cancelText: '取消',
+    onOk: () => {
+      dataSources.value = dataSources.value.filter(item => item.id !== id)
+      message.success('数据源删除成功')
+    }
+  })
 }
 
 // 处理确定
 const handleOk = () => {
-  // TODO: 实现保存逻辑
+  const { name, type, format, config } = dataSourceForm
+  if (!name || !type) {
+    message.error('请填写数据源名称和类型')
+    return
+  }
+  if (editingDataSource.value) {
+    const index = dataSources.value.findIndex(item => item.id === editingDataSource.value.id)
+    if (index !== -1) {
+      dataSources.value[index] = {
+        ...dataSources.value[index],
+        name,
+        type,
+        format,
+        config
+      }
+    }
+  } else {
+    const newId = dataSources.value.length > 0
+      ? Math.max(...dataSources.value.map(item => item.id)) + 1
+      : 1
+    dataSources.value.push({
+      id: newId,
+      name,
+      type,
+      format,
+      config,
+      status: 'active',
+      createdAt: new Date().toISOString()
+    })
+  }
   modalVisible.value = false
-  message.success('数据源保存成功')
+  message.success(editingDataSource.value ? '数据源更新成功' : '数据源添加成功')
 }
 
 // 处理取消

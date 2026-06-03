@@ -14,7 +14,7 @@
               </a-button>
             </a-col>
             <a-col :span="8">
-              <a-button @click="importDrones">
+              <a-button @click="triggerImport">
                 <template #icon>
                   <UploadOutlined />
                 </template>
@@ -57,9 +57,9 @@
       <a-col :span="24">
         <a-card>
           <template #extra>
-            <a-input-search placeholder="搜索无人机" style="width: 200px" />
+            <a-input-search v-model:value="searchQuery" placeholder="搜索无人机" style="width: 200px" />
           </template>
-          <a-table :columns="columns" :data-source="drones" row-key="id">
+          <a-table :columns="columns" :data-source="filteredDrones" row-key="id">
             <template #status="{ record }">
               <a-tag :color="getStatusColor(record.status)">{{ record.status }}</a-tag>
             </template>
@@ -73,20 +73,20 @@
       </a-col>
     </a-row>
     
-    <!-- 添加无人机模态框 -->
-    <a-modal title="添加无人机" v-model:open="addDroneModalVisible" @ok="handleAddDrone">
+    <!-- 添加/编辑无人机模态框 -->
+    <a-modal :title="isEditing ? '编辑无人机' : '添加无人机'" v-model:open="addDroneModalVisible" @ok="handleModalOk">
       <a-form :model="newDrone" layout="vertical">
         <a-form-item label="无人机编号">
-          <a-input v-model:value="newDrone.id" />
+          <a-input v-model:value="newDrone.id" :disabled="isEditing" />
         </a-form-item>
         <a-form-item label="无人机名称">
           <a-input v-model:value="newDrone.name" />
         </a-form-item>
         <a-form-item label="类型">
           <a-select v-model:value="newDrone.type">
-            <a-option value="multirotor">多旋翼</a-option>
-            <a-option value="fixed-wing">固定翼</a-option>
-            <a-option value="hybrid">混合动力</a-option>
+            <a-select-option value="multirotor">多旋翼</a-select-option>
+            <a-select-option value="fixed-wing">固定翼</a-select-option>
+            <a-select-option value="hybrid">混合动力</a-select-option>
           </a-select>
         </a-form-item>
         <a-form-item label="最大载重">
@@ -103,15 +103,49 @@
         </a-form-item>
       </a-form>
     </a-modal>
+
+    <!-- 无人机详情模态框 -->
+    <a-modal title="无人机详情" v-model:open="detailsModalVisible" :footer="null">
+      <template v-if="selectedDrone">
+        <a-descriptions bordered :column="1">
+          <a-descriptions-item label="无人机编号">{{ selectedDrone.id }}</a-descriptions-item>
+          <a-descriptions-item label="无人机名称">{{ selectedDrone.name }}</a-descriptions-item>
+          <a-descriptions-item label="类型">
+            {{ { multirotor: '多旋翼', 'fixed-wing': '固定翼', hybrid: '混合动力' }[selectedDrone.type] || selectedDrone.type }}
+          </a-descriptions-item>
+          <a-descriptions-item label="状态">
+            <a-tag :color="getStatusColor(selectedDrone.status)">{{ selectedDrone.status }}</a-tag>
+          </a-descriptions-item>
+          <a-descriptions-item label="位置坐标">{{ selectedDrone.location }}</a-descriptions-item>
+          <a-descriptions-item label="电量">
+            <a-progress :percent="selectedDrone.battery" size="small" :status="selectedDrone.battery <= 20 ? 'exception' : 'active'" />
+          </a-descriptions-item>
+          <a-descriptions-item label="最大载重(kg)">{{ selectedDrone.maxPayload }}</a-descriptions-item>
+          <a-descriptions-item label="最大续航(min)">{{ selectedDrone.maxEndurance }}</a-descriptions-item>
+          <a-descriptions-item label="最大速度(km/h)">{{ selectedDrone.maxSpeed }}</a-descriptions-item>
+          <a-descriptions-item label="描述">{{ selectedDrone.description }}</a-descriptions-item>
+        </a-descriptions>
+      </template>
+    </a-modal>
+
+    <!-- 隐藏的文件输入 -->
+    <input type="file" ref="fileInputRef" accept=".csv" style="display: none" @change="handleFileImport" />
   </a-card>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue'
 import { PlusOutlined, UploadOutlined, DownloadOutlined } from '@ant-design/icons-vue'
+import { message } from 'ant-design-vue'
 
 // 响应式数据
 const addDroneModalVisible = ref(false)
+const isEditing = ref(false)
+const detailsModalVisible = ref(false)
+const selectedDrone = ref(null)
+const searchQuery = ref('')
+const fileInputRef = ref(null)
+
 const newDrone = ref({
   id: '',
   name: '',
@@ -175,6 +209,15 @@ const idleCount = computed(() => {
   return drones.value.filter(drone => drone.status === '待命').length
 })
 
+// 搜索过滤
+const filteredDrones = computed(() => {
+  if (!searchQuery.value) {
+    return drones.value
+  }
+  const q = searchQuery.value.toLowerCase()
+  return drones.value.filter(drone => drone.name.toLowerCase().includes(q))
+})
+
 // 表格列配置
 const columns = [
   {
@@ -225,15 +268,39 @@ const columns = [
   }
 ]
 
+// ID 生成
+const generateId = () => {
+  const maxNum = drones.value.reduce((max, drone) => {
+    const match = drone.id.match(/UAV-(\d+)/)
+    const num = match ? parseInt(match[1], 10) : 0
+    return Math.max(max, num)
+  }, 0)
+  return `UAV-${String(maxNum + 1).padStart(3, '0')}`
+}
+
+// 重置表单
+const resetNewDrone = () => {
+  newDrone.value = {
+    id: '',
+    name: '',
+    type: 'multirotor',
+    maxPayload: 5,
+    maxEndurance: 60,
+    maxSpeed: 50,
+    description: ''
+  }
+}
+
 // 方法
 const showAddDroneModal = () => {
+  isEditing.value = false
+  resetNewDrone()
   addDroneModalVisible.value = true
 }
 
 const handleAddDrone = () => {
-  // 添加新无人机
   drones.value.push({
-    id: newDrone.value.id,
+    id: newDrone.value.id || generateId(),
     name: newDrone.value.name,
     type: newDrone.value.type,
     maxPayload: newDrone.value.maxPayload,
@@ -244,20 +311,34 @@ const handleAddDrone = () => {
     battery: 100,
     description: newDrone.value.description
   })
-  
-  // 重置表单
-  newDrone.value = {
-    id: '',
-    name: '',
-    type: 'multirotor',
-    maxPayload: 5,
-    maxEndurance: 60,
-    maxSpeed: 50,
-    description: ''
-  }
-  
-  // 关闭模态框
+  resetNewDrone()
   addDroneModalVisible.value = false
+}
+
+const handleEditDrone = () => {
+  const index = drones.value.findIndex(drone => drone.id === newDrone.value.id)
+  if (index !== -1) {
+    drones.value[index] = {
+      ...drones.value[index],
+      name: newDrone.value.name,
+      type: newDrone.value.type,
+      maxPayload: newDrone.value.maxPayload,
+      maxEndurance: newDrone.value.maxEndurance,
+      maxSpeed: newDrone.value.maxSpeed,
+      description: newDrone.value.description
+    }
+  }
+  resetNewDrone()
+  isEditing.value = false
+  addDroneModalVisible.value = false
+}
+
+const handleModalOk = () => {
+  if (isEditing.value) {
+    handleEditDrone()
+  } else {
+    handleAddDrone()
+  }
 }
 
 const getStatusColor = (status) => {
@@ -272,8 +353,17 @@ const getStatusColor = (status) => {
 }
 
 const editDrone = (record) => {
-  console.log('编辑无人机:', record)
-  // 这里可以打开编辑模态框
+  isEditing.value = true
+  newDrone.value = {
+    id: record.id,
+    name: record.name,
+    type: record.type,
+    maxPayload: record.maxPayload,
+    maxEndurance: record.maxEndurance,
+    maxSpeed: record.maxSpeed,
+    description: record.description
+  }
+  addDroneModalVisible.value = true
 }
 
 const deleteDrone = (id) => {
@@ -281,18 +371,81 @@ const deleteDrone = (id) => {
 }
 
 const viewDetails = (record) => {
-  console.log('查看详情:', record)
-  // 这里可以打开详情模态框
+  selectedDrone.value = { ...record }
+  detailsModalVisible.value = true
 }
 
-const importDrones = () => {
-  console.log('导入无人机')
-  // 这里可以实现文件上传
+const triggerImport = () => {
+  fileInputRef.value?.click()
+}
+
+const handleFileImport = (event) => {
+  const file = event.target.files[0]
+  if (!file) return
+
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    const text = e.target?.result
+    if (typeof text !== 'string') return
+
+    const lines = text.split('\n').filter(line => line.trim() !== '')
+    let importedCount = 0
+
+    for (let i = 0; i < lines.length; i++) {
+      const parts = lines[i].split(',').map(s => s.trim())
+      // 跳过标题行
+      if (i === 0 && parts[0] === 'name') continue
+
+      const [name, type, maxPayload, maxEndurance, maxSpeed, description] = parts
+      if (!name) continue
+
+      drones.value.push({
+        id: generateId(),
+        name,
+        type: type || 'multirotor',
+        maxPayload: parseFloat(maxPayload) || 5,
+        maxEndurance: parseFloat(maxEndurance) || 60,
+        maxSpeed: parseFloat(maxSpeed) || 50,
+        status: '待命',
+        location: '39.9042, 116.4074',
+        battery: 100,
+        description: description || ''
+      })
+      importedCount++
+    }
+
+    message.success(`成功导入 ${importedCount} 架无人机`)
+    // 重置 file input 以允许重复选择同一文件
+    event.target.value = ''
+  }
+  reader.readAsText(file)
 }
 
 const exportDrones = () => {
-  console.log('导出无人机')
-  // 这里可以实现文件下载
+  const header = 'name,type,status,location,battery,maxPayload,maxEndurance,maxSpeed,description'
+  const rows = drones.value.map(drone => {
+    return [
+      drone.name,
+      drone.type,
+      drone.status,
+      drone.location,
+      drone.battery,
+      drone.maxPayload,
+      drone.maxEndurance,
+      drone.maxSpeed,
+      drone.description
+    ].join(',')
+  })
+  const csv = [header, ...rows].join('\n')
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = 'drones_export.csv'
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  URL.revokeObjectURL(url)
 }
 </script>
 

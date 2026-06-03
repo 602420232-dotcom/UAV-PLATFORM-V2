@@ -2,6 +2,27 @@
 
 import * as echarts from 'echarts'
 import L from 'leaflet'
+import 'leaflet.heat'
+
+// ECharts 图表实例注册表 (用于正确清理 resize 事件)
+const chartRegistry = new Map()
+
+function registerChart(chart) {
+  const resizeHandler = () => {
+    try { chart.resize() } catch (e) { /* chart already disposed */ }
+  }
+  chartRegistry.set(chart, resizeHandler)
+  window.addEventListener('resize', resizeHandler)
+  return chart
+}
+
+function unregisterChart(chart) {
+  const resizeHandler = chartRegistry.get(chart)
+  if (resizeHandler) {
+    window.removeEventListener('resize', resizeHandler)
+    chartRegistry.delete(chart)
+  }
+}
 
 /**
  * 初始化地图
@@ -79,7 +100,7 @@ export function addPath(map, path, options = {}) {
 export function addTaskMarker(map, task) {
   const icon = L.divIcon({
     className: 'task-marker',
-    html: `<div style="width: 20px; height: 20px; background: #52c41a; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">${task.id.charAt(0)}</div>`,
+    html: `<div style="width: 20px; height: 20px; background: #52c41a; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">${String(task.id).charAt(0)}</div>`,
     iconSize: [20, 20]
   })
   
@@ -140,13 +161,8 @@ export function initLineChart(containerId, options = {}) {
   
   const mergedOptions = { ...defaultOptions, ...options }
   chart.setOption(mergedOptions)
-  
-  // 响应式
-  window.addEventListener('resize', () => {
-    chart.resize()
-  })
-  
-  return chart
+
+  return registerChart(chart)
 }
 
 /**
@@ -181,13 +197,8 @@ export function initBarChart(containerId, options = {}) {
   
   const mergedOptions = { ...defaultOptions, ...options }
   chart.setOption(mergedOptions)
-  
-  // 响应式
-  window.addEventListener('resize', () => {
-    chart.resize()
-  })
-  
-  return chart
+
+  return registerChart(chart)
 }
 
 /**
@@ -224,13 +235,8 @@ export function initPieChart(containerId, options = {}) {
   
   const mergedOptions = { ...defaultOptions, ...options }
   chart.setOption(mergedOptions)
-  
-  // 响应式
-  window.addEventListener('resize', () => {
-    chart.resize()
-  })
-  
-  return chart
+
+  return registerChart(chart)
 }
 
 /**
@@ -290,13 +296,8 @@ export function initHeatmapChart(containerId, options = {}) {
   
   const mergedOptions = { ...defaultOptions, ...options }
   chart.setOption(mergedOptions)
-  
-  // 响应式
-  window.addEventListener('resize', () => {
-    chart.resize()
-  })
-  
-  return chart
+
+  return registerChart(chart)
 }
 
 /**
@@ -325,13 +326,8 @@ export function initRadarChart(containerId, options = {}) {
   
   const mergedOptions = { ...defaultOptions, ...options }
   chart.setOption(mergedOptions)
-  
-  // 响应式
-  window.addEventListener('resize', () => {
-    chart.resize()
-  })
-  
-  return chart
+
+  return registerChart(chart)
 }
 
 /**
@@ -413,13 +409,169 @@ export function initGaugeChart(containerId, options = {}) {
   
   const mergedOptions = { ...defaultOptions, ...options }
   chart.setOption(mergedOptions)
-  
-  // 响应式
-  window.addEventListener('resize', () => {
-    chart.resize()
+
+  return registerChart(chart)
+}
+
+// ──────────────────────────────────────────────
+// Feature 1: 禁飞区可视化
+// ──────────────────────────────────────────────
+
+/**
+ * 添加禁飞区
+ * @param {L.Map} map - 地图实例
+ * @param {Object} zone - 禁飞区数据 { id, name, center: [lat,lng], radius, type: 'circle'|'polygon', points }
+ * @returns {L.Circle|L.Polygon} 图层实例
+ */
+export function addNoFlyZone(map, zone) {
+  let layer
+  const baseOptions = {
+    color: '#ff0000',
+    fillColor: '#ff0000',
+    fillOpacity: 0.2,
+    weight: 2
+  }
+
+  if (zone.type === 'circle') {
+    layer = L.circle(zone.center, {
+      ...baseOptions,
+      radius: zone.radius
+    }).addTo(map)
+  } else if (zone.type === 'polygon') {
+    layer = L.polygon(zone.points, baseOptions).addTo(map)
+  }
+
+  if (layer) {
+    layer.bindPopup([
+      '<b>🚫 禁飞区: ' + (zone.name || '未命名') + '</b>',
+      '<hr>',
+      '<b>ID:</b> ' + (zone.id || '-'),
+      '<b>类型:</b> ' + (zone.type === 'circle' ? '圆形' : '多边形'),
+      '<b>限制:</b> 禁止无人机飞入'
+    ].join('<br>'))
+  }
+
+  return layer
+}
+
+// ──────────────────────────────────────────────
+// Feature 2: 气象热力图
+// ──────────────────────────────────────────────
+
+/**
+ * 添加气象热力图
+ * @param {L.Map} map - 地图实例
+ * @param {Array} data - 热力图数据 [[lat, lng, intensity], ...]
+ * @param {Object} options - 配置选项 { radius, blur, maxZoom, gradient }
+ * @returns {L.HeatLayer} 热力图实例
+ */
+export function addWeatherHeatmap(map, data, options = {}) {
+  const defaultOptions = {
+    radius: 25,
+    blur: 15,
+    maxZoom: 17,
+    gradient: {
+      0.0: '#00ff00',
+      0.3: '#ffff00',
+      0.6: '#ff8800',
+      0.9: '#ff0000',
+      1.0: '#880000'
+    }
+  }
+
+  const mergedOptions = { ...defaultOptions, ...options }
+
+  const heatLayer = L.heatLayer(data, mergedOptions).addTo(map)
+
+  return heatLayer
+}
+
+// ──────────────────────────────────────────────
+// Feature 3: 风险标注路径
+// ──────────────────────────────────────────────
+
+/**
+ * 获取风险等级对应颜色
+ * @param {number} risk - 风险值 0-10
+ * @returns {string} 颜色值
+ */
+function getRiskColor(risk) {
+  if (risk < 3) return '#52c41a'
+  if (risk < 6) return '#fa8c16'
+  if (risk < 8) return '#f5222d'
+  return '#a8071a'
+}
+
+/**
+ * 获取风险等级文本
+ * @param {number} risk - 风险值 0-10
+ * @returns {string} 等级描述
+ */
+function getRiskLevelText(risk) {
+  if (risk < 3) return '低'
+  if (risk < 6) return '中'
+  if (risk < 8) return '高'
+  return '极高'
+}
+
+/**
+ * 添加风险标注路径
+ * @param {L.Map} map - 地图实例
+ * @param {Array} segments - 路径段数组 [{ points: [[lat,lng],...], risk: number }]
+ * @param {Object} options - 配置选项（预留）
+ * @returns {Object} { layers: L.Polyline[], legend: L.Control }
+ */
+export function addRiskPath(map, segments, options = {}) {
+  const layers = []
+
+  // 渲染每个路径段
+  segments.forEach((segment) => {
+    const risk = Math.max(0, Math.min(10, segment.risk))
+    const color = getRiskColor(risk)
+    const weight = 2 + risk / 3
+
+    const polyline = L.polyline(segment.points, {
+      color: color,
+      weight: weight,
+      opacity: 0.8
+    }).addTo(map)
+
+    polyline.bindPopup([
+      '<b>路径段</b>',
+      '<b>风险等级:</b> ' + risk.toFixed(1) + '/10',
+      '<b>风险级别:</b> ' + getRiskLevelText(risk)
+    ].join('<br>'))
+
+    layers.push(polyline)
   })
-  
-  return chart
+
+  // 创建图例控件
+  const LegendControl = L.Control.extend({
+    onAdd: function () {
+      const div = L.DomUtil.create('div', 'risk-legend')
+      div.style.cssText = [
+        'background: white',
+        'padding: 10px',
+        'border-radius: 4px',
+        'box-shadow: 0 2px 6px rgba(0,0,0,0.3)',
+        'font-size: 13px',
+        'line-height: 1.6'
+      ].join(';')
+      div.innerHTML = [
+        '<div style="font-weight:bold;margin-bottom:6px;">风险等级</div>',
+        '<div><span style="display:inline-block;width:16px;height:16px;background:#52c41a;margin-right:6px;border-radius:2px;vertical-align:middle;"></span>0-3 低风险</div>',
+        '<div><span style="display:inline-block;width:16px;height:16px;background:#fa8c16;margin-right:6px;border-radius:2px;vertical-align:middle;"></span>3-6 中风险</div>',
+        '<div><span style="display:inline-block;width:16px;height:16px;background:#f5222d;margin-right:6px;border-radius:2px;vertical-align:middle;"></span>6-8 高风险</div>',
+        '<div><span style="display:inline-block;width:16px;height:16px;background:#a8071a;margin-right:6px;border-radius:2px;vertical-align:middle;"></span>8-10 极高风险</div>'
+      ].join('')
+      return div
+    }
+  })
+
+  const legend = new LegendControl({ position: 'bottomright' })
+  legend.addTo(map)
+
+  return { layers: layers, legend: legend }
 }
 
 /**
@@ -428,6 +580,7 @@ export function initGaugeChart(containerId, options = {}) {
  */
 export function destroyChart(chart) {
   if (chart) {
+    unregisterChart(chart)
     chart.dispose()
   }
 }

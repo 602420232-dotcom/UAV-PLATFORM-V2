@@ -5,6 +5,7 @@ import router from './router'
 import Antd from 'ant-design-vue'
 import 'ant-design-vue/dist/reset.css'
 import axios from 'axios'
+import i18n from './locales'
 
 // 配置axios
 axios.defaults.baseURL = '/api'
@@ -16,6 +17,7 @@ const app = createApp(App)
 // 使用插件
 app.use(createPinia())
 app.use(router)
+app.use(i18n)
 app.use(Antd)
 
 // 全局属性

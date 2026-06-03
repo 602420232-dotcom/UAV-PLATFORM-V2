@@ -8,10 +8,10 @@
         </a-col>
         <a-col :span="6">
           <a-select v-model:value="statusFilter" placeholder="状态筛选">
-            <a-option value="">全部</a-option>
-            <a-option value="成功">成功</a-option>
-            <a-option value="失败">失败</a-option>
-            <a-option value="进行中">进行中</a-option>
+            <a-select-option value="">全部</a-select-option>
+            <a-select-option value="成功">成功</a-select-option>
+            <a-select-option value="失败">失败</a-select-option>
+            <a-select-option value="进行中">进行中</a-select-option>
           </a-select>
         </a-col>
         <a-col :span="6">
@@ -192,8 +192,7 @@ const searchHistory = async () => {
 }
 
 const handleTableChange = (pagination, filters, sorter) => {
-  console.log('表格变化:', pagination, filters, sorter)
-  // 这里可以处理分页、排序等
+  // 表格变化
 }
 
 const viewDetails = (record) => {
@@ -202,9 +201,7 @@ const viewDetails = (record) => {
 }
 
 const exportResult = (record) => {
-  console.log('导出结果:', record)
-  // 这里可以实现导出功能
-  alert('导出功能已触发')
+  // 导出结果
 }
 
 const generateMockData = () => {

@@ -14,7 +14,7 @@ export const useDataStore = defineStore('data', () => {
   const weatherData = ref(null)
   const windField = ref([])
   const dataSources = ref([])
-  
+
   const loading = ref({
     drones: false,
     tasks: false,
@@ -30,7 +30,9 @@ export const useDataStore = defineStore('data', () => {
     dataSources: null
   })
   const useDemo = ref(true)
-  
+  const lastApiFailureTime = ref(null)
+  const apiAvailable = ref(false)
+
   // 待取消的请求控制器
   const pendingControllers = new Map()
 
@@ -39,15 +41,22 @@ export const useDataStore = defineStore('data', () => {
     loading.value[type] = true
     error.value[type] = null
     try {
-      const response = await apiFn()
+      const controller = new AbortController()
+      addController(type, controller)
+      const response = await apiFn(controller.signal)
+      removeController(type)
       const result = normalizeApiResponse(response)
       if (result && (Array.isArray(result) ? result.length > 0 : true)) {
         useDemo.value = false
+        apiAvailable.value = true
         return result
       }
     } catch (err) {
+      if (err.name === 'AbortError') return demoValue
       console.warn(`[${type}] API failed, falling back to demo`, err)
       error.value[type] = err.message
+      lastApiFailureTime.value = Date.now()
+      apiAvailable.value = false
     } finally {
       loading.value[type] = false
     }
@@ -81,45 +90,40 @@ export const useDataStore = defineStore('data', () => {
   }
 
   async function fetchWeather(lat = 39.9, lng = 116.4) {
-    try {
-      loading.value.weather = true
-      const response = await weatherApi.getWeatherCurrent(lat, lng)
-      const data = normalizeApiResponse(response)
-      if (data) {
-        weatherData.value = data
-        if (data.windField) windField.value = data.windField
-        useDemo.value = false
-      }
-    } catch (err) {
-      weatherData.value = demoData.weather
-      windField.value = demoData.weather.windField
-      console.warn('[weather] API failed, falling back to demo', err)
-    } finally {
-      loading.value.weather = false
+    await fetchWithFallback(
+      () => weatherApi.getWeatherCurrent(lat, lng),
+      () => {
+        weatherData.value = demoData.weather
+        if (demoData.weather.windField) windField.value = demoData.weather.windField
+        return demoData.weather
+      },
+      'weather'
+    )
+    if (weatherData.value && weatherData.value.windField) {
+      windField.value = weatherData.value.windField
     }
   }
-  
+
   // 数据源管理
   async function fetchDataSources() {
     dataSources.value = await fetchWithFallback(
       () => dataSourceApi.getDataSources(),
-      [],
-      'dataSources'
-    )
-    // 如果API返回空，使用演示数据
-    if (dataSources.value.length === 0) {
-      dataSources.value = [
+      [
         { id: 1, name: 'GOES-16卫星数据', type: 'satellite', format: 'netcdf', status: 'active', createdAt: '2024-01-01T00:00:00Z' },
         { id: 2, name: '多普勒雷达数据', type: 'radar', format: 'hdf5', status: 'active', createdAt: '2024-01-02T00:00:00Z' },
         { id: 3, name: '气象地面站数据', type: 'ground_station', format: 'csv', status: 'active', createdAt: '2024-01-03T00:00:00Z' },
         { id: 4, name: '海洋浮标数据', type: 'buoy', format: 'json', status: 'active', createdAt: '2024-01-04T00:00:00Z' }
-      ]
-    }
+      ],
+      'dataSources'
+    )
   }
-  
+
   async function createDataSource(data) {
     try {
-      const response = await dataSourceApi.createDataSource(data)
+      const controller = new AbortController()
+      addController('createDataSource', controller)
+      const response = await dataSourceApi.createDataSource(data, { signal: controller.signal })
+      removeController('createDataSource')
       const newDataSource = response || {
         id: Math.max(0, ...dataSources.value.map(item => item.id), 0) + 1,
         ...data,
@@ -128,16 +132,21 @@ export const useDataStore = defineStore('data', () => {
         updatedAt: new Date().toISOString()
       }
       dataSources.value.unshift(newDataSource)
+      apiAvailable.value = true
       return newDataSource
     } catch (err) {
+      if (err.name === 'AbortError') throw err
       console.error('[createDataSource]', err)
       throw err
     }
   }
-  
+
   async function updateDataSource(id, data) {
     try {
-      await dataSourceApi.updateDataSource(id, data)
+      const controller = new AbortController()
+      addController('updateDataSource', controller)
+      await dataSourceApi.updateDataSource(id, data, { signal: controller.signal })
+      removeController('updateDataSource')
       const index = dataSources.value.findIndex(item => item.id === id)
       if (index > -1) {
         dataSources.value[index] = {
@@ -147,33 +156,41 @@ export const useDataStore = defineStore('data', () => {
         }
       }
     } catch (err) {
+      if (err.name === 'AbortError') throw err
       console.error('[updateDataSource]', err)
       throw err
     }
   }
-  
+
   async function deleteDataSource(id) {
     try {
-      await dataSourceApi.deleteDataSource(id)
+      const controller = new AbortController()
+      addController('deleteDataSource', controller)
+      await dataSourceApi.deleteDataSource(id, { signal: controller.signal })
+      removeController('deleteDataSource')
       const index = dataSources.value.findIndex(item => item.id === id)
       if (index > -1) {
         dataSources.value.splice(index, 1)
       }
     } catch (err) {
+      if (err.name === 'AbortError') throw err
       console.error('[deleteDataSource]', err)
-      // 即使API失败也尝试本地删除
       const index = dataSources.value.findIndex(item => item.id === id)
       if (index > -1) {
         dataSources.value.splice(index, 1)
       }
     }
   }
-  
+
   // 请求取消管理
   function addController(id, controller) {
     pendingControllers.set(id, controller)
   }
-  
+
+  function removeController(id) {
+    pendingControllers.delete(id)
+  }
+
   function cancelRequest(id) {
     const controller = pendingControllers.get(id)
     if (controller) {
@@ -181,7 +198,7 @@ export const useDataStore = defineStore('data', () => {
       pendingControllers.delete(id)
     }
   }
-  
+
   function cancelAllRequests() {
     pendingControllers.forEach((controller) => controller.abort())
     pendingControllers.clear()
@@ -211,6 +228,8 @@ export const useDataStore = defineStore('data', () => {
     loading,
     error,
     useDemo,
+    apiAvailable,
+    lastApiFailureTime,
 
     // Actions
     fetchDrones,

@@ -100,7 +100,8 @@
       
       <!-- 系统告警 -->
       <a-col :span="12">
-        <a-card title="系统告警" :extra="<a href='#'>查看全部</a>">
+        <a-card title="系统告警">
+          <template #extra><a href="#">查看全部</a></template>
           <a-list :data-source="alerts" :render-item="renderAlertItem" />
         </a-card>
       </a-col>
@@ -116,8 +117,8 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, watch } from 'vue'
-import { CheckCircleOutlined, CpuOutlined, DatabaseOutlined, HddOutlined, RocketOutlined, CloudOutlined, OrderedListOutlined, ClockCircleOutlined, HeartOutlined, AlertOutlined, LineChartOutlined, BarChartOutlined, PieChartOutlined } from '@ant-design/icons-vue'
+import { ref, onMounted, onUnmounted, h } from 'vue'
+import { CheckCircleOutlined, DashboardOutlined, DatabaseOutlined, HddOutlined, HeartOutlined } from '@ant-design/icons-vue'
 import * as echarts from 'echarts'
 
 // 响应式数据
@@ -177,21 +178,23 @@ let taskStatsChart = null
 // 方法
 const renderServiceItem = (service) => {
   const statusColor = service.status === '运行中' ? 'green' : 'red'
-  return (
-    <a-list-item>
-      <a-list-item-meta title={service.name} description={`响应时间: ${service.response} | 最后更新: ${service.lastUpdated}`} />
-      <a-tag :color={statusColor}>{service.status}</a-tag>
-    </a-list-item>
-  )
+  return h('a-list-item', [
+    h('a-list-item-meta', {
+      title: service.name,
+      description: `响应时间: ${service.response} | 最后更新: ${service.lastUpdated}`
+    }),
+    h('a-tag', { color: statusColor }, service.status)
+  ])
 }
 
 const renderAlgorithmItem = (algorithm) => {
-  return (
-    <a-list-item>
-      <a-list-item-meta title={algorithm.name} description={`平均时间: ${algorithm.averageTime}`} />
-      <a-tag color="blue">{algorithm.successRate}</a-tag>
-    </a-list-item>
-  )
+  return h('a-list-item', [
+    h('a-list-item-meta', {
+      title: algorithm.name,
+      description: `平均时间: ${algorithm.averageTime}`
+    }),
+    h('a-tag', { color: 'blue' }, algorithm.successRate)
+  ])
 }
 
 const renderAlertItem = (alert) => {
@@ -200,12 +203,13 @@ const renderAlertItem = (alert) => {
     'warning': 'orange',
     'error': 'red'
   }
-  return (
-    <a-list-item>
-      <a-list-item-meta title={alert.message} description={alert.time} />
-      <a-tag :color={levelColor[alert.level]}>{alert.level}</a-tag>
-    </a-list-item>
-  )
+  return h('a-list-item', [
+    h('a-list-item-meta', {
+      title: alert.message,
+      description: alert.time
+    }),
+    h('a-tag', { color: levelColor[alert.level] }, alert.level)
+  ])
 }
 
 const initLoadChart = () => {
@@ -443,18 +447,6 @@ onUnmounted(() => {
   if (loadChart) loadChart.dispose()
   if (responseTimeChart) responseTimeChart.dispose()
   if (taskStatsChart) taskStatsChart.dispose()
-})
-
-onUnmounted(() => {
-  if (loadChart) {
-    loadChart.dispose()
-  }
-  if (responseTimeChart) {
-    responseTimeChart.dispose()
-  }
-  if (taskStatsChart) {
-    taskStatsChart.dispose()
-  }
 })
 </script>
 

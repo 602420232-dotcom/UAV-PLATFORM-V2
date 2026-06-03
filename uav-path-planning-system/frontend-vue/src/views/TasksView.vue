@@ -46,15 +46,15 @@
             <template #action="{ record }">
               <a-button size="small" @click="editTask(record)">编辑</a-button>
               <a-button size="small" danger @click="deleteTask(record.id)">删除</a-button>
-              <a-button size="small" @click="assignTask(record.id)">分配</a-button>
+              <a-button size="small" @click="assignTask(record)">分配</a-button>
             </template>
           </a-table>
         </a-card>
       </a-col>
     </a-row>
     
-    <!-- 添加任务模态框 -->
-    <a-modal title="添加任务" v-model:open="addTaskModalVisible" @ok="handleAddTask">
+    <!-- 添加/编辑任务模态框 -->
+    <a-modal :title="isEditing ? '编辑任务' : '添加任务'" v-model:open="addTaskModalVisible" @ok="isEditing ? handleEditTask : handleAddTask">
       <a-form :model="newTask" layout="vertical">
         <a-form-item label="任务名称">
           <a-input v-model:value="newTask.name" />
@@ -78,13 +78,29 @@
         </a-form-item>
         <a-form-item label="优先级">
           <a-select v-model:value="newTask.priority">
-            <a-option value="low">低</a-option>
-            <a-option value="medium">中</a-option>
-            <a-option value="high">高</a-option>
+            <a-select-option value="low">低</a-select-option>
+            <a-select-option value="medium">中</a-select-option>
+            <a-select-option value="high">高</a-select-option>
           </a-select>
         </a-form-item>
         <a-form-item label="描述">
           <a-textarea v-model:value="newTask.description" />
+        </a-form-item>
+      </a-form>
+    </a-modal>
+
+    <!-- 分配任务模态框 -->
+    <a-modal title="分配任务" v-model:open="assignModalVisible" @ok="confirmAssign" @cancel="assignModalVisible = false">
+      <a-form layout="vertical">
+        <a-form-item label="任务名称">
+          <a-input :value="selectedTaskForAssign?.name" disabled />
+        </a-form-item>
+        <a-form-item label="选择无人机">
+          <a-select v-model:value="assignDroneId" placeholder="请选择无人机">
+            <a-select-option value="1">无人机1</a-select-option>
+            <a-select-option value="2">无人机2</a-select-option>
+            <a-select-option value="3">无人机3</a-select-option>
+          </a-select>
         </a-form-item>
       </a-form>
     </a-modal>
@@ -94,9 +110,16 @@
 <script setup>
 import { ref } from 'vue'
 import { PlusOutlined, UploadOutlined, DownloadOutlined } from '@ant-design/icons-vue'
+import { message } from 'ant-design-vue'
 
 // 响应式数据
 const addTaskModalVisible = ref(false)
+const isEditing = ref(false)
+const editingTaskId = ref(null)
+const assignModalVisible = ref(false)
+const selectedTaskForAssign = ref(null)
+const assignDroneId = ref(undefined)
+
 const newTask = ref({
   name: '',
   type: 'delivery',
@@ -194,27 +217,15 @@ const columns = [
   }
 ]
 
-// 方法
-const showAddTaskModal = () => {
-  addTaskModalVisible.value = true
+// 工具函数
+const formatDate = (date) => {
+  if (!date) return ''
+  const d = new Date(date)
+  const pad = (n) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`
 }
 
-const handleAddTask = () => {
-  // 添加新任务
-  const newId = tasks.value.length + 1
-  tasks.value.push({
-    id: newId,
-    name: newTask.value.name,
-    type: newTask.value.type,
-    location: newTask.value.location,
-    startTime: newTask.value.startTime.toLocaleString(),
-    endTime: newTask.value.endTime.toLocaleString(),
-    priority: newTask.value.priority,
-    status: '待分配',
-    description: newTask.value.description
-  })
-  
-  // 重置表单
+const resetNewTask = () => {
   newTask.value = {
     name: '',
     type: 'delivery',
@@ -224,9 +235,32 @@ const handleAddTask = () => {
     priority: 'medium',
     description: ''
   }
-  
-  // 关闭模态框
+}
+
+// 方法
+const showAddTaskModal = () => {
+  isEditing.value = false
+  editingTaskId.value = null
+  resetNewTask()
+  addTaskModalVisible.value = true
+}
+
+const handleAddTask = () => {
+  const newId = tasks.value.length > 0 ? Math.max(...tasks.value.map(t => t.id)) + 1 : 1
+  tasks.value.push({
+    id: newId,
+    name: newTask.value.name,
+    type: newTask.value.type,
+    location: newTask.value.location,
+    startTime: formatDate(newTask.value.startTime),
+    endTime: formatDate(newTask.value.endTime),
+    priority: newTask.value.priority,
+    status: '待分配',
+    description: newTask.value.description
+  })
+  resetNewTask()
   addTaskModalVisible.value = false
+  message.success('任务添加成功')
 }
 
 const getStatusColor = (status) => {
@@ -241,27 +275,86 @@ const getStatusColor = (status) => {
 }
 
 const editTask = (record) => {
-  console.log('编辑任务:', record)
-  // 这里可以打开编辑模态框
+  isEditing.value = true
+  editingTaskId.value = record.id
+  newTask.value = {
+    name: record.name,
+    type: record.type,
+    location: record.location,
+    startTime: record.startTime ? new Date(record.startTime) : new Date(),
+    endTime: record.endTime ? new Date(record.endTime) : new Date(),
+    priority: record.priority,
+    description: record.description
+  }
+  addTaskModalVisible.value = true
+}
+
+const handleEditTask = () => {
+  const index = tasks.value.findIndex(t => t.id === editingTaskId.value)
+  if (index !== -1) {
+    tasks.value[index] = {
+      ...tasks.value[index],
+      name: newTask.value.name,
+      type: newTask.value.type,
+      location: newTask.value.location,
+      startTime: formatDate(newTask.value.startTime),
+      endTime: formatDate(newTask.value.endTime),
+      priority: newTask.value.priority,
+      description: newTask.value.description
+    }
+  }
+  resetNewTask()
+  addTaskModalVisible.value = false
+  message.success('任务编辑成功')
 }
 
 const deleteTask = (id) => {
   tasks.value = tasks.value.filter(task => task.id !== id)
+  message.success('任务删除成功')
 }
 
-const assignTask = (id) => {
-  console.log('分配任务:', id)
-  // 这里可以打开分配模态框
+const assignTask = (record) => {
+  selectedTaskForAssign.value = record
+  assignDroneId.value = undefined
+  assignModalVisible.value = true
+}
+
+const confirmAssign = () => {
+  if (!assignDroneId.value) {
+    message.warning('请选择无人机')
+    return
+  }
+  const task = tasks.value.find(t => t.id === selectedTaskForAssign.value.id)
+  if (task) {
+    task.status = '已分配'
+  }
+  assignModalVisible.value = false
+  message.success('任务分配成功')
 }
 
 const importTasks = () => {
-  console.log('导入任务')
-  // 这里可以实现文件上传
+  // 导入任务
 }
 
 const exportTasks = () => {
-  console.log('导出任务')
-  // 这里可以实现文件下载
+  if (tasks.value.length === 0) {
+    message.warning('没有可导出的任务')
+    return
+  }
+  const headers = ['任务ID', '任务名称', '任务类型', '任务点', '开始时间', '结束时间', '优先级', '状态', '描述']
+  let csv = headers.join(',') + '\n'
+  tasks.value.forEach(task => {
+    const row = [task.id, task.name, task.type, task.location, task.startTime, task.endTime, task.priority, task.status, task.description]
+    csv += row.join(',') + '\n'
+  })
+  const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = 'tasks_export.csv'
+  a.click()
+  URL.revokeObjectURL(url)
+  message.success('任务导出成功')
 }
 </script>
 
