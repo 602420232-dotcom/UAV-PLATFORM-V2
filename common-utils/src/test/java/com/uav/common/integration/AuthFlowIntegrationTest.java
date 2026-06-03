@@ -1,6 +1,5 @@
 package com.uav.common.integration;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,7 +30,6 @@ public class AuthFlowIntegrationTest {
     private static final Logger log = LoggerFactory.getLogger(AuthFlowIntegrationTest.class);
     private static final String BASE_URL = System.getProperty("test.target", "http://localhost:8089");
     private static final TestRestTemplate restTemplate = new TestRestTemplate();
-    private static final ObjectMapper objectMapper = new ObjectMapper();
     
     private static String authToken;
     private static String username;
@@ -50,7 +48,7 @@ public class AuthFlowIntegrationTest {
         ResponseEntity<String> response = restTemplate.getForEntity(
             BASE_URL + "/actuator/health", String.class);
         
-        assertEquals(200, response.getStatusCodeValue(), "服务应返回 200 OK");
+        assertEquals(200, response.getStatusCode().value(), "服务应返回 200 OK");
         log.info("✅ 健康检查通过: {}", response.getBody());
     }
 
@@ -65,14 +63,15 @@ public class AuthFlowIntegrationTest {
             "fullName", "Test User"
         );
 
-        ResponseEntity<Map> response = restTemplate.postForEntity(
+        ResponseEntity<Map<String, Object>> response = restTemplate.postForEntity(
             BASE_URL + "/api/v1/auth/register", 
             new HttpEntity<>(body, createJsonHeaders()),
-            Map.class);
+            (Class<Map<String, Object>>) (Class<?>) Map.class);
 
         log.info("Register response: {}", response.getBody());
         
-        assertEquals(201, response.getStatusCodeValue(), "注册应返回 201 Created");
+        assertEquals(201, response.getStatusCode().value(), "注册应返回 201 Created");
+        assertNotNull(response.getBody(), "响应不应为空");
         assertNotNull(response.getBody().get("token"), "响应应包含 token");
         
         authToken = (String) response.getBody().get("token");
@@ -89,14 +88,15 @@ public class AuthFlowIntegrationTest {
             "password", "TestPass123!"
         );
 
-        ResponseEntity<Map> response = restTemplate.postForEntity(
+        ResponseEntity<Map<String, Object>> response = restTemplate.postForEntity(
             BASE_URL + "/api/v1/auth/login",
             new HttpEntity<>(body, createJsonHeaders()),
-            Map.class);
+            (Class<Map<String, Object>>) (Class<?>) Map.class);
 
         log.info("Login response status: {}", response.getStatusCode());
         
-        assertEquals(200, response.getStatusCodeValue(), "登录应返回 200 OK");
+        assertEquals(200, response.getStatusCode().value(), "登录应返回 200 OK");
+        assertNotNull(response.getBody(), "响应不应为空");
         assertNotNull(response.getBody().get("token"), "响应应包含 token");
         
         authToken = (String) response.getBody().get("token");
@@ -115,7 +115,7 @@ public class AuthFlowIntegrationTest {
             String.class);
 
         log.info("Protected endpoint response: {}", response.getStatusCode());
-        assertTrue(response.getStatusCodeValue() == 200 || response.getStatusCodeValue() == 403,
+        assertTrue(response.getStatusCode().value() == 200 || response.getStatusCode().value() == 403,
             "应返回 200（有权限）或 403（初始用户无角色权限）");
         log.info("✅ 受保护端点访问正常: {}", response.getStatusCode());
     }
@@ -133,7 +133,7 @@ public class AuthFlowIntegrationTest {
             new HttpEntity<>(headers),
             String.class);
 
-        assertEquals(401, response.getStatusCodeValue(), "无效 Token 应返回 401");
+        assertEquals(401, response.getStatusCode().value(), "无效 Token 应返回 401");
         log.info("✅ 无效 Token 被正确拒绝: 401");
     }
 
@@ -146,13 +146,13 @@ public class AuthFlowIntegrationTest {
             "password", ""
         );
 
-        ResponseEntity<Map> response = restTemplate.postForEntity(
+        ResponseEntity<Map<String, Object>> response = restTemplate.postForEntity(
             BASE_URL + "/api/v1/auth/login",
             new HttpEntity<>(body, createJsonHeaders()),
-            Map.class);
+            (Class<Map<String, Object>>) (Class<?>) Map.class);
 
         log.info("Empty password response: {}", response.getStatusCode());
-        assertTrue(response.getStatusCodeValue() == 400, "空密码应返回 400");
+        assertTrue(response.getStatusCode().value() == 400, "空密码应返回 400");
         log.info("✅ 空密码被正确拒绝: 400");
     }
 
@@ -168,7 +168,7 @@ public class AuthFlowIntegrationTest {
             String.class);
 
         log.info("Logout response: {}", response.getStatusCode());
-        assertTrue(response.getStatusCodeValue() == 200, "登出应返回 200");
+        assertTrue(response.getStatusCode().value() == 200, "登出应返回 200");
         log.info("✅ 用户登出成功");
     }
 
@@ -180,6 +180,7 @@ public class AuthFlowIntegrationTest {
         return headers;
     }
 
+    @SuppressWarnings("unchecked")
     private HttpHeaders createAuthHeaders() {
         HttpHeaders headers = createJsonHeaders();
         if (authToken != null) {
