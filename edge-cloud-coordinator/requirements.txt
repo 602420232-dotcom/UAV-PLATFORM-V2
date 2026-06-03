@@ -11,3 +11,6 @@ requests>=2.27.0
 
 # 熔断器
 pybreaker>=1.0.0
+
+# 监控指标
+prometheus-client>=0.15.0

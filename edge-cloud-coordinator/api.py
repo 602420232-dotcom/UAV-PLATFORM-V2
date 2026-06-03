@@ -9,8 +9,9 @@ from fastapi import Query
 
 # 第三方库
 try:
-    from fastapi import FastAPI, HTTPException, BackgroundTasks
+    from fastapi import FastAPI, HTTPException, BackgroundTasks, WebSocket, WebSocketDisconnect
     from fastapi.middleware.cors import CORSMiddleware
+    from fastapi.responses import Response
     from pydantic import BaseModel, Field
     HAS_FASTAPI = True
 except ImportError:
@@ -20,6 +21,7 @@ except ImportError:
 # 本地模块
 from coordinator import EdgeCloudCoordinator, EdgeTask, TaskType
 from federated_learning import FederatedLearning, DroneClient
+from websocket_sync import WebSocketSync, MessageType
 
 logger = logging.getLogger(__name__)
 
@@ -65,9 +67,10 @@ if HAS_FASTAPI:
         allow_headers=["Authorization", "Content-Type", "X-Requested-With"],
     )
 
-    # 全局限流器
+    # 全局限流器 & WebSocket 管理器
     coordinator = EdgeCloudCoordinator()
     federated_learning = FederatedLearning(min_clients=2)
+    ws_sync = WebSocketSync(node_id="coordinator")
 
 
 # ==================== Pydantic Models ====================
@@ -399,6 +402,56 @@ if HAS_FASTAPI:
             "metrics": metrics,
             "aggregated": aggregated,
         }
+
+
+    # ==================== WebSocket 实时通信 ====================
+
+    @app.websocket("/ws/{drone_id}")
+    async def websocket_endpoint(websocket: WebSocket, drone_id: str):
+        """
+        WebSocket 实时通信端点
+
+        特性：
+        - 服务端每 30s 发送 ping，客户端需回复 pong
+        - 60s 无心跳判定为过期连接，自动断开
+        - 支持自动重连（按 drone_id 识别）
+        - 可通过 /ws/status 查看连接健康状态
+        """
+        await websocket.accept()
+        conn_info = await ws_sync.connect(drone_id, websocket)
+
+        try:
+            while True:
+                data = await websocket.receive_json()
+                await ws_sync.handle_message(drone_id, data)
+
+        except WebSocketDisconnect:
+            logger.info(f"WebSocket 客户端断开: {drone_id}")
+            await ws_sync.disconnect(drone_id, reason="client_disconnect")
+
+        except Exception as e:
+            logger.error(f"WebSocket 异常 ({drone_id}): {e}")
+            await ws_sync.disconnect(drone_id, reason="error")
+
+    # ==================== 监控指标 ====================
+
+    @app.get("/metrics", tags=["Monitoring"])
+    async def prometheus_metrics():
+        """Prometheus 指标暴露端点"""
+        try:
+            from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
+            data = generate_latest()
+            return Response(content=data, media_type=CONTENT_TYPE_LATEST)
+        except ImportError:
+            return {"error": "prometheus_client 未安装，指标不可用"}
+        except Exception as e:
+            logger.error("Prometheus 指标生成失败: %s", e)
+            return {"error": "指标生成失败"}
+
+    @app.get("/ws/status", tags=["WebSocket"])
+    async def websocket_status():
+        """WebSocket 连接健康状态"""
+        return await ws_sync.get_health_status()
 
 
 # ==================== Main Entry ====================
