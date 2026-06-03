@@ -50,6 +50,10 @@ set(SOURCES
     src/path_planner.cpp
     src/risk_assessor.cpp
     src/flight_controller.cpp
+    src/dwa_planner.cpp
+    src/trajectory_corrector.cpp
+    src/path_smoother.cpp
+    src/offline_cache.cpp
     src/bindings.cpp
 )
 

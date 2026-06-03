@@ -5,6 +5,10 @@
 #include "path_planner.h"
 #include "risk_assessor.h"
 #include "flight_controller.h"
+#include "dwa_planner.h"
+#include "trajectory_corrector.h"
+#include "path_smoother.h"
+#include "offline_cache.h"
 
 namespace py = pybind11;
 
@@ -270,5 +274,126 @@ PYBIND11_MODULE(edge_sdk_cpp, m) {
         .value("LAND", uav_sdk::FlightMode::LAND)
         .value("TAKEOFF", uav_sdk::FlightMode::TAKEOFF)
         .value("GUIDED", uav_sdk::FlightMode::GUIDED)
+        .value("LOITER", uav_sdk::FlightMode::LOITER)
+        .value("FOLLOW", uav_sdk::FlightMode::FOLLOW)
+        .value("CIRCLE", uav_sdk::FlightMode::CIRCLE)
         .export_values();
+
+    // ========================================
+    // DWAPlanner 绑定
+    // ========================================
+    py::class_<uav_sdk::DWAPlanner>(m, "DWAPlanner")
+        .def(py::init<>(),
+             R"pbdoc(Create a DWA local obstacle avoidance planner.)pbdoc")
+        .def("plan", &uav_sdk::DWAPlanner::plan,
+             py::arg("current_x"), py::arg("current_y"), py::arg("current_yaw"),
+             py::arg("current_v"), py::arg("current_w"),
+             py::arg("goal_x"), py::arg("goal_y"),
+             py::arg("obstacles"),
+             R"pbdoc(Plan local trajectory using DWA algorithm.)pbdoc")
+        .def("predict_trajectory", &uav_sdk::DWAPlanner::predict_trajectory,
+             py::arg("x0"), py::arg("y0"), py::arg("yaw0"),
+             py::arg("v"), py::arg("w"),
+             R"pbdoc(Predict trajectory given initial state and velocities.)pbdoc")
+        .def("set_params", &uav_sdk::DWAPlanner::set_params,
+             py::arg("params"),
+             R"pbdoc(Set DWA parameters.)pbdoc")
+        .def("get_params", &uav_sdk::DWAPlanner::get_params,
+             R"pbdoc(Get current DWA parameters.)pbdoc");
+
+    // ========================================
+    // TrajectoryCorrector 绑定
+    // ========================================
+    py::class_<uav_sdk::TrajectoryCorrector>(m, "TrajectoryCorrector")
+        .def(py::init<>(),
+             R"pbdoc(Create a trajectory corrector with PID control.)pbdoc")
+        .def("set_path", &uav_sdk::TrajectoryCorrector::set_path,
+             py::arg("path"),
+             R"pbdoc(Set the reference path.)pbdoc")
+        .def("compute_correction", &uav_sdk::TrajectoryCorrector::compute_correction,
+             py::arg("current_x"), py::arg("current_y"),
+             py::arg("current_yaw"), py::arg("current_v"),
+             py::arg("dt"),
+             R"pbdoc(Compute trajectory correction commands.)pbdoc")
+        .def("get_current_waypoint", &uav_sdk::TrajectoryCorrector::get_current_waypoint,
+             R"pbdoc(Get current target waypoint.)pbdoc")
+        .def("get_current_error", &uav_sdk::TrajectoryCorrector::get_current_error,
+             R"pbdoc(Get current tracking error.)pbdoc")
+        .def("is_path_complete", &uav_sdk::TrajectoryCorrector::is_path_complete,
+             R"pbdoc(Check if path tracking is complete.)pbdoc")
+        .def("reset", &uav_sdk::TrajectoryCorrector::reset,
+             R"pbdoc(Reset the trajectory corrector.)pbdoc");
+
+    // ========================================
+    // PathSmoother 绑定
+    // ========================================
+    py::class_<uav_sdk::PathSmoother>(m, "PathSmoother")
+        .def(py::init<>(),
+             R"pbdoc(Create a path smoother.)pbdoc")
+        .def("bezier_smooth", &uav_sdk::PathSmoother::bezier_smooth,
+             py::arg("input_path"), py::arg("smoothness") = 5,
+             R"pbdoc(Smooth path using Bezier curves.)pbdoc")
+        .def("spline_smooth", &uav_sdk::PathSmoother::spline_smooth,
+             py::arg("input_path"), py::arg("num_samples") = 50,
+             R"pbdoc(Smooth path using Catmull-Rom spline.)pbdoc")
+        .def("simplify_path", &uav_sdk::PathSmoother::simplify_path,
+             py::arg("path"), py::arg("epsilon") = 1.0,
+             R"pbdoc(Simplify path using Douglas-Peucker algorithm.)pbdoc")
+        .def("generate_alternatives", &uav_sdk::PathSmoother::generate_alternatives,
+             py::arg("path"), py::arg("num_alternatives") = 3,
+             py::arg("offset") = 2.0,
+             R"pbdoc(Generate alternative offset paths.)pbdoc");
+
+    // ========================================
+    // OfflineCache 绑定
+    // ========================================
+    py::enum_<uav_sdk::OfflineCache::CacheType>(m, "CacheType")
+        .value("PATH_PLAN", uav_sdk::OfflineCache::PATH_PLAN)
+        .value("WEATHER_DATA", uav_sdk::OfflineCache::WEATHER_DATA)
+        .value("CONFIG", uav_sdk::OfflineCache::CONFIG)
+        .value("MAP_DATA", uav_sdk::OfflineCache::MAP_DATA)
+        .export_values();
+
+    py::class_<uav_sdk::OfflineCache>(m, "OfflineCache")
+        .def(py::init<const std::string&>(),
+             py::arg("cache_dir") = "./offline_cache",
+             R"pbdoc(Create offline cache manager.)pbdoc")
+        .def("put", &uav_sdk::OfflineCache::put,
+             py::arg("key"), py::arg("data"),
+             py::arg("type") = uav_sdk::OfflineCache::PATH_PLAN,
+             py::arg("ttl") = 3600,
+             R"pbdoc(Put data into cache.)pbdoc")
+        .def("get", &uav_sdk::OfflineCache::get,
+             py::arg("key"), py::arg("type") = uav_sdk::OfflineCache::PATH_PLAN,
+             R"pbdoc(Get data from cache.)pbdoc")
+        .def("remove", &uav_sdk::OfflineCache::remove,
+             py::arg("key"), py::arg("type") = uav_sdk::OfflineCache::PATH_PLAN,
+             R"pbdoc(Remove data from cache.)pbdoc")
+        .def("clear", &uav_sdk::OfflineCache::clear,
+             py::arg("type") = uav_sdk::OfflineCache::PATH_PLAN,
+             R"pbdoc(Clear all data of given type.)pbdoc")
+        .def("exists", &uav_sdk::OfflineCache::exists,
+             py::arg("key"), py::arg("type") = uav_sdk::OfflineCache::PATH_PLAN,
+             R"pbdoc(Check if key exists in cache.)pbdoc")
+        .def("save_config", &uav_sdk::OfflineCache::save_config,
+             py::arg("app_name"), py::arg("config_json"),
+             R"pbdoc(Save app configuration.)pbdoc")
+        .def("load_config", &uav_sdk::OfflineCache::load_config,
+             py::arg("app_name"),
+             R"pbdoc(Load app configuration.)pbdoc")
+        .def("cache_path", &uav_sdk::OfflineCache::cache_path,
+             py::arg("key"), py::arg("path"),
+             R"pbdoc(Cache a path plan.)pbdoc")
+        .def("get_cached_path", &uav_sdk::OfflineCache::get_cached_path,
+             py::arg("key"),
+             R"pbdoc(Get a cached path plan.)pbdoc")
+        .def("cache_weather", &uav_sdk::OfflineCache::cache_weather,
+             py::arg("location_id"), py::arg("weather"),
+             R"pbdoc(Cache weather data.)pbdoc")
+        .def("get_cached_weather", &uav_sdk::OfflineCache::get_cached_weather,
+             py::arg("location_id"),
+             R"pbdoc(Get cached weather data.)pbdoc")
+        .def("list_keys", &uav_sdk::OfflineCache::list_keys,
+             py::arg("type") = uav_sdk::OfflineCache::PATH_PLAN,
+             R"pbdoc(List all keys of given type.)pbdoc");
 }

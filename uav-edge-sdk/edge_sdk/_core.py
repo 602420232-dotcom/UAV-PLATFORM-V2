@@ -13,16 +13,18 @@ import sys
 import os
 from typing import List, Tuple, Dict, Any, Optional
 
+from .config import SDKConfig
+from .logger import get_logger
+
+logger = get_logger(__name__)
+
 # 尝试导入 C++ 模块，如果失败则使用纯 Python 回退
 try:
-    from . import edge_sdk_cpp
+    from . import edge_sdk_cpp  # type: ignore
     HAS_CPP_MODULE = True
 except ImportError:
     HAS_CPP_MODULE = False
-    logger.info("[EdgeSDK] Warning: C++ module not found, using pure Python fallback")
-
-from .config import SDKConfig
-from .logger import get_logger
+    logger.info("C++ module not found, using pure Python fallback")
 
 __version__ = "1.0.0"
 
@@ -91,15 +93,20 @@ class EdgeSDK:
         """初始化纯 Python 回退模块"""
         from .path_planner_python import PathPlannerFallback
         from .risk_assessor_python import RiskAssessorFallback
-        
+        from .flight_controller_python import FlightControllerFallback
+
         self.logger.warning("Using pure Python fallback (slower performance)")
-        
+
         grid_width = self.config.get('grid_width', 100)
         grid_height = self.config.get('grid_height', 100)
         resolution = self.config.get('resolution', 1.0)
-        
+
         self.planner = PathPlannerFallback(grid_width, grid_height, resolution)
         self.risk_assessor = RiskAssessorFallback()
+        self.flight_controller = FlightControllerFallback(
+            self.config.get('serial_device', 'COM3'),
+            self.config.get('baudrate', 57600)
+        )
     
     def plan_path(
         self,
