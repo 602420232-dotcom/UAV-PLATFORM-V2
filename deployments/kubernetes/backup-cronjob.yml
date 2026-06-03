@@ -1,90 +1,83 @@
-# K8s CronJob — MySQL 自动备份
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: mysql-backup
-  namespace: uav-system
+  name: uav-database-backup
+  namespace: uav-path-planning
+  labels:
+    app: uav-backup
 spec:
   schedule: "0 2 * * *"
-  successfulJobsHistoryLimit: 7
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
   failedJobsHistoryLimit: 3
   jobTemplate:
     spec:
       template:
         spec:
           containers:
-            - name: mysql-backup
-              image: mysql:8.0
-              command:
-                - /bin/sh
-                - -c
-                - |
-                  mysqldump -h ${MYSQL_HOST} -u ${MYSQL_USER} -p${MYSQL_PASSWORD} --all-databases --single-transaction --routines --triggers | gzip > /backup/mysql-$(date +%Y%m%d-%H%M%S).sql.gz
-                  find /backup -name "mysql-*.sql.gz" -mtime +7 -delete
-                  echo "Backup completed: $(ls -la /backup | grep mysql)"
-              env:
-                - name: MYSQL_HOST
-                  value: mysql.uav-system.svc.cluster.local
-                - name: MYSQL_USER
-                  valueFrom:
-                    secretKeyRef:
-                      name: mysql-secrets
-                      key: username
-                - name: MYSQL_PASSWORD
-                  valueFrom:
-                    secretKeyRef:
-                      name: mysql-secrets
-                      key: password
-              volumeMounts:
-                - name: backup-storage
-                  mountPath: /backup
-          restartPolicy: OnFailure
-          volumes:
+          - name: mysql-backup
+            image: mysql:8.0
+            command:
+            - /bin/sh
+            - -c
+            - |
+              # Full database backup
+              mkdir -p /backup/$(date +%Y%m%d)
+              
+              for db in uav_platform wrf_processor meteor_forecast path_planning data_assimilation uav_weather; do
+                echo "Backing up $db..."
+                mysqldump -h mysql -u root -p${DB_PASSWORD} \
+                  --single-transaction \
+                  --routines \
+                  --triggers \
+                  --events \
+                  --databases $db \
+                  --result-file=/backup/$(date +%Y%m%d)/${db}.sql
+                gzip /backup/$(date +%Y%m%d)/${db}.sql
+              done
+              
+              # Cleanup backups older than 30 days
+              find /backup -type d -mtime +30 -exec rm -rf {} \; 2>/dev/null || true
+              
+              echo "Backup completed: $(date)"
+            env:
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: uav-secrets
+                  key: db-password
+            volumeMounts:
             - name: backup-storage
-              persistentVolumeClaim:
-                claimName: backup-pvc
----
-# K8s CronJob — Nacos 配置备份
-apiVersion: batch/v1
-kind: CronJob
-metadata:
-  name: nacos-backup
-  namespace: uav-system
-spec:
-  schedule: "0 3 * * *"
-  successfulJobsHistoryLimit: 7
-  failedJobsHistoryLimit: 3
-  jobTemplate:
-    spec:
-      template:
-        spec:
-          containers:
-            - name: nacos-backup
-              image: curlimages/curl:8.2
-              command:
-                - /bin/sh
-                - -c
-                - |
-                  curl -s "http://nacos:8848/nacos/v1/cs/configs?dataId=&group=&tenant=" > /backup/nacos-config-$(date +%Y%m%d-%H%M%S).json
-                  echo "Nacos config backup completed"
-              volumeMounts:
-                - name: backup-storage
-                  mountPath: /backup
-          restartPolicy: OnFailure
+              mountPath: /backup
           volumes:
-            - name: backup-storage
-              persistentVolumeClaim:
-                claimName: backup-pvc
+          - name: backup-storage
+            persistentVolumeClaim:
+              claimName: backup-pvc
+          restartPolicy: OnFailure
 ---
-# PersistentVolumeClaim — 备份存储
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: backup-pvc
-  namespace: uav-system
+  namespace: uav-path-planning
 spec:
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
       storage: 50Gi
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backup-scripts
+  namespace: uav-path-planning
+data:
+  verify-backup.sh: |
+    #!/bin/bash
+    # Verify backup integrity
+    BACKUP_DIR=${1:-/backup}
+    for f in $(find $BACKUP_DIR -name "*.sql.gz" -type f); do
+      echo "Verifying: $f"
+      gunzip -t "$f" && echo "  OK" || echo "  FAILED"
+    done

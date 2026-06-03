@@ -1,5 +1,4 @@
 services:
-  # ===== 基础设施层 =====
   mysql:
     image: mysql:8.0
     container_name: uav-mysql
@@ -22,8 +21,10 @@ services:
       start_period: 30s
     deploy:
       resources:
-        limits: { memory: 512M }
-        reservations: { memory: 256M }
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
 
   redis:
     image: redis:6.2
@@ -54,13 +55,10 @@ services:
       retries: 10
     deploy:
       resources:
-        limits: { memory: 512M }
+        limits:
+          memory: 512M
 
-  # ===== 微服务层 =====
   api-gateway:
-    build:
-      context: .
-      dockerfile: ./api-gateway/Dockerfile
     image: trae-api-gateway:latest
     container_name: uav-gateway
     ports:
@@ -83,8 +81,10 @@ services:
       start_period: 40s
     deploy:
       resources:
-        limits: { memory: 512M }
-        reservations: { memory: 256M }
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
 
   wrf-processor:
     build:
@@ -94,8 +94,10 @@ services:
     ports:
       - "8081:8081"
     depends_on:
-      mysql: { condition: service_healthy }
-      nacos: { condition: service_healthy }
+      mysql:
+        condition: service_healthy
+      nacos:
+        condition: service_healthy
     environment:
       LOG_PATH: /logs
       SPRING_MAIN_ALLOW_BEAN_DEFINITION_OVERRIDING: "true"
@@ -113,8 +115,10 @@ services:
       start_period: 40s
     deploy:
       resources:
-        limits: { memory: 512M }
-        reservations: { memory: 256M }
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
 
   data-assimilation:
     build:
@@ -124,8 +128,10 @@ services:
     ports:
       - "8084:8084"
     depends_on:
-      mysql: { condition: service_healthy }
-      nacos: { condition: service_healthy }
+      mysql:
+        condition: service_healthy
+      nacos:
+        condition: service_healthy
     environment:
       LOG_PATH: /logs
       SPRING_MAIN_ALLOW_BEAN_DEFINITION_OVERRIDING: "true"
@@ -143,8 +149,10 @@ services:
       start_period: 40s
     deploy:
       resources:
-        limits: { memory: 512M }
-        reservations: { memory: 256M }
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
 
   meteor-forecast:
     build:
@@ -154,8 +162,10 @@ services:
     ports:
       - "8082:8082"
     depends_on:
-      mysql: { condition: service_healthy }
-      nacos: { condition: service_healthy }
+      mysql:
+        condition: service_healthy
+      nacos:
+        condition: service_healthy
     environment:
       LOG_PATH: /logs
       SPRING_MAIN_ALLOW_BEAN_DEFINITION_OVERRIDING: "true"
@@ -173,8 +183,10 @@ services:
       start_period: 40s
     deploy:
       resources:
-        limits: { memory: 512M }
-        reservations: { memory: 256M }
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
 
   path-planning:
     build:
@@ -184,8 +196,10 @@ services:
     ports:
       - "8083:8083"
     depends_on:
-      mysql: { condition: service_healthy }
-      nacos: { condition: service_healthy }
+      mysql:
+        condition: service_healthy
+      nacos:
+        condition: service_healthy
     environment:
       LOG_PATH: /logs
       SPRING_MAIN_ALLOW_BEAN_DEFINITION_OVERRIDING: "true"
@@ -203,25 +217,31 @@ services:
       start_period: 40s
     deploy:
       resources:
-        limits: { memory: 512M }
-        reservations: { memory: 256M }
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
 
   uav-platform:
-    build:
-      context: .
-      dockerfile: ./uav-platform-service/Dockerfile
     image: trae-uav-platform:latest
     container_name: uav-platform
     ports:
       - "8080:8080"
     depends_on:
-      mysql: { condition: service_healthy }
-      redis: { condition: service_healthy }
-      nacos: { condition: service_healthy }
-      wrf-processor: { condition: service_started }
-      data-assimilation: { condition: service_started }
-      meteor-forecast: { condition: service_started }
-      path-planning: { condition: service_started }
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      nacos:
+        condition: service_healthy
+      wrf-processor:
+        condition: service_started
+      data-assimilation:
+        condition: service_started
+      meteor-forecast:
+        condition: service_started
+      path-planning:
+        condition: service_started
     environment:
       SECURITY_USER_PASSWORD: ${SECURITY_USER_PASSWORD}
       LOG_PATH: /logs
@@ -246,21 +266,23 @@ services:
       start_period: 40s
     deploy:
       resources:
-        limits: { memory: 512M }
-        reservations: { memory: 256M }
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
 
   uav-weather-collector:
-    build:
-      context: .
-      dockerfile: ./uav-weather-collector/Dockerfile
     image: trae-uav-weather-collector:latest
     container_name: uav-weather
     ports:
       - "8086:8086"
     depends_on:
-      mysql: { condition: service_healthy }
-      nacos: { condition: service_healthy }
-      redis: { condition: service_healthy }
+      mysql:
+        condition: service_healthy
+      nacos:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     environment:
       LOG_PATH: /logs
       SPRING_MAIN_ALLOW_BEAN_DEFINITION_OVERRIDING: "true"
@@ -279,8 +301,10 @@ services:
       start_period: 40s
     deploy:
       resources:
-        limits: { memory: 512M }
-        reservations: { memory: 256M }
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
 
   edge-cloud-coordinator:
     build: ./edge-cloud-coordinator
@@ -289,22 +313,32 @@ services:
       - "8000:8000"
       - "8765:8765"
     depends_on:
-      kafka: { condition: service_started }
+      kafka:
+        condition: service_started
     environment:
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       REDIS_HOST: redis
       REDIS_PORT: 6379
     restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
     deploy:
       resources:
-        limits: { memory: 512M }
-        reservations: { memory: 256M }
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
 
   kafka:
     image: confluentinc/cp-kafka:7.4.0
     container_name: uav-kafka
     depends_on:
-      zookeeper: { condition: service_started }
+      zookeeper:
+        condition: service_started
     ports:
       - "9092:9092"
     environment:
@@ -316,7 +350,8 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
     deploy:
       resources:
-        limits: { memory: 1G }
+        limits:
+          memory: 1G
 
   zookeeper:
     image: confluentinc/cp-zookeeper:7.4.0
@@ -327,52 +362,20 @@ services:
       ZOOKEEPER_CLIENT_PORT: 2181
     deploy:
       resources:
-        limits: { memory: 256M }
+        limits:
+          memory: 256M
 
   frontend:
     build:
       context: ./uav-path-planning-system/frontend-vue
       dockerfile: Dockerfile
-    image: trae-frontend-vue:latest
+    image: trae-frontend-vue:${TAG:-1.0.0}
     container_name: uav-frontend
     ports:
       - "3000:80"
     restart: always
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost/"]
-      interval: 30s
-      timeout: 5s
-      start_period: 10s
-      retries: 3
-
-
-  model-engine:
-    build:
-      context: ./model-engine
-      dockerfile: Dockerfile
-    image: trae-model-engine:latest
-    container_name: uav-model-engine
-    ports:
-      - "8087:8087"
-    volumes:
-      - /mnt/d/Developer/FengWu_All/FengWu:/app/model:ro
-      - model-engine-data:/data
-      # 原项目桥接: 引用 meteor-forecast 的 Python 代码 (不改原文件)
-      - ./meteor-forecast-service/src/main/python:/legacy/meteor-forecast:ro
-    depends_on:
-      redis:
-        condition: service_healthy
-    environment:
-      DEVICE: cuda
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              capabilities: [gpu]
-    restart: always
-    healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:8087/health"]
       interval: 30s
       timeout: 5s
       start_period: 10s

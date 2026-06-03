@@ -18,6 +18,46 @@ spring:
         locator:
           enabled: true
           lower-case-service-id: true
+      routes:
+        - id: uav-platform
+          uri: lb://uav-platform
+          predicates:
+            - Path=/api/platform/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                key-resolver: "#{@userKeyResolver}"
+                redis-rate-limiter.replenishRate: 100
+                redis-rate-limiter.burstCapacity: 200
+            - StripPrefix=1
+        - id: path-planning
+          uri: lb://path-planning
+          predicates:
+            - Path=/api/planning/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                key-resolver: "#{@userKeyResolver}"
+                redis-rate-limiter.replenishRate: 50
+                redis-rate-limiter.burstCapacity: 100
+            - StripPrefix=1
+        - id: wrf-processor
+          uri: lb://wrf-processor
+          predicates:
+            - Path=/api/wrf/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                key-resolver: "#{@userKeyResolver}"
+                redis-rate-limiter.replenishRate: 30
+                redis-rate-limiter.burstCapacity: 60
+            - StripPrefix=1
+      default-filters:
+        - name: RequestRateLimiter
+          args:
+            key-resolver: "#{@userKeyResolver}"
+            redis-rate-limiter.replenishRate: 20
+            redis-rate-limiter.burstCapacity: 40
 
 springdoc:
   api-docs:

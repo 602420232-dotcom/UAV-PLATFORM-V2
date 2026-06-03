@@ -28,4 +28,15 @@ public class RateLimitConfig {
                 != null ? exchange.getRequest().getHeaders().getFirst("X-User-Id") : "anonymous"
         );
     }
+
+    @Bean
+    public KeyResolver apiKeyResolver() {
+        return exchange -> {
+            String apiKey = exchange.getRequest().getHeaders().getFirst("X-API-Key");
+            if (apiKey != null && !apiKey.isEmpty()) {
+                return Mono.just(apiKey);
+            }
+            return Mono.just("anonymous");
+        };
+    }
 }

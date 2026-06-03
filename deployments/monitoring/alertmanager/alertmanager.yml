@@ -1,150 +1,66 @@
-# Alertmanager Configuration
 global:
   resolve_timeout: 5m
-  smtp_smarthost: 'smtp.example.com:587'
-  smtp_from: 'alerts@example.com'
-  smtp_auth_username: 'alerts@example.com'
-  smtp_auth_password: '${SMTP_PASSWORD}'
+  slack_api_url: ''
+  pagerduty_url: ''
 
-# Slack notification configuration
-templates:
-  - '/etc/alertmanager/template*.tmpl'
-
-# Route configuration
 route:
-  group_by: ['alertname', 'cluster', 'service']
+  receiver: 'default-receiver'
   group_wait: 30s
   group_interval: 5m
   repeat_interval: 4h
-  receiver: 'default-receiver'
+  group_by: ['alertname', 'severity']
+  
   routes:
-    # Critical alerts - immediate notification
-    - match:
-        severity: critical
-      receiver: 'critical-receiver'
-      group_wait: 0s
-      repeat_interval: 1h
+  - match:
+      severity: critical
+    receiver: 'critical-receiver'
+    repeat_interval: 1h
+    group_wait: 10s
+  
+  - match:
+      severity: warning
+    receiver: 'warning-receiver'
+    repeat_interval: 4h
+  
+  - match:
+      component: infrastructure
+    receiver: 'infra-receiver'
+    group_by: ['alertname', 'component']
 
-    # Warning alerts - notify after 5 minutes
-    - match:
-        severity: warning
-      receiver: 'warning-receiver'
-      group_wait: 5m
-      repeat_interval: 4h
-
-    # Info alerts - daily digest
-    - match:
-        severity: info
-      receiver: 'info-receiver'
-      group_wait: 1h
-      repeat_interval: 24h
-
-# Receivers
 receivers:
-  # Default receiver (all alerts)
-  - name: 'default-receiver'
-    email_configs:
-      - to: 'ops-team@example.com'
-        send_resolved: true
-        headers:
-          subject: 'UAV Platform Alert: {{ .GroupLabels.alertname }}'
-        html: |
-          <h1>UAV Platform Alert</h1>
-          <p><strong>Alert:</strong> {{ .GroupLabels.alertname }}</p>
-          <p><strong>Severity:</strong> {{ .CommonLabels.severity }}</p>
-          <p><strong>Status:</strong> {{ .Status }}</p>
-          <h2>Details</h2>
-          {{ range .Alerts }}
-            <h3>{{ .Labels.alertname }}</h3>
-            <p>{{ .Annotations.description }}</p>
-            <p><strong>Started:</strong> {{ .StartsAt }}</p>
-            {{ if .Annotations.runbook_url }}
-              <p><a href="{{ .Annotations.runbook_url }}">Runbook</a></p>
-            {{ end }}
-          {{ end }}
+- name: 'default-receiver'
+  webhook_configs:
+  - url: 'http://alert-webhook:8080/webhook'
+    send_resolved: true
 
-  # Critical alerts receiver (immediate notification)
-  - name: 'critical-receiver'
-    slack_configs:
-      - api_url: '${SLACK_WEBHOOK_URL}'
-        channel: '#alerts-critical'
-        send_resolved: true
-        color: '{{ if eq .Status "firing" }}danger{{ else }}good{{ end }}'
-        title: '{{ if eq .Status "firing" }}🔴 CRITICAL{{ else }}✅ RESOLVED{{ end }}: {{ .GroupLabels.alertname }}'
-        text: |
-          {{ range .Alerts }}
-          *Alert:* {{ .Labels.alertname }}
-          *Severity:* {{ .Labels.severity }}
-          *Description:* {{ .Annotations.description }}
-          {{ if .Annotations.runbook_url }}
-          *Runbook:* <{{ .Annotations.runbook_url }}|Click here>
-          {{ end }}
-          *Details:* {{ .Annotations.summary }}
-          {{ end }}
-    email_configs:
-      - to: 'critical-team@example.com'
-        send_resolved: true
-        headers:
-          subject: '🚨 CRITICAL: {{ .GroupLabels.alertname }}'
-        html: |
-          <h1 style="color:red;">🚨 CRITICAL ALERT</h1>
-          <p><strong>Alert:</strong> {{ .GroupLabels.alertname }}</p>
-          <p><strong>Environment:</strong> Production</p>
-          {{ range .Alerts }}
-            <hr/>
-            <h2>{{ .Labels.alertname }}</h2>
-            <p>{{ .Annotations.description }}</p>
-            <p><strong>Started:</strong> {{ .StartsAt }}</p>
-          {{ end }}
-    webhook_configs:
-      - url: 'http://alert-webhook:5000/webhook'
-        send_resolved: true
+- name: 'critical-receiver'
+  webhook_configs:
+  - url: 'http://alert-webhook:8080/webhook/critical'
+    send_resolved: true
+  pagerduty_configs:
+  - routing_key: ''
+    severity: critical
 
-  # Warning alerts receiver
-  - name: 'warning-receiver'
-    slack_configs:
-      - api_url: '${SLACK_WEBHOOK_URL}'
-        channel: '#alerts-warning'
-        send_resolved: true
-        color: '{{ if eq .Status "firing" }}warning{{ else }}good{{ end }}'
-        title: '{{ if eq .Status "firing" }}⚠️ WARNING{{ else }}✅ RESOLVED{{ end }}: {{ .GroupLabels.alertname }}'
-        text: |
-          {{ range .Alerts }}
-          *Alert:* {{ .Labels.alertname }}
-          *Description:* {{ .Annotations.description }}
-          {{ end }}
-    email_configs:
-      - to: 'ops-team@example.com'
-        send_resolved: true
-        headers:
-          subject: '⚠️ WARNING: {{ .GroupLabels.alertname }}'
+- name: 'warning-receiver'
+  webhook_configs:
+  - url: 'http://alert-webhook:8080/webhook/warning'
+    send_resolved: true
+  slack_configs:
+  - channel: '#uav-alerts'
+    title: '{{ .GroupLabels.alertname }}'
+    text: '{{ .CommonAnnotations.description }}'
 
-  # Info alerts receiver (daily digest)
-  - name: 'info-receiver'
-    email_configs:
-      - to: 'daily-digest@example.com'
-        send_resolved: true
-        headers:
-          subject: 'UAV Platform Daily Digest'
-        html: |
-          <h1>Daily Alert Digest</h1>
-          <p>Date: {{ .GroupLabels.date }}</p>
-          {{ range .Alerts }}
-            <p>• {{ .Labels.alertname }}: {{ .Annotations.summary }}</p>
-          {{ end }}
-
-# Inhibition rules
+- name: 'infra-receiver'
+  email_configs:
+  - to: 'ops@example.com'
+    from: 'alertmanager@uav-platform.com'
+    smarthost: 'smtp.example.com:587'
+    auth_username: ''
+    auth_password: ''
+  
 inhibit_rules:
-  # Suppress warning alerts if critical is firing
-  - source_match:
-      severity: 'critical'
-    target_match:
-      severity: 'warning'
-    equal: ['alertname', 'cluster', 'service']
-
-  # Suppress info alerts if warning or critical is firing
-  - source_match:
-      severity: ['critical', 'warning']
-    target_match:
-      severity: 'info'
-    equal: ['alertname', 'cluster', 'service']
+- source_match:
+    severity: critical
+  target_match:
+    severity: warning
+  equal: ['alertname', 'job']

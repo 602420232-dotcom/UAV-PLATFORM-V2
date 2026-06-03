@@ -1,0 +1,35 @@
+# Prometheus Recording Rules
+# Pre-computed metrics for dashboard performance optimization
+groups:
+  - name: uav_service_recording_rules
+    interval: 15s
+    rules:
+      # Service uptime percentage over 24h
+      - record: job:up:avg_over_24h
+        expr: avg_over_time(up[24h])
+      
+      # Request rate per service (5m window)
+      - record: job:http_requests:rate5m
+        expr: rate(http_requests_total[5m])
+      
+      # Error rate per service (5m window)
+      - record: job:http_errors:rate5m
+        expr: rate(http_requests_total{status=~"5.."}[5m])
+      
+      # P95 response time per service
+      - record: job:http_response_time:p95
+        expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, job))
+      
+      # Error ratio per service
+      - record: job:http_error_ratio:5m
+        expr: |
+          rate(http_requests_total{status=~"5.."}[5m])
+          /
+          (rate(http_requests_total[5m]) > 0 or 1)
+      
+      # Service health score (0-100)
+      - record: job:service_health_score
+        expr: |
+          (avg_over_time(up[5m]) * 40) +
+          ((1 - (rate(http_requests_total{status=~"5.."}[5m]) / (rate(http_requests_total[5m]) > 0 or 1))) * 30) +
+          ((1 - (rate(http_request_duration_seconds_count{quantile="0.95"}[5m]) > 2)) * 30)
