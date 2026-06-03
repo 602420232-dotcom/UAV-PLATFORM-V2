@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # ===== 基础设施层 =====
   mysql:
@@ -60,7 +58,10 @@ services:
 
   # ===== 微服务层 =====
   api-gateway:
-    build: ./api-gateway
+    build:
+      context: .
+      dockerfile: ./api-gateway/Dockerfile
+    image: trae-api-gateway:latest
     container_name: uav-gateway
     ports:
       - "8088:8088"
@@ -68,6 +69,9 @@ services:
       nacos:
         condition: service_healthy
     environment:
+      - LOG_PATH=/logs
+      - SPRING_MAIN_ALLOW_BEAN_DEFINITION_OVERRIDING=true
+      - SPRING_DATASOURCE_HIKARI_INITIALIZATION_FAIL_TIMEOUT=-1
       - NACOS_SERVER=nacos:8848
       - REDIS_HOST=redis
     restart: always
@@ -83,7 +87,9 @@ services:
         reservations: { memory: 256M }
 
   wrf-processor:
-    build: ./wrf-processor-service
+    build:
+      context: .
+      dockerfile: ./wrf-processor-service/Dockerfile
     container_name: wrf-processor
     ports:
       - "8081:8081"
@@ -91,10 +97,12 @@ services:
       mysql: { condition: service_healthy }
       nacos: { condition: service_healthy }
     environment:
+      LOG_PATH: /logs
+      SPRING_MAIN_ALLOW_BEAN_DEFINITION_OVERRIDING: "true"
+      SPRING_DATASOURCE_HIKARI_INITIALIZATION_FAIL_TIMEOUT: "-1"
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/wrf_processor?useSSL=false&serverTimezone=UTC
       SPRING_DATASOURCE_USERNAME: uav
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
-
       NACOS_SERVER: nacos:8848
     restart: always
     healthcheck:
@@ -109,7 +117,9 @@ services:
         reservations: { memory: 256M }
 
   data-assimilation:
-    build: ./data-assimilation-service
+    build:
+      context: .
+      dockerfile: ./data-assimilation-service/Dockerfile
     container_name: data-assimilation
     ports:
       - "8084:8084"
@@ -117,6 +127,9 @@ services:
       mysql: { condition: service_healthy }
       nacos: { condition: service_healthy }
     environment:
+      LOG_PATH: /logs
+      SPRING_MAIN_ALLOW_BEAN_DEFINITION_OVERRIDING: "true"
+      SPRING_DATASOURCE_HIKARI_INITIALIZATION_FAIL_TIMEOUT: "-1"
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/data_assimilation?useSSL=false&serverTimezone=UTC
       SPRING_DATASOURCE_USERNAME: uav
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
@@ -134,7 +147,9 @@ services:
         reservations: { memory: 256M }
 
   meteor-forecast:
-    build: ./meteor-forecast-service
+    build:
+      context: .
+      dockerfile: ./meteor-forecast-service/Dockerfile
     container_name: meteor-forecast
     ports:
       - "8082:8082"
@@ -142,6 +157,9 @@ services:
       mysql: { condition: service_healthy }
       nacos: { condition: service_healthy }
     environment:
+      LOG_PATH: /logs
+      SPRING_MAIN_ALLOW_BEAN_DEFINITION_OVERRIDING: "true"
+      SPRING_DATASOURCE_HIKARI_INITIALIZATION_FAIL_TIMEOUT: "-1"
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/meteor_forecast?useSSL=false&serverTimezone=UTC
       SPRING_DATASOURCE_USERNAME: uav
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
@@ -159,7 +177,9 @@ services:
         reservations: { memory: 256M }
 
   path-planning:
-    build: ./path-planning-service
+    build:
+      context: .
+      dockerfile: ./path-planning-service/Dockerfile
     container_name: path-planning
     ports:
       - "8083:8083"
@@ -167,6 +187,9 @@ services:
       mysql: { condition: service_healthy }
       nacos: { condition: service_healthy }
     environment:
+      LOG_PATH: /logs
+      SPRING_MAIN_ALLOW_BEAN_DEFINITION_OVERRIDING: "true"
+      SPRING_DATASOURCE_HIKARI_INITIALIZATION_FAIL_TIMEOUT: "-1"
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/path_planning?useSSL=false&serverTimezone=UTC
       SPRING_DATASOURCE_USERNAME: uav
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
@@ -184,7 +207,10 @@ services:
         reservations: { memory: 256M }
 
   uav-platform:
-    build: ./uav-platform-service
+    build:
+      context: .
+      dockerfile: ./uav-platform-service/Dockerfile
+    image: trae-uav-platform:latest
     container_name: uav-platform
     ports:
       - "8080:8080"
@@ -197,6 +223,10 @@ services:
       meteor-forecast: { condition: service_started }
       path-planning: { condition: service_started }
     environment:
+      SECURITY_USER_PASSWORD: ${SECURITY_USER_PASSWORD}
+      LOG_PATH: /logs
+      SPRING_MAIN_ALLOW_BEAN_DEFINITION_OVERRIDING: "true"
+      SPRING_DATASOURCE_HIKARI_INITIALIZATION_FAIL_TIMEOUT: "-1"
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/uav_platform?useSSL=false&serverTimezone=UTC
       SPRING_DATASOURCE_USERNAME: uav
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
@@ -220,7 +250,10 @@ services:
         reservations: { memory: 256M }
 
   uav-weather-collector:
-    build: ./uav-weather-collector
+    build:
+      context: .
+      dockerfile: ./uav-weather-collector/Dockerfile
+    image: trae-uav-weather-collector:latest
     container_name: uav-weather
     ports:
       - "8086:8086"
@@ -229,6 +262,9 @@ services:
       nacos: { condition: service_healthy }
       redis: { condition: service_healthy }
     environment:
+      LOG_PATH: /logs
+      SPRING_MAIN_ALLOW_BEAN_DEFINITION_OVERRIDING: "true"
+      SPRING_DATASOURCE_HIKARI_INITIALIZATION_FAIL_TIMEOUT: "-1"
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/uav_weather?useSSL=false&serverTimezone=UTC
       SPRING_DATASOURCE_USERNAME: uav
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
