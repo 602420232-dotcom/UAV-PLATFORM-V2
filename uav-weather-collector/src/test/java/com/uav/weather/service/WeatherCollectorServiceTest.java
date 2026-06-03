@@ -1,9 +1,11 @@
 package com.uav.weather.service;
 
+import com.uav.weather.config.WeatherProperties;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
 import java.util.Map;
@@ -17,7 +19,7 @@ class WeatherCollectorServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new WeatherCollectorService();
+        service = new WeatherCollectorService(new RestTemplate(), new WeatherProperties());
         service.init();
     }
 

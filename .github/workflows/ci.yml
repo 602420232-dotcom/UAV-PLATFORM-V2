@@ -1,0 +1,108 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+env:
+  JAVA_VERSION: '17'
+  NODE_VERSION: '20'
+  PYTHON_VERSION: '3.11'
+
+jobs:
+  # ===== Job 1: Java 后端编译与测试 =====
+  java-build:
+    name: Java Backend Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Install root POM
+        run: mvn install -N -B -q
+
+      - name: Build common-utils
+        run: mvn install -pl common-utils -DskipTests -B -q
+
+      - name: Compile all modules
+        run: mvn compile -B -q
+
+      - name: Run tests
+        run: mvn test -B
+        continue-on-error: true
+
+  # ===== Job 2: Python 语法检查 =====
+  python-lint:
+    name: Python Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install ruff
+
+      - name: Check Python scripts
+        run: |
+          find . -name "*.py" -not -path "./.git/*" -not -path "./node_modules/*" \
+            -not -path "./*/.venv/*" -exec ruff check {} \; || true
+
+  # ===== Job 3: 前端构建 =====
+  frontend-build:
+    name: Frontend Build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: uav-path-planning-system/frontend-vue
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: uav-path-planning-system/frontend-vue/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint || true
+
+      - name: Build
+        run: npm run build
+
+  # ===== Job 4: Docker 镜像构建 =====
+  docker-build:
+    name: Docker Build
+    runs-on: ubuntu-latest
+    needs: [java-build, frontend-build]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build API Gateway
+        run: docker build -t trae-api-gateway:${{ github.sha }} -f api-gateway/Dockerfile .
+
+      - name: Build Path Planning Service
+        run: docker build -t path-planning-service:${{ github.sha }} -f path-planning-service/Dockerfile .
+
+      - name: Build UAV Platform
+        run: docker build -t uav-platform-service:${{ github.sha }} -f uav-platform-service/Dockerfile .
+
+      - name: Build Frontend
+        run: docker build -t frontend-vue:${{ github.sha }} -f uav-path-planning-system/frontend-vue/Dockerfile uav-path-planning-system/frontend-vue

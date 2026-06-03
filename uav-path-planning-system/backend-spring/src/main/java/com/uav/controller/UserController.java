@@ -1,84 +1,56 @@
 package com.uav.controller;
+
 import com.uav.model.User;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import jakarta.annotation.PostConstruct;
-import java.util.ArrayList;
-import java.util.List;
+import com.uav.service.UserService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api")
 public class UserController {
 
-    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+    private final UserService userService;
 
-    @Value("${app.default-password:Uav@2024!Secure}")
-    private String defaultPassword;
-
-    @Value("${app.init-default-users:true}")
-    private boolean initDefaultUsers;
-
-    private List<User> users = new ArrayList<>();
-
-    @PostConstruct
-    public void init() {
-        if (!initDefaultUsers) {
-            return;
-        }
-        User admin = new User();
-        admin.setId(1L);
-        admin.setUsername("admin");
-        admin.setPassword(passwordEncoder.encode(defaultPassword));
-        admin.setFullName("管理员");
-        admin.setEmail("admin@example.com");
-
-        User dispatcher = new User();
-        dispatcher.setId(2L);
-        dispatcher.setUsername("dispatcher");
-        dispatcher.setPassword(passwordEncoder.encode(defaultPassword));
-        dispatcher.setFullName("调度员");
-        dispatcher.setEmail("dispatcher@example.com");
-
-        users.add(admin);
-        users.add(dispatcher);
+    public UserController(UserService userService) {
+        this.userService = userService;
     }
 
     @GetMapping("/admin/users")
-    public List<User> getUsers() {
-        return users;
+    public ResponseEntity<?> getUsers() {
+        return ResponseEntity.ok(userService.findAll());
     }
 
     @GetMapping("/admin/users/{id}")
-    public User getUser(@PathVariable Long id) {
-        return users.stream().filter(u -> u.getId().equals(id)).findFirst().orElse(null);
+    public ResponseEntity<?> getUser(@PathVariable Long id) {
+        User user = userService.findById(id);
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("用户不存在");
+        }
+        return ResponseEntity.ok(user);
     }
 
     @PostMapping("/admin/users")
-    public User createUser(@RequestBody User user) {
-        user.setId((long) (users.size() + 1));
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        users.add(user);
-        return user;
+    public ResponseEntity<?> createUser(@RequestBody User user) {
+        User created = userService.create(user);
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     @PutMapping("/admin/users/{id}")
-    public User updateUser(@PathVariable Long id, @RequestBody User user) {
-        User existingUser = users.stream().filter(u -> u.getId().equals(id)).findFirst().orElse(null);
-        if (existingUser != null) {
-            existingUser.setUsername(user.getUsername());
-            if (user.getPassword() != null && !user.getPassword().isEmpty()) {
-                existingUser.setPassword(passwordEncoder.encode(user.getPassword()));
-            }
-            existingUser.setFullName(user.getFullName());
-            existingUser.setEmail(user.getEmail());
-            existingUser.setRoles(user.getRoles());
+    public ResponseEntity<?> updateUser(@PathVariable Long id, @RequestBody User user) {
+        User updated = userService.update(id, user);
+        if (updated == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("用户不存在");
         }
-        return existingUser;
+        return ResponseEntity.ok(updated);
     }
 
     @DeleteMapping("/admin/users/{id}")
-    public boolean deleteUser(@PathVariable Long id) {
-        return users.removeIf(u -> u.getId().equals(id));
+    public ResponseEntity<?> deleteUser(@PathVariable Long id) {
+        if (userService.findById(id) == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("用户不存在");
+        }
+        userService.delete(id);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 }

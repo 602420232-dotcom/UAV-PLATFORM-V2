@@ -13,6 +13,8 @@ import java.util.Map;
 import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 @DisplayName("WeatherCollector 集成测试")
 class WeatherCollectorTests {
@@ -23,8 +25,13 @@ class WeatherCollectorTests {
     @BeforeEach
     void setUp() {
         weatherController = new WeatherController();
-        weatherCollectorService = new WeatherCollectorService();
-        ReflectionTestUtils.setField(Objects.requireNonNull(weatherController), "weatherCollectorService", weatherCollectorService);
+        weatherCollectorService = mock(WeatherCollectorService.class);
+        when(weatherCollectorService.getCurrentWeather(anyString())).thenReturn(Map.of());
+        when(weatherCollectorService.getWeatherHistory(anyString(), anyInt())).thenReturn(List.of());
+        when(weatherCollectorService.getFusedWeather(anyString())).thenReturn(Map.of());
+        when(weatherCollectorService.listDataSources()).thenReturn(List.of());
+        when(weatherCollectorService.getDroneAlerts(anyString())).thenReturn(List.of());
+        ReflectionTestUtils.setField(Objects.requireNonNull(weatherController), "weatherService", weatherCollectorService);
     }
 
     @Test

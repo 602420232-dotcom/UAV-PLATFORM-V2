@@ -6,12 +6,13 @@
 
 ## 技术栈
 
-- **框架**: Spring Boot 3.2.0
+- **框架**: Spring Boot 3.5.14
 - **语言**: Java 17
 - **构建工具**: Maven
 - **安全**: Spring Security + JWT
 - **缓存**: Redis
-- **数据库**: MySQL 8.0 (MyBatis-Plus / JPA)
+- **数据库**: MySQL 8.0 (MyBatis-Plus)
+- **熔断器**: Resilience4j
 
 ## 服务信息
 

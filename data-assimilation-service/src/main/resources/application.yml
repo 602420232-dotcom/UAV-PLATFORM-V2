@@ -3,6 +3,10 @@ spring:
     allow-bean-definition-overriding: true
   application:
     name: data-assimilation-service
+  autoconfigure:
+    exclude:
+      - io.github.resilience4j.bulkhead.autoconfigure.BulkheadAutoConfiguration
+      - io.github.resilience4j.timelimiter.autoconfigure.TimeLimiterAutoConfiguration
   
   # 数据库配置
   datasource:
@@ -17,9 +21,21 @@ spring:
       ddl-auto: update
     show-sql: false
 
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
+  config:
+    import: classpath:health-config.yml
+
 # 服务器配置
 server:
+  port: 8084
+  shutdown: graceful
 
-uav:
-  jwt:
-    secret: dThpc3RhbmRvbmx5Zm9ydGVzdGluZzM2MmJ5dGVzbG9uZ3NlY3JldGtleQ==
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+jwt:
+  secret: ${JWT_SECRET}

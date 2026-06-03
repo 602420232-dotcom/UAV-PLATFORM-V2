@@ -12,10 +12,12 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
+    "@ant-design/icons-svg": "^4.2.1",
     "@ant-design/icons-vue": "^7.0.0",
     "ant-design-vue": "^4.0.0",
     "axios": "^1.6.2",
     "cesium": "^1.119.0",
+    "dayjs": "^1.11.13",
     "echarts": "^5.4.3",
     "leaflet": "^1.9.4",
     "leaflet.heat": "^0.2.0",
@@ -28,7 +30,7 @@
     "@vitejs/plugin-vue": "^5.0.0",
     "@vitejs/plugin-vue-jsx": "^5.1.5",
     "@vue/test-utils": "^2.4.10",
-    "jsdom": "^29.1.1",
+    "jsdom": "^25.0.1",
     "vite": "^5.0.0",
     "vitest": "^4.1.8"
   }

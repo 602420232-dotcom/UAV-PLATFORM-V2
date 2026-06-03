@@ -40,6 +40,7 @@ ENV/
 .venv/
 .conda/
 .condarc
+.python-version
 
 # PyInstaller
 *.manifest
@@ -211,6 +212,7 @@ $RECYCLE.BIN/
 **/frontend-vue/.env.local
 
 # 密钥管理工具生成的备份文件
+*.bak
 *.bak.*
 *.backup.*
 *.backup
@@ -244,6 +246,7 @@ minikube-config
 *.pid.lock
 *.part
 *.crdownload
+*.zip
 
 # 日志文件
 logs/
@@ -327,9 +330,6 @@ pom.xml.backup.*
 pom.xml.bak
 **/pom.xml.backup.*
 **/pom.xml.bak
-
-# Model Engine
-model-engine/
 
 # Quick Dockerfiles
 Dockerfile.*.quick

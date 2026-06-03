@@ -1,38 +1,30 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
-    <property name="LOG_FILE" value="${LOG_PATH:-logs}/${spring.application.name}.log"/>
-    <property name="APP_NAME" value="${spring.application.name:-uav-service}"/>
+    <!-- 引用统一的 Logback 基础配置 -->
+    <include resource="logback-base.xml"/>
 
-    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder>
-            <pattern>%d{yyyy-MM-dd HH:mm:ss} [%thread] [%X{tid}] %-5level %logger{36} - %msg%n</pattern>
-        </encoder>
-    </appender>
-
-    <appender name="JSON" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
-            <includeCallerInfo>true</includeCallerInfo>
-            <customFields>{"service_name":"${APP_NAME}"}</customFields>
-        </encoder>
-    </appender>
-
-    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${LOG_FILE}</file>
+    <!-- Logstash JSON 日志（用于日志采集系统） -->
+    <appender name="LOGSTASH" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH:-./logs}/app.json</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${LOG_FILE}.%d{yyyy-MM-dd}.%i.gz</fileNamePattern>
-            <maxHistory>30</maxHistory>
-            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
-                <maxFileSize>100MB</maxFileSize>
-            </timeBasedFileNamingAndTriggeringPolicy>
+            <fileNamePattern>${LOG_PATH:-./logs}/app.%d{yyyy-MM-dd}.json.gz</fileNamePattern>
+            <maxHistory>7</maxHistory>
         </rollingPolicy>
-        <encoder>
-            <pattern>%d{yyyy-MM-dd HH:mm:ss} [%thread] [%X{tid}] %-5level %logger{36} - %msg%n</pattern>
+        <encoder class="ch.qos.logback.classic.encoder.LogstashEncoder">
+            <includeCallerData>true</includeCallerData>
+            <includeContextName>true</includeContextName>
+            <customFields>{"app_name":"${APP_NAME:-wrf-processor}"}</customFields>
         </encoder>
     </appender>
 
-    <root level="INFO">
-        <appender-ref ref="CONSOLE"/>
+    <!-- 为 WRF 处理相关包添加调试日志 -->
+    <logger name="com.uav.wrf" level="DEBUG" additivity="false">
         <appender-ref ref="FILE"/>
+        <appender-ref ref="LOGSTASH"/>
+    </logger>
+
+    <!-- 根日志同时输出到 LOGSTASH -->
+    <root level="INFO">
+        <appender-ref ref="LOGSTASH"/>
     </root>
 </configuration>

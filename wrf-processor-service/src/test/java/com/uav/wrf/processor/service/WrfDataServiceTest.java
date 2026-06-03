@@ -83,6 +83,7 @@ class WrfDataServiceTest {
 
     @Test
     @DisplayName("获取湍流数据")
+    @SuppressWarnings("unchecked")
     void testGetTurbulence() {
         when(repository.findByFileId("wrf_test")).thenReturn(Optional.of(createTestFile()));
         Map<String, Object> result = service.getTurbulence("wrf_test");
@@ -93,6 +94,7 @@ class WrfDataServiceTest {
 
     @Test
     @DisplayName("获取能见度数据")
+    @SuppressWarnings("unchecked")
     void testGetVisibility() {
         when(repository.findByFileId("wrf_test")).thenReturn(Optional.of(createTestFile()));
         Map<String, Object> result = service.getVisibility("wrf_test");
@@ -103,6 +105,7 @@ class WrfDataServiceTest {
 
     @Test
     @DisplayName("获取闪电风险评估")
+    @SuppressWarnings("unchecked")
     void testGetLightningRisk() {
         when(repository.findByFileId("wrf_test")).thenReturn(Optional.of(createTestFile()));
         Map<String, Object> result = service.getLightningRisk("wrf_test");
@@ -113,6 +116,7 @@ class WrfDataServiceTest {
 
     @Test
     @DisplayName("获取高度分层数据")
+    @SuppressWarnings("unchecked")
     void testGetHeightLayers() {
         when(repository.findByFileId("wrf_test")).thenReturn(Optional.of(createTestFile()));
         Map<String, Object> result = service.getHeightLayers("wrf_test", List.of(0, 100, 1000));

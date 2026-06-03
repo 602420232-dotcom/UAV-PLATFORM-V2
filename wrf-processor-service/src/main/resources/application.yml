@@ -12,7 +12,7 @@ spring:
   datasource:
     url: jdbc:mysql://localhost:3306/wrf_processor?useSSL=false&serverTimezone=UTC
     username: ${DB_USER:root}
-    password: ${DB_PASSWORD:123456}
+    password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
   
   # JPA配置
@@ -21,9 +21,15 @@ spring:
       ddl-auto: update
     show-sql: false
 
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
+  config:
+    import: classpath:health-config.yml
+
 # 服务器配置
 server:
   port: 8081
+  shutdown: graceful
 
 springdoc:
   api-docs:
@@ -32,7 +38,7 @@ springdoc:
     path: /swagger-ui.html
 
 jwt:
-  secret: dThpc3RhbmRvbmx5Zm9ydGVzdGluZzM2MmJ5dGVzbG9uZ3NlY3JldGtleQ==
+  secret: ${JWT_SECRET}
 
 # WRF处理器配置
 wrf:
@@ -54,5 +60,5 @@ task-execution:
 # 日志配置
 logging:
   level:
-    com.uav.wrf: INFO
-    org.springframework: WARN
+    "[com.uav.wrf]": INFO
+    "[org.springframework]": WARN

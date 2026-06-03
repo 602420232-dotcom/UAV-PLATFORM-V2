@@ -1,5 +1,7 @@
 package com.uav.common.utils;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.uav.common.script.PythonScriptInvoker;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -11,20 +13,22 @@ import java.util.Objects;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * PythonExecutor单元测试
+ * PythonExecutor 单元测试（通过委托模式调用 PythonScriptInvoker）
  */
 @DisplayName("PythonExecutor测试")
 class PythonExecutorTest {
 
     private PythonExecutor pythonExecutor;
+    private PythonScriptInvoker scriptInvoker;
 
     @BeforeEach
     void setUp() {
-        pythonExecutor = new PythonExecutor();
+        scriptInvoker = new PythonScriptInvoker(new ObjectMapper());
+        pythonExecutor = new PythonExecutor(scriptInvoker);
         ReflectionTestUtils.setField(
-                Objects.requireNonNull(pythonExecutor), "scriptPath", "src/main/python");
+                Objects.requireNonNull(scriptInvoker), "scriptPath", "src/main/python");
         ReflectionTestUtils.setField(
-                Objects.requireNonNull(pythonExecutor), "timeout", 30000);
+                Objects.requireNonNull(scriptInvoker), "timeout", 30000);
     }
 
     @Test
@@ -36,28 +40,28 @@ class PythonExecutorTest {
     @Test
     @DisplayName("测试空脚本名称验证")
     void testValidateEmptyScriptName() {
-        assertThrows(SecurityException.class, () -> 
+        assertThrows(SecurityException.class, () ->
             pythonExecutor.execute("", "predict", new HashMap<>()));
     }
 
     @Test
     @DisplayName("测试null脚本名称验证")
     void testValidateNullScriptName() {
-        assertThrows(SecurityException.class, () -> 
+        assertThrows(SecurityException.class, () ->
             pythonExecutor.execute(null, "predict", new HashMap<>()));
     }
 
     @Test
     @DisplayName("测试路径遍历脚本名称")
     void testValidatePathTraversalScriptName() {
-        assertThrows(SecurityException.class, () -> 
+        assertThrows(SecurityException.class, () ->
             pythonExecutor.execute("../malicious.py", "predict", new HashMap<>()));
     }
 
     @Test
     @DisplayName("测试无效脚本名称")
     void testValidateInvalidScriptName() {
-        assertThrows(SecurityException.class, () -> 
+        assertThrows(SecurityException.class, () ->
             pythonExecutor.execute("malicious.py", "predict", new HashMap<>()));
     }
 
@@ -70,14 +74,14 @@ class PythonExecutorTest {
     @Test
     @DisplayName("测试空动作验证")
     void testValidateEmptyAction() {
-        assertThrows(SecurityException.class, () -> 
+        assertThrows(SecurityException.class, () ->
             pythonExecutor.execute("meteor_forecast.py", "", new HashMap<>()));
     }
 
     @Test
     @DisplayName("测试无效动作验证")
     void testValidateInvalidAction() {
-        assertThrows(SecurityException.class, () -> 
+        assertThrows(SecurityException.class, () ->
             pythonExecutor.execute("meteor_forecast.py", "rm", new HashMap<>()));
     }
 

@@ -15,12 +15,13 @@
 | **API Gateway** | 8088 | HTTP | 统一入口（限流/熔断/路由） | ✅ | ✅ |
 | **Platform Service** | 8080 | HTTP | 主平台服务（认证/任务/无人机） | ✅ | ✅ |
 | **WRF Processor** | 8081 | HTTP | WRF 气象数据处理 | ✅ | ✅ |
-| **Bayes Assimilator** | 8084 | HTTP | 贝叶斯同化计算 | ✅ | ✅ |
-| **Meteor Forecaster** | 8082 | HTTP | 气象预测与订正（LSTM+XGBoost） | ✅ | ✅ |
+| **Meteor Forecaster** | 8082 | HTTP | 气象预测与订正（ConvLSTM+XGBoost） | ✅ | ✅ |
 | **Path Planner** | 8083 | HTTP | VRPTW+DE-RRT*+DWA 路径规划 | ✅ | ✅ |
+| **Bayes Assimilator** | 8084 | HTTP | 贝叶斯同化计算（3D-VAR/4D-VAR/EnKF） | ✅ | ✅ |
+| **FengWu Service** | 8085 | HTTP | 风乌气象模型推理服务（ONNX Runtime） | - | ✅ |
 | **Weather Collector** | 8086 | HTTP | 多源气象数据采集与融合 | - | ✅ |
-| **Edge-Cloud Coordinator** | 8000 | HTTP | 边云协同 | - | ✅ |
-| **Edge-Cloud Coordinator** | 8765 | WebSocket | WebSocket 通信 | - | ✅ |
+| **Edge-Cloud Coordinator** | 8000 | HTTP | 边云协同（联邦学习/WebSocket） | - | ✅ |
+| **Edge-Cloud Coordinator** | 8765 | WebSocket | WebSocket 实时通信 | - | ✅ |
 
 ### 端口分配原则
 
@@ -82,6 +83,8 @@ export default defineConfig({
 | `/api/forecast/**` | meteor-forecast-service | 8082 | 气象预报 API |
 | `/api/planning/**` | path-planning-service | 8083 | 路径规划 API |
 | `/api/assimilation/**` | data-assimilation-service | 8084 | 数据同化 API |
+| `/api/fengwu/**` | fengwu-service | 8085 | 风乌模型 API |
+| `/api/weather/**` | uav-weather-collector | 8086 | 气象采集 API |
 
 ### 前端 API 调用
 
@@ -124,7 +127,9 @@ Platform Service (localhost:8080)
 | Meteor Forecaster | 8082 | `/actuator/health` |
 | Path Planner | 8083 | `/actuator/health` |
 | Data Assimilator | 8084 | `/actuator/health` |
+| FengWu Service | 8085 | `/api/fengwu/health` |
 | Weather Collector | 8086 | `/actuator/health` |
+| Edge-Cloud Coordinator | 8000 | `/health` |
 | Frontend | 3000 | `/` |
 
 ---
@@ -337,6 +342,6 @@ grafana:
 
 ---
 
-> **最后更新**: 2026-05-08  
-> **版本**: 2.1  
+> **最后更新**: 2026-06-03  
+> **版本**: 2.2  
 > **维护者**: DITHIOTHREITOL

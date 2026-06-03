@@ -86,7 +86,8 @@ docker run -p 8081:8081 wrf-processor:latest
 | path-planning | 8083 | path-planning-service/ | 路径规划服务 |
 | uav-platform | 8080 | uav-platform-service/ | 主平台服务 |
 | uav-weather-collector | 8086 | uav-weather-collector/ | 气象信息收集服务 |
-| edge-cloud-coordinator | 8000/8765 | edge-cloud-coordinator/ | 边云协同框架（REST/WebSocket） |
+| fengwu-service | 8085 | fengwu-service/ | 风乌气象模型推理服务（ONNX Runtime） |
+| edge-cloud-coordinator | 8000/8765 | edge-cloud-coordinator/ | 边云协同框架（REST/WebSocket/联邦学习） |
 
 ### 访问地址
 
@@ -96,6 +97,7 @@ docker run -p 8081:8081 wrf-processor:latest
 - 气象预测：http://localhost:8082
 - 路径规划：http://localhost:8083
 - 同化服务：http://localhost:8084
+- 风乌模型：http://localhost:8085/docs
 - 气象收集：http://localhost:8086
 - 边云协同：http://localhost:8000/docs
 - Nacos 控制台：http://localhost:8848/nacos
@@ -108,6 +110,13 @@ trae/
 ├── DOCKER.md              # 本文件
 ├── .dockerignore          # Docker 忽略文件
 ├── fix-maven-deps.bat     # Maven 依赖修复脚本
+├── api-gateway/           # API 网关服务
+│   ├── Dockerfile
+│   ├── pom.xml
+│   └── src/
+├── common-utils/          # 公共工具模块
+│   ├── pom.xml
+│   └── src/
 ├── wrf-processor-service/
 │   ├── Dockerfile         # 服务 Dockerfile
 │   ├── pom.xml            # Maven 配置
@@ -124,10 +133,24 @@ trae/
 │   ├── Dockerfile
 │   ├── pom.xml
 │   └── src/
-└── data-assimilation-service/
+├── data-assimilation-service/
+│   ├── Dockerfile
+│   ├── pom.xml
+│   └── src/
+├── uav-weather-collector/
+│   ├── Dockerfile
+│   ├── pom.xml
+│   └── src/
+├── fengwu-service/        # 风乌气象模型推理服务
+│   ├── Dockerfile
+│   ├── app.py
+│   ├── requirements.txt
+│   └── model/             # ONNX 模型文件（需挂载）
+└── edge-cloud-coordinator/ # 边云协同框架
     ├── Dockerfile
-    ├── pom.xml
-    └── src/
+    ├── api.py
+    ├── requirements.txt
+    └── coordinator.py
 ```
 
 ## 🔧 Dockerfile 说明
@@ -202,10 +225,12 @@ docker-compose up -d mysql redis
 
 ## 📝 更新记录
 
-- v1.1.0 - 添加 API Gateway、气象收集服务、边云协同框架
+- v2.2.0 - 添加 FengWu 风乌气象模型推理服务（ONNX Runtime）
+- v2.1.0 - 添加 API Gateway、气象收集服务、边云协同框架
+- v2.0.0 - 重构服务架构，添加熔断器保护
 - v1.0.0 - 初始版本，支持完整部署
 ---
 
-> **最后更新**: 2026-05-08  
-> **版本**: 2.1  
+> **最后更新**: 2026-06-03  
+> **版本**: 2.2  
 > **维护者**: DITHIOTHREITOL

@@ -72,12 +72,25 @@ class AssimilationService:
                 },
             }
         except ImportError:
-            logger.warning("algorithm_core 未安装，返回模拟结果")
+            logger.critical(
+                "algorithm_core 模块未安装！无法执行实际同化计算。\n"
+                "请确保已安装 algorithm_core 包，或者检查 Python 路径配置。\n"
+                "当前返回的为模拟数据，不具备实际预报参考价值。\n"
+                "安装方式: pip install algorithm_core 或参照项目 README 配置。"
+            )
             return {
                 "status": "success",
                 "analysis": None,
                 "variance": None,
-                "metrics": {"algorithm": algorithm_key, "simulated": True},
+                "metrics": {
+                    "algorithm": algorithm_key,
+                    "simulated": True,
+                },
+                "data_source_warning": True,
+                "warning": (
+                    "⚠️ algorithm_core 模块未安装，当前返回模拟数据。"
+                    "请安装 algorithm_core 包后再执行实际同化计算。"
+                ),
             }
         except Exception as e:
             logger.error("同化失败: %s", e, exc_info=True)

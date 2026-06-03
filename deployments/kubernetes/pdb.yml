@@ -1,0 +1,46 @@
+# ============================================================
+# Pod 干扰预算 — 保证滚动更新/节点维护时服务不中断
+# ============================================================
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: api-gateway-pdb
+  namespace: uav-platform
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: api-gateway
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: uav-platform-pdb
+  namespace: uav-platform
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: uav-platform
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: path-planning-pdb
+  namespace: uav-platform
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: path-planning
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: mysql-pdb
+  namespace: uav-platform
+spec:
+  maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: mysql

@@ -62,6 +62,41 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
+# 真实数据检测标记
+# 如果所有数据源均返回模拟数据，应标记整个管线的输出为模拟
+REAL_DATA_DETECTED = False
+
+
+def detect_real_data(sources: dict) -> bool:
+    """
+    检测是否有真实数据源接入
+    
+    检查所有配置的数据源是否返回了非模拟的真实观测数据。
+    如果没有任何真实数据源，应降低输出结果的置信度标记。
+    """
+    has_real_data = False
+    real_sources = []
+    simulated_sources = []
+    
+    for name, source in sources.items():
+        if hasattr(source, 'is_real_data') and source.is_real_data():
+            has_real_data = True
+            real_sources.append(name)
+        else:
+            simulated_sources.append(name)
+    
+    if not has_real_data:
+        logger.warning(
+            "\n" + "="*60 + "\n"
+            "⚠️  警告: 当前无真实数据源接入！\n"
+            f"    模拟数据源: {', '.join(simulated_sources)}\n"
+            "    同化结果无实际气象参考价值。\n"
+            "    请配置真实数据源后重新运行。\n"
+            "="*60
+        )
+    
+    return has_real_data
+
 
 class PipelineStage(Enum):
     """流水线阶段枚举"""

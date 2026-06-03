@@ -1,28 +1,33 @@
-FROM python:3.11-slim
+FROM nvidia/cuda:11.8-runtime-ubuntu22.04 AS base
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3 python3-pip curl && \
+    rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-# Install system deps
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install Python deps
+# Install Python dependencies (GPU version of onnxruntime)
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip3 install --no-cache-dir -r requirements.txt && \
+    pip3 install --no-cache-dir onnxruntime-gpu>=1.17.0
 
-# Copy service code
-COPY *.py ./
-COPY *.npy ./
+# Copy application code
+COPY . .
 
-# Model files will be mounted as volume at runtime
-EXPOSE 8085
-# Security: create non-root user
-RUN groupadd -r appgroup && useradd -r -g appgroup -m -s /sbin/nologin appuser && \
-    chown -R appuser:appgroup /app
+# Create non-root user
+RUN groupadd -r appuser && useradd -r -g appuser -m -s /sbin/nologin appuser && \
+    chown -R appuser:appuser /app
+
 USER appuser
 
-HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
-    CMD curl -f http://localhost:8085/health || exit 1
+EXPOSE 8085
 
-CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8085"]
+ENV FENGWU_USE_GPU=true \
+    FENGWU_MODEL_PATH=/app/model/fengwu_v2.onnx \
+    FENGWU_NUM_THREADS=4
+
+# Model warmup on startup
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -sf http://localhost:8085/health/ready || exit 1
+
+ENTRYPOINT ["python3", "app.py"]

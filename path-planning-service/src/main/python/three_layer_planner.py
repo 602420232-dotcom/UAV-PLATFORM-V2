@@ -4,10 +4,10 @@
 集成VRPTW、A*和DWA算法
 """
 
+import heapq
 import numpy as np
 import json
 import sys
-import os
 import logging
 import threading
 import concurrent.futures
@@ -128,7 +128,7 @@ class VRPTWPlanner:
                 }
                 
                 current_location = (0, 0)  # 假设基地位置
-                current_time = 0
+                current_time = 0.0
                 
                 while unassigned_tasks and drone.current_endurance > 0:
                     # 选择最近的任务
@@ -148,11 +148,16 @@ class VRPTWPlanner:
                     flight_time = self.calculate_time(min_distance, drone.max_speed)
                     
                     # 检查时间窗和续航
-                    if current_time + flight_time >= nearest_task.end_time:
-                        break
+                    if current_time + flight_time > nearest_task.end_time:
+                        continue
                     
                     if flight_time > drone.current_endurance:
                         break
+                    
+                    # 如果早于最早开始时间，需要等待
+                    if current_time + flight_time < nearest_task.start_time:
+                        wait_time = nearest_task.start_time - (current_time + flight_time)
+                        flight_time += wait_time
                     
                     # 添加任务到路径
                     route['tasks'].append(nearest_task.id)
@@ -249,13 +254,16 @@ class AStarPlanner:
             
             # 简化的A*实现
             open_set = {start}
+            heap = [(0.0, 0, start)]
+            tie_breaker = 1
             came_from = {}
             g_score = {start: 0}
             f_score = {start: self.calculate_distance(start, goal)}
             
-            while open_set:
-                # 选择f_score最小的节点
-                current = min(open_set, key=lambda x: f_score.get(x, float('inf')))
+            while heap:
+                _, _, current = heapq.heappop(heap)
+                if current not in open_set:
+                    continue
                 
                 if current == goal:
                     # 重建路径
@@ -282,14 +290,14 @@ class AStarPlanner:
                 
                 # 生成邻居节点
                 neighbors = [
-                    (current[0] + 1, current[1]),
-                    (current[0] - 1, current[1]),
-                    (current[0], current[1] + 1),
-                    (current[0], current[1] - 1),
-                    (current[0] + 1, current[1] + 1),
-                    (current[0] + 1, current[1] - 1),
-                    (current[0] - 1, current[1] + 1),
-                    (current[0] - 1, current[1] - 1)
+                    (current[0] + 1.0, current[1]),
+                    (current[0] - 1.0, current[1]),
+                    (current[0], current[1] + 1.0),
+                    (current[0], current[1] - 1.0),
+                    (current[0] + 1.0, current[1] + 1.0),
+                    (current[0] + 1.0, current[1] - 1.0),
+                    (current[0] - 1.0, current[1] + 1.0),
+                    (current[0] - 1.0, current[1] - 1.0)
                 ]
                 
                 for neighbor in neighbors:
@@ -307,6 +315,8 @@ class AStarPlanner:
                         
                         if neighbor not in open_set:
                             open_set.add(neighbor)
+                            heapq.heappush(heap, (f_score[neighbor], tie_breaker, neighbor))
+                            tie_breaker += 1
             
             logger.warning("无法找到路径")
             return {
@@ -541,8 +551,8 @@ class DWAPlanner:
                 return cached_result
             
             # 简化的DWA实现
-            v_range = [1, 2, 3]  # 减少速度范围以提高速度
-            w_range = [-0.5, 0, 0.5]  # 减少角速度范围以提高速度
+            v_range = [1.0, 2.0, 3.0]  # 减少速度范围以提高速度
+            w_range = [-0.5, 0.0, 0.5]  # 减少角速度范围以提高速度
             
             best_score = -float('inf')
             best_trajectory = []
@@ -553,10 +563,11 @@ class DWAPlanner:
                     trajectory = []
                     x, y, theta = current_pose
                     
+                    dt = 0.1  # time step
                     for i in range(5):  # 减少预测步数以提高速度
-                        x += v * np.cos(theta)
-                        y += v * np.sin(theta)
-                        theta += w
+                        x += v * np.cos(theta) * dt
+                        y += v * np.sin(theta) * dt
+                        theta += w * dt
                         trajectory.append((x, y))
                     
                     # 计算轨迹评分
@@ -572,6 +583,8 @@ class DWAPlanner:
                     speed_score = v
                     
                     # 综合评分
+                    if min_obstacle_distance == float('inf'):
+                        min_obstacle_distance = 10.0  # default safe distance
                     score = -0.5 * goal_distance + 2.0 * min_obstacle_distance + 0.5 * speed_score
                     
                     if score > best_score and not self.is_collision(trajectory[-1]):
@@ -619,6 +632,38 @@ class ThreeLayerPlanner:
         self.derrt_star = DERRTStarPlanner(weather_data, obstacles, no_fly_zones)
         self.dwa = DWAPlanner(weather_data, obstacles)
     
+    def calculate_comprehensive_cost(self, route: Dict, weather_data: Optional[Dict] = None) -> float:
+        """
+        计算四维综合代价：距离 + 能耗 + 时间 + 气象风险
+        
+        Args:
+            route: 包含 total_distance, total_time, total_payload 的路径
+            weather_data: 气象数据（风速等）
+        
+        Returns:
+            综合代价（越小越好）
+        """
+        distance = route.get('total_distance', 0)
+        time_cost = route.get('total_time', 0)
+        payload = route.get('total_payload', 0)
+        
+        # 能耗：与距离和载重成正比
+        energy = distance * (1 + payload / 10.0)
+        
+        # 气象风险
+        wind_speed = 0
+        if weather_data:
+            wind_speed = weather_data.get('wind_speed', 0) or 0
+        risk = distance * wind_speed / 100.0
+        
+        # 四维加权综合代价
+        w_dist = 0.3
+        w_energy = 0.2
+        w_time = 0.25
+        w_risk = 0.25
+        
+        return w_dist * distance + w_energy * energy + w_time * time_cost + w_risk * risk
+    
     def plan(self) -> Dict:
         """
         执行完整路径规划
@@ -635,7 +680,7 @@ class ThreeLayerPlanner:
             def process_route(route):
                 if route['tasks']:
                     # 从基地到第一个任务点
-                    start = (0, 0)
+                    start = (0.0, 0.0)
                     route_path = []
                     for task_id in route['tasks']:
                         task = next(t for t in self.tasks if t.id == task_id)
@@ -652,15 +697,18 @@ class ThreeLayerPlanner:
                                 route_path.extend(astar_result['path'])
                                 start = goal
                     # 从最后一个任务点返回基地
-                    derrt_result = self.derrt_star.plan(start, (0, 0))
+                    derrt_result = self.derrt_star.plan(start, (0.0, 0.0))
                     if derrt_result['success']:
                         route_path.extend(derrt_result['path'])
                     else:
                         # 如果DE-RRT*失败，使用A*作为备选
-                        astar_result = self.a_star.plan(start, (0, 0))
+                        astar_result = self.a_star.plan(start, (0.0, 0.0))
                         if astar_result['success']:
                             route_path.extend(astar_result['path'])
                     route['path'] = route_path
+                    # 计算四维综合代价
+                    if self.weather_data:
+                        route['comprehensive_cost'] = self.calculate_comprehensive_cost(route, self.weather_data)
                 return route
             
             # 使用并行处理
@@ -722,49 +770,46 @@ class ThreeLayerPlanner:
                 }
             
             # 重新规划路径（并行处理）
-            start = (0, 0)  # 假设从基地出发
+            start = (0.0, 0.0)  # 假设从基地出发
             new_path = []
             
-            def plan_segment(task):
-                nonlocal start
+            def plan_segment_with_start(task, current_start):
                 goal = task.location
                 # 使用DE-RRT*算法
-                derrt_result = self.derrt_star.plan(start, goal)
+                derrt_result = self.derrt_star.plan(current_start, goal)
                 if derrt_result['success']:
-                    path_segment = derrt_result['path']
-                    start = goal
-                    return path_segment
+                    return (derrt_result['path'], goal)
                 else:
                     # 如果DE-RRT*失败，使用A*作为备选
-                    astar_result = self.a_star.plan(start, goal)
+                    astar_result = self.a_star.plan(current_start, goal)
                     if astar_result['success']:
-                        path_segment = astar_result['path']
-                        start = goal
-                        return path_segment
+                        return (astar_result['path'], goal)
                     else:
-                        return None
+                        return (None, current_start)
             
-            # 处理任务点之间的路径
+            # 顺序处理任务段（避免竞态条件）
+            current_pos = start
             segments = []
-            with concurrent.futures.ThreadPoolExecutor(max_workers=min(10, len(tasks))) as executor:
-                segments = list(executor.map(plan_segment, tasks))
+            for task in tasks:
+                segment, current_pos = plan_segment_with_start(task, current_pos)
+                segments.append(segment)
             
             # 检查是否所有段都成功规划
             for segment in segments:
                 if segment is None:
                     return {
                         'success': False,
-                        'error': f'无法规划到任务点的路径'
+                        'error': '无法规划到任务点的路径'
                     }
                 new_path.extend(segment)
             
             # 从最后一个任务点返回基地
-            derrt_result = self.derrt_star.plan(start, (0, 0))
+            derrt_result = self.derrt_star.plan(current_pos, (0.0, 0.0))
             if derrt_result['success']:
                 new_path.extend(derrt_result['path'])
             else:
                 # 如果DE-RRT*失败，使用A*作为备选
-                astar_result = self.a_star.plan(start, (0, 0))
+                astar_result = self.a_star.plan(current_pos, (0.0, 0.0))
                 if astar_result['success']:
                     new_path.extend(astar_result['path'])
                 else:
@@ -822,8 +867,8 @@ def main():
         
         try:
             input_data = load_input(2)
-            drones = [Drone(d['id'], d['max_payload'], d['max_endurance'], d['max_speed']) for d in input_data.get('drones', [])]
-            tasks = [Task(t['id'], tuple(t['location']), t['demand'], t['start_time'], t['end_time']) for t in input_data.get('tasks', [])]
+            drones = [Drone(d['id'], float(d['max_payload']), float(d['max_endurance']), float(d['max_speed'])) for d in input_data.get('drones', [])]
+            tasks = [Task(t['id'], (float(t['location'][0]), float(t['location'][1])), float(t['demand']), float(t['start_time']), float(t['end_time'])) for t in input_data.get('tasks', [])]
             weather_data = input_data.get('weather_data', {})
             
             vrptw = VRPTWPlanner(drones, tasks, weather_data)
@@ -847,11 +892,13 @@ def main():
         
         try:
             input_data = load_input(2)
-            start = tuple(input_data.get('start', (0, 0)))
-            goal = tuple(input_data.get('goal', (10, 10)))
+            start_data = input_data.get('start', (0, 0))
+            start = (float(start_data[0]), float(start_data[1]))
+            goal_data = input_data.get('goal', (10, 10))
+            goal = (float(goal_data[0]), float(goal_data[1]))
             weather_data = input_data.get('weather_data', {})
-            obstacles = [Obstacle(tuple(o['location']), o['radius']) for o in input_data.get('obstacles', [])]
-            no_fly_zones = [NoFlyZone(tuple(n['location']), n['radius']) for n in input_data.get('no_fly_zones', [])]
+            obstacles = [Obstacle((float(o['location'][0]), float(o['location'][1])), float(o['radius'])) for o in input_data.get('obstacles', [])]
+            no_fly_zones = [NoFlyZone((float(n['location'][0]), float(n['location'][1])), float(n['radius'])) for n in input_data.get('no_fly_zones', [])]
             
             a_star = AStarPlanner(weather_data, obstacles, no_fly_zones)
             result = a_star.plan(start, goal)
@@ -874,10 +921,12 @@ def main():
         
         try:
             input_data = load_input(2)
-            current_pose = tuple(input_data.get('current_pose', (0, 0, 0)))
-            goal = tuple(input_data.get('goal', (10, 10)))
+            pose_data = input_data.get('current_pose', (0, 0, 0))
+            current_pose = (float(pose_data[0]), float(pose_data[1]), float(pose_data[2]))
+            goal_data = input_data.get('goal', (10, 10))
+            goal = (float(goal_data[0]), float(goal_data[1]))
             weather_data = input_data.get('weather_data', {})
-            obstacles = [Obstacle(tuple(o['location']), o['radius']) for o in input_data.get('obstacles', [])]
+            obstacles = [Obstacle((float(o['location'][0]), float(o['location'][1])), float(o['radius'])) for o in input_data.get('obstacles', [])]
             
             dwa = DWAPlanner(weather_data, obstacles)
             result = dwa.plan(current_pose, goal)
@@ -900,11 +949,11 @@ def main():
         
         try:
             input_data = load_input(2)
-            drones = [Drone(d['id'], d['max_payload'], d['max_endurance'], d['max_speed']) for d in input_data.get('drones', [])]
-            tasks = [Task(t['id'], tuple(t['location']), t['demand'], t['start_time'], t['end_time']) for t in input_data.get('tasks', [])]
+            drones = [Drone(d['id'], float(d['max_payload']), float(d['max_endurance']), float(d['max_speed'])) for d in input_data.get('drones', [])]
+            tasks = [Task(t['id'], (float(t['location'][0]), float(t['location'][1])), float(t['demand']), float(t['start_time']), float(t['end_time'])) for t in input_data.get('tasks', [])]
             weather_data = input_data.get('weather_data', {})
-            obstacles = [Obstacle(tuple(o['location']), o['radius']) for o in input_data.get('obstacles', [])]
-            no_fly_zones = [NoFlyZone(tuple(n['location']), n['radius']) for n in input_data.get('no_fly_zones', [])]
+            obstacles = [Obstacle((float(o['location'][0]), float(o['location'][1])), float(o['radius'])) for o in input_data.get('obstacles', [])]
+            no_fly_zones = [NoFlyZone((float(n['location'][0]), float(n['location'][1])), float(n['radius'])) for n in input_data.get('no_fly_zones', [])]
             
             planner = ThreeLayerPlanner(drones, tasks, weather_data, obstacles, no_fly_zones)
             result = planner.plan()
@@ -927,11 +976,13 @@ def main():
         
         try:
             input_data = load_input(2)
-            start = tuple(input_data.get('start', (0, 0)))
-            goal = tuple(input_data.get('goal', (10, 10)))
+            start_data = input_data.get('start', (0, 0))
+            start = (float(start_data[0]), float(start_data[1]))
+            goal_data = input_data.get('goal', (10, 10))
+            goal = (float(goal_data[0]), float(goal_data[1]))
             weather_data = input_data.get('weather_data', {})
-            obstacles = [Obstacle(tuple(o['location']), o['radius']) for o in input_data.get('obstacles', [])]
-            no_fly_zones = [NoFlyZone(tuple(n['location']), n['radius']) for n in input_data.get('no_fly_zones', [])]
+            obstacles = [Obstacle((float(o['location'][0]), float(o['location'][1])), float(o['radius'])) for o in input_data.get('obstacles', [])]
+            no_fly_zones = [NoFlyZone((float(n['location'][0]), float(n['location'][1])), float(n['radius'])) for n in input_data.get('no_fly_zones', [])]
             
             derrt_star = DERRTStarPlanner(weather_data, obstacles, no_fly_zones)
             result = derrt_star.plan(start, goal)
@@ -956,10 +1007,10 @@ def main():
             input_data = load_input(2)
             current_route = input_data.get('current_route', {})
             new_weather_data = input_data.get('new_weather_data', {})
-            new_obstacles = [Obstacle(tuple(o['location']), o['radius']) for o in input_data.get('new_obstacles', [])]
-            new_no_fly_zones = [NoFlyZone(tuple(n['location']), n['radius']) for n in input_data.get('new_no_fly_zones', [])]
-            drones = [Drone(d['id'], d['max_payload'], d['max_endurance'], d['max_speed']) for d in input_data.get('drones', [])]
-            tasks = [Task(t['id'], tuple(t['location']), t['demand'], t['start_time'], t['end_time']) for t in input_data.get('tasks', [])]
+            new_obstacles = [Obstacle((float(o['location'][0]), float(o['location'][1])), float(o['radius'])) for o in input_data.get('new_obstacles', [])]
+            new_no_fly_zones = [NoFlyZone((float(n['location'][0]), float(n['location'][1])), float(n['radius'])) for n in input_data.get('new_no_fly_zones', [])]
+            drones = [Drone(d['id'], float(d['max_payload']), float(d['max_endurance']), float(d['max_speed'])) for d in input_data.get('drones', [])]
+            tasks = [Task(t['id'], (float(t['location'][0]), float(t['location'][1])), float(t['demand']), float(t['start_time']), float(t['end_time'])) for t in input_data.get('tasks', [])]
             
             planner = ThreeLayerPlanner(drones, tasks, new_weather_data, new_obstacles, new_no_fly_zones)
             result = planner.dynamic_replan(current_route, new_weather_data, new_obstacles, new_no_fly_zones)

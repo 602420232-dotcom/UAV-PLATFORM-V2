@@ -3,7 +3,10 @@ package com.uav.controller;
 import com.uav.common.exception.BusinessException;
 import com.uav.config.JwtUtil;
 import com.uav.config.SecurityAuditConfig;
+import com.uav.model.Role;
 import com.uav.model.User;
+import com.uav.repository.RoleRepository;
+import com.uav.repository.UserRepository;
 import com.uav.service.CustomUserDetailsService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,6 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -33,15 +37,21 @@ public class AuthController {
     private final CustomUserDetailsService userDetailsService;
     private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
+    private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
 
     public AuthController(AuthenticationManager authenticationManager,
                           CustomUserDetailsService userDetailsService,
                           JwtUtil jwtUtil,
-                          PasswordEncoder passwordEncoder) {
+                          PasswordEncoder passwordEncoder,
+                          UserRepository userRepository,
+                          RoleRepository roleRepository) {
         this.authenticationManager = authenticationManager;
         this.userDetailsService = userDetailsService;
         this.jwtUtil = jwtUtil;
         this.passwordEncoder = passwordEncoder;
+        this.userRepository = userRepository;
+        this.roleRepository = roleRepository;
     }
 
     @PostMapping("/login")
@@ -72,18 +82,15 @@ public class AuthController {
 
             return ResponseEntity.ok(response);
         } catch (BadCredentialsException e) {
-            // 统一错误消息，不暴露是用户名错误还是密码错误
             SecurityAuditConfig.logAuthenticationFailure(username, "凭证错误", httpRequest);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("用户名或密码错误");
         } catch (DisabledException e) {
             SecurityAuditConfig.logAuthenticationFailure(username, "账户已禁用", httpRequest);
-            // 注意：这里仍然暴露账户状态，但这是必要的用户体验反馈
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("账户已被禁用");
         } catch (LockedException e) {
             SecurityAuditConfig.logAuthenticationFailure(username, "账户已锁定", httpRequest);
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("账户已被锁定");
         } catch (UsernameNotFoundException e) {
-            // 重要：不能暴露用户是否存在，统一错误消息
             SecurityAuditConfig.logAuthenticationFailure(username, "凭证错误", httpRequest);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("用户名或密码错误");
         } catch (AuthenticationException e) {
@@ -106,25 +113,48 @@ public class AuthController {
             throw new BusinessException("VALIDATION_ERROR", "密码长度不能少于6位");
         }
 
-        try {
-            userDetailsService.loadUserByUsername(username);
+        if (userRepository.existsByUsername(username)) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("用户名已存在");
-        } catch (UsernameNotFoundException e) {
-            // 用户不存在，可以创建
         }
 
-        User user = new User();
-        user.setUsername(username);
-        user.setPassword(passwordEncoder.encode(password));
-        user.setEmail(email);
-        user.setFullName(fullName);
-        user.setEnabled(true);
-        user.setAccountNonExpired(true);
-        user.setAccountNonLocked(true);
-        user.setCredentialsNonExpired(true);
+        try {
+            User user = new User();
+            user.setUsername(username);
+            user.setPassword(passwordEncoder.encode(password));
+            user.setEmail(email);
+            user.setFullName(fullName);
+            user.setEnabled(true);
+            user.setAccountNonExpired(true);
+            user.setAccountNonLocked(true);
+            user.setCredentialsNonExpired(true);
 
-        throw new BusinessException("NOT_IMPLEMENTED", "用户保存功能待实现");
+            Role userRole = roleRepository.findByName("USER")
+                .orElseThrow(() -> new BusinessException("ROLE_NOT_FOUND", "默认角色不存在"));
+            user.setRoles(Set.of(userRole));
 
+            userRepository.save(user);
+
+            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+            String token = jwtUtil.generateToken(userDetails);
+
+            SecurityAuditConfig.logAuthenticationSuccess(username, httpRequest);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("token", token);
+
+            Map<String, Object> userMap = new HashMap<>();
+            userMap.put("id", user.getId());
+            userMap.put("username", user.getUsername());
+            userMap.put("email", user.getEmail());
+            userMap.put("fullName", user.getFullName());
+            response.put("user", userMap);
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        } catch (BusinessException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new BusinessException("REGISTRATION_ERROR", "注册失败，请稍后重试");
+        }
     }
 
     @PostMapping("/refresh")
@@ -135,7 +165,25 @@ public class AuthController {
             throw new BusinessException("VALIDATION_ERROR", "刷新令牌不能为空");
         }
 
-        throw new BusinessException("NOT_IMPLEMENTED", "刷新令牌功能待实现");
+        try {
+            String username = jwtUtil.extractUsername(refreshToken);
+            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+
+            if (!jwtUtil.validateToken(refreshToken, userDetails)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("令牌无效或已过期");
+            }
+
+            String newToken = jwtUtil.generateToken(userDetails);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("token", newToken);
+
+            return ResponseEntity.ok(response);
+        } catch (UsernameNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("令牌无效或已过期");
+        } catch (Exception e) {
+            throw new BusinessException("TOKEN_REFRESH_ERROR", "刷新令牌失败");
+        }
     }
 
     @PostMapping("/logout")

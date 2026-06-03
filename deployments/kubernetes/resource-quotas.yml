@@ -1,0 +1,39 @@
+# ============================================================
+# 资源配额 — 防止单个团队/命名空间耗尽集群资源
+# ============================================================
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: uav-platform-quota
+  namespace: uav-platform
+spec:
+  hard:
+    requests.cpu: "16"
+    requests.memory: "32Gi"
+    limits.cpu: "32"
+    limits.memory: "64Gi"
+    requests.storage: "100Gi"
+    persistentvolumeclaims: "10"
+    count/services: "20"
+    count/deployments.apps: "15"
+---
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: uav-platform-limits
+  namespace: uav-platform
+spec:
+  limits:
+    - default:
+        cpu: 500m
+        memory: 512Mi
+      defaultRequest:
+        cpu: 200m
+        memory: 256Mi
+      max:
+        cpu: "4"
+        memory: 4Gi
+      min:
+        cpu: 50m
+        memory: 64Mi
+      type: Container

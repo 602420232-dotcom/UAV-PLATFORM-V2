@@ -109,6 +109,7 @@ class WrfControllerEnhancedTest {
 
     @Test
     @DisplayName("获取湍流数据")
+    @SuppressWarnings("unchecked")
     void testGetTurbulence() {
         Map<String, Object> result = wrfController.getTurbulence("test-file-id");
         assertTrue((Boolean) result.get("success"));
@@ -118,6 +119,7 @@ class WrfControllerEnhancedTest {
 
     @Test
     @DisplayName("获取能见度数据")
+    @SuppressWarnings("unchecked")
     void testGetVisibility() {
         Map<String, Object> result = wrfController.getVisibility("test-file-id");
         assertTrue((Boolean) result.get("success"));
@@ -127,6 +129,7 @@ class WrfControllerEnhancedTest {
 
     @Test
     @DisplayName("获取闪电风险评估")
+    @SuppressWarnings("unchecked")
     void testGetLightningRisk() {
         Map<String, Object> result = wrfController.getLightningRisk("test-file-id");
         assertTrue((Boolean) result.get("success"));

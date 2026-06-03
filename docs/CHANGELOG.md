@@ -1,5 +1,50 @@
 # 项目更新日志
 
+## 📅 2026-06-03 - 第三阶段改进
+
+### ✅ 新增功能
+
+#### 1. FengWu 气象模型服务
+
+**概述**: 集成风乌（FengWu）深度学习气象预测模型，基于 ONNX Runtime 提供全球 0~14 天天气预报。
+
+**新增文件**:
+```
+fengwu-service/
+├── app.py                 # FastAPI 应用主入口
+├── inference_engine.py    # ONNX 推理引擎封装
+├── requirements.txt       # Python 依赖
+├── Dockerfile             # Docker 镜像构建
+└── README.md              # 服务文档
+```
+
+**服务特性**:
+| 特性 | 说明 |
+|------|------|
+| 模型类型 | 深度学习全球天气预报模型 |
+| 推理引擎 | ONNX Runtime |
+| 输入数据 | ERA5 大气数据（69个变量） |
+| 预测范围 | 0~14天（56步，每步6小时） |
+| 服务端口 | 8085 |
+
+**API 端点**:
+- `POST /api/fengwu/forecast` - 全球气象预测
+- `POST /api/fengwu/wind` - 风场快速查询
+- `GET /api/fengwu/model/info` - 模型信息
+- `GET /api/fengwu/health` - 健康检查
+
+#### 2. 文档全面更新
+
+**更新的文档**:
+| 文档 | 更新内容 |
+|------|---------|
+| `README.md` | 更新项目结构、技术栈、服务表格 |
+| `docs/DOCKER.md` | 添加 FengWu 服务配置 |
+| `docs/PORTS_CONFIGURATION.md` | 添加端口 8085 配置 |
+| `docs/api/API_DOCUMENTATION.md` | 添加 FengWu API 文档 |
+
+---
+
 ## 📅 2026-05-08 - 第二阶段改进
 
 ### ✅ 新增功能
@@ -221,11 +266,11 @@ common-utils/
 
 ---
 
-**更新日期**: 2026-05-08  
+**更新日期**: 2026-06-03  
 **更新人**: UAV DevOps Team  
-**版本**: 2.0.0
+**版本**: 3.0.0
 ---
 
-> **最后更新**: 2026-05-08  
-> **版本**: 2.1  
+> **最后更新**: 2026-06-03  
+> **版本**: 3.0  
 > **维护者**: DITHIOTHREITOL

@@ -1,0 +1,35 @@
+# ============================================================
+# 分级健康检查配置
+# 引用方式: spring.config.import=classpath:health-config.yml
+# ============================================================
+
+# 启用所有健康端点
+management.endpoints.web.exposure.include: health,info
+
+# 分级健康检查
+management.endpoint.health:
+  show-details: when-authorized
+  show-components: when-authorized
+  group:
+    # 存活检查: 仅检查最基础的进程存活
+    liveness:
+      include: ping
+      show-details: never
+    # 就绪检查: 检查外部依赖是否就绪
+    readiness:
+      include: db,redis,python,diskSpace
+      show-details: when-authorized
+    # 完整检查: 所有组件
+    full:
+      include: "*"
+      show-details: always
+
+# 健康检查 HTTP 状态码映射
+management.endpoint.health.status:
+  http-mapping:
+    DOWN: 503
+    DEGRADED: 200
+    OUT_OF_SERVICE: 503
+
+# Kubernetes 探针兼容
+management.health.probes.enabled: true

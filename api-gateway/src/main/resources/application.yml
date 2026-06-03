@@ -1,7 +1,12 @@
 server:
   port: 8088
+  shutdown: graceful
 
 spring:
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
+  config:
+    import: classpath:health-config.yml
   main:
     allow-bean-definition-overriding: true
     web-application-type: reactive
@@ -12,6 +17,9 @@ spring:
       - io.github.resilience4j.timelimiter.autoconfigure.TimeLimiterAutoConfiguration
   application:
     name: api-gateway
+  redis:
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
   cloud:
     gateway:
       discovery:
@@ -27,8 +35,8 @@ spring:
             - name: RequestRateLimiter
               args:
                 key-resolver: "#{@userKeyResolver}"
-                redis-rate-limiter.replenishRate: 100
-                redis-rate-limiter.burstCapacity: 200
+                rate-limiter: "#{@defaultRateLimiter}"
+                status-code: TOO_MANY_REQUESTS
             - StripPrefix=1
         - id: path-planning
           uri: lb://path-planning
@@ -38,8 +46,7 @@ spring:
             - name: RequestRateLimiter
               args:
                 key-resolver: "#{@userKeyResolver}"
-                redis-rate-limiter.replenishRate: 50
-                redis-rate-limiter.burstCapacity: 100
+                rate-limiter: "#{@defaultRateLimiter}"
             - StripPrefix=1
         - id: wrf-processor
           uri: lb://wrf-processor
@@ -49,15 +56,22 @@ spring:
             - name: RequestRateLimiter
               args:
                 key-resolver: "#{@userKeyResolver}"
-                redis-rate-limiter.replenishRate: 30
-                redis-rate-limiter.burstCapacity: 60
+                rate-limiter: "#{@defaultRateLimiter}"
             - StripPrefix=1
+        - id: weather-collector
+          uri: lb://uav-weather-collector
+          predicates:
+            - Path=/api/weather/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                key-resolver: "#{@userKeyResolver}"
+                rate-limiter: "#{@strictRateLimiter}"
       default-filters:
         - name: RequestRateLimiter
           args:
-            key-resolver: "#{@userKeyResolver}"
-            redis-rate-limiter.replenishRate: 20
-            redis-rate-limiter.burstCapacity: 40
+            key-resolver: "#{@ipKeyResolver}"
+            rate-limiter: "#{@defaultRateLimiter}"
 
 springdoc:
   api-docs:

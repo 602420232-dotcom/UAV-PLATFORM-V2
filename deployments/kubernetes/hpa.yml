@@ -1,13 +1,56 @@
+# ============================================================
+# Kubernetes 水平自动扩缩容 (HPA)
+# 基于 CPU / 内存 / 自定义指标自动调整 Pod 副本数
+# ============================================================
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: api-gateway-hpa
-  namespace: uav-system
+  name: uav-platform-hpa
+  namespace: uav-platform
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: api-gateway
+    name: uav-platform
+  minReplicas: 2
+  maxReplicas: 10
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+        - type: Percent
+          value: 100
+          periodSeconds: 15
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+        - type: Percent
+          value: 50
+          periodSeconds: 60
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: path-planning-hpa
+  namespace: uav-platform
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: path-planning
   minReplicas: 2
   maxReplicas: 8
   metrics:
@@ -17,23 +60,17 @@ spec:
         target:
           type: Utilization
           averageUtilization: 70
-    - type: Resource
-      resource:
-        name: memory
-        target:
-          type: Utilization
-          averageUtilization: 75
 ---
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: uav-platform-hpa
-  namespace: uav-system
+  name: api-gateway-hpa
+  namespace: uav-platform
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: uav-platform-service
+    name: api-gateway
   minReplicas: 2
   maxReplicas: 6
   metrics:
@@ -42,76 +79,18 @@ spec:
         name: cpu
         target:
           type: Utilization
-          averageUtilization: 70
-    - type: Resource
-      resource:
-        name: memory
-        target:
-          type: Utilization
-          averageUtilization: 75
+          averageUtilization: 60
 ---
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: wrf-processor-hpa
-  namespace: uav-system
+  name: fengwu-service-hpa
+  namespace: uav-platform
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: wrf-processor-service
-  minReplicas: 1
-  maxReplicas: 4
-  metrics:
-    - type: Resource
-      resource:
-        name: cpu
-        target:
-          type: Utilization
-          averageUtilization: 80
-    - type: Resource
-      resource:
-        name: memory
-        target:
-          type: Utilization
-          averageUtilization: 85
----
-apiVersion: autoscaling/v2
-kind: HorizontalPodAutoscaler
-metadata:
-  name: path-planning-hpa
-  namespace: uav-system
-spec:
-  scaleTargetRef:
-    apiVersion: apps/v1
-    kind: Deployment
-    name: path-planning-service
-  minReplicas: 1
-  maxReplicas: 4
-  metrics:
-    - type: Resource
-      resource:
-        name: cpu
-        target:
-          type: Utilization
-          averageUtilization: 75
-    - type: Resource
-      resource:
-        name: memory
-        target:
-          type: Utilization
-          averageUtilization: 80
----
-apiVersion: autoscaling/v2
-kind: HorizontalPodAutoscaler
-metadata:
-  name: data-assimilation-hpa
-  namespace: uav-system
-spec:
-  scaleTargetRef:
-    apiVersion: apps/v1
-    kind: Deployment
-    name: data-assimilation-service
+    name: fengwu-service
   minReplicas: 1
   maxReplicas: 3
   metrics:
@@ -120,36 +99,4 @@ spec:
         name: cpu
         target:
           type: Utilization
-          averageUtilization: 85
-    - type: Resource
-      resource:
-        name: memory
-        target:
-          type: Utilization
-          averageUtilization: 90
----
-apiVersion: autoscaling/v2
-kind: HorizontalPodAutoscaler
-metadata:
-  name: meteor-forecast-hpa
-  namespace: uav-system
-spec:
-  scaleTargetRef:
-    apiVersion: apps/v1
-    kind: Deployment
-    name: meteor-forecast-service
-  minReplicas: 1
-  maxReplicas: 3
-  metrics:
-    - type: Resource
-      resource:
-        name: cpu
-        target:
-          type: Utilization
-          averageUtilization: 70
-    - type: Resource
-      resource:
-        name: memory
-        target:
-          type: Utilization
-          averageUtilization: 75
+          averageUtilization: 80

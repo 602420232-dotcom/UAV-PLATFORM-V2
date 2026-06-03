@@ -28,9 +28,21 @@ spring:
       password: ${SECURITY_USER_PASSWORD}  # 移除默认值，强制要求配置
       roles: ADMIN
 
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
+  config:
+    import: classpath:health-config.yml
+
 # 服务器配置
 server:
+  port: 8080
+  shutdown: graceful
 
-uav:
-  jwt:
-    secret: dThpc3RhbmRvbmx5Zm9ydGVzdGluZzM2MmJ5dGVzbG9uZ3NlY3JldGtleQ==
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+jwt:
+  secret: dThpc3RhbmRvbmx5Zm9ydGVzdGluZzM2MmJ5dGVzbG9uZ3NlY3JldGtleQ==

@@ -1,6 +1,6 @@
 package com.uav.service;
 
-import com.uav.config.DemoProperties;
+import com.uav.config.UavProperties;
 import com.uav.entity.DemoSession;
 import com.uav.model.Role;
 import com.uav.model.User;
@@ -29,7 +29,7 @@ public class DemoModeService {
     private static final String DEMO_SESSION_KEY_PREFIX = "demo:session:";
     private static final String DEMO_API_CALLS_KEY_PREFIX = "demo:api:calls:";
 
-    private final DemoProperties demoProperties;
+    private final UavProperties uavProperties;
     private final DemoSessionRepository demoSessionRepository;
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
@@ -40,12 +40,12 @@ public class DemoModeService {
     public DemoSession createDemoUser(String ipAddress, String purpose) {
         log.info("Creating demo user, ipAddress={}, purpose={}", ipAddress, purpose);
 
-        if (!demoProperties.isEnabled()) {
+        if (!uavProperties.getDemo().isEnabled()) {
             throw new IllegalStateException("Demo mode is not enabled");
         }
 
         long activeSessions = demoSessionRepository.countByIsActiveTrue();
-        if (activeSessions >= demoProperties.getMaxConcurrentSessions()) {
+        if (activeSessions >= uavProperties.getDemo().getMaxConcurrentSessions()) {
             throw new IllegalStateException("Max concurrent demo sessions reached");
         }
 
@@ -76,7 +76,7 @@ public class DemoModeService {
         demoUser = userRepository.save(demoUser);
 
         LocalDateTime now = LocalDateTime.now();
-        LocalDateTime expiresAt = now.plusSeconds(demoProperties.getSessionDuration());
+        LocalDateTime expiresAt = now.plusSeconds(uavProperties.getDemo().getSessionDuration());
 
         DemoSession demoSession = DemoSession.builder()
                 .demoUserId(demoUserId)
@@ -94,7 +94,7 @@ public class DemoModeService {
         demoSession = demoSessionRepository.save(demoSession);
 
         String redisKey = DEMO_SESSION_KEY_PREFIX + sessionId;
-        long ttl = demoProperties.getSessionDuration();
+        long ttl = uavProperties.getDemo().getSessionDuration();
         redisTemplate.opsForValue().set(redisKey, demoSession, ttl, TimeUnit.SECONDS);
 
         String apiCallsKey = DEMO_API_CALLS_KEY_PREFIX + sessionId;
@@ -112,14 +112,14 @@ public class DemoModeService {
             Optional<DemoSession> sessionOpt = demoSessionRepository.findBySessionId(sessionId);
             if (sessionOpt.isPresent()) {
                 currentCalls = sessionOpt.get().getApiCalls();
-                long ttl = demoProperties.getSessionDuration();
+                long ttl = uavProperties.getDemo().getSessionDuration();
                 redisTemplate.opsForValue().set(apiCallsKey, currentCalls, ttl, TimeUnit.SECONDS);
             } else {
                 return false;
             }
         }
 
-        return currentCalls < demoProperties.getApiRateLimit();
+        return currentCalls < uavProperties.getDemo().getApiRateLimit();
     }
 
     public boolean isDemoSessionValid(String sessionId) {
@@ -158,7 +158,7 @@ public class DemoModeService {
         DemoSession demoSession = (DemoSession) redisTemplate.opsForValue().get(redisKey);
         if (demoSession != null) {
             demoSession.setApiCalls(newCalls != null ? newCalls.intValue() : 0);
-            redisTemplate.opsForValue().set(redisKey, demoSession, demoProperties.getSessionDuration(), TimeUnit.SECONDS);
+            redisTemplate.opsForValue().set(redisKey, demoSession, uavProperties.getDemo().getSessionDuration(), TimeUnit.SECONDS);
         }
 
         demoSessionRepository.findBySessionId(sessionId).ifPresent(session -> {
@@ -193,9 +193,9 @@ public class DemoModeService {
         if (demoSession == null) {
             demoSession = demoSessionRepository.findBySessionId(sessionId).orElse(null);
             if (demoSession != null) {
-                long ttl = demoProperties.getSessionDuration();
-                redisTemplate.opsForValue().set(redisKey, demoSession, ttl, TimeUnit.SECONDS);
-            }
+            long ttl = uavProperties.getDemo().getSessionDuration();
+            redisTemplate.opsForValue().set(redisKey, demoSession, ttl, TimeUnit.SECONDS);
+        }
         }
 
         return Optional.ofNullable(demoSession);

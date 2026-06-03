@@ -1,3 +1,4 @@
+import heapq
 import logging
 from typing import Tuple, Optional, List, Dict, Set
 
@@ -53,14 +54,13 @@ class DijkstraPlanner(BasePlanner):
             predecessors = [[None for _ in range(h)] for _ in range(w)]
             distances[start_grid[0]][start_grid[1]] = 0
 
-            priority_queue = [(0, start_grid)]
+            priority_queue = [(0.0, start_grid)]
             visited: Set = set()
             directions = [(0, 1), (1, 0), (0, -1), (-1, 0),
                           (1, 1), (1, -1), (-1, 1), (-1, -1)]
 
             while priority_queue:
-                priority_queue.sort()
-                current_distance, current_pos = priority_queue.pop(0)
+                current_distance, current_pos = heapq.heappop(priority_queue)
 
                 if current_pos == goal_grid:
                     path = []
@@ -91,7 +91,7 @@ class DijkstraPlanner(BasePlanner):
                     if nd < distances[nx][ny]:
                         distances[nx][ny] = nd
                         predecessors[nx][ny] = current_pos
-                        priority_queue.append((nd, (nx, ny)))
+                        heapq.heappush(priority_queue, (nd, (nx, ny)))
 
             logger.warning("Dijkstra无法找到路径")
             return self._make_result(False, error='无法找到路径')

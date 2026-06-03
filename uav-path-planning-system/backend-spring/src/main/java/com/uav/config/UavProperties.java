@@ -3,6 +3,11 @@ package com.uav.config;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * 路径规划系统专用配置属性
+ * 
+ * 注意：JWT 配置已移至 common-utils 模块的 UavConfigProperties
+ */
 @Configuration
 @ConfigurationProperties(prefix = "uav")
 public class UavProperties {
@@ -11,6 +16,7 @@ public class UavProperties {
     private Wrf wrf = new Wrf();
     private PathPlanning pathPlanning = new PathPlanning();
     private Grpc grpc = new Grpc();
+    private Demo demo = new Demo();
 
     public Python getPython() {
         return python;
@@ -44,9 +50,16 @@ public class UavProperties {
         this.grpc = grpc;
     }
 
+    public Demo getDemo() {
+        return demo;
+    }
+
+    public void setDemo(Demo demo) {
+        this.demo = demo;
+    }
+
     public static class Python {
-        private static final String USER_DIR = System.getProperty("user.dir");
-        private String scriptPath = USER_DIR + "/algorithm-core";
+        private String scriptPath;
         private int timeout = 30000;
 
         public String getScriptPath() {
@@ -67,8 +80,7 @@ public class UavProperties {
     }
 
     public static class Wrf {
-        private static final String USER_DIR = System.getProperty("user.dir");
-        private String dataPath = USER_DIR + "/data/wrf";
+        private String dataPath;
         private int updateInterval = 300;
 
         public String getDataPath() {
@@ -136,6 +148,54 @@ public class UavProperties {
 
         public void setPort(int port) {
             this.port = port;
+        }
+    }
+
+    public static class Demo {
+        private boolean enabled = false;
+        private int maxConcurrentSessions = 100;
+        private int apiRateLimit = 100;
+        private int sessionDuration = 3600;
+        private boolean dataIsolation = true;
+
+        public boolean isEnabled() {
+            return enabled;
+        }
+
+        public void setEnabled(boolean enabled) {
+            this.enabled = enabled;
+        }
+
+        public int getMaxConcurrentSessions() {
+            return maxConcurrentSessions;
+        }
+
+        public void setMaxConcurrentSessions(int maxConcurrentSessions) {
+            this.maxConcurrentSessions = maxConcurrentSessions;
+        }
+
+        public int getApiRateLimit() {
+            return apiRateLimit;
+        }
+
+        public void setApiRateLimit(int apiRateLimit) {
+            this.apiRateLimit = apiRateLimit;
+        }
+
+        public int getSessionDuration() {
+            return sessionDuration;
+        }
+
+        public void setSessionDuration(int sessionDuration) {
+            this.sessionDuration = sessionDuration;
+        }
+
+        public boolean isDataIsolation() {
+            return dataIsolation;
+        }
+
+        public void setDataIsolation(boolean dataIsolation) {
+            this.dataIsolation = dataIsolation;
         }
     }
 }
