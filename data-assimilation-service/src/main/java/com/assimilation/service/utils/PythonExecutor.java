@@ -19,6 +19,10 @@ public class PythonExecutor {
     private static final Logger log = LoggerFactory.getLogger(PythonExecutor.class);
     private static PythonScriptInvoker delegate;
 
+    /**
+     * @deprecated 使用 {@link com.uav.common.script.PythonScriptInvoker} 替代
+     */
+    @Deprecated
     public static void init(ApplicationContext context) {
         delegate = context.getBean(PythonScriptInvoker.class);
         log.info("PythonExecutor initialized with delegate: PythonScriptInvoker");
