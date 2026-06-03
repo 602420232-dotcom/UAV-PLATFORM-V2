@@ -24,6 +24,10 @@ public class PythonExecutor {
         log.info("PythonExecutor initialized with delegate: PythonScriptInvoker");
     }
 
+    /**
+     * @deprecated 请使用 {@link PythonScriptInvoker#execute(String, String, Map)} 替代。
+     */
+    @Deprecated
     public static Map<String, Object> execute(String pythonScript, String action, Map<String, Object> request) {
         if (delegate == null) {
             log.warn("PythonScriptInvoker not initialized, trying fallback execution");
