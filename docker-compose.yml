@@ -3,10 +3,10 @@ services:
     image: mysql:8.0
     container_name: uav-mysql
     environment:
-      MYSQL_ROOT_PASSWORD: '***'
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-CHANGE_ME}
       MYSQL_DATABASE: uav_platform
       MYSQL_USER: uav
-      MYSQL_PASSWORD: '***'
+      MYSQL_PASSWORD: ${DB_PASSWORD:-CHANGE_ME}
     ports:
       - "3306:3306"
     volumes:
@@ -59,7 +59,10 @@ services:
           memory: 512M
 
   api-gateway:
-    image: trae-api-gateway:latest
+    build:
+      context: .
+      dockerfile: ./api-gateway/Dockerfile
+    image: trae-api-gateway:${TAG:-latest}
     container_name: uav-gateway
     ports:
       - "8088:8088"
@@ -223,7 +226,10 @@ services:
           memory: 256M
 
   uav-platform:
-    image: trae-uav-platform:latest
+    build:
+      context: .
+      dockerfile: ./uav-platform-service/Dockerfile
+    image: trae-uav-platform:${TAG:-latest}
     container_name: uav-platform
     ports:
       - "8080:8080"
@@ -272,7 +278,10 @@ services:
           memory: 256M
 
   uav-weather-collector:
-    image: trae-uav-weather-collector:latest
+    build:
+      context: .
+      dockerfile: ./uav-weather-collector/Dockerfile
+    image: trae-uav-weather-collector:${TAG:-latest}
     container_name: uav-weather
     ports:
       - "8086:8086"
@@ -333,12 +342,73 @@ services:
         reservations:
           memory: 256M
 
+  fengwu-service:
+    build:
+      context: .
+      dockerfile: ./fengwu-service/Dockerfile
+    container_name: uav-fengwu
+    ports:
+      - "8085:8085"
+    depends_on:
+      nacos:
+        condition: service_healthy
+    environment:
+      LOG_PATH: /logs
+      FENGWU_USE_GPU: "false"
+      FENGWU_MODEL_PATH: /app/model/fengwu_v2.onnx
+      FENGWU_NUM_THREADS: 4
+      NACOS_SERVER: nacos:8848
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8085/health/ready"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+        reservations:
+          memory: 2G
+
+  model-engine:
+    build:
+      context: .
+      dockerfile: ./model-engine/Dockerfile
+    container_name: uav-model-engine
+    ports:
+      - "8087:8087"
+    depends_on:
+      nacos:
+        condition: service_healthy
+      fengwu-service:
+        condition: service_started
+    environment:
+      LOG_PATH: /logs
+      MODEL_PYTHON_PATH: /app/python
+      NACOS_SERVER: nacos:8848
+      FENGWU_SERVICE_URL: http://fengwu-service:8085
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8087/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 1G
+
   kafka:
     image: confluentinc/cp-kafka:7.4.0
     container_name: uav-kafka
     depends_on:
       zookeeper:
-        condition: service_started
+        condition: service_healthy
     ports:
       - "9092:9092"
     environment:
@@ -360,6 +430,11 @@ services:
       - "2181:2181"
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
+    healthcheck:
+      test: ["CMD", "echo", "ruok", "|", "nc", "localhost", "2181"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     deploy:
       resources:
         limits:
@@ -388,4 +463,6 @@ volumes:
 
 networks:
   trae_default:
-    external: true
+    # 生产环境使用 external: true 预先创建网络
+    # docker network create trae_default
+    driver: bridge

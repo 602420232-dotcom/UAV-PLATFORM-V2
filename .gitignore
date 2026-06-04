@@ -336,6 +336,3 @@ Dockerfile.*.quick
 
 # Pyright cache
 .pyright/
-
-# Model checkpoints / weights
-model-engine/checkpoints/

@@ -11,6 +11,9 @@ import org.springframework.context.annotation.Configuration;
 public class WeatherProperties {
 
     private Collection collection = new Collection();
+    private Cma cma = new Cma();
+    private Owm owm = new Owm();
+    private Ecmwf ecmwf = new Ecmwf();
 
     public Collection getCollection() {
         return collection;
@@ -18,6 +21,30 @@ public class WeatherProperties {
 
     public void setCollection(Collection collection) {
         this.collection = collection;
+    }
+
+    public Cma getCma() {
+        return cma;
+    }
+
+    public void setCma(Cma cma) {
+        this.cma = cma;
+    }
+
+    public Owm getOwm() {
+        return owm;
+    }
+
+    public void setOwm(Owm owm) {
+        this.owm = owm;
+    }
+
+    public Ecmwf getEcmwf() {
+        return ecmwf;
+    }
+
+    public void setEcmwf(Ecmwf ecmwf) {
+        this.ecmwf = ecmwf;
     }
 
     public static class Collection {
@@ -56,6 +83,69 @@ public class WeatherProperties {
 
         public void setRiskInterval(long riskInterval) {
             this.riskInterval = riskInterval;
+        }
+    }
+
+    public static class Cma {
+        private String apiKey = "";
+        private String baseUrl = "https://api.weather.cma.cn/api";
+
+        public String getApiKey() {
+            return apiKey;
+        }
+
+        public void setApiKey(String apiKey) {
+            this.apiKey = apiKey;
+        }
+
+        public String getBaseUrl() {
+            return baseUrl;
+        }
+
+        public void setBaseUrl(String baseUrl) {
+            this.baseUrl = baseUrl;
+        }
+    }
+
+    public static class Owm {
+        private String apiKey = "";
+        private String baseUrl = "https://api.openweathermap.org/data/2.5";
+
+        public String getApiKey() {
+            return apiKey;
+        }
+
+        public void setApiKey(String apiKey) {
+            this.apiKey = apiKey;
+        }
+
+        public String getBaseUrl() {
+            return baseUrl;
+        }
+
+        public void setBaseUrl(String baseUrl) {
+            this.baseUrl = baseUrl;
+        }
+    }
+
+    public static class Ecmwf {
+        private String apiKey = "";
+        private String baseUrl = "https://api.ecmwf.int/v1";
+
+        public String getApiKey() {
+            return apiKey;
+        }
+
+        public void setApiKey(String apiKey) {
+            this.apiKey = apiKey;
+        }
+
+        public String getBaseUrl() {
+            return baseUrl;
+        }
+
+        public void setBaseUrl(String baseUrl) {
+            this.baseUrl = baseUrl;
         }
     }
 }

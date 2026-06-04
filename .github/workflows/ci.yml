@@ -6,6 +6,11 @@ on:
   pull_request:
     branches: [main]
 
+# GitHub Container Registry 推送需要 packages: write
+permissions:
+  contents: read
+  packages: write
+
 env:
   JAVA_VERSION: '17'
   NODE_VERSION: '20'
@@ -87,22 +92,145 @@ jobs:
       - name: Build
         run: npm run build
 
-  # ===== Job 4: Docker 镜像构建 =====
+  # ===== Job 4: Docker 镜像构建与推送 =====
   docker-build:
-    name: Docker Build
+    name: Docker Build & Push
     runs-on: ubuntu-latest
     needs: [java-build, frontend-build]
+    permissions:
+      contents: read
+      packages: write
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build API Gateway
-        run: docker build -t trae-api-gateway:${{ github.sha }} -f api-gateway/Dockerfile .
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build Path Planning Service
-        run: docker build -t path-planning-service:${{ github.sha }} -f path-planning-service/Dockerfile .
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-      - name: Build UAV Platform
-        run: docker build -t uav-platform-service:${{ github.sha }} -f uav-platform-service/Dockerfile .
+      - name: Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=sha,prefix=
+            type=ref,event=branch
+            type=semver,pattern={{version}}
 
-      - name: Build Frontend
-        run: docker build -t frontend-vue:${{ github.sha }} -f uav-path-planning-system/frontend-vue/Dockerfile uav-path-planning-system/frontend-vue
+      # ----- Java 微服务 -----
+      - name: Build & Push API Gateway
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./api-gateway/Dockerfile
+          push: true
+          tags: ghcr.io/${{ github.repository }}/api-gateway:${{ github.sha }},ghcr.io/${{ github.repository }}/api-gateway:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build & Push UAV Platform
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./uav-platform-service/Dockerfile
+          push: true
+          tags: ghcr.io/${{ github.repository }}/uav-platform:${{ github.sha }},ghcr.io/${{ github.repository }}/uav-platform:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build & Push WRF Processor
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./wrf-processor-service/Dockerfile
+          push: true
+          tags: ghcr.io/${{ github.repository }}/wrf-processor:${{ github.sha }},ghcr.io/${{ github.repository }}/wrf-processor:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build & Push Data Assimilation
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./data-assimilation-service/Dockerfile
+          push: true
+          tags: ghcr.io/${{ github.repository }}/data-assimilation:${{ github.sha }},ghcr.io/${{ github.repository }}/data-assimilation:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build & Push Meteor Forecast
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./meteor-forecast-service/Dockerfile
+          push: true
+          tags: ghcr.io/${{ github.repository }}/meteor-forecast:${{ github.sha }},ghcr.io/${{ github.repository }}/meteor-forecast:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build & Push Path Planning
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./path-planning-service/Dockerfile
+          push: true
+          tags: ghcr.io/${{ github.repository }}/path-planning:${{ github.sha }},ghcr.io/${{ github.repository }}/path-planning:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build & Push Weather Collector
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./uav-weather-collector/Dockerfile
+          push: true
+          tags: ghcr.io/${{ github.repository }}/weather-collector:${{ github.sha }},ghcr.io/${{ github.repository }}/weather-collector:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build & Push Frontend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./uav-path-planning-system/frontend-vue
+          file: Dockerfile
+          push: true
+          tags: ghcr.io/${{ github.repository }}/frontend:${{ github.sha }},ghcr.io/${{ github.repository }}/frontend:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # ----- Python / AI 服务 -----
+      - name: Build & Push FengWu Service
+        uses: docker/build-push-action@v6
+        with:
+          context: ./fengwu-service
+          file: Dockerfile
+          push: true
+          tags: ghcr.io/${{ github.repository }}/fengwu:${{ github.sha }},ghcr.io/${{ github.repository }}/fengwu:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build & Push Edge-Cloud Coordinator
+        uses: docker/build-push-action@v6
+        with:
+          context: ./edge-cloud-coordinator
+          file: Dockerfile
+          push: true
+          tags: ghcr.io/${{ github.repository }}/edge-cloud:${{ github.sha }},ghcr.io/${{ github.repository }}/edge-cloud:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build & Push Model Engine
+        uses: docker/build-push-action@v6
+        with:
+          context: ./model-engine
+          file: Dockerfile
+          push: true
+          tags: ghcr.io/${{ github.repository }}/model-engine:${{ github.sha }},ghcr.io/${{ github.repository }}/model-engine:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
