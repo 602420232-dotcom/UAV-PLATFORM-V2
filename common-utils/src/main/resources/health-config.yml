@@ -17,7 +17,7 @@ management.endpoint.health:
       show-details: never
     # 就绪检查: 检查外部依赖是否就绪
     readiness:
-      include: db,redis,python,diskSpace
+      include: db,redis,diskSpace
       show-details: when-authorized
     # 完整检查: 所有组件
     full:
