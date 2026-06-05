@@ -57,6 +57,7 @@ except ImportError:
 
 
 class EnhancedAssimilationConfig(AssimilationConfig):
+
     def __post_init__(self):
         """验证配置参数的合理性"""
         super().__post_init__()
@@ -211,6 +212,7 @@ def assimilate_with_progress(assimilator, background, observations, locations):
     if has_tqdm:
         with tqdm(total=100, desc="3DVAR同化进度", unit="%") as pbar:
             # 模拟进度更新
+
             def progress_callback(progress):
                 pbar.update(progress - pbar.n)
 

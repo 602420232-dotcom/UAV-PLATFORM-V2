@@ -22,6 +22,7 @@ def fix_file(rel_path, replacements):
     else:
         print(f'NO CHANGES: {rel_path}')
 
+
 # File 3: algorithm_core/examples/TESTING.md
 
 

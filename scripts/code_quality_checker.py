@@ -5,8 +5,7 @@ Check for common code quality issues
 
 import os
 import re
-from pathlib import Path
-from typing import Dict, List
+from typing import List
 from datetime import datetime
 
 
@@ -102,7 +101,7 @@ class CodeQualityChecker:
                     'count': long_lines
                 })
 
-        except Exception as e:
+        except Exception as e:  # noqa: F841
             pass
 
     def _generate_report(self):

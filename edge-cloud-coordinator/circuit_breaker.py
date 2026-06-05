@@ -9,7 +9,6 @@ import pybreaker
 import logging
 from functools import wraps
 from typing import Callable, Any, Optional
-import time
 
 # 配置日志
 logger = logging.getLogger(__name__)
@@ -217,6 +216,7 @@ def circuit_breaker(breaker_type: str = 'http'):
     Args:
         breaker_type: 熔断器类型 ('http', 'websocket', 'federated')
     """
+
     def decorator(func: Callable) -> Callable:
         @wraps(func)
         def wrapper(*args, **kwargs):
@@ -248,6 +248,7 @@ def with_circuit_breaker(breaker_name: str, fallback: Optional[Callable] = None)
         breaker_name: 熔断器名称
         fallback: 降级函数
     """
+
     def decorator(func: Callable) -> Callable:
         @wraps(func)
         def wrapper(*args, **kwargs):

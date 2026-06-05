@@ -10,12 +10,10 @@ MAVLink 输出 — PX4/ArduPilot 原生支持
 """
 import json
 import struct
-import math
-from dataclasses import dataclass, field
-from typing import List, Optional, Tuple
+from dataclasses import dataclass
+from typing import Optional, Tuple
 from enum import IntEnum
 from pathlib import Path
-from datetime import datetime
 
 
 # ── 坐标系统 ────────────────────────────────────

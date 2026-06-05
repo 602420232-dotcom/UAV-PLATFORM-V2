@@ -12,11 +12,10 @@ SRC_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file
 if SRC_DIR not in sys.path:
     sys.path.insert(0, SRC_DIR)
 
-import numpy as np
-from scipy.sparse import csr_matrix, lil_matrix
-from scipy.interpolate import RegularGridInterpolator
-from typing import Optional, Tuple, List, Union
-import logging
+import numpy as np  # noqa: E402
+from scipy.sparse import csr_matrix  # noqa: E402
+from typing import Tuple  # noqa: E402
+import logging  # noqa: E402
 
 logger = logging.getLogger(__name__)
 

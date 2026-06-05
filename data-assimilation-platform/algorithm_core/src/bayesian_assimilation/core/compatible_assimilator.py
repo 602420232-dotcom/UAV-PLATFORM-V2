@@ -12,18 +12,18 @@ SRC_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file
 if SRC_DIR not in sys.path:
     sys.path.insert(0, SRC_DIR)
 
-import numpy as np
-from scipy.sparse import diags, csr_matrix
-from scipy.sparse.linalg import LinearOperator, cg
-import logging
-from typing import Optional, Tuple, List
-import warnings
+import numpy as np  # noqa: E402
+from scipy.sparse import diags, csr_matrix  # noqa: E402
+from scipy.sparse.linalg import LinearOperator, cg  # noqa: E402
+import logging  # noqa: E402
+from typing import Optional, Tuple  # noqa: E402
+import warnings  # noqa: E402
 warnings.filterwarnings('ignore', category=UserWarning)
 
 logger = logging.getLogger(__name__)
 
-from bayesian_assimilation.utils.config import CompatibleConfig
-from bayesian_assimilation.core.base import AssimilationBase
+from bayesian_assimilation.utils.config import CompatibleConfig  # noqa: E402
+from bayesian_assimilation.core.base import AssimilationBase  # noqa: E402
 
 
 class CompatibleAssimilator(AssimilationBase):

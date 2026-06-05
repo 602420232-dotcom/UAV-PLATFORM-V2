@@ -3,7 +3,6 @@
 GPR 风险场 API 路由
 """
 import torch
-import numpy as np
 import logging
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
@@ -38,8 +37,6 @@ class RiskFieldResponse(BaseModel):
 
 
 @router.post("/compute", response_model=RiskFieldResponse)
-
-
 async def compute_risk_field(request: RiskFieldRequest):
     """
     计算气象风险场
@@ -99,13 +96,10 @@ async def compute_risk_field(request: RiskFieldRequest):
 
 
 @router.get("/status")
-
-
 async def risk_service_status():
     """检查 GPR 风险场服务状态"""
     try:
         import torch
-        import gpytorch
         return {
             "service": "GPR Risk Field",
             "torch_version": torch.__version__,

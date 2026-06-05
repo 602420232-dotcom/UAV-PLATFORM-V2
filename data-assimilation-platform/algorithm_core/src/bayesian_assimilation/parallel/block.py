@@ -5,7 +5,7 @@
 '''
 
 import numpy as np
-from typing import Dict, List, Optional, Any, Tuple
+from typing import Any
 import logging
 import concurrent.futures
 import multiprocessing
@@ -20,7 +20,9 @@ try:
 
 except ImportError:
     # 如果无法导入，创建一个基类
+
     class BayesianAssimilator:
+
         def __init__(self, config=None):
             self.config = config
             self.logger = logging.getLogger(__name__)
@@ -215,7 +217,7 @@ class BlockParallelAssimilator(BayesianAssimilator):
             analysis[start_x:end_x, :, :] = analysis_block
             variance[start_x:end_x, :, :] = variance_block
 
-        elapsed = time.time() - start_time
+        elapsed = time.time() - start_time  # noqa: F841
 
         return analysis, variance
 

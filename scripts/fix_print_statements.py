@@ -4,10 +4,11 @@
 将 print(json.dumps(...)) 替换为 logger.info(...)
 """
 
-import os
 import re
-import sys
+import logging
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 # 项目根目录
 PROJECT_ROOT = Path(__file__).parent.parent

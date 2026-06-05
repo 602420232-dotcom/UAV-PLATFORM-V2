@@ -5,7 +5,6 @@ Python类型注解自动添加器
 
 import ast
 import os
-from pathlib import Path
 from typing import List, Tuple, Optional
 from datetime import datetime
 
@@ -91,7 +90,7 @@ def add_types_to_file(file_path: str) -> Tuple[bool, List[dict]]:
             return True, adder.changes
         return False, []
 
-    except Exception as e:
+    except Exception as e:  # noqa: F841
         return False, []
 
 

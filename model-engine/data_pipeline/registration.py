@@ -12,10 +12,10 @@
   时间配准: 多源预报的异步时间对齐 + 线性插值
 """
 import numpy as np
-from scipy.ndimage import zoom, gaussian_filter
-from dataclasses import dataclass, field
+from scipy.ndimage import zoom
+from dataclasses import dataclass
 from typing import Optional, Tuple, List
-from datetime import datetime, timedelta
+from datetime import datetime
 
 
 @dataclass
@@ -102,7 +102,7 @@ class SpatiotemporalRegistrator:
 
         return resampled
 
-    def _terrain_correct(self, field: np.ndarray) -> np.ndarray:
+    def _terrain_correct(self, field: np.ndarray) -> np.ndarray:  # noqa: F811
         """地形校正: 温度/气压随高度修正"""
         # 简化修正: 温度每100m 降 0.65°C
         dem = self._load_dem(field.shape[1], field.shape[2])

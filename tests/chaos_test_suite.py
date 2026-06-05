@@ -2,10 +2,8 @@
 """Chaos Engineering 测试套件 — 验证系统弹性"""
 import requests
 import time
-import json
 import threading
 import os
-import sys
 
 BASE_URL = os.environ.get("BASE_URL", "http://localhost:8088")
 TIMEOUT = 10
@@ -127,7 +125,6 @@ def test_5_memory_leak_detection():
 def test_6_cascade_failure():
     """级联故障测试 — 依赖服务不可用时行为"""
     log("6/6: 验证依赖服务超时不会导致级联崩溃")
-    import socket
 
     start = time.time()
     for _ in range(5):

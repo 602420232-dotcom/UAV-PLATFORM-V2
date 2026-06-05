@@ -9,9 +9,13 @@ import argparse
 import time
 import sys
 import os
+import logging
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../algorithm_core/src'))
 
 import numpy as np
+
+logger = logging.getLogger(__name__)
 
 
 def benchmark_3dvar(grid_size: str, obs_count: int):

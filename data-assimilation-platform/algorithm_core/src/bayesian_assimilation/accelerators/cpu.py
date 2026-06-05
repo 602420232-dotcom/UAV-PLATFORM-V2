@@ -4,7 +4,6 @@ CPU加速器
 """
 
 import os
-import sys
 import logging
 import numpy as np
 from typing import Optional, Any
@@ -95,7 +94,7 @@ class CPUAccelerator(BaseAccelerator):
             # 尝试检测OpenBLAS（可选）
             try:
                 # 使用__import__动态导入避免Pylance报错
-                openblas = __import__('openblas')
+                openblas = __import__('openblas')  # noqa: F841
                 logger.info("   OpenBLAS可用")
                 self.use_blas = True
             except (ImportError, AttributeError):
@@ -104,7 +103,7 @@ class CPUAccelerator(BaseAccelerator):
             # 尝试检测Intel MKL（可选）
             try:
                 # 使用__import__动态导入避免Pylance报错
-                mkl = __import__('mkl')
+                mkl = __import__('mkl')  # noqa: F841
                 logger.info("   Intel MKL可用")
                 self.use_blas = True
             except (ImportError, AttributeError):

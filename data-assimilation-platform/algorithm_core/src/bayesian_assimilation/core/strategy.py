@@ -12,10 +12,10 @@ SRC_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file
 if SRC_DIR not in sys.path:
     sys.path.insert(0, SRC_DIR)
 
-import numpy as np
-from typing import Optional, Tuple, Dict, Any, Union
-from datetime import datetime
-import logging
+import numpy as np  # noqa: E402
+from typing import Optional, Tuple, Dict, Any, Union  # noqa: E402
+from datetime import datetime  # noqa: E402
+import logging  # noqa: E402
 
 logger = logging.getLogger(__name__)
 
@@ -103,13 +103,13 @@ class EnsembleStrategy(AssimilationStrategy):
         start_time = datetime.now()
 
         nx, ny, nz = background.shape
-        n_total = nx * ny * nz
+        n_total = nx * ny * nz  # noqa: F841
 
         ensemble = np.random.randn(self.ensemble_size, nx, ny, nz) * 0.5 + background
 
         analysis = np.mean(ensemble, axis=0)
 
-        anomalies = ensemble - analysis
+        anomalies = ensemble - analysis  # noqa: F841
         variance = np.var(ensemble, axis=0)
 
         elapsed = (datetime.now() - start_time).total_seconds()

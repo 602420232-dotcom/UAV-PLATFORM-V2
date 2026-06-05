@@ -1,4 +1,3 @@
-import logging
 """
 Docstring模板和生成工具
 
@@ -8,7 +7,12 @@ Author: AI Code Audit System
 Date: 2026-05-08
 """
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 # ==================== 类Docstring模板 ====================
+
 
 CLASS_DOCSTRING_TEMPLATE = '''"""{name} - {short_description}
 

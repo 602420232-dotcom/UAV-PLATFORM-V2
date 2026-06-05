@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 class SecurityChecker(ast.NodeVisitor):
+
     def __init__(self):
         self.findings = []
         self.current_file = None

@@ -13,7 +13,6 @@ import time
 import logging
 import threading
 import atexit
-from pathlib import Path
 from typing import Optional
 
 import numpy as np

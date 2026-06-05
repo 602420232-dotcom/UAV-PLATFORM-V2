@@ -20,6 +20,7 @@ class TestSparseBackgroundCovariance:
     """Test class: SparseBackgroundCovariance"""
 
     @pytest.fixture
+
     def sparsebackgroundcovariance_instance(self):
     """Create instance for SparseBackgroundCovariance"""
         # Initialize with default parameters for testing
@@ -36,6 +37,7 @@ class TestSparseBackgroundCovariance:
     """Test class: SparseBackgroundCovariance"""
 
     @pytest.fixture
+
     def sparsebackgroundcovariance_instance(self):
     """Create instance for SparseBackgroundCovariance"""
         # Initialize with default parameters for testing
@@ -52,6 +54,7 @@ class TestFastSparseBackgroundCovariance:
     """Test class: FastSparseBackgroundCovariance"""
 
     @pytest.fixture
+
     def fastsparsebackgroundcovariance_instance(self):
     """Create instance for FastSparseBackgroundCovariance"""
         # Initialize with default parameters for testing
@@ -68,6 +71,7 @@ class TestFastSparseBackgroundCovariance:
     """Test class: FastSparseBackgroundCovariance"""
 
     @pytest.fixture
+
     def fastsparsebackgroundcovariance_instance(self):
     """Create instance for FastSparseBackgroundCovariance"""
         # Initialize with default parameters for testing

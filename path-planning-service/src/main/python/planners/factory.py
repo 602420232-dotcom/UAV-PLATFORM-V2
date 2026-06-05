@@ -1,6 +1,6 @@
 from typing import Dict, List, Optional, Tuple
 
-from .rrt_star import RRTP, RRTStarPlanner
+from .rrt_star import RRTP
 from .dijkstra import DijkstraPlanner
 from .genetic import GeneticAlgorithmPlanner
 from .pso import ParticleSwarmOptimizationPlanner

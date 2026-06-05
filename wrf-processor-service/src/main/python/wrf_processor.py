@@ -7,13 +7,11 @@ WRF气象数据处理服务
 
 import netCDF4 as nc
 import numpy as np
-import pandas as pd
 import json
 import sys
-import os
 import logging
 import math
-from typing import Optional, Dict, List, Any, Tuple
+from typing import Optional, Dict, List
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -94,6 +92,7 @@ class WrfProcessor:
         return variables
 
     # ─── 基础气象数据提取 ────────────────────────────────────────────────
+
     def extract_meteorological_data(self, height: int = 100) -> Dict:
         """提取指定高度的气象数据"""
         if not self.dataset:
@@ -149,6 +148,7 @@ class WrfProcessor:
             return {}
 
     # ─── 湍流参数提取 ────────────────────────────────────────────────────
+
     def extract_turbulence(self) -> Dict:
         """
         提取湍流参数（Turbulent Kinetic Energy）
@@ -226,6 +226,7 @@ class WrfProcessor:
             return {'tke': None, 'turbulence_intensity': 'UNKNOWN', 'error': str(e)}
 
     # ─── 能见度计算 ──────────────────────────────────────────────────────
+
     def calculate_visibility(self) -> Dict:
         """
         计算能见度
@@ -319,13 +320,14 @@ class WrfProcessor:
 
                 logger.info(f"能见度计算完成: {result['visibility_category']} ({visibility_m:.0f}m)")
 
-        except Exception as e:
+        except Exception as e:  # noqa: F841
             logger.error(f"计算能见度失败: {e}")
             result['error'] = str(e)
 
         return result
 
     # ─── 闪电风险评估 ────────────────────────────────────────────────────
+
     def assess_lightning_risk(self) -> Dict:
         """
         评估闪电风险
@@ -450,6 +452,7 @@ class WrfProcessor:
         return result
 
     # ─── 0-1000m分层数据提取 ────────────────────────────────────────────
+
     def extract_height_layers(self, target_layers: Optional[List[int]] = None) -> Dict:
         """
         提取0-1000米分层气象数据
@@ -574,6 +577,7 @@ class WrfProcessor:
             return {'layers': [], 'error': str(e)}
 
     # ─── 综合数据提取 ────────────────────────────────────────────────────
+
     def extract_all_parameters(self, height: int = 100) -> Dict:
         """提取所有气象参数的综合方法"""
         meteorological = self.extract_meteorological_data(height)
@@ -592,6 +596,7 @@ class WrfProcessor:
         }
 
     # ─── 统计信息 ────────────────────────────────────────────────────────
+
     def get_statistics(self) -> Dict:
         """计算所有参数的数据统计信息"""
         if not self.dataset:
@@ -637,6 +642,7 @@ class WrfProcessor:
         return stats
 
     # ─── 分块读取 ────────────────────────────────────────────────────────
+
     def read_variable_chunked(self, varname: str, chunk_size: int = 100) -> np.ndarray:
         """分块读取大型变量（防止内存溢出）"""
         with nc.Dataset(self.file_path, 'r') as ds:

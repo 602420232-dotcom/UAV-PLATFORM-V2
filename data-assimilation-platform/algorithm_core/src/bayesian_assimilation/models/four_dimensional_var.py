@@ -7,17 +7,15 @@ SRC_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file
 if SRC_DIR not in sys.path:
     sys.path.insert(0, SRC_DIR)
 
-import numpy as np
-from scipy.optimize import minimize
-from scipy.linalg import solve
-import subprocess
-import netCDF4 as nc
-from datetime import datetime, timedelta
-from typing import Dict, List, Tuple, Optional, Any
-import logging
+import numpy as np  # noqa: E402
+from scipy.optimize import minimize  # noqa: E402
+import subprocess  # noqa: E402
+import netCDF4 as nc  # noqa: E402
+from datetime import datetime  # noqa: E402
+from typing import Dict, List, Tuple, Optional, Any  # noqa: E402
+import logging  # noqa: E402
 
-from bayesian_assimilation.core.base import AssimilationBase
-from bayesian_assimilation.utils.config import BaseConfig
+from bayesian_assimilation.core.base import AssimilationBase  # noqa: E402
 
 logger = logging.getLogger(__name__)
 
@@ -266,6 +264,7 @@ class FourDimensionalVar(AssimilationBase):
         n = n_rows * n_cols
 
         # 准备观测算子
+
         def observation_operator(model_state):
             obs_values = []
             for obs in observations:

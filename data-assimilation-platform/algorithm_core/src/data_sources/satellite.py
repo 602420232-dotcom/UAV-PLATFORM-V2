@@ -1,7 +1,6 @@
 # data_sources/satellite.py
 # 卫星数据源处理
 
-import numpy as np
 from typing import Optional, List, Dict, Any, Tuple
 import h5py
 import netCDF4 as nc
@@ -14,7 +13,9 @@ try:
 
 except ImportError:
     from abc import ABC, abstractmethod
+
     class DataSourceBase(ABC):
+
         def __init__(self, config=None):
             self.config = config or {}
             self.data = None
@@ -84,6 +85,7 @@ class SatelliteDataSource(DataSourceBase):
         """
         with h5py.File(file_path, 'r') as f:
             self.data = {}
+
             def _extract_data(group, prefix=''):
                 for key in group.keys():
                     item = group[key]

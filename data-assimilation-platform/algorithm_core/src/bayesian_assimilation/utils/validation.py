@@ -5,7 +5,7 @@
 
 import logging
 import numpy as np
-from typing import Dict, Any, List, Tuple, Optional, Union
+from typing import Dict, Any, List, Tuple, Union
 
 logger = logging.getLogger(__name__)
 

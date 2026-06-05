@@ -20,6 +20,7 @@ class TestAdaptiveAssimilator:
     """Test class: AdaptiveAssimilator"""
 
     @pytest.fixture
+
     def adaptiveassimilator_instance(self):
     """Create instance for AdaptiveAssimilator"""
         # Initialize with default parameters for testing
@@ -36,6 +37,7 @@ class TestAdaptiveAssimilator:
     """Test class: AdaptiveAssimilator"""
 
     @pytest.fixture
+
     def adaptiveassimilator_instance(self):
     """Create instance for AdaptiveAssimilator"""
         # Initialize with default parameters for testing
@@ -52,6 +54,7 @@ class TestAdaptiveAssimilator:
     """Test class: AdaptiveAssimilator"""
 
     @pytest.fixture
+
     def adaptiveassimilator_instance(self):
     """Create instance for AdaptiveAssimilator"""
         # Initialize with default parameters for testing
@@ -68,6 +71,7 @@ class TestAdaptiveAssimilator:
     """Test class: AdaptiveAssimilator"""
 
     @pytest.fixture
+
     def adaptiveassimilator_instance(self):
     """Create instance for AdaptiveAssimilator"""
         # Initialize with default parameters for testing

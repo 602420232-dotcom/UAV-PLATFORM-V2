@@ -11,7 +11,6 @@ CNN 空间订正 + LSTM 时序订正
 """
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 from dataclasses import dataclass
 from typing import Tuple, Optional, List
 
@@ -38,6 +37,7 @@ class SpatialCorrector(nn.Module):
     浅层 CNN 空间订正
     结构: Conv3×3 → ReLU → Conv3×3 → ReLU → Conv1×1
     """
+
     def __init__(self, config: CNNConfig):
         super().__init__()
         cfg = config
@@ -93,6 +93,7 @@ class LSTMTemporalCorrector(nn.Module):
     ConvLSTM 时序订正
     利用多时刻预报的时序一致性进一步抑制异常
     """
+
     def __init__(self, input_dim: int = 6, hidden_dim: int = 64,
                  kernel_size: int = 3, num_layers: int = 2):
         super().__init__()
@@ -145,6 +146,7 @@ class CNNCorrector(nn.Module):
     """
     完整订正器: CNN 空间 + LSTM 时序
     """
+
     def __init__(self, config: Optional[CNNConfig] = None):
         super().__init__()
         self.config = config or CNNConfig()

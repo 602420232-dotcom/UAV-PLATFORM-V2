@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 
 class ConflictPoint:
     """冲突点"""
+
     def __init__(self, time: float, position: Tuple[float, float],
                  drone_ids: Tuple[str, str], separation: float):
         self.time = time

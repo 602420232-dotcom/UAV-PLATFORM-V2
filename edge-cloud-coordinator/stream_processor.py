@@ -127,6 +127,7 @@ class FlinkJobManager:
 
     def streaming_etl(self, source_topic: str, sink_topic: str, transform_fn: Callable):
         """流式ETL"""
+
         def _run():
             logger.info(f"启动流式ETL: {source_topic} -> {sink_topic}")
             while True:

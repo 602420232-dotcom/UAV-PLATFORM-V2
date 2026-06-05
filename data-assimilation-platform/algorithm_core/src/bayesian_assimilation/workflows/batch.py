@@ -5,7 +5,7 @@
 
 import logging
 import numpy as np
-from typing import List, Dict, Any, Optional, Tuple, Callable
+from typing import List, Dict, Any, Optional
 from datetime import datetime
 from concurrent.futures import ProcessPoolExecutor, as_completed
 import os
@@ -18,6 +18,7 @@ try:
 except ImportError:
 
     class AssimilationBase:
+
         def __init__(self, config=None):
             self.config = config
             self.logger = logging.getLogger(__name__)
@@ -27,7 +28,9 @@ try:
 
 
 except ImportError:
+
     class BayesianAssimilator:
+
         def __init__(self, config=None):
             self.config = config
             self.logger = logging.getLogger(__name__)
@@ -44,11 +47,14 @@ try:
 
 
 except ImportError:
+
     class WRFDataAdapter:
+
         def __init__(self, config=None):
             self.config = config
 
     class ObservationAdapter:
+
         def __init__(self, config=None):
             self.config = config
 
@@ -57,7 +63,9 @@ try:
 
 
 except ImportError:
+
     class NetCDFReader:
+
         def __init__(self, path):
             self.path = path
 
@@ -69,6 +77,7 @@ try:
 except ImportError:
 
     class AssimilationConfig:
+
         def __init__(self, **kwargs):
             for key, value in kwargs.items():
                 setattr(self, key, value)
@@ -78,7 +87,9 @@ try:
 
 
 except ImportError:
+
     class PerformanceMetrics:
+
         def __init__(self):
             pass
 

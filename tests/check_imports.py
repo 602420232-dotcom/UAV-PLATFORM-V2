@@ -13,6 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 class ImportChecker(ast.NodeVisitor):
+
     def __init__(self):
         self.imports = {}
         self.used_names = set()

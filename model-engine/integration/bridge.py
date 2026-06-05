@@ -31,10 +31,10 @@ _ensure_import()
 
 
 try:
-    from meteor_forecast import MeteorForecast, Cache, prediction_cache, fusion_cache, risk_cache
-    from meteor_forecast_enhanced import MeteorForecast as MeteorForecastEnhanced, ModelConfig, DataPreprocessor, HyperparameterTuner, TrainingMonitor
-    from mlops_pipeline import MLOpsPipeline, ModelVersion, ModelMetrics
-    from model_serving import ModelServingAPI, ModelStatus, RLModelServing
+    from meteor_forecast import MeteorForecast
+    from meteor_forecast_enhanced import MeteorForecast as MeteorForecastEnhanced
+    from mlops_pipeline import MLOpsPipeline
+    from model_serving import ModelServingAPI
     LEGACY_AVAILABLE = True
     logger.info("✅ 原项目 meteor-forecast 模块成功桥接")
 

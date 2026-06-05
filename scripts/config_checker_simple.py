@@ -5,8 +5,7 @@ Check YAML/properties files without external dependencies
 
 import os
 import re
-from pathlib import Path
-from typing import Dict, List
+from typing import List
 from datetime import datetime
 
 
@@ -108,7 +107,7 @@ class SimpleConfigChecker:
                                     'details': f'Secret length: {len(secret)} (min: 32)'
                                 })
 
-        except Exception as e:
+        except Exception as e:  # noqa: F841
             pass  # Skip unreadable files
 
     def _generate_report(self):

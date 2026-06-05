@@ -10,17 +10,15 @@ SRC_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file
 if SRC_DIR not in sys.path:
     sys.path.insert(0, SRC_DIR)
 
-import numpy as np
-from scipy.optimize import minimize
-from scipy import sparse
-from scipy.sparse.linalg import spsolve, LinearOperator
-from typing import Optional, Tuple, List, Dict, Any, Union
-import logging
-import concurrent.futures
-import multiprocessing
+import numpy as np  # noqa: E402
+from scipy.optimize import minimize  # noqa: E402
+from scipy import sparse  # noqa: E402
+from typing import Optional, Tuple, List, Dict, Any, Union  # noqa: E402
+import logging  # noqa: E402
+import concurrent.futures  # noqa: E402
+import multiprocessing  # noqa: E402
 
-from bayesian_assimilation.core.base import AssimilationBase
-from bayesian_assimilation.utils.config import BaseConfig
+from bayesian_assimilation.utils.config import BaseConfig  # noqa: E402
 
 logger = logging.getLogger(__name__)
 
@@ -162,7 +160,7 @@ class VarianceFieldOptimizer:
         """
         bg_error_scale = max(params[0], 1e-3)
         obs_error_scale = max(params[1], 1e-4)
-        corr_scale = max(params[2], 1e-1)
+        corr_scale = max(params[2], 1e-1)  # noqa: F841
 
         try:
             nx, ny, nz = background.shape
@@ -328,6 +326,7 @@ class VarianceFieldOptimizer:
         ]
 
         history = []
+
         def callback(x):
             if is_parallel:
                 f_val = self._objective_parallel(x, background, observations, obs_locations)  # type: ignore
@@ -344,9 +343,11 @@ class VarianceFieldOptimizer:
         options = self._get_minimize_options(verbose)
 
         if is_parallel:
-            obj_func = lambda p: self._objective_parallel(p, background, observations, obs_locations)  # type: ignore # type: ignore
+            def obj_func(p):
+                return self._objective_parallel(p, background, observations, obs_locations)  # noqa: E501
         else:
-            obj_func = lambda p: self._objective_function(p, background, observations, obs_locations)  # type: ignore
+            def obj_func(p):
+                return self._objective_function(p, background, observations, obs_locations)  # noqa: E501
 
         result = minimize(
             fun=obj_func,

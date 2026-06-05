@@ -20,9 +20,9 @@ JWT 认证模块
 """
 
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import jwt
 from jwt import ExpiredSignatureError, InvalidSignatureError, DecodeError
@@ -198,7 +198,7 @@ class JwtAuth:
         try:
             key = self._get_blacklist_key(token_type, token_id)
             return self.redis_client.exists(key) > 0
-        except Exception as e:
+        except Exception as e:  # noqa: F841
             return False
 
     def verify_token(
@@ -387,6 +387,7 @@ class JwtAuth:
 
             return dependency
         except ImportError:
+
             def dependency(token: str):
                 return self.get_current_user(token, required_roles)
             return dependency

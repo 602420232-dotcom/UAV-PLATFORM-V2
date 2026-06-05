@@ -25,7 +25,7 @@ except ImportError:
 # 本地模块
 from coordinator import EdgeCloudCoordinator, EdgeTask, TaskType
 from federated_learning import FederatedLearning, DroneClient
-from websocket_sync import WebSocketSync, MessageType
+from websocket_sync import WebSocketSync
 
 logger = logging.getLogger(__name__)
 
@@ -298,6 +298,7 @@ if HAS_FASTAPI:
     @app.post("/upload", tags=["Coordinator"])
     async def upload_edge_data(background_tasks: BackgroundTasks):
         """上传边缘数据到云端"""
+
         def _upload():
             coordinator.upload_edge_data()
 
@@ -423,7 +424,7 @@ if HAS_FASTAPI:
         - 可通过 /ws/status 查看连接健康状态
         """
         await websocket.accept()
-        conn_info = await ws_sync.connect(drone_id, websocket)
+        conn_info = await ws_sync.connect(drone_id, websocket)  # noqa: F841
 
         try:
             while True:

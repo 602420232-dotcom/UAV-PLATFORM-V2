@@ -22,8 +22,6 @@ def set_assimilation_service(service: AssimilationService):
 
 
 @router.post("/batch", response_model=BatchResponse)
-
-
 async def batch_assimilation(request: BatchRequest):
     """
     批量同化计算

@@ -20,6 +20,7 @@ class TestAssimilationService:
     """Test class: AssimilationService"""
 
     @pytest.fixture
+
     def assimilationservice_instance(self):
     """Create instance for AssimilationService"""
         # Initialize with default parameters for testing

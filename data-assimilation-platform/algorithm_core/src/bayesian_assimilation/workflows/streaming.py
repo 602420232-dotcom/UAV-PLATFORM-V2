@@ -6,11 +6,10 @@
 import logging
 import numpy as np
 from typing import Iterator, List, Dict, Any, Optional, Callable
-from datetime import datetime, timedelta
+from datetime import datetime
 from collections import deque
 from dataclasses import dataclass, field
 import threading
-import time
 
 # 尝试导入必要的类
 
@@ -20,7 +19,9 @@ try:
 
 
 except ImportError:
+
     class BayesianAssimilator:
+
         def __init__(self, config=None):
             self.config = config
             self.logger = logging.getLogger(__name__)
@@ -37,6 +38,7 @@ try:
 except ImportError:
 
     class AssimilationConfig:
+
         def __init__(self, **kwargs):
             for key, value in kwargs.items():
                 setattr(self, key, value)
@@ -46,7 +48,9 @@ try:
 
 
 except ImportError:
+
     class PerformanceMetrics:
+
         def __init__(self):
             pass
 
@@ -210,7 +214,7 @@ class StreamingAssimilator:
             return []
 
         results = []
-        start_time = datetime.now()
+        start_time = datetime.now()  # noqa: F841
 
         for stream_data in batch:
             try:

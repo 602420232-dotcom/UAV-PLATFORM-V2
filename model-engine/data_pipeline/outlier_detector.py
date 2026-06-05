@@ -13,7 +13,7 @@
 """
 import numpy as np
 from scipy.ndimage import gaussian_filter
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Optional, Tuple, List
 
 
@@ -213,7 +213,7 @@ class OutlierDetector:
 # ── 便捷函数 ────────────────────────────────────
 
 
-def clean_forecast_field(field: np.ndarray) -> np.ndarray:
+def clean_forecast_field(field: np.ndarray) -> np.ndarray:  # noqa: F811
     """快速清洗单帧预报场"""
     detector = OutlierDetector()
     return detector.detect_and_fix(field)

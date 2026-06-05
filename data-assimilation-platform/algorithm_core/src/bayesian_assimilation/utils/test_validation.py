@@ -20,6 +20,7 @@ class TestDataValidator:
     """Test class: DataValidator"""
 
     @pytest.fixture
+
     def datavalidator_instance(self):
     """Create instance for DataValidator"""
         # Initialize with default parameters for testing
@@ -36,6 +37,7 @@ class TestDataValidator:
     """Test class: DataValidator"""
 
     @pytest.fixture
+
     def datavalidator_instance(self):
     """Create instance for DataValidator"""
         # Initialize with default parameters for testing
@@ -52,6 +54,7 @@ class TestDataValidator:
     """Test class: DataValidator"""
 
     @pytest.fixture
+
     def datavalidator_instance(self):
     """Create instance for DataValidator"""
         # Initialize with default parameters for testing
@@ -68,6 +71,7 @@ class TestDataValidator:
     """Test class: DataValidator"""
 
     @pytest.fixture
+
     def datavalidator_instance(self):
     """Create instance for DataValidator"""
         # Initialize with default parameters for testing
@@ -84,6 +88,7 @@ class TestDataValidator:
     """Test class: DataValidator"""
 
     @pytest.fixture
+
     def datavalidator_instance(self):
     """Create instance for DataValidator"""
         # Initialize with default parameters for testing
@@ -100,6 +105,7 @@ class TestDataValidator:
     """Test class: DataValidator"""
 
     @pytest.fixture
+
     def datavalidator_instance(self):
     """Create instance for DataValidator"""
         # Initialize with default parameters for testing
@@ -116,6 +122,7 @@ class TestDataValidator:
     """Test class: DataValidator"""
 
     @pytest.fixture
+
     def datavalidator_instance(self):
     """Create instance for DataValidator"""
         # Initialize with default parameters for testing

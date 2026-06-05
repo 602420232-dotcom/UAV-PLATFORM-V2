@@ -4,7 +4,7 @@
 
 from abc import ABC, abstractmethod
 from enum import Enum
-from typing import Optional, Any, Dict, Callable, Type
+from typing import Optional, Any, Dict, Type
 
 
 class AcceleratorType(Enum):

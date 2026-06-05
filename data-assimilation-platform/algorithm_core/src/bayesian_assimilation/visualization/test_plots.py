@@ -20,6 +20,7 @@ class TestVarianceFieldPlotter:
     """Test class: VarianceFieldPlotter"""
 
     @pytest.fixture
+
     def variancefieldplotter_instance(self):
     """Create instance for VarianceFieldPlotter"""
         # Initialize with default parameters for testing
@@ -36,6 +37,7 @@ class TestVarianceFieldPlotter:
     """Test class: VarianceFieldPlotter"""
 
     @pytest.fixture
+
     def variancefieldplotter_instance(self):
     """Create instance for VarianceFieldPlotter"""
         # Initialize with default parameters for testing
@@ -52,6 +54,7 @@ class TestVarianceFieldPlotter:
     """Test class: VarianceFieldPlotter"""
 
     @pytest.fixture
+
     def variancefieldplotter_instance(self):
     """Create instance for VarianceFieldPlotter"""
         # Initialize with default parameters for testing
@@ -68,6 +71,7 @@ class TestVarianceFieldPlotter:
     """Test class: VarianceFieldPlotter"""
 
     @pytest.fixture
+
     def variancefieldplotter_instance(self):
     """Create instance for VarianceFieldPlotter"""
         # Initialize with default parameters for testing
@@ -84,6 +88,7 @@ class TestWindFieldPlotter:
     """Test class: WindFieldPlotter"""
 
     @pytest.fixture
+
     def windfieldplotter_instance(self):
     """Create instance for WindFieldPlotter"""
         # Initialize with default parameters for testing
@@ -100,6 +105,7 @@ class TestWindFieldPlotter:
     """Test class: WindFieldPlotter"""
 
     @pytest.fixture
+
     def windfieldplotter_instance(self):
     """Create instance for WindFieldPlotter"""
         # Initialize with default parameters for testing
@@ -116,6 +122,7 @@ class TestWindFieldPlotter:
     """Test class: WindFieldPlotter"""
 
     @pytest.fixture
+
     def windfieldplotter_instance(self):
     """Create instance for WindFieldPlotter"""
         # Initialize with default parameters for testing
@@ -132,6 +139,7 @@ class TestComparisonPlotter:
     """Test class: ComparisonPlotter"""
 
     @pytest.fixture
+
     def comparisonplotter_instance(self):
     """Create instance for ComparisonPlotter"""
         # Initialize with default parameters for testing
@@ -148,6 +156,7 @@ class TestComparisonPlotter:
     """Test class: ComparisonPlotter"""
 
     @pytest.fixture
+
     def comparisonplotter_instance(self):
     """Create instance for ComparisonPlotter"""
         # Initialize with default parameters for testing

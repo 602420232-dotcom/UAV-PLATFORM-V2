@@ -12,12 +12,12 @@ import os
 import logging
 import threading
 from tensorflow.keras.models import Sequential, load_model
-from tensorflow.keras.layers import LSTM, Dense, Dropout, ConvLSTM2D, BatchNormalization, Flatten, Reshape
+from tensorflow.keras.layers import LSTM, Dense, Dropout, ConvLSTM2D, BatchNormalization, Flatten
 from xgboost import XGBRegressor
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import mean_squared_error
 from sklearn.gaussian_process import GaussianProcessRegressor
-from sklearn.gaussian_process.kernels import RBF, Matern, WhiteKernel, ConstantKernel
+from sklearn.gaussian_process.kernels import RBF, WhiteKernel, ConstantKernel
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -26,6 +26,7 @@ logger = logging.getLogger(__name__)
 
 
 class Cache:
+
     def __init__(self, max_size=1000):
         self.max_size = max_size
         self.cache = {}
@@ -216,7 +217,7 @@ class MeteorForecast:
         """
         try:
             # 计算预测误差
-            error = np.array(observed_data) - np.array(forecast_data)
+            error = np.array(observed_data) - np.array(forecast_data)  # noqa: F841
 
             # 准备特征数据（使用预测值作为特征）
             X = np.array(forecast_data).reshape(-1, 1)
@@ -299,7 +300,7 @@ class MeteorForecast:
                 self.xgb_model = XGBRegressor(n_estimators=100, learning_rate=0.1, max_depth=5, n_jobs=-1)
 
             # 继续训练LSTM模型
-            history = self.lstm_model.fit(X, y, epochs=epochs, batch_size=batch_size, verbose=1, validation_split=0.2)
+            history = self.lstm_model.fit(X, y, epochs=epochs, batch_size=batch_size, verbose=1, validation_split=0.2)  # noqa: F841
 
             # 训练XGBoost模型
             self.xgb_model.fit(X.reshape(X.shape[0], -1), y)

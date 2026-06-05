@@ -5,7 +5,7 @@ import json
 import os
 import logging
 import numpy as np
-from typing import Dict, List, Optional, Any
+from typing import Dict, Optional, Any
 from datetime import datetime
 from dataclasses import dataclass, asdict
 from enum import Enum
@@ -142,6 +142,7 @@ class RLModelServing:
 
 class RLPolicy:
     """强化学习策略基类"""
+
     def __init__(self, model=None):
         self.model = model
 

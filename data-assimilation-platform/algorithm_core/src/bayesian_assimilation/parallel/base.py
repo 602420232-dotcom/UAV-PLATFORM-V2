@@ -6,7 +6,6 @@ from abc import ABC, abstractmethod
 from enum import Enum
 from typing import Optional, Any, Dict, Callable, Type, List
 import logging
-import numpy as np
 
 
 class ParallelType(Enum):

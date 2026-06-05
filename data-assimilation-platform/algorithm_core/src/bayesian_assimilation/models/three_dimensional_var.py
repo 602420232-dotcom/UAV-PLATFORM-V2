@@ -10,14 +10,14 @@ SRC_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file
 if SRC_DIR not in sys.path:
     sys.path.insert(0, SRC_DIR)
 
-import numpy as np
-from scipy.sparse import csr_matrix
-from scipy.sparse.linalg import LinearOperator, cg
-from typing import Optional, Tuple, List
-import logging
+import numpy as np  # noqa: E402
+from scipy.sparse import csr_matrix  # noqa: E402
+from scipy.sparse.linalg import LinearOperator, cg  # noqa: E402
+from typing import Optional  # noqa: E402
+import logging  # noqa: E402
 
-from bayesian_assimilation.core.base import AssimilationBase
-from bayesian_assimilation.utils.config import BaseConfig
+from bayesian_assimilation.core.base import AssimilationBase  # noqa: E402
+from bayesian_assimilation.utils.config import BaseConfig  # noqa: E402
 
 logger = logging.getLogger(__name__)
 
@@ -140,7 +140,7 @@ class ThreeDimensionalVAR(AssimilationBase):
 
         cov = SpatialCovariance(sigma_b=1.0, correlation_length=self.resolution)
 
-        B_inv = LinearOperator(
+        B_inv = LinearOperator(  # noqa: F841
             shape=(n, n),
             matvec=cov.apply_inverse  # type: ignore
         )

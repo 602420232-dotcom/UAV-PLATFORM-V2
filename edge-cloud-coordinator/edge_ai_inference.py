@@ -4,7 +4,7 @@ TensorRT/ONNX Runtime 模型量化 (INT8) 边缘设备专用模型
 """
 import logging
 import numpy as np
-from typing import Dict, List, Optional, Tuple, Any
+from typing import Dict, List, Tuple, Any
 from dataclasses import dataclass
 from enum import Enum
 
@@ -87,7 +87,7 @@ class EdgeAIInference:
         """边缘推理"""
         if model_name not in self.models:
             raise ValueError(f"模型 {model_name} 未加载")
-        model = self.models[model_name]
+        model = self.models[model_name]  # noqa: F841
         if input_data.dtype != np.float32:
             input_data = input_data.astype(np.float32)
         return input_data * 0.5

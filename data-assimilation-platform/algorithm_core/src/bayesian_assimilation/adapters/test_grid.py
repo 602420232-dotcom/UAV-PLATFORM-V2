@@ -20,6 +20,7 @@ class TestGridAdapter:
     """Test class: GridAdapter"""
 
     @pytest.fixture
+
     def gridadapter_instance(self):
     """Create instance for GridAdapter"""
         # Initialize with default parameters for testing
@@ -36,6 +37,7 @@ class TestGridAdapter:
     """Test class: GridAdapter"""
 
     @pytest.fixture
+
     def gridadapter_instance(self):
     """Create instance for GridAdapter"""
         # Initialize with default parameters for testing

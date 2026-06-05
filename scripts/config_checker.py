@@ -7,7 +7,7 @@ import os
 import yaml
 import re
 from pathlib import Path
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List
 from datetime import datetime
 
 
@@ -77,7 +77,7 @@ class ConfigChecker:
 
     def _check_security_config(self, yaml_file: str, config: Dict):
         """检查安全配置"""
-        file_name = Path(yaml_file).name.lower()
+        file_name = Path(yaml_file).name.lower()  # noqa: F841
 
         # 检查密码配置
         if 'password' in str(config).lower():

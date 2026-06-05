@@ -3,6 +3,7 @@ package com.uav.gateway.config;
 import org.springframework.cloud.gateway.filter.ratelimit.KeyResolver;
 import org.springframework.cloud.gateway.filter.ratelimit.RedisRateLimiter;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Configuration;
 import reactor.core.publisher.Mono;
 
@@ -24,6 +25,7 @@ public class RateLimiterConfig {
      * 按用户 ID 限流（从 JWT Token 中提取）
      */
     @Bean
+    @org.springframework.context.annotation.Primary
     public KeyResolver userKeyResolver() {
         return exchange -> {
             String userId = exchange.getRequest().getHeaders().getFirst("X-User-Id");
@@ -54,6 +56,7 @@ public class RateLimiterConfig {
      * burstCapacity: 令牌桶容量（允许突发）
      */
     @Bean("defaultRateLimiter")
+    @Primary
     public RedisRateLimiter defaultRateLimiter() {
         return new RedisRateLimiter(2, 100, 1);
     }

@@ -135,6 +135,7 @@ class Result:
 
 def handle_errors(func):
     """装饰器：统一处理函数中的异常"""
+
     def wrapper(*args, **kwargs):
         try:
             return func(*args, **kwargs)

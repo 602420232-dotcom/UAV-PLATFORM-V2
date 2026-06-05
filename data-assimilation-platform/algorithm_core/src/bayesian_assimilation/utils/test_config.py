@@ -20,6 +20,7 @@ class TestConfigFactory:
     """Test class: ConfigFactory"""
 
     @pytest.fixture
+
     def configfactory_instance(self):
     """Create instance for ConfigFactory"""
         # Initialize with default parameters for testing
@@ -36,6 +37,7 @@ class TestConfigFactory:
     """Test class: ConfigFactory"""
 
     @pytest.fixture
+
     def configfactory_instance(self):
     """Create instance for ConfigFactory"""
         # Initialize with default parameters for testing

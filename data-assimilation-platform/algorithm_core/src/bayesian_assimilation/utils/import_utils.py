@@ -11,6 +11,7 @@ logger = logging.getLogger(__name__)
 
 class MockClass:
     """模拟类基类，当真实类无法导入时使用"""
+
     def __init__(self, *args, **kwargs):
         pass
 
@@ -52,6 +53,7 @@ def create_assimilation_base_mock() -> Type:
     from abc import ABC, abstractmethod
 
     class AssimilationBaseMock(ABC):
+
         def __init__(self, config=None):
             self.config = config
             self.logger = logging.getLogger(__name__)
@@ -72,6 +74,7 @@ def create_bayesian_assimilator_mock() -> Type:
     import numpy as np
 
     class BayesianAssimilatorMock:
+
         def __init__(self, config=None):
             self.config = config
             self.logger = logging.getLogger(__name__)
@@ -99,6 +102,7 @@ def create_assimilation_config_mock() -> Type:
     """创建 AssimilationConfig 模拟类"""
 
     class AssimilationConfigMock:
+
         def __init__(self, **kwargs):
             for key, value in kwargs.items():
                 setattr(self, key, value)
@@ -110,6 +114,7 @@ def create_performance_metrics_mock() -> Type:
     """创建 PerformanceMetrics 模拟类"""
 
     class PerformanceMetricsMock:
+
         def __init__(self):
             self.metrics = {}
 
@@ -126,14 +131,17 @@ def create_data_adapter_mocks() -> Dict[str, Type]:
     """创建数据适配器模拟类"""
 
     class WRFDataAdapterMock:
+
         def __init__(self, config=None):
             self.config = config
 
     class ObservationAdapterMock:
+
         def __init__(self, config=None):
             self.config = config
 
     class GridAdapterMock:
+
         def __init__(self, config=None):
             self.config = config
 
@@ -148,6 +156,7 @@ def create_io_adapter_mocks() -> Dict[str, Any]:
     """创建IO适配器模拟类和函数"""
 
     class NetCDFReaderMock:
+
         def __init__(self, path):
             self.path = path
 
@@ -164,6 +173,7 @@ def create_parallel_manager_mock() -> Type:
     """创建并行管理器模拟类"""
 
     class ParallelManagerMock:
+
         def __init__(self, config=None):
             self.config = config
             self.logger = logging.getLogger(__name__)

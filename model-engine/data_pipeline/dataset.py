@@ -11,7 +11,6 @@ import torch
 from torch.utils.data import Dataset, DataLoader
 
 from .training_data import PhysicsConstrainedGenerator
-from .config import CONFIG
 
 logger = logging.getLogger(__name__)
 

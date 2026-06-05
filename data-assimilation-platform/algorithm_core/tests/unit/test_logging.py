@@ -146,6 +146,7 @@ class TestLogFunctionCall:
 
     def test_log_function_call_class_method(self):
         """测试类方法装饰"""
+
         class TestClass:
             @log_function_call
             def method(self, x):

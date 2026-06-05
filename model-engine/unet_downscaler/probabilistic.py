@@ -10,8 +10,6 @@
 """
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-from dataclasses import dataclass, field
 from typing import Optional, Tuple
 
 from unet_downscaler.model import UNetConfig, DoubleConv, Down, Up, SpatialObsEncoder

@@ -20,6 +20,7 @@ class TestLinearSolver:
     """Test class: LinearSolver"""
 
     @pytest.fixture
+
     def linearsolver_instance(self):
     """Create instance for LinearSolver"""
         # Initialize with default parameters for testing
@@ -36,6 +37,7 @@ class TestCGSolver:
     """Test class: CGSolver"""
 
     @pytest.fixture
+
     def cgsolver_instance(self):
     """Create instance for CGSolver"""
         # Initialize with default parameters for testing
@@ -52,6 +54,7 @@ class TestGMRESSolver:
     """Test class: GMRESSolver"""
 
     @pytest.fixture
+
     def gmressolver_instance(self):
     """Create instance for GMRESSolver"""
         # Initialize with default parameters for testing
@@ -68,6 +71,7 @@ class TestBicgstabSolver:
     """Test class: BicgstabSolver"""
 
     @pytest.fixture
+
     def bicgstabsolver_instance(self):
     """Create instance for BicgstabSolver"""
         # Initialize with default parameters for testing
@@ -84,6 +88,7 @@ class TestDirectSolver:
     """Test class: DirectSolver"""
 
     @pytest.fixture
+
     def directsolver_instance(self):
     """Create instance for DirectSolver"""
         # Initialize with default parameters for testing
@@ -100,6 +105,7 @@ class TestSolverFactory:
     """Test class: SolverFactory"""
 
     @pytest.fixture
+
     def solverfactory_instance(self):
     """Create instance for SolverFactory"""
         # Initialize with default parameters for testing
@@ -116,6 +122,7 @@ class TestPreconditioner:
     """Test class: Preconditioner"""
 
     @pytest.fixture
+
     def preconditioner_instance(self):
     """Create instance for Preconditioner"""
         # Initialize with default parameters for testing
@@ -132,6 +139,7 @@ class TestJacobiPreconditioner:
     """Test class: JacobiPreconditioner"""
 
     @pytest.fixture
+
     def jacobipreconditioner_instance(self):
     """Create instance for JacobiPreconditioner"""
         # Initialize with default parameters for testing
@@ -148,6 +156,7 @@ class TestIdentityPreconditioner:
     """Test class: IdentityPreconditioner"""
 
     @pytest.fixture
+
     def identitypreconditioner_instance(self):
     """Create instance for IdentityPreconditioner"""
         # Initialize with default parameters for testing

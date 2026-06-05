@@ -23,13 +23,13 @@ sys.path.insert(
     0, os.path.join(os.path.dirname(__file__), "..", "common-utils", "src", "main", "python")
 )
 
-import numpy as np
-from fastapi import FastAPI, HTTPException, Header, Depends
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field
+import numpy as np  # noqa: E402
+from fastapi import FastAPI, HTTPException, Header, Depends  # noqa: E402
+from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
+from pydantic import BaseModel, Field  # noqa: E402
 
-from inference_engine import get_engine, FengWuEngine
-from security_middleware import SecurityMiddleware
+from inference_engine import get_engine, FengWuEngine  # noqa: E402
+from security_middleware import SecurityMiddleware  # noqa: E402
 
 
 logging.basicConfig(
@@ -108,8 +108,6 @@ else:
 
 
 @asynccontextmanager
-
-
 async def lifespan(app: FastAPI):
     logger.info("Loading FengWu model...")
     engine = get_engine()
@@ -210,8 +208,6 @@ _start_time = time.time()
 
 
 @app.get("/health", response_model=HealthResponse)
-
-
 async def health():
     engine = get_engine()
     return HealthResponse(
@@ -223,16 +219,12 @@ async def health():
 
 
 @app.get("/actuator/health", response_model=HealthResponse)
-
-
 async def actuator_health():
     """Spring Boot Actuator 兼容的健康检查端点。"""
     return await health()
 
 
 @app.get("/health/ready")
-
-
 async def readiness():
     """Kubernetes readiness probe."""
     engine = get_engine()
@@ -246,8 +238,6 @@ async def readiness():
     response_model=ForecastResponse,
     dependencies=[Depends(verify_api_key)],
 )
-
-
 async def forecast(request: ForecastRequest):
     """
     Run FengWu weather forecast.
@@ -322,8 +312,6 @@ async def forecast(request: ForecastRequest):
     "/api/v1/forecast/wind",
     dependencies=[Depends(verify_api_key)],
 )
-
-
 async def forecast_wind(request: ForecastRequest):
     """
     Lightweight endpoint — returns only wind speed/direction as grid summary.
@@ -375,8 +363,6 @@ async def forecast_wind(request: ForecastRequest):
     "/api/v1/model/info",
     dependencies=[Depends(verify_api_key)],
 )
-
-
 async def model_info():
     """Return model metadata."""
     engine = get_engine()

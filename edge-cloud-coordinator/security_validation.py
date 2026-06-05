@@ -4,7 +4,7 @@ Coordinator API 安全验证模块
 提供输入消毒、路径保护等安全功能。
 """
 
-from typing import Tuple, List, Dict
+from typing import Tuple, Dict
 
 
 def sanitize_task_id(task_id: str) -> str:

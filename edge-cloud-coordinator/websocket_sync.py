@@ -64,8 +64,11 @@ except ImportError:
 
     class _DummyMetric:
         """Prometheus 未安装时的空桩"""
+
         def labels(self, **kwargs): return self
+
         def inc(self, amount=1): pass
+
         def set(self, amount): pass
 
     ws_active_connections = _DummyMetric()

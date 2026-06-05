@@ -1,5 +1,4 @@
 import numpy as np
-from typing import Any
 
 
 def serialize_grid(grid_data: np.ndarray) -> dict:

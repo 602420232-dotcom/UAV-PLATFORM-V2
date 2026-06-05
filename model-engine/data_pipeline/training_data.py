@@ -13,15 +13,11 @@
   3. 真实: ERA5 重分析 → 降尺度配对
 """
 import logging
-import random
 from pathlib import Path
-from datetime import datetime, timedelta
-from typing import Optional, Tuple, Dict, List
+from typing import Optional, Tuple, List
 
 import numpy as np
 import xarray as xr
-import torch
-from torch.utils.data import Dataset
 
 from .config import CONFIG
 

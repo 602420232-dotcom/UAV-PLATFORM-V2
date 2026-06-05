@@ -132,5 +132,6 @@ class TestBasic(unittest.TestCase):
 
         print("OK 部署文件测试通过")
 
+
 if __name__ == '__main__':
     unittest.main()

@@ -6,7 +6,7 @@
 import logging
 import numpy as np
 import os
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -160,6 +160,7 @@ class HDF5Reader(IOAdapter):
 
             data = {}
             with h5py.File(file_path, 'r') as hf:
+
                 def _visit_items(name, obj):
                     if isinstance(obj, h5py.Dataset):
                         data[name] = obj[:]

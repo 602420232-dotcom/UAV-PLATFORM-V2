@@ -3,8 +3,8 @@
 支持 YAML 配置文件加载和继承
 """
 
-from dataclasses import dataclass, field
-from typing import Optional, Tuple, List, Dict, Any, Union
+from dataclasses import dataclass
+from typing import Optional, Tuple, Dict, Any
 import os
 import logging
 

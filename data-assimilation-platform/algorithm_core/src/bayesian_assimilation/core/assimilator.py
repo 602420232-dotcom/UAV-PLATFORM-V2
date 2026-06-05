@@ -10,16 +10,15 @@ SRC_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file
 if SRC_DIR not in sys.path:
     sys.path.insert(0, SRC_DIR)
 
-import numpy as np
-import logging
-from typing import Optional, Tuple, List, Dict, Any
-from datetime import datetime
+import numpy as np  # noqa: E402
+import logging  # noqa: E402
+from typing import Optional, Tuple  # noqa: E402
 
-from bayesian_assimilation.utils.config import BaseConfig, AssimilationConfig
-from bayesian_assimilation.core.base import AssimilationBase
+from bayesian_assimilation.utils.config import AssimilationConfig  # noqa: E402
+from bayesian_assimilation.core.base import AssimilationBase  # noqa: E402
 
-from scipy.interpolate import RegularGridInterpolator
-from scipy.sparse import lil_matrix, csr_matrix
+from scipy.interpolate import RegularGridInterpolator  # noqa: E402
+from scipy.sparse import lil_matrix  # noqa: E402
 
 logger = logging.getLogger(__name__)
 
@@ -80,7 +79,7 @@ class BayesianAssimilator(AssimilationBase):
             variance: 方差场 (nx, ny, nz)
         """
         nx, ny, nz = background.shape
-        n_total = nx * ny * nz
+        n_total = nx * ny * nz  # noqa: F841
 
         xb = background.flatten()
 

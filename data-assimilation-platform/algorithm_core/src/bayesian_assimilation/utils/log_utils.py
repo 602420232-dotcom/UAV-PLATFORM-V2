@@ -27,6 +27,7 @@ def get_logger(name: Optional[str] = None) -> logging.Logger:
 
 def log_function_call(func):
     import functools
+
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         logger = logging.getLogger(func.__module__)

@@ -2,9 +2,8 @@
 气象+路径知识图谱
 语义增强搜索和推理，智能推荐引擎
 """
-import json
 import logging
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List, Optional
 from dataclasses import dataclass
 
 logger = logging.getLogger(__name__)

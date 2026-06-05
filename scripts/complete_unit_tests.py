@@ -4,8 +4,6 @@ Complete TODO sections in auto-generated test files
 """
 
 import os
-import re
-from pathlib import Path
 from typing import List, Dict
 from datetime import datetime
 

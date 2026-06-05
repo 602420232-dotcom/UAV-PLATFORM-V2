@@ -7,9 +7,8 @@
 import numpy as np
 import json
 import sys
-import os
 import logging
-from typing import Dict, Tuple, Optional
+from typing import Dict, Tuple
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -327,6 +326,7 @@ def main():
             'success': False,
             'error': '未知命令'
         }))
+
 
 if __name__ == "__main__":
     main()

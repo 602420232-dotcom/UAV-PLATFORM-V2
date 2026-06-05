@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 class BlockDecomposition:
+
     def __init__(self, config=None):
         self.config = config
 

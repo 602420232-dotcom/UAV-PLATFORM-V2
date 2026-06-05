@@ -20,6 +20,7 @@ class TestObservationOperator:
     """Test class: ObservationOperator"""
 
     @pytest.fixture
+
     def observationoperator_instance(self):
     """Create instance for ObservationOperator"""
         # Initialize with default parameters for testing
@@ -36,6 +37,7 @@ class TestObservationOperator:
     """Test class: ObservationOperator"""
 
     @pytest.fixture
+
     def observationoperator_instance(self):
     """Create instance for ObservationOperator"""
         # Initialize with default parameters for testing
@@ -52,6 +54,7 @@ class TestNearestNeighborOperator:
     """Test class: NearestNeighborOperator"""
 
     @pytest.fixture
+
     def nearestneighboroperator_instance(self):
     """Create instance for NearestNeighborOperator"""
         # Initialize with default parameters for testing
@@ -68,6 +71,7 @@ class TestNearestNeighborOperator:
     """Test class: NearestNeighborOperator"""
 
     @pytest.fixture
+
     def nearestneighboroperator_instance(self):
     """Create instance for NearestNeighborOperator"""
         # Initialize with default parameters for testing
@@ -84,6 +88,7 @@ class TestBilinearOperator:
     """Test class: BilinearOperator"""
 
     @pytest.fixture
+
     def bilinearoperator_instance(self):
     """Create instance for BilinearOperator"""
         # Initialize with default parameters for testing
@@ -100,6 +105,7 @@ class TestBilinearOperator:
     """Test class: BilinearOperator"""
 
     @pytest.fixture
+
     def bilinearoperator_instance(self):
     """Create instance for BilinearOperator"""
         # Initialize with default parameters for testing
@@ -116,6 +122,7 @@ class TestGaussianOperator:
     """Test class: GaussianOperator"""
 
     @pytest.fixture
+
     def gaussianoperator_instance(self):
     """Create instance for GaussianOperator"""
         # Initialize with default parameters for testing
@@ -132,6 +139,7 @@ class TestGaussianOperator:
     """Test class: GaussianOperator"""
 
     @pytest.fixture
+
     def gaussianoperator_instance(self):
     """Create instance for GaussianOperator"""
         # Initialize with default parameters for testing
@@ -148,6 +156,7 @@ class TestOperatorFactory:
     """Test class: OperatorFactory"""
 
     @pytest.fixture
+
     def operatorfactory_instance(self):
     """Create instance for OperatorFactory"""
         # Initialize with default parameters for testing

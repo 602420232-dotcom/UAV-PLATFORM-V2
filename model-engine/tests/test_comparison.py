@@ -157,6 +157,7 @@ def test_comparison_output():
     coarse, truth = pairs[0]
 
     # 方法1: 原样输出 (noop baseline)
+
     def method_noop(x):
         return x[:, :6]
 

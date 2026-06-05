@@ -20,6 +20,7 @@ class TestAssimilationModel:
     """Test class: AssimilationModel"""
 
     @pytest.fixture
+
     def assimilationmodel_instance(self):
     """Create instance for AssimilationModel"""
         # Initialize with default parameters for testing
@@ -36,6 +37,7 @@ class TestAssimilationModel:
     """Test class: AssimilationModel"""
 
     @pytest.fixture
+
     def assimilationmodel_instance(self):
     """Create instance for AssimilationModel"""
         # Initialize with default parameters for testing

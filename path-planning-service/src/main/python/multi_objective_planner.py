@@ -5,7 +5,7 @@
 """
 import numpy as np
 import logging
-from typing import List, Tuple, Optional
+from typing import List, Tuple
 from dataclasses import dataclass, field
 
 logger = logging.getLogger(__name__)

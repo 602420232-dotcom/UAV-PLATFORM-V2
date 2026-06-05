@@ -8,11 +8,11 @@ GPR 贝叶斯风险方差场
 实现: GPyTorch (基于 PyTorch 的高斯过程库)
 """
 import torch
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Optional, Tuple
 import gpytorch
 from gpytorch.means import ConstantMean
-from gpytorch.kernels import RBFKernel, ScaleKernel, ProductStructureKernel
+from gpytorch.kernels import RBFKernel, ScaleKernel
 from gpytorch.distributions import MultivariateNormal
 
 
@@ -29,6 +29,7 @@ class GPRConfig:
 
 class GPRegressionModel(gpytorch.models.ExactGP):
     """精确高斯过程回归"""
+
     def __init__(self, train_x, train_y, likelihood):
         super().__init__(train_x, train_y, likelihood)
         self.mean_module = ConstantMean()
@@ -42,6 +43,7 @@ class GPRegressionModel(gpytorch.models.ExactGP):
 
 class SparseGPModel(gpytorch.models.ApproximateGP):
     """变分稀疏高斯过程（大规模数据用）"""
+
     def __init__(self, inducing_points):
         variational_dist = gpytorch.variational.CholeskyVariationalDistribution(inducing_points.size(0))
         variational_strategy = gpytorch.variational.VariationalStrategy(

@@ -4,8 +4,8 @@
 """
 import numpy as np
 import logging
-from typing import List, Tuple, Optional
-from dataclasses import dataclass, field
+from typing import List, Tuple
+from dataclasses import dataclass
 
 logger = logging.getLogger(__name__)
 

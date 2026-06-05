@@ -20,6 +20,7 @@ class TestUAVDataAdapter:
     """Test class: UAVDataAdapter"""
 
     @pytest.fixture
+
     def uavdataadapter_instance(self):
     """Create instance for UAVDataAdapter"""
         # Initialize with default parameters for testing
@@ -36,6 +37,7 @@ class TestUAVDataAdapter:
     """Test class: UAVDataAdapter"""
 
     @pytest.fixture
+
     def uavdataadapter_instance(self):
     """Create instance for UAVDataAdapter"""
         # Initialize with default parameters for testing

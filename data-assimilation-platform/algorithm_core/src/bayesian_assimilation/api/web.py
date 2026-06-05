@@ -6,7 +6,6 @@ Web 界面模块
 import logging
 import os
 import sys
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 

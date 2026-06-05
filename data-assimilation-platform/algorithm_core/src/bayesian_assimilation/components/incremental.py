@@ -9,6 +9,7 @@ logger = logging.getLogger(__name__)
 
 
 class IncrementalDetector:
+
     def __init__(self, config=None):
         self.config = config
         self.previous_analysis = None

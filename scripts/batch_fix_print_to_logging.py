@@ -8,7 +8,10 @@
 import os
 import re
 import sys
+import logging
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 # 项目根目录
 PROJECT_ROOT = Path(__file__).parent.parent
@@ -34,7 +37,7 @@ def fix_file(filepath):
         with open(filepath, 'r', encoding='utf-8') as f:
             content = f.read()
 
-        original_content = content
+        original_content = content  # noqa: F841
         modified = False
 
         # 1. 替换 print(json.dumps(...)) 为 logger.info(...)
@@ -132,6 +135,7 @@ def main():
     logger.info(f"❌ 错误: {error_count} 个文件")
     logger.info(f"⏭️ 跳过: {skipped_count} 个目录")
     print("=" * 60)
+
 
 if __name__ == "__main__":
     main()

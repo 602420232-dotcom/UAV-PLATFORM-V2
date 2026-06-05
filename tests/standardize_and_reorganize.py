@@ -5,10 +5,7 @@ Phase 1: Add uniform footer to all .md files
 Phase 2: Reorganize docs/ into logical hierarchy
 """
 import os
-import re
 import shutil
-import json
-from datetime import datetime
 
 ROOT = r'd:\Developer\workplace\py\iteam\trae'
 

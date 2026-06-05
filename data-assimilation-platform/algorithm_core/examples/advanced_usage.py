@@ -433,6 +433,7 @@ class OptimizedBayesianAssimilation:
         b = B_inv_xb + Ht_R_inv_y
 
         # 定义Hessian矩阵的线性算子
+
         def hessian_matvec(x):
             return self._apply_hessian(x, B_inv, H, R_inv)
 

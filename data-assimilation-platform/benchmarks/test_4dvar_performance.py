@@ -10,15 +10,11 @@ import numpy as np
 
 
 @pytest.mark.benchmark
-
-
 @pytest.mark.parametrize("grid_size,time_steps,obs_per_step", [
     ((30, 30, 10), 5, 100),
     ((50, 50, 20), 10, 200),
     ((100, 100, 50), 20, 500),
 ])
-
-
 def test_4dvar_performance(grid_size, time_steps, obs_per_step):
     from bayesian_assimilation.models.four_dimensional_var import FourDimensionalVar
 

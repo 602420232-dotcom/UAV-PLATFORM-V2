@@ -5,8 +5,6 @@ router = APIRouter(prefix="/variance", tags=["variance"])
 
 
 @router.post("/compute")
-
-
 async def compute_variance(request: Dict[str, Any]):
     try:
         background = request.get("background")

@@ -12,7 +12,7 @@ CBS 是 MAPF (Multi-Agent Path Finding) 领域的 SOTA 算法。
 import heapq
 import logging
 import math
-from typing import List, Tuple, Dict, Optional, Set
+from typing import List, Tuple, Dict, Optional
 from .base import BasePlanner
 
 logger = logging.getLogger(__name__)
@@ -20,6 +20,7 @@ logger = logging.getLogger(__name__)
 
 class Constraint:
     """时空约束"""
+
     def __init__(self, agent_id: str, time_step: int,
                  position: Tuple[float, float], constraint_type: str = "vertex"):
         self.agent_id = agent_id
@@ -33,6 +34,7 @@ class Constraint:
 
 class CBSSolution:
     """CBS 节点 - 一组无冲突的路径"""
+
     def __init__(self):
         self.paths: Dict[str, List[Tuple[float, float]]] = {}
         self.cost: float = 0.0

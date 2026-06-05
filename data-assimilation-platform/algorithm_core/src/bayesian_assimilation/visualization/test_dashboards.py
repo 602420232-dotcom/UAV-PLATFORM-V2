@@ -20,6 +20,7 @@ class TestAssimilationDashboard:
     """Test class: AssimilationDashboard"""
 
     @pytest.fixture
+
     def assimilationdashboard_instance(self):
     """Create instance for AssimilationDashboard"""
         # Initialize with default parameters for testing
@@ -36,6 +37,7 @@ class TestAssimilationDashboard:
     """Test class: AssimilationDashboard"""
 
     @pytest.fixture
+
     def assimilationdashboard_instance(self):
     """Create instance for AssimilationDashboard"""
         # Initialize with default parameters for testing
@@ -52,6 +54,7 @@ class TestAssimilationDashboard:
     """Test class: AssimilationDashboard"""
 
     @pytest.fixture
+
     def assimilationdashboard_instance(self):
     """Create instance for AssimilationDashboard"""
         # Initialize with default parameters for testing
@@ -68,6 +71,7 @@ class TestPerformanceDashboard:
     """Test class: PerformanceDashboard"""
 
     @pytest.fixture
+
     def performancedashboard_instance(self):
     """Create instance for PerformanceDashboard"""
         # Initialize with default parameters for testing
@@ -84,6 +88,7 @@ class TestPerformanceDashboard:
     """Test class: PerformanceDashboard"""
 
     @pytest.fixture
+
     def performancedashboard_instance(self):
     """Create instance for PerformanceDashboard"""
         # Initialize with default parameters for testing
@@ -100,6 +105,7 @@ class TestPerformanceDashboard:
     """Test class: PerformanceDashboard"""
 
     @pytest.fixture
+
     def performancedashboard_instance(self):
     """Create instance for PerformanceDashboard"""
         # Initialize with default parameters for testing
@@ -116,6 +122,7 @@ class TestInteractiveDashboard:
     """Test class: InteractiveDashboard"""
 
     @pytest.fixture
+
     def interactivedashboard_instance(self):
     """Create instance for InteractiveDashboard"""
         # Initialize with default parameters for testing
@@ -132,6 +139,7 @@ class TestInteractiveDashboard:
     """Test class: InteractiveDashboard"""
 
     @pytest.fixture
+
     def interactivedashboard_instance(self):
     """Create instance for InteractiveDashboard"""
         # Initialize with default parameters for testing
@@ -148,6 +156,7 @@ class TestInteractiveDashboard:
     """Test class: InteractiveDashboard"""
 
     @pytest.fixture
+
     def interactivedashboard_instance(self):
     """Create instance for InteractiveDashboard"""
         # Initialize with default parameters for testing

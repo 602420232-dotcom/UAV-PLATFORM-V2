@@ -20,6 +20,7 @@ class TestDataSourceBase:
     """Test class: DataSourceBase"""
 
     @pytest.fixture
+
     def datasourcebase_instance(self):
     """Create instance for DataSourceBase"""
         # Initialize with default parameters for testing
@@ -36,6 +37,7 @@ class TestSatelliteDataSource:
     """Test class: SatelliteDataSource"""
 
     @pytest.fixture
+
     def satellitedatasource_instance(self):
     """Create instance for SatelliteDataSource"""
         # Initialize with default parameters for testing
@@ -52,6 +54,7 @@ class TestSatelliteDataSource:
     """Test class: SatelliteDataSource"""
 
     @pytest.fixture
+
     def satellitedatasource_instance(self):
     """Create instance for SatelliteDataSource"""
         # Initialize with default parameters for testing
@@ -68,6 +71,7 @@ class TestSatelliteDataSource:
     """Test class: SatelliteDataSource"""
 
     @pytest.fixture
+
     def satellitedatasource_instance(self):
     """Create instance for SatelliteDataSource"""
         # Initialize with default parameters for testing

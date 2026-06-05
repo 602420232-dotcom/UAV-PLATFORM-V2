@@ -20,6 +20,7 @@ class TestAssimilationStrategy:
     """Test class: AssimilationStrategy"""
 
     @pytest.fixture
+
     def assimilationstrategy_instance(self):
     """Create instance for AssimilationStrategy"""
         # Initialize with default parameters for testing
@@ -36,6 +37,7 @@ class TestAssimilationStrategy:
     """Test class: AssimilationStrategy"""
 
     @pytest.fixture
+
     def assimilationstrategy_instance(self):
     """Create instance for AssimilationStrategy"""
         # Initialize with default parameters for testing
@@ -52,6 +54,7 @@ class TestThreeDVARStrategy:
     """Test class: ThreeDVARStrategy"""
 
     @pytest.fixture
+
     def threedvarstrategy_instance(self):
     """Create instance for ThreeDVARStrategy"""
         # Initialize with default parameters for testing
@@ -68,6 +71,7 @@ class TestEnsembleStrategy:
     """Test class: EnsembleStrategy"""
 
     @pytest.fixture
+
     def ensemblestrategy_instance(self):
     """Create instance for EnsembleStrategy"""
         # Initialize with default parameters for testing
@@ -84,6 +88,7 @@ class TestIncrementalStrategy:
     """Test class: IncrementalStrategy"""
 
     @pytest.fixture
+
     def incrementalstrategy_instance(self):
     """Create instance for IncrementalStrategy"""
         # Initialize with default parameters for testing
@@ -100,6 +105,7 @@ class TestIncrementalStrategy:
     """Test class: IncrementalStrategy"""
 
     @pytest.fixture
+
     def incrementalstrategy_instance(self):
     """Create instance for IncrementalStrategy"""
         # Initialize with default parameters for testing
@@ -116,6 +122,7 @@ class TestHybridStrategy:
     """Test class: HybridStrategy"""
 
     @pytest.fixture
+
     def hybridstrategy_instance(self):
     """Create instance for HybridStrategy"""
         # Initialize with default parameters for testing
@@ -132,6 +139,7 @@ class TestStrategyFactory:
     """Test class: StrategyFactory"""
 
     @pytest.fixture
+
     def strategyfactory_instance(self):
     """Create instance for StrategyFactory"""
         # Initialize with default parameters for testing
@@ -148,6 +156,7 @@ class TestStrategyManager:
     """Test class: StrategyManager"""
 
     @pytest.fixture
+
     def strategymanager_instance(self):
     """Create instance for StrategyManager"""
         # Initialize with default parameters for testing
@@ -164,6 +173,7 @@ class TestStrategyManager:
     """Test class: StrategyManager"""
 
     @pytest.fixture
+
     def strategymanager_instance(self):
     """Create instance for StrategyManager"""
         # Initialize with default parameters for testing
@@ -180,6 +190,7 @@ class TestStrategyManager:
     """Test class: StrategyManager"""
 
     @pytest.fixture
+
     def strategymanager_instance(self):
     """Create instance for StrategyManager"""
         # Initialize with default parameters for testing
@@ -196,6 +207,7 @@ class TestStrategyManager:
     """Test class: StrategyManager"""
 
     @pytest.fixture
+
     def strategymanager_instance(self):
     """Create instance for StrategyManager"""
         # Initialize with default parameters for testing

@@ -5,7 +5,6 @@ Automatically add type annotations to key functions
 
 import os
 import re
-from pathlib import Path
 from typing import Dict, List
 from datetime import datetime
 

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Fix wildcard imports and broad exceptions in Java files."""
+# flake8: noqa: E741
 import re
 import os
 

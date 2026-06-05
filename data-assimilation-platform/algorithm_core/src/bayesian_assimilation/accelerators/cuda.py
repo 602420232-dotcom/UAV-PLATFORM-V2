@@ -4,10 +4,9 @@ CUDA专用加速器
 """
 
 import os
-import sys
 import logging
 import numpy as np
-from typing import Optional, Any, Callable
+from typing import Optional, Any
 
 # 处理相对导入和绝对导入
 
@@ -75,7 +74,7 @@ class CUDAAccelerator(BaseAccelerator):
                 logger.warning("⚠️ CuPy未安装，尝试PyCUDA")
                 try:
                     import pycuda.driver as cuda  # type: ignore
-                    import pycuda.autoinit  # type: ignore
+                    import pycuda.autoinit  # noqa: F401  # type: ignore
                     self._pycuda = cuda
                     logger.info("✅ PyCUDA已导入")
                     self._device_count = cuda.Device.count()  # type: ignore
@@ -134,7 +133,7 @@ class CUDAAccelerator(BaseAccelerator):
                 import cupy as cp
                 x = cp.ones((100, 100))
                 y = cp.ones((100, 100))
-                z = cp.dot(x, y)
+                z = cp.dot(x, y)  # noqa: F841
                 cp.cuda.Stream.null.synchronize()
                 logger.info("✅ CuPy JIT预热完成")
 
@@ -184,7 +183,6 @@ class CUDAAccelerator(BaseAccelerator):
         """释放CUDA加速器资源"""
         if self._pycuda:
             try:
-                import pycuda.autoinit
                 # PyCUDA会自动清理
                 pass
             except Exception:
@@ -380,7 +378,6 @@ class PyCUDAccelerator(CUDAAccelerator):
         """初始化PyCUDA加速器"""
         try:
             import pycuda.driver as cuda
-            import pycuda.autoinit
             self._pycuda = cuda
             self._cuda_available = True
             self._device_count = cuda.Device.count()  # type: ignore

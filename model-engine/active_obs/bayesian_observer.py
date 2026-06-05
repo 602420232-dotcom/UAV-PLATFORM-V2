@@ -22,10 +22,9 @@
   5. 重新计算方差场 → 回到 1
 """
 import numpy as np
-from dataclasses import dataclass, field
-from typing import Optional, List, Tuple, Callable
+from dataclasses import dataclass
+from typing import Optional, List, Tuple
 from scipy.spatial.distance import cdist
-from scipy.stats import norm
 
 
 @dataclass

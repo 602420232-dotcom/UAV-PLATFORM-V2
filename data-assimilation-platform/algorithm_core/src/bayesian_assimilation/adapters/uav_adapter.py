@@ -5,7 +5,7 @@ UAV数据适配器模块
 
 import logging
 import numpy as np
-from typing import Dict, Any, List, Tuple, Optional
+from typing import Dict, Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -115,8 +115,8 @@ def process_uav_data(uav_data: Dict[str, Any], config: Optional[Dict[str, Any]] 
 
                 # 提取传感器数据
                 wind_speed = sensor_data[i].get('wind_speed', 0)
-                temperature = sensor_data[i].get('temperature', 25)
-                humidity = sensor_data[i].get('humidity', 50)
+                temperature = sensor_data[i].get('temperature', 25)  # noqa: F841
+                humidity = sensor_data[i].get('humidity', 50)  # noqa: F841
 
                 # 转换为笛卡尔坐标（简化处理）
                 x = lat * 111319.9  # 纬度转米

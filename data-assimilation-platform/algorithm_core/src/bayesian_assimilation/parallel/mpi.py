@@ -19,6 +19,7 @@ try:
 except ImportError:
     MPI4PY_AVAILABLE = False
     # 创建一个模拟的MPI类，用于在没有安装mpi4py时的运行
+
     class DummyMPI:
         COMM_WORLD = None
     MPI = DummyMPI()
@@ -32,7 +33,9 @@ try:
 
 except ImportError:
     # 如果无法导入，创建一个基类
+
     class ParallelManager:
+
         def __init__(self, config=None):
             self.config = config or {}
             self.initialized = False
@@ -285,7 +288,9 @@ try:
 
 except ImportError:
     # 如果无法导入，创建一个基类
+
     class BayesianAssimilator:
+
         def __init__(self, config=None):
             self.config = config
             self.logger = logging.getLogger(__name__)

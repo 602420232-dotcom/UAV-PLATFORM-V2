@@ -23,7 +23,6 @@ M1-M5 对比实验 — 论文实验核心
 """
 import time
 import json
-from datetime import datetime
 from pathlib import Path
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Tuple, Callable
@@ -334,6 +333,7 @@ class M1to5Experiment:
     def _save_results(self, results: Dict):
         """保存结果到 JSON"""
         # 转换 numpy 类型
+
         def convert(obj):
             if isinstance(obj, np.floating):
                 return float(obj)

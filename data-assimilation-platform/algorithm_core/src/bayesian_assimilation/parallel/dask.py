@@ -6,9 +6,7 @@ import logging
 
 
 try:
-    import dask
     import dask.array as da
-    import dask.distributed as dd
     from dask.distributed import Client, LocalCluster
     DASK_AVAILABLE = True
 
@@ -25,7 +23,9 @@ try:
 
 except ImportError:
     # 如果无法导入，创建一个基类
+
     class ParallelManager:
+
         def __init__(self, config=None):
             self.config = config or {}
 
@@ -135,6 +135,7 @@ class DaskParallelManager(ParallelManager):
                 # 将数据分批次处理
                 batches = [data[i:i+batch_size] for i in range(0, len(data), batch_size)]
                 # 定义批处理函数
+
                 def batch_func(batch):
                     return [func(item) for item in batch]
                 # 并行执行批处理
@@ -169,7 +170,7 @@ class DaskParallelManager(ParallelManager):
             import os
 
             # 计算文件大小
-            file_size = np.prod(shape) * dtype.itemsize
+            file_size = np.prod(shape) * dtype.itemsize  # noqa: F841
 
             # 创建或打开文件
             if os.path.exists(file_path):
@@ -348,6 +349,7 @@ class DaskParallelManager(ParallelManager):
             # 默认优化
             return self._calculate_chunks(array_shape)
 
+
 # 便捷函数
 
 
@@ -369,7 +371,9 @@ try:
 
 except ImportError:
     # 如果无法导入，创建一个基类
+
     class BayesianAssimilator:
+
         def __init__(self, config=None):
             self.config = config
             self.logger = logging.getLogger(__name__)
@@ -403,9 +407,7 @@ class DaskParallelAssimilator(BayesianAssimilator):
         真正的Dask并行执行3DVAR同化
         """
         import time
-        import dask
-        import dask.array as da
-        from dask.distributed import get_client
+        from dask.distributed import get_client  # noqa: F811
 
         start_time = time.time()
 
@@ -428,6 +430,7 @@ class DaskParallelAssimilator(BayesianAssimilator):
                     blocks.append((i, end_i))
 
             # 定义每个块的处理函数
+
             def process_block(block_info):
                 start_x, end_x = block_info
 
@@ -467,7 +470,7 @@ class DaskParallelAssimilator(BayesianAssimilator):
                 analysis[start_x:end_x, :, :] = analysis_block
                 variance[start_x:end_x, :, :] = variance_block
 
-            elapsed = time.time() - start_time
+            elapsed = time.time() - start_time  # noqa: F841
 
             return analysis, variance
 

@@ -20,6 +20,7 @@ class TestAssimilationBase:
     """Test class: AssimilationBase"""
 
     @pytest.fixture
+
     def assimilationbase_instance(self):
     """Create instance for AssimilationBase"""
         # Initialize with default parameters for testing
@@ -36,6 +37,7 @@ class TestAssimilationBase:
     """Test class: AssimilationBase"""
 
     @pytest.fixture
+
     def assimilationbase_instance(self):
     """Create instance for AssimilationBase"""
         # Initialize with default parameters for testing
@@ -52,6 +54,7 @@ class TestAssimilationBase:
     """Test class: AssimilationBase"""
 
     @pytest.fixture
+
     def assimilationbase_instance(self):
     """Create instance for AssimilationBase"""
         # Initialize with default parameters for testing
@@ -68,6 +71,7 @@ class TestAssimilationBase:
     """Test class: AssimilationBase"""
 
     @pytest.fixture
+
     def assimilationbase_instance(self):
     """Create instance for AssimilationBase"""
         # Initialize with default parameters for testing
@@ -84,6 +88,7 @@ class TestAssimilationBase:
     """Test class: AssimilationBase"""
 
     @pytest.fixture
+
     def assimilationbase_instance(self):
     """Create instance for AssimilationBase"""
         # Initialize with default parameters for testing
@@ -100,6 +105,7 @@ class TestAssimilationBase:
     """Test class: AssimilationBase"""
 
     @pytest.fixture
+
     def assimilationbase_instance(self):
     """Create instance for AssimilationBase"""
         # Initialize with default parameters for testing

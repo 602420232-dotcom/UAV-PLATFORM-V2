@@ -6,7 +6,7 @@
 import logging
 import numpy as np
 from scipy import interpolate
-from typing import Dict, Any, List, Tuple, Optional, Union
+from typing import Dict, Any, Tuple, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -227,11 +227,11 @@ def points_to_grid(points: np.ndarray, values: np.ndarray,
         grid = np.zeros(grid_shape)
 
         # 归一化点坐标到网格索引
-        x_indices = ((points[:, 0] - points[:, 0].min()) / \
+        x_indices = ((points[:, 0] - points[:, 0].min()) /
                     (points[:, 0].max() - points[:, 0].min() + 1e-10) * (nx - 1)).astype(int)
-        y_indices = ((points[:, 1] - points[:, 1].min()) / \
+        y_indices = ((points[:, 1] - points[:, 1].min()) /
                     (points[:, 1].max() - points[:, 1].min() + 1e-10) * (ny - 1)).astype(int)
-        z_indices = ((points[:, 2] - points[:, 2].min()) / \
+        z_indices = ((points[:, 2] - points[:, 2].min()) /
                     (points[:, 2].max() - points[:, 2].min() + 1e-10) * (nz - 1)).astype(int)
 
         # 确保索引在有效范围内

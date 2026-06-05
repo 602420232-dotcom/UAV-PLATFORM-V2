@@ -7,10 +7,8 @@ import asyncio
 import aiohttp
 import time
 import statistics
-import json
 import sys
 from dataclasses import dataclass
-from typing import List
 
 
 @dataclass
@@ -26,6 +24,7 @@ class BenchmarkResult:
 
 
 class BenchRunner:
+
     def __init__(self, base_url: str = "http://localhost:8088"):
         self.base_url = base_url
         self.timeout = aiohttp.ClientTimeout(total=30)

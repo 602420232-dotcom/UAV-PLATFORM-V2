@@ -11,7 +11,7 @@ import os
 import logging
 import tensorflow as tf
 from tensorflow.keras.models import Sequential, load_model
-from tensorflow.keras.layers import Dense, Flatten, Input
+from tensorflow.keras.layers import Dense, Input
 from tensorflow.keras.optimizers import Adam
 from collections import deque
 import random
@@ -24,6 +24,7 @@ class DQNPlanner:
     """
     DQN路径规划器
     """
+
     def __init__(self, state_size=6, action_size=4, model_path=None):
         """
         初始化DQN规划器
@@ -154,6 +155,7 @@ class PPOPlanner:
     """
     PPO路径规划器
     """
+
     def __init__(self, state_size=6, action_size=4, model_path=None):
         """
         初始化PPO规划器
@@ -331,6 +333,7 @@ class PathPlanningEnv:
     """
     路径规划环境
     """
+
     def __init__(self, start, goal, obstacles, no_fly_zones):
         """
         初始化环境
@@ -450,6 +453,7 @@ class ReinforcementLearningPlanner:
     """
     强化学习路径规划器
     """
+
     def __init__(self, algorithm='dqn'):
         """
         初始化强化学习规划器

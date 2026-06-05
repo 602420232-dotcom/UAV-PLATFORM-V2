@@ -7,6 +7,7 @@ logger = logging.getLogger(__name__)
 
 
 class JobService:
+
     def __init__(self):
         self._jobs: Dict[str, dict] = {}
 

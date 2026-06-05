@@ -486,12 +486,11 @@ def run_fair_benchmark(background, observations, obs_locations, config, n_blocks
     logger.info(f"并行块数: {n_blocks}")
     logger.info(f"启用Dask: {enable_dask}")
     logger.info(f"使用Dask客户端: {bool(dask_client)}")
+    success_count = sum(1 for r in results.values() if r.get('success', False))
     logger.info(f"总测试数: {len(results)}")
     logger.info(f"成功测试数: {success_count}")
     logger.info(f"失败测试数: {len(results) - success_count}")
     logger.info("="*80)
-
-    success_count = sum(1 for r in results.values() if r.get('success', False))
 
     if results['sequential']['success']:
         seq_time = results['sequential']['elapsed']

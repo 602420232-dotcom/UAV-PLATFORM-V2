@@ -20,6 +20,7 @@ class TestIOAdapter:
     """Test class: IOAdapter"""
 
     @pytest.fixture
+
     def ioadapter_instance(self):
     """Create instance for IOAdapter"""
         # Initialize with default parameters for testing
@@ -36,6 +37,7 @@ class TestIOAdapter:
     """Test class: IOAdapter"""
 
     @pytest.fixture
+
     def ioadapter_instance(self):
     """Create instance for IOAdapter"""
         # Initialize with default parameters for testing
@@ -52,6 +54,7 @@ class TestNetCDFReader:
     """Test class: NetCDFReader"""
 
     @pytest.fixture
+
     def netcdfreader_instance(self):
     """Create instance for NetCDFReader"""
         # Initialize with default parameters for testing
@@ -68,6 +71,7 @@ class TestNetCDFReader:
     """Test class: NetCDFReader"""
 
     @pytest.fixture
+
     def netcdfreader_instance(self):
     """Create instance for NetCDFReader"""
         # Initialize with default parameters for testing
@@ -84,6 +88,7 @@ class TestHDF5Reader:
     """Test class: HDF5Reader"""
 
     @pytest.fixture
+
     def hdf5reader_instance(self):
     """Create instance for HDF5Reader"""
         # Initialize with default parameters for testing
@@ -100,6 +105,7 @@ class TestHDF5Reader:
     """Test class: HDF5Reader"""
 
     @pytest.fixture
+
     def hdf5reader_instance(self):
     """Create instance for HDF5Reader"""
         # Initialize with default parameters for testing

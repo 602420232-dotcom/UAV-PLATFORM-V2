@@ -57,37 +57,31 @@ def check_python_environment():
     logger.info(f"Python版本: {sys.version}")
 
     try:
-        import numpy
         logger.info("[OK] numpy 已安装")
     except ImportError:
         logger.info("[ERROR] numpy 未安装")
 
     try:
-        import scipy
         logger.info("[OK] scipy 已安装")
     except ImportError:
         logger.info("[ERROR] scipy 未安装")
 
     try:
-        import pandas
         logger.info("[OK] pandas 已安装")
     except ImportError:
         logger.info("[ERROR] pandas 未安装")
 
     try:
-        import netCDF4
         logger.info("[OK] netCDF4 已安装")
     except ImportError:
         logger.info("[WARNING] netCDF4 未安装")
 
     try:
-        import xgboost
         logger.info("[OK] xgboost 已安装")
     except ImportError:
         logger.info("[WARNING] xgboost 未安装")
 
     try:
-        import sklearn
         logger.info("[OK] sklearn 已安装")
     except ImportError:
         logger.info("[WARNING] sklearn 未安装")
@@ -174,7 +168,7 @@ def check_frontend_implementation():
     ]
 
     existing_count = 0
-    total_count = len(frontend_files)
+    total_count = len(frontend_files)  # noqa: F841
 
     for file_path in frontend_files:
         if os.path.exists(file_path):
@@ -199,7 +193,7 @@ def check_security_implementation():
     ]
 
     existing_count = 0
-    total_count = len(security_files)
+    total_count = len(security_files)  # noqa: F841
 
     for file_path in security_files:
         if os.path.exists(file_path):

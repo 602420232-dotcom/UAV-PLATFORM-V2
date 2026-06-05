@@ -95,12 +95,15 @@ class KafkaClient:
 
 
 class _MockProducer:
+
     def send(self, topic, key=None, value=None):
         logger.debug(f"[模拟Kafka] 发送 {topic}: {value}")
 
 
 class _MockConsumer:
+
     def __init__(self, topic): self.topic = topic
+
     def __iter__(self): return iter([])
 
 

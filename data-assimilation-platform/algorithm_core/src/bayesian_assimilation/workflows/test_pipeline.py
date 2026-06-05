@@ -20,6 +20,7 @@ class TestBayesianAssimilator:
     """Test class: BayesianAssimilator"""
 
     @pytest.fixture
+
     def bayesianassimilator_instance(self):
     """Create instance for BayesianAssimilator"""
         # Initialize with default parameters for testing
@@ -36,6 +37,7 @@ class TestBayesianAssimilator:
     """Test class: BayesianAssimilator"""
 
     @pytest.fixture
+
     def bayesianassimilator_instance(self):
     """Create instance for BayesianAssimilator"""
         # Initialize with default parameters for testing
@@ -52,6 +54,7 @@ class TestPipelineStep:
     """Test class: PipelineStep"""
 
     @pytest.fixture
+
     def pipelinestep_instance(self):
     """Create instance for PipelineStep"""
         # Initialize with default parameters for testing
@@ -68,6 +71,7 @@ class TestPipelineStep:
     """Test class: PipelineStep"""
 
     @pytest.fixture
+
     def pipelinestep_instance(self):
     """Create instance for PipelineStep"""
         # Initialize with default parameters for testing
@@ -84,6 +88,7 @@ class TestPipelineStep:
     """Test class: PipelineStep"""
 
     @pytest.fixture
+
     def pipelinestep_instance(self):
     """Create instance for PipelineStep"""
         # Initialize with default parameters for testing
@@ -100,6 +105,7 @@ class TestDataLoadingStep:
     """Test class: DataLoadingStep"""
 
     @pytest.fixture
+
     def dataloadingstep_instance(self):
     """Create instance for DataLoadingStep"""
         # Initialize with default parameters for testing
@@ -116,6 +122,7 @@ class TestPreprocessingStep:
     """Test class: PreprocessingStep"""
 
     @pytest.fixture
+
     def preprocessingstep_instance(self):
     """Create instance for PreprocessingStep"""
         # Initialize with default parameters for testing
@@ -132,6 +139,7 @@ class TestAssimilationStep:
     """Test class: AssimilationStep"""
 
     @pytest.fixture
+
     def assimilationstep_instance(self):
     """Create instance for AssimilationStep"""
         # Initialize with default parameters for testing
@@ -148,6 +156,7 @@ class TestPostprocessingStep:
     """Test class: PostprocessingStep"""
 
     @pytest.fixture
+
     def postprocessingstep_instance(self):
     """Create instance for PostprocessingStep"""
         # Initialize with default parameters for testing
@@ -164,6 +173,7 @@ class TestAssimilationPipeline:
     """Test class: AssimilationPipeline"""
 
     @pytest.fixture
+
     def assimilationpipeline_instance(self):
     """Create instance for AssimilationPipeline"""
         # Initialize with default parameters for testing
@@ -180,6 +190,7 @@ class TestAssimilationPipeline:
     """Test class: AssimilationPipeline"""
 
     @pytest.fixture
+
     def assimilationpipeline_instance(self):
     """Create instance for AssimilationPipeline"""
         # Initialize with default parameters for testing
@@ -196,6 +207,7 @@ class TestAssimilationPipeline:
     """Test class: AssimilationPipeline"""
 
     @pytest.fixture
+
     def assimilationpipeline_instance(self):
     """Create instance for AssimilationPipeline"""
         # Initialize with default parameters for testing
@@ -212,6 +224,7 @@ class TestAssimilationPipeline:
     """Test class: AssimilationPipeline"""
 
     @pytest.fixture
+
     def assimilationpipeline_instance(self):
     """Create instance for AssimilationPipeline"""
         # Initialize with default parameters for testing
@@ -228,6 +241,7 @@ class TestAssimilationPipeline:
     """Test class: AssimilationPipeline"""
 
     @pytest.fixture
+
     def assimilationpipeline_instance(self):
     """Create instance for AssimilationPipeline"""
         # Initialize with default parameters for testing

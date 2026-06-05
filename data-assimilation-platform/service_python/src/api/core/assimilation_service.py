@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 
 
 class AssimilationService:
+
     def __init__(self, cluster_manager=None):
         self._cluster_manager = cluster_manager
         self._algorithm_map = {

@@ -10,12 +10,10 @@ SRC_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file
 if SRC_DIR not in sys.path:
     sys.path.insert(0, SRC_DIR)
 
-import numpy as np
-from dataclasses import dataclass
-from typing import Optional, Tuple, List, Dict, Any
-import logging
+from typing import Optional, Tuple  # noqa: E402
+import logging  # noqa: E402
 
-from bayesian_assimilation.utils.config import BaseConfig
+from bayesian_assimilation.utils.config import BaseConfig  # noqa: E402
 
 logger = logging.getLogger(__name__)
 

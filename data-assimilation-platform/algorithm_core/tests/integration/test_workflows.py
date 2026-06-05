@@ -153,7 +153,9 @@ class TestPipelineWorkflow:
         }
 
         # 创建一个简单的pass-through步骤
+
         class PassThroughStep:
+
             def __init__(self):
                 self.name = "pass_through"
                 self.stage = PipelineStage.DATA_LOADING
@@ -193,7 +195,9 @@ class TestPipelineWorkflow:
         pipeline = AssimilationPipeline("timing_test")
 
         # 添加一些带结果的步骤
+
         class MockStep:
+
             def __init__(self, elapsed):
                 self.name = "mock"
                 self.stage = PipelineStage.ASSIMILATION
@@ -364,8 +368,6 @@ class TestWorkflowComparison:
 
 
 @pytest.mark.integration
-
-
 @pytest.mark.slow
 class TestWorkflowPerformance:
     """工作流性能测试类"""
@@ -379,7 +381,9 @@ class TestWorkflowPerformance:
         pipeline = AssimilationPipeline("perf_test")
 
         # 添加pass-through步骤模拟处理
+
         class PerfMockStep:
+
             def __init__(self):
                 self.name = "perf_mock"
                 self.stage = PipelineStage.ASSIMILATION

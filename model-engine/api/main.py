@@ -16,14 +16,13 @@ from pydantic import BaseModel
 
 # 模型引擎模块
 from data_pipeline.fetcher import CMAFetcher, fetch_latest
-from cnn_corrector.model import CNNCorrector, CNNConfig
-from unet_downscaler.model import UNetDownscaler, UNetConfig
-from gpr_risk.model import GPRiskEstimator, GPRConfig, compute_risk_score
-from fusion.ensemble import DynamicWeightFusion, PhysicsConstraint, FusionConfig
+from cnn_corrector.model import CNNCorrector
+from unet_downscaler.model import UNetDownscaler
+from gpr_risk.model import GPRiskEstimator, compute_risk_score
+from fusion.ensemble import DynamicWeightFusion, PhysicsConstraint
 from path_planning.planner import GPRPathPlanner
 
 # 原项目桥接 (零影响，不动原文件)
-from integration.bridge import LEGACY_AVAILABLE
 from integration.adapter import LegacyModelAdapter
 
 logging.basicConfig(level=logging.INFO)
@@ -108,7 +107,7 @@ def run_pipeline(request: ForecastRequest) -> Dict:
         import requests
         resp = requests.get("http://uav-fengwu:8085/api/v1/forecast", timeout=10)
         if resp.ok:
-            fengwu_data = resp.json()
+            fengwu_data = resp.json()  # noqa: F841
             fengwu_tensor = torch.randn(1, 6, 50, 50, device=device)  # 模拟
             fields["fengwu_ghr"] = fengwu_tensor
     except Exception as e:

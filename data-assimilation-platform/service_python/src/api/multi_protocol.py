@@ -4,15 +4,14 @@
 提供 HTTP REST 和 WebSocket 两种协议的支持，
 确保服务端能够处理不同客户端的连接需求。
 """
-import asyncio
 import json
 import logging
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
 
 class MultiProtocolHandler:
+
     def __init__(self):
         self._ws_connections = set()
 

@@ -20,6 +20,7 @@ class TestCovarianceOperator:
     """Test class: CovarianceOperator"""
 
     @pytest.fixture
+
     def covarianceoperator_instance(self):
     """Create instance for CovarianceOperator"""
         # Initialize with default parameters for testing
@@ -36,6 +37,7 @@ class TestCovarianceOperator:
     """Test class: CovarianceOperator"""
 
     @pytest.fixture
+
     def covarianceoperator_instance(self):
     """Create instance for CovarianceOperator"""
         # Initialize with default parameters for testing
@@ -52,6 +54,7 @@ class TestCovarianceOperator:
     """Test class: CovarianceOperator"""
 
     @pytest.fixture
+
     def covarianceoperator_instance(self):
     """Create instance for CovarianceOperator"""
         # Initialize with default parameters for testing
@@ -68,6 +71,7 @@ class TestCovarianceOperator:
     """Test class: CovarianceOperator"""
 
     @pytest.fixture
+
     def covarianceoperator_instance(self):
     """Create instance for CovarianceOperator"""
         # Initialize with default parameters for testing
@@ -84,6 +88,7 @@ class TestStatisticalMetrics:
     """Test class: StatisticalMetrics"""
 
     @pytest.fixture
+
     def statisticalmetrics_instance(self):
     """Create instance for StatisticalMetrics"""
         # Initialize with default parameters for testing
@@ -100,6 +105,7 @@ class TestStatisticalMetrics:
     """Test class: StatisticalMetrics"""
 
     @pytest.fixture
+
     def statisticalmetrics_instance(self):
     """Create instance for StatisticalMetrics"""
         # Initialize with default parameters for testing
@@ -116,6 +122,7 @@ class TestStatisticalMetrics:
     """Test class: StatisticalMetrics"""
 
     @pytest.fixture
+
     def statisticalmetrics_instance(self):
     """Create instance for StatisticalMetrics"""
         # Initialize with default parameters for testing
@@ -132,6 +139,7 @@ class TestStatisticalMetrics:
     """Test class: StatisticalMetrics"""
 
     @pytest.fixture
+
     def statisticalmetrics_instance(self):
     """Create instance for StatisticalMetrics"""
         # Initialize with default parameters for testing
@@ -148,6 +156,7 @@ class TestStatisticalMetrics:
     """Test class: StatisticalMetrics"""
 
     @pytest.fixture
+
     def statisticalmetrics_instance(self):
     """Create instance for StatisticalMetrics"""
         # Initialize with default parameters for testing
@@ -164,6 +173,7 @@ class TestStatisticalMetrics:
     """Test class: StatisticalMetrics"""
 
     @pytest.fixture
+
     def statisticalmetrics_instance(self):
     """Create instance for StatisticalMetrics"""
         # Initialize with default parameters for testing
@@ -180,6 +190,7 @@ class TestStatisticalMetrics:
     """Test class: StatisticalMetrics"""
 
     @pytest.fixture
+
     def statisticalmetrics_instance(self):
     """Create instance for StatisticalMetrics"""
         # Initialize with default parameters for testing
@@ -196,6 +207,7 @@ class TestStatisticalMetrics:
     """Test class: StatisticalMetrics"""
 
     @pytest.fixture
+
     def statisticalmetrics_instance(self):
     """Create instance for StatisticalMetrics"""
         # Initialize with default parameters for testing
@@ -212,6 +224,7 @@ class TestEnsembleStatistics:
     """Test class: EnsembleStatistics"""
 
     @pytest.fixture
+
     def ensemblestatistics_instance(self):
     """Create instance for EnsembleStatistics"""
         # Initialize with default parameters for testing
@@ -228,6 +241,7 @@ class TestEnsembleStatistics:
     """Test class: EnsembleStatistics"""
 
     @pytest.fixture
+
     def ensemblestatistics_instance(self):
     """Create instance for EnsembleStatistics"""
         # Initialize with default parameters for testing
@@ -244,6 +258,7 @@ class TestEnsembleStatistics:
     """Test class: EnsembleStatistics"""
 
     @pytest.fixture
+
     def ensemblestatistics_instance(self):
     """Create instance for EnsembleStatistics"""
         # Initialize with default parameters for testing
@@ -260,6 +275,7 @@ class TestEnsembleStatistics:
     """Test class: EnsembleStatistics"""
 
     @pytest.fixture
+
     def ensemblestatistics_instance(self):
     """Create instance for EnsembleStatistics"""
         # Initialize with default parameters for testing
@@ -276,6 +292,7 @@ class TestEnsembleStatistics:
     """Test class: EnsembleStatistics"""
 
     @pytest.fixture
+
     def ensemblestatistics_instance(self):
     """Create instance for EnsembleStatistics"""
         # Initialize with default parameters for testing

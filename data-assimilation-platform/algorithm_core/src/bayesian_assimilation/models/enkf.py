@@ -10,13 +10,12 @@ SRC_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file
 if SRC_DIR not in sys.path:
     sys.path.insert(0, SRC_DIR)
 
-import numpy as np
-from scipy.sparse import csr_matrix
-from typing import Optional, Tuple, List
-import logging
+import numpy as np  # noqa: E402
+from typing import Optional  # noqa: E402
+import logging  # noqa: E402
 
-from bayesian_assimilation.core.base import AssimilationBase
-from bayesian_assimilation.utils.config import BaseConfig
+from bayesian_assimilation.core.base import AssimilationBase  # noqa: E402
+from bayesian_assimilation.utils.config import BaseConfig  # noqa: E402
 
 logger = logging.getLogger(__name__)
 
@@ -86,7 +85,7 @@ class EnKF(AssimilationBase):
         执行集合卡尔曼滤波
         """
         nx, ny, nz = self.grid_shape
-        n = nx * ny * nz
+        n = nx * ny * nz  # noqa: F841
         n_obs = len(obs)
 
         # 生成集合
@@ -98,7 +97,7 @@ class EnKF(AssimilationBase):
         # 观测误差协方差
         obs_err = obs_err or np.full(n_obs, self.observation_error_scale)
         R = np.diag(obs_err**2)
-        R_inv = np.diag(1.0 / (obs_err**2 + 1e-6))
+        R_inv = np.diag(1.0 / (obs_err**2 + 1e-6))  # noqa: F841
 
         # 计算集合均值和协方差
         xb_mean = np.mean(ensemble, axis=0)
@@ -131,7 +130,7 @@ class EnKF(AssimilationBase):
             xa_ensemble[i] = ensemble[i] + K @ innovation_i
 
         # 计算分析误差方差
-        xa_prime = xa_ensemble - xa_mean
+        xa_prime = xa_ensemble - xa_mean  # noqa: F841
         variance = np.var(xa_ensemble, axis=0)
 
         self.analysis = xa_mean.reshape(nx, ny, nz)

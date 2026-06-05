@@ -20,6 +20,7 @@ class TestTimeSeriesAnimator:
     """Test class: TimeSeriesAnimator"""
 
     @pytest.fixture
+
     def timeseriesanimator_instance(self):
     """Create instance for TimeSeriesAnimator"""
         # Initialize with default parameters for testing
@@ -36,6 +37,7 @@ class TestTimeSeriesAnimator:
     """Test class: TimeSeriesAnimator"""
 
     @pytest.fixture
+
     def timeseriesanimator_instance(self):
     """Create instance for TimeSeriesAnimator"""
         # Initialize with default parameters for testing
@@ -52,6 +54,7 @@ class TestTimeSeriesAnimator:
     """Test class: TimeSeriesAnimator"""
 
     @pytest.fixture
+
     def timeseriesanimator_instance(self):
     """Create instance for TimeSeriesAnimator"""
         # Initialize with default parameters for testing
@@ -68,6 +71,7 @@ class TestVarianceHeatmapAnimator:
     """Test class: VarianceHeatmapAnimator"""
 
     @pytest.fixture
+
     def varianceheatmapanimator_instance(self):
     """Create instance for VarianceHeatmapAnimator"""
         # Initialize with default parameters for testing
@@ -84,6 +88,7 @@ class TestAssimilationCycleAnimator:
     """Test class: AssimilationCycleAnimator"""
 
     @pytest.fixture
+
     def assimilationcycleanimator_instance(self):
     """Create instance for AssimilationCycleAnimator"""
         # Initialize with default parameters for testing

@@ -20,6 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 class Cache:
+
     def __init__(self, max_size=1000):
         self.max_size = max_size
         self.cache = {}
@@ -49,6 +50,7 @@ class Drone:
     """
     无人机类
     """
+
     def __init__(self, id: str, max_payload: float, max_endurance: float, max_speed: float):
         self.id = id
         self.max_payload = max_payload
@@ -62,6 +64,7 @@ class Task:
     """
     任务类
     """
+
     def __init__(self, id: str, location: Tuple[float, float], demand: float, start_time: float, end_time: float):
         self.id = id
         self.location = location
@@ -74,6 +77,7 @@ class Obstacle:
     """
     障碍物类
     """
+
     def __init__(self, location: Tuple[float, float], radius: float):
         self.location = location
         self.radius = radius
@@ -83,6 +87,7 @@ class NoFlyZone:
     """
     禁飞区类
     """
+
     def __init__(self, location: Tuple[float, float], radius: float):
         self.location = location
         self.radius = radius
@@ -92,6 +97,7 @@ class VRPTWPlanner:
     """
     VRPTW规划器
     """
+
     def __init__(self, drones: List[Drone], tasks: List[Task], weather_data: Optional[Dict] = None):
         self.drones = drones
         self.tasks = tasks
@@ -219,6 +225,7 @@ class AStarPlanner:
     """
     A*路径规划器
     """
+
     def __init__(self, weather_data: Optional[Dict] = None, obstacles: Optional[List[Obstacle]] = None, no_fly_zones: Optional[List[NoFlyZone]] = None):
         self.weather_data = weather_data or {}
         self.obstacles = obstacles or []
@@ -345,6 +352,7 @@ class DERRTStarPlanner:
     """
     DE-RRT*路径规划器
     """
+
     def __init__(self, weather_data: Optional[Dict] = None, obstacles: Optional[List[Obstacle]] = None, no_fly_zones: Optional[List[NoFlyZone]] = None):
         self.weather_data = weather_data or {}
         self.obstacles = obstacles or []
@@ -526,6 +534,7 @@ class DWAPlanner:
     """
     DWA路径规划器
     """
+
     def __init__(self, weather_data: Optional[Dict] = None, obstacles: Optional[List[Obstacle]] = None):
         self.weather_data = weather_data or {}
         self.obstacles = obstacles or []
@@ -633,6 +642,7 @@ class ThreeLayerPlanner:
     """
     三层路径规划器
     """
+
     def __init__(self, drones: List[Drone], tasks: List[Task], weather_data: Optional[Dict] = None, obstacles: Optional[List[Obstacle]] = None, no_fly_zones: Optional[List[NoFlyZone]] = None):
         self.drones = drones
         self.tasks = tasks

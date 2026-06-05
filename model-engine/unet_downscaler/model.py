@@ -10,8 +10,8 @@ U-Net 物理降尺度模型
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from dataclasses import dataclass, field
-from typing import Tuple, Optional, List
+from dataclasses import dataclass
+from typing import Optional
 
 
 @dataclass
@@ -30,6 +30,7 @@ class UNetConfig:
 
 class DoubleConv(nn.Module):
     """(Conv3×3 → BN → ReLU) × 2"""
+
     def __init__(self, in_ch: int, out_ch: int):
         super().__init__()
         self.conv = nn.Sequential(
@@ -47,6 +48,7 @@ class DoubleConv(nn.Module):
 
 class AttentionGate(nn.Module):
     """注意力门 — 用于多源观测同化"""
+
     def __init__(self, F_g: int, F_l: int, F_int: int):
         super().__init__()
         self.W_g = nn.Sequential(
@@ -62,6 +64,7 @@ class AttentionGate(nn.Module):
 
 class SpatialObsEncoder(nn.Module):
     """稀疏站点/无人机观测 → 稠密场编码"""
+
     def __init__(self, obs_channels: int):
         super().__init__()
         self.encoder = nn.Sequential(
@@ -86,6 +89,7 @@ class SpatialObsEncoder(nn.Module):
 
 
 class Down(nn.Module):
+
     def __init__(self, in_ch, out_ch):
         super().__init__()
         self.pool = nn.MaxPool2d(2)
@@ -96,6 +100,7 @@ class Down(nn.Module):
 
 
 class Up(nn.Module):
+
     def __init__(self, in_ch, out_ch, use_attn=False, gate_ch=None):
         super().__init__()
         self.up = nn.ConvTranspose2d(in_ch, in_ch // 2, kernel_size=2, stride=2)
@@ -121,6 +126,7 @@ class UNetDownscaler(nn.Module):
     U-Net 3km → 1km 降尺度
     可选: 多源观测同化 (注意力门)
     """
+
     def __init__(self, config: Optional[UNetConfig] = None):
         super().__init__()
         self.config = config or UNetConfig()

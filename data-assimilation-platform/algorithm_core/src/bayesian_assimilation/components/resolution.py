@@ -1,5 +1,5 @@
 # Type annotations added: 2026-05-08 13:22:43
-from typing import Dict, List, Any, Optional, Callable, Tuple
+from typing import Dict, Any
 
 """
 分辨率管理组件
@@ -18,10 +18,10 @@ SRC_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file
 if SRC_DIR not in sys.path:
     sys.path.insert(0, SRC_DIR)
 
-import numpy as np
+import numpy as np  # noqa: E402
 
-from bayesian_assimilation.core.assimilator import BayesianAssimilator
-from bayesian_assimilation.utils.config import AssimilationConfig
+from bayesian_assimilation.core.assimilator import BayesianAssimilator  # noqa: E402
+from bayesian_assimilation.utils.config import AssimilationConfig  # noqa: E402
 
 
 class AdaptiveResolutionSelector:

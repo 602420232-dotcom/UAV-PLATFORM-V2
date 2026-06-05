@@ -312,8 +312,6 @@ class TestAssimilationEdgeCases:
 
 
 @pytest.mark.integration
-
-
 @pytest.mark.slow
 class TestAssimilationPerformance:
     """同化性能测试类"""

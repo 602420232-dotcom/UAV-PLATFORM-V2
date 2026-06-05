@@ -5,11 +5,9 @@
 
 import numpy as np
 import logging
-from typing import Optional, Tuple, List, Dict, Any, Union
+from typing import Optional, Tuple
 from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
-from matplotlib.colors import Normalize, LinearSegmentedColormap
-from mpl_toolkits.mplot3d import Axes3D
 
 logger = logging.getLogger(__name__)
 
@@ -372,8 +370,8 @@ class ComparisonPlotter:
         analysis_slice = analysis[:, :, slice_index]
 
         nx, ny = bg_slice.shape
-        x = np.arange(nx) * self.resolution
-        y = np.arange(ny) * self.resolution
+        x = np.arange(nx) * self.resolution  # noqa: F841
+        y = np.arange(ny) * self.resolution  # noqa: F841
 
         vmin = min(np.nanmin(bg_slice), np.nanmin(analysis_slice))
         vmax = max(np.nanmax(bg_slice), np.nanmax(analysis_slice))

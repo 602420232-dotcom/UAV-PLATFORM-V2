@@ -4,9 +4,8 @@ Based on pytest framework
 """
 
 import os
-import re
 from pathlib import Path
-from typing import List, Dict, Optional, Tuple
+from typing import List, Dict, Tuple
 from datetime import datetime
 import ast
 
@@ -55,7 +54,7 @@ def extract_functions_from_file(file_path: str) -> List[Dict]:
 
         return extractor.functions
 
-    except Exception as e:
+    except Exception as e:  # noqa: F841
         return []
 
 
@@ -68,7 +67,7 @@ def generate_test_file(python_file: str, functions: List[Dict]) -> Tuple[bool, s
 
     # Find src directory
     try:
-        src_idx = next(i for i, p in enumerate(parts) if p in ['src', 'algorithm_core', 'platform-core'])
+        src_idx = next(i for i, p in enumerate(parts) if p in ['src', 'algorithm_core', 'platform-core'])  # noqa: F841
         base_name = path.stem
         test_file = path.parent / f'test_{base_name}.py'
 

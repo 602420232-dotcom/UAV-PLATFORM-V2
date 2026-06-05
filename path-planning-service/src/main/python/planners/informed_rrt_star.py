@@ -10,7 +10,7 @@ import numpy as np
 import logging
 import math
 import random
-from typing import List, Tuple, Optional, Set
+from typing import List, Tuple, Optional
 from .base import BasePlanner
 
 logger = logging.getLogger(__name__)
@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 
 class Node:
     """Informed RRT* 节点"""
+
     def __init__(self, position: Tuple[float, float]):
         self.position = position
         self.parent = None
@@ -69,7 +70,7 @@ class InformedRRTStarPlanner(BasePlanner):
 
             # 旋转矩阵
             theta = math.atan2(goal[1] - start[1], goal[0] - start[0])
-            c_rot = np.array([
+            c_rot = np.array([  # noqa: F841
                 [math.cos(theta), -math.sin(theta)],
                 [math.sin(theta), math.cos(theta)]
             ])

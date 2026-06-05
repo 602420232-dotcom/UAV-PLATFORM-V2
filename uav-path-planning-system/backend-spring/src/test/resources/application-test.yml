@@ -1,0 +1,65 @@
+spring:
+  application:
+    name: uav-path-planning-test
+
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+      - org.springframework.boot.autoconfigure.cache.RedisCacheManager
+
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;MODE=MySQL
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    database-platform: org.hibernate.dialect.H2Dialect
+
+  flyway:
+    enabled: false
+
+  cache:
+    type: none
+
+server:
+  port: 0
+
+jwt:
+  secret: test-secret-key-for-unit-testing-only-do-not-use-in-production
+  expiration: 3600000
+
+uav:
+  python:
+    script-path: ./python
+    timeout: 30000
+
+  wrf:
+    data-path: ./data/wrf
+    update-interval: 300
+
+  path-planning:
+    max-tasks: 200
+    max-drones: 10
+    replanning-threshold: 3.0
+
+  grpc:
+    host: localhost
+    port: 50051
+
+  cors:
+    allowed-origins: http://localhost:5173
+
+  csrf:
+    enabled: false
+
+utm:
+  enabled: false
+
+logging:
+  level:
+    root: warn
+    "[com.uav]": info

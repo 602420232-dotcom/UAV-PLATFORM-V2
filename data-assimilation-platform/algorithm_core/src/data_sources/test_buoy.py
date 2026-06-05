@@ -20,6 +20,7 @@ class TestBuoyDataSource:
     """Test class: BuoyDataSource"""
 
     @pytest.fixture
+
     def buoydatasource_instance(self):
     """Create instance for BuoyDataSource"""
         # Initialize with default parameters for testing
@@ -36,6 +37,7 @@ class TestBuoyDataSource:
     """Test class: BuoyDataSource"""
 
     @pytest.fixture
+
     def buoydatasource_instance(self):
     """Create instance for BuoyDataSource"""
         # Initialize with default parameters for testing

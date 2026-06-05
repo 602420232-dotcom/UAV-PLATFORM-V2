@@ -241,6 +241,7 @@ def profile_function(func: Optional[Callable[P, R]] = None, *, name: Optional[st
     Returns:
         装饰后的函数
     """
+
     def decorator(f: Callable[P, R]) -> Callable[P, R]:
         profiler = get_profiler()
         analysis_name = name or f.__name__

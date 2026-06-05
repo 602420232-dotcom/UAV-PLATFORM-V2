@@ -18,8 +18,8 @@
 """
 import time
 import numpy as np
-from dataclasses import dataclass, field
-from typing import List, Optional, Tuple, Callable
+from dataclasses import dataclass
+from typing import List, Optional, Tuple
 from enum import Enum
 
 from .cost_function import RiskCostFunction, CostConfig

@@ -108,7 +108,7 @@ services:
       LOG_PATH: /logs
       SPRING_MAIN_ALLOW_BEAN_DEFINITION_OVERRIDING: "true"
       SPRING_DATASOURCE_HIKARI_INITIALIZATION_FAIL_TIMEOUT: "-1"
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/wrf_processor?useSSL=false&serverTimezone=UTC
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/wrf_processor?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
       SPRING_DATASOURCE_USERNAME: uav
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
       NACOS_SERVER: nacos:8848
@@ -143,7 +143,7 @@ services:
       LOG_PATH: /logs
       SPRING_MAIN_ALLOW_BEAN_DEFINITION_OVERRIDING: "true"
       SPRING_DATASOURCE_HIKARI_INITIALIZATION_FAIL_TIMEOUT: "-1"
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/data_assimilation?useSSL=false&serverTimezone=UTC
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/data_assimilation?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
       SPRING_DATASOURCE_USERNAME: uav
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
       NACOS_SERVER: nacos:8848
@@ -178,7 +178,7 @@ services:
       LOG_PATH: /logs
       SPRING_MAIN_ALLOW_BEAN_DEFINITION_OVERRIDING: "true"
       SPRING_DATASOURCE_HIKARI_INITIALIZATION_FAIL_TIMEOUT: "-1"
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/meteor_forecast?useSSL=false&serverTimezone=UTC
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/meteor_forecast?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
       SPRING_DATASOURCE_USERNAME: uav
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
       NACOS_SERVER: nacos:8848
@@ -213,7 +213,7 @@ services:
       LOG_PATH: /logs
       SPRING_MAIN_ALLOW_BEAN_DEFINITION_OVERRIDING: "true"
       SPRING_DATASOURCE_HIKARI_INITIALIZATION_FAIL_TIMEOUT: "-1"
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/path_planning?useSSL=false&serverTimezone=UTC
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/path_planning?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
       SPRING_DATASOURCE_USERNAME: uav
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
       NACOS_SERVER: nacos:8848
@@ -259,7 +259,7 @@ services:
       LOG_PATH: /logs
       SPRING_MAIN_ALLOW_BEAN_DEFINITION_OVERRIDING: "true"
       SPRING_DATASOURCE_HIKARI_INITIALIZATION_FAIL_TIMEOUT: "-1"
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/uav_platform?useSSL=false&serverTimezone=UTC
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/uav_platform?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
       SPRING_DATASOURCE_USERNAME: uav
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
       SPRING_REDIS_HOST: redis
@@ -302,7 +302,7 @@ services:
       LOG_PATH: /logs
       SPRING_MAIN_ALLOW_BEAN_DEFINITION_OVERRIDING: "true"
       SPRING_DATASOURCE_HIKARI_INITIALIZATION_FAIL_TIMEOUT: "-1"
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/uav_weather?useSSL=false&serverTimezone=UTC
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/uav_weather?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
       SPRING_DATASOURCE_USERNAME: uav
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
       SPRING_REDIS_HOST: redis

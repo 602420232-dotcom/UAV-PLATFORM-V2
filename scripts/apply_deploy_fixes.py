@@ -109,6 +109,7 @@ def fix_docker_compose():
         f.write(content)
     print(f"✅ docker-compose.yml 已修复 ({len(secrets_map)} 处密码替换 + 3 处健康检查)")
 
+
 def fix_dockerfiles():
     """修复所有 runtime Dockerfile: 添加非root用户; 修复 pip 静默错误"""
     runtime_dockerfiles = [
@@ -246,6 +247,7 @@ def fix_env_files():
     with open(dev_path, 'w') as f:
         f.write(dev_content)
     print("✅ docker-compose.dev.yml 已修复 (Nacos健康检查 + Redis版本)")
+
 
 def fix_k8s_namespace():
     """统一 K8s 命名空间为 uav-platform"""
@@ -464,6 +466,7 @@ def fix_k8s_resources():
 
     print("✅ K8s 资源限制已与 docker-compose 对齐 (data-assimilation: 2Gi, uav-platform: 1.5Gi)")
 
+
 def archive_duplicate_k8s():
     """归档重复的 K8s YAML 文件"""
     duplicates = [
@@ -554,6 +557,7 @@ def fix_hpa_conflicts():
                 print(f"✅ {svc_file} 已移除内联HPA")
 
     print("   ℹ️ HPA统一使用 hpa.yml + hpa-supplement.yml")
+
 
 def fix_sonarqube_postgres():
     """为 SonarQube 添加 PostgreSQL 部署"""
@@ -742,6 +746,7 @@ def main():
     print("✅ 所有自动修复已完成！")
     print(f"📄 审计报告: {PROJECT}/docs/audit/deploy-audit.md")
     print("=" * 60)
+
 
 if __name__ == "__main__":
     main()

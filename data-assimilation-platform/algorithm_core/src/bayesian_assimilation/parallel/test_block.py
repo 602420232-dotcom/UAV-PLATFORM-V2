@@ -20,6 +20,7 @@ class TestBayesianAssimilator:
     """Test class: BayesianAssimilator"""
 
     @pytest.fixture
+
     def bayesianassimilator_instance(self):
     """Create instance for BayesianAssimilator"""
         # Initialize with default parameters for testing
@@ -36,6 +37,7 @@ class TestBayesianAssimilator:
     """Test class: BayesianAssimilator"""
 
     @pytest.fixture
+
     def bayesianassimilator_instance(self):
     """Create instance for BayesianAssimilator"""
         # Initialize with default parameters for testing
@@ -52,6 +54,7 @@ class TestBlockParallelAssimilator:
     """Test class: BlockParallelAssimilator"""
 
     @pytest.fixture
+
     def blockparallelassimilator_instance(self):
     """Create instance for BlockParallelAssimilator"""
         # Initialize with default parameters for testing
@@ -68,6 +71,7 @@ class TestBlockParallelAssimilator:
     """Test class: BlockParallelAssimilator"""
 
     @pytest.fixture
+
     def blockparallelassimilator_instance(self):
     """Create instance for BlockParallelAssimilator"""
         # Initialize with default parameters for testing
@@ -84,6 +88,7 @@ class TestBlockParallelAssimilator:
     """Test class: BlockParallelAssimilator"""
 
     @pytest.fixture
+
     def blockparallelassimilator_instance(self):
     """Create instance for BlockParallelAssimilator"""
         # Initialize with default parameters for testing

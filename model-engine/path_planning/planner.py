@@ -12,8 +12,7 @@ GPR 风险场驱动的路径规划
 与原 Java 服务不冲突，可并行运行用于对比
 """
 import numpy as np
-import torch
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import List, Tuple, Optional
 from enum import Enum
 
@@ -184,7 +183,7 @@ class GPRPathPlanner:
         smooth = []
         for i in t:
             # 伯恩斯坦多项式 (n=3 级数)
-            n = min(len(path_xy) - 1, 3)
+            n = min(len(path_xy) - 1, 3)  # noqa: F841
             seg_idx = min(int(i * (len(path_xy) - 1)), len(path_xy) - 2)
             p0 = path_xy[max(0, seg_idx - 1)]
             p1 = path_xy[seg_idx]

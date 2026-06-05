@@ -21,7 +21,7 @@
 """
 import numpy as np
 from dataclasses import dataclass, field
-from typing import List, Optional, Tuple, Dict
+from typing import List, Optional, Tuple
 from enum import IntEnum
 
 
@@ -217,7 +217,7 @@ class MultiUAVConflictResolver:
         if a.priority < b.priority:
             high, low = a, b
         else:
-            high, low = b, a
+            high, low = b, a  # noqa: F841
 
         # 让低优先级减速让行
         low.speed = max(5, low.speed - c.speed_adjustment_max)

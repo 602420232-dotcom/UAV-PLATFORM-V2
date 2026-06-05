@@ -9,7 +9,7 @@
 """
 import json
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -20,9 +20,8 @@ try:
     from pyflink.datastream.connectors.kafka import (
         KafkaSource, KafkaSink, KafkaRecordSerializationSchema
     )
-    from pyflink.common import WatermarkStrategy, Duration
+    from pyflink.common import WatermarkStrategy
     from pyflink.common.serialization import SimpleStringSchema
-    from pyflink.datastream.window import SlidingProcessingTimeWindows
     FLINK_AVAILABLE = True
 
 
@@ -111,9 +110,9 @@ class WeatherDataProcessor:
             .set_bootstrap_servers(self.bootstrap_servers) \
             .set_record_serializer(
                 KafkaRecordSerializationSchema.builder()
-                    .set_topic(topic)
-                    .set_value_serialization_schema(SimpleStringSchema())
-                    .build()
+                .set_topic(topic)
+                .set_value_serialization_schema(SimpleStringSchema())
+                .build()
             ) \
             .build()
 

@@ -20,6 +20,7 @@ class TestParallelManager:
     """Test class: ParallelManager"""
 
     @pytest.fixture
+
     def parallelmanager_instance(self):
     """Create instance for ParallelManager"""
         # Initialize with default parameters for testing
@@ -36,6 +37,7 @@ class TestParallelManager:
     """Test class: ParallelManager"""
 
     @pytest.fixture
+
     def parallelmanager_instance(self):
     """Create instance for ParallelManager"""
         # Initialize with default parameters for testing
@@ -52,6 +54,7 @@ class TestParallelManager:
     """Test class: ParallelManager"""
 
     @pytest.fixture
+
     def parallelmanager_instance(self):
     """Create instance for ParallelManager"""
         # Initialize with default parameters for testing
@@ -68,6 +71,7 @@ class TestParallelManager:
     """Test class: ParallelManager"""
 
     @pytest.fixture
+
     def parallelmanager_instance(self):
     """Create instance for ParallelManager"""
         # Initialize with default parameters for testing
@@ -84,6 +88,7 @@ class TestParallelManager:
     """Test class: ParallelManager"""
 
     @pytest.fixture
+
     def parallelmanager_instance(self):
     """Create instance for ParallelManager"""
         # Initialize with default parameters for testing
@@ -100,6 +105,7 @@ class TestParallelManager:
     """Test class: ParallelManager"""
 
     @pytest.fixture
+
     def parallelmanager_instance(self):
     """Create instance for ParallelManager"""
         # Initialize with default parameters for testing
@@ -116,6 +122,7 @@ class TestParallelManager:
     """Test class: ParallelManager"""
 
     @pytest.fixture
+
     def parallelmanager_instance(self):
     """Create instance for ParallelManager"""
         # Initialize with default parameters for testing
@@ -132,6 +139,7 @@ class TestParallelFactory:
     """Test class: ParallelFactory"""
 
     @pytest.fixture
+
     def parallelfactory_instance(self):
     """Create instance for ParallelFactory"""
         # Initialize with default parameters for testing
@@ -148,6 +156,7 @@ class TestParallelFactory:
     """Test class: ParallelFactory"""
 
     @pytest.fixture
+
     def parallelfactory_instance(self):
     """Create instance for ParallelFactory"""
         # Initialize with default parameters for testing
@@ -164,6 +173,7 @@ class TestSequentialParallelManager:
     """Test class: SequentialParallelManager"""
 
     @pytest.fixture
+
     def sequentialparallelmanager_instance(self):
     """Create instance for SequentialParallelManager"""
         # Initialize with default parameters for testing
@@ -180,6 +190,7 @@ class TestSequentialParallelManager:
     """Test class: SequentialParallelManager"""
 
     @pytest.fixture
+
     def sequentialparallelmanager_instance(self):
     """Create instance for SequentialParallelManager"""
         # Initialize with default parameters for testing
@@ -196,6 +207,7 @@ class TestSequentialParallelManager:
     """Test class: SequentialParallelManager"""
 
     @pytest.fixture
+
     def sequentialparallelmanager_instance(self):
     """Create instance for SequentialParallelManager"""
         # Initialize with default parameters for testing
@@ -212,6 +224,7 @@ class TestSequentialParallelManager:
     """Test class: SequentialParallelManager"""
 
     @pytest.fixture
+
     def sequentialparallelmanager_instance(self):
     """Create instance for SequentialParallelManager"""
         # Initialize with default parameters for testing
@@ -228,6 +241,7 @@ class TestSequentialParallelManager:
     """Test class: SequentialParallelManager"""
 
     @pytest.fixture
+
     def sequentialparallelmanager_instance(self):
     """Create instance for SequentialParallelManager"""
         # Initialize with default parameters for testing

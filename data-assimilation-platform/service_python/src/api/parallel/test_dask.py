@@ -20,6 +20,7 @@ class TestDaskClusterManager:
     """Test class: DaskClusterManager"""
 
     @pytest.fixture
+
     def daskclustermanager_instance(self):
     """Create instance for DaskClusterManager"""
         # Initialize with default parameters for testing
@@ -36,6 +37,7 @@ class TestDaskClusterManager:
     """Test class: DaskClusterManager"""
 
     @pytest.fixture
+
     def daskclustermanager_instance(self):
     """Create instance for DaskClusterManager"""
         # Initialize with default parameters for testing

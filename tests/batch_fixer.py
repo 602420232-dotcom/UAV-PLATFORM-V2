@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Automated fixer: wildcard imports, catch(Exception), docstrings"""
+# flake8: noqa: E741
 import re
 import os
 import json
@@ -131,10 +132,10 @@ def add_python_docstrings():
             # Find class definitions without docstrings
             lines = content.split('\n')
             new_lines = []
-            in_def = False
-            needs_doc = False
-            def_line = 0
-            fix_count = 0
+            in_def = False  # noqa: F841
+            needs_doc = False  # noqa: F841
+            def_line = 0  # noqa: F841
+            fix_count = 0  # noqa: F841
 
             for i, line in enumerate(lines):
                 # Check for class/def without docstring

@@ -13,7 +13,7 @@ import numpy as np
 from .bridge import (
     LEGACY_AVAILABLE,
     MeteorForecast, MeteorForecastEnhanced,
-    ModelConfig, MLOpsPipeline, ModelServingAPI, ModelStatus,
+    MLOpsPipeline, ModelServingAPI,
 )
 
 logger = logging.getLogger(__name__)
@@ -47,7 +47,6 @@ class LegacyModelAdapter:
 
     def _has_enhanced(self) -> bool:
         try:
-            from meteor_forecast_enhanced import MeteorForecast
             return True
         except ImportError:
             return False

@@ -10,16 +10,16 @@ SRC_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file
 if SRC_DIR not in sys.path:
     sys.path.insert(0, SRC_DIR)
 
-import numpy as np
-from typing import Optional, Tuple, List, Dict, Any
-import logging
+import numpy as np  # noqa: E402
+from typing import Optional, Tuple, List, Dict, Any  # noqa: E402
+import logging  # noqa: E402
 
-from bayesian_assimilation.core.base import AssimilationBase
-from bayesian_assimilation.utils.config import BaseConfig
-from bayesian_assimilation.models.three_dimensional_var import ThreeDimensionalVAR
-from bayesian_assimilation.models.enkf import EnKF
-from bayesian_assimilation.models.four_dimensional_var import FourDimensionalVar
-from bayesian_assimilation.models.enhanced_bayesian import EnhancedBayesianAssimilation
+from bayesian_assimilation.core.base import AssimilationBase  # noqa: E402
+from bayesian_assimilation.utils.config import BaseConfig  # noqa: E402
+from bayesian_assimilation.models.three_dimensional_var import ThreeDimensionalVAR  # noqa: E402
+from bayesian_assimilation.models.enkf import EnKF  # noqa: E402
+from bayesian_assimilation.models.four_dimensional_var import FourDimensionalVar  # noqa: E402
+from bayesian_assimilation.models.enhanced_bayesian import EnhancedBayesianAssimilation  # noqa: E402
 
 logger = logging.getLogger(__name__)
 

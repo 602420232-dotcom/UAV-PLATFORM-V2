@@ -16,9 +16,8 @@ EnKF 贝叶斯动态同化模块
   K = P^f H^T (H P^f H^T + R)^{-1}
 """
 import numpy as np
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Optional, Tuple, List, Callable
-import torch
 
 
 @dataclass
@@ -126,7 +125,7 @@ class EnsembleKalmanFilter:
         # P^f = (1/(N-1)) × X' × X'^T
         # 用扰动矩阵近似
         X_prime = perturbations.reshape(N, -1)  # (N, C*H*W)
-        n_state = X_prime.shape[1]
+        n_state = X_prime.shape[1]  # noqa: F841
 
         if obs_operator is not None:
             # 使用观测算子 H

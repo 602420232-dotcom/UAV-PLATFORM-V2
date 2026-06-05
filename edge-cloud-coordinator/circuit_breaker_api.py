@@ -31,8 +31,6 @@ class CircuitBreakerResponse(BaseModel):
 
 
 @router.get("/status", response_model=CircuitBreakerResponse)
-
-
 async def get_status():
     """
     获取所有熔断器状态
@@ -53,8 +51,6 @@ async def get_status():
 
 
 @router.get("/status/{breaker_name}", response_model=CircuitBreakerResponse)
-
-
 async def get_breaker_status(breaker_name: str):
     """
     获取指定熔断器状态
@@ -87,8 +83,6 @@ async def get_breaker_status(breaker_name: str):
 
 
 @router.post("/trip/{breaker_name}", response_model=CircuitBreakerResponse)
-
-
 async def trip_breaker(breaker_name: str):
     """
     手动触发熔断
@@ -130,8 +124,6 @@ async def trip_breaker(breaker_name: str):
 
 
 @router.post("/reset/{breaker_name}", response_model=CircuitBreakerResponse)
-
-
 async def reset_breaker(breaker_name: str):
     """
     手动重置熔断器
@@ -173,8 +165,6 @@ async def reset_breaker(breaker_name: str):
 
 
 @router.get("/health", response_model=CircuitBreakerResponse)
-
-
 async def health_check():
     """
     健康检查
@@ -208,8 +198,6 @@ async def health_check():
 
 
 @router.post("/call-with-fallback")
-
-
 async def call_with_fallback(request: FallbackRequest):
     """
     使用熔断器调用服务

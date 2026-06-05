@@ -20,6 +20,7 @@ class TestJobService:
     """Test class: JobService"""
 
     @pytest.fixture
+
     def jobservice_instance(self):
     """Create instance for JobService"""
         # Initialize with default parameters for testing
@@ -36,6 +37,7 @@ class TestJobService:
     """Test class: JobService"""
 
     @pytest.fixture
+
     def jobservice_instance(self):
     """Create instance for JobService"""
         # Initialize with default parameters for testing
@@ -52,6 +54,7 @@ class TestJobService:
     """Test class: JobService"""
 
     @pytest.fixture
+
     def jobservice_instance(self):
     """Create instance for JobService"""
         # Initialize with default parameters for testing
@@ -68,6 +71,7 @@ class TestJobService:
     """Test class: JobService"""
 
     @pytest.fixture
+
     def jobservice_instance(self):
     """Create instance for JobService"""
         # Initialize with default parameters for testing
@@ -84,6 +88,7 @@ class TestJobService:
     """Test class: JobService"""
 
     @pytest.fixture
+
     def jobservice_instance(self):
     """Create instance for JobService"""
         # Initialize with default parameters for testing

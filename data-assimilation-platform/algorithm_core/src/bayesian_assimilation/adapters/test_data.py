@@ -20,6 +20,7 @@ class TestDataAdapter:
     """Test class: DataAdapter"""
 
     @pytest.fixture
+
     def dataadapter_instance(self):
     """Create instance for DataAdapter"""
         # Initialize with default parameters for testing
@@ -36,6 +37,7 @@ class TestDataAdapter:
     """Test class: DataAdapter"""
 
     @pytest.fixture
+
     def dataadapter_instance(self):
     """Create instance for DataAdapter"""
         # Initialize with default parameters for testing
@@ -52,6 +54,7 @@ class TestWRFDataAdapter:
     """Test class: WRFDataAdapter"""
 
     @pytest.fixture
+
     def wrfdataadapter_instance(self):
     """Create instance for WRFDataAdapter"""
         # Initialize with default parameters for testing
@@ -68,6 +71,7 @@ class TestWRFDataAdapter:
     """Test class: WRFDataAdapter"""
 
     @pytest.fixture
+
     def wrfdataadapter_instance(self):
     """Create instance for WRFDataAdapter"""
         # Initialize with default parameters for testing
@@ -84,6 +88,7 @@ class TestObservationAdapter:
     """Test class: ObservationAdapter"""
 
     @pytest.fixture
+
     def observationadapter_instance(self):
     """Create instance for ObservationAdapter"""
         # Initialize with default parameters for testing
@@ -100,6 +105,7 @@ class TestObservationAdapter:
     """Test class: ObservationAdapter"""
 
     @pytest.fixture
+
     def observationadapter_instance(self):
     """Create instance for ObservationAdapter"""
         # Initialize with default parameters for testing

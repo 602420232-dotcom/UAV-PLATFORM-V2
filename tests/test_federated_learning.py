@@ -11,6 +11,7 @@ from federated_learning import FederatedLearning, ClientUpdate, DroneClient
 
 
 class TestFederatedLearning:
+
     def setup_method(self):
         self.fl = FederatedLearning(aggregation_strategy="fedavg", min_clients=2)
 
@@ -108,6 +109,7 @@ class TestFederatedLearning:
 
 
 class TestDroneClient:
+
     def setup_method(self):
         self.client = DroneClient(drone_id="uav-test-1")
 

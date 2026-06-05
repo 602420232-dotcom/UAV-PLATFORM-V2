@@ -14,7 +14,9 @@ try:
 
 except ImportError:
     from abc import ABC, abstractmethod
+
     class DataSourceBase(ABC):
+
         def __init__(self, config=None):
             self.config = config or {}
             self.data = None
@@ -84,6 +86,7 @@ class RadarDataSource(DataSourceBase):
         """
         with h5py.File(file_path, 'r') as f:
             self.data = {}
+
             def _extract_data(group, prefix=''):
                 for key in group.keys():
                     item = group[key]

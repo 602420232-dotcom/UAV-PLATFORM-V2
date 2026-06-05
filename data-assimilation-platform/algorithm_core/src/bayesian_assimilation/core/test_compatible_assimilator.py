@@ -20,6 +20,7 @@ class TestCompatibleAssimilator:
     """Test class: CompatibleAssimilator"""
 
     @pytest.fixture
+
     def compatibleassimilator_instance(self):
     """Create instance for CompatibleAssimilator"""
         # Initialize with default parameters for testing
@@ -36,6 +37,7 @@ class TestCompatibleAssimilator:
     """Test class: CompatibleAssimilator"""
 
     @pytest.fixture
+
     def compatibleassimilator_instance(self):
     """Create instance for CompatibleAssimilator"""
         # Initialize with default parameters for testing
@@ -52,6 +54,7 @@ class TestCompatibleAssimilator:
     """Test class: CompatibleAssimilator"""
 
     @pytest.fixture
+
     def compatibleassimilator_instance(self):
     """Create instance for CompatibleAssimilator"""
         # Initialize with default parameters for testing
@@ -68,6 +71,7 @@ class TestCompatibleAssimilator:
     """Test class: CompatibleAssimilator"""
 
     @pytest.fixture
+
     def compatibleassimilator_instance(self):
     """Create instance for CompatibleAssimilator"""
         # Initialize with default parameters for testing
@@ -84,6 +88,7 @@ class TestFastSparseBackgroundCovariance:
     """Test class: FastSparseBackgroundCovariance"""
 
     @pytest.fixture
+
     def fastsparsebackgroundcovariance_instance(self):
     """Create instance for FastSparseBackgroundCovariance"""
         # Initialize with default parameters for testing
@@ -100,6 +105,7 @@ class TestFastSparseBackgroundCovariance:
     """Test class: FastSparseBackgroundCovariance"""
 
     @pytest.fixture
+
     def fastsparsebackgroundcovariance_instance(self):
     """Create instance for FastSparseBackgroundCovariance"""
         # Initialize with default parameters for testing

@@ -8,7 +8,7 @@ UAV Edge SDK - 纯 Python 路径规划器（回退模块）
 """
 
 import heapq
-from typing import List, Tuple, Optional
+from typing import List, Tuple
 
 
 class Point:

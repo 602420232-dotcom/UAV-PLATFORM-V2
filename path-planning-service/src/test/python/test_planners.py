@@ -232,7 +232,9 @@ class TestPlannerFactory(unittest.TestCase):
         self.assertIn('pso', types)
 
     def test_register_custom(self):
+
         class CustomPlanner(BasePlanner):
+
             def plan(self):
                 return {'success': True}
         PlannerFactory.register('custom', CustomPlanner)

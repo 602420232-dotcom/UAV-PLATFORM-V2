@@ -12,11 +12,15 @@
 
 import os
 import re
+import logging
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 from typing import List, Tuple
 
 
 class ComprehensiveFixer:
+
     def __init__(self, root_dir: str):
         self.root_dir = Path(root_dir)
         self.stats = {
@@ -141,6 +145,7 @@ class ComprehensiveFixer:
         else:
             logger.info("\n✅ 无错误")
         print("="*60)
+
 
 if __name__ == '__main__':
     import sys

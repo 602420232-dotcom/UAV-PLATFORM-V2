@@ -11,7 +11,9 @@ try:
 
 except ImportError:
     from abc import ABC, abstractmethod
+
     class DataSourceBase(ABC):
+
         def __init__(self, config=None):
             self.config = config or {}
             self.data = None
@@ -26,7 +28,9 @@ try:
 
 
 except ImportError:
+
     class SatelliteDataSource(DataSourceBase):
+
         def __init__(self, config=None):
             super().__init__(config)
 
@@ -38,7 +42,9 @@ try:
 
 
 except ImportError:
+
     class RadarDataSource(DataSourceBase):
+
         def __init__(self, config=None):
             super().__init__(config)
 

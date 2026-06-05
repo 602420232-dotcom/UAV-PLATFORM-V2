@@ -17,7 +17,7 @@ Demo 模式模块
         # 拒绝访问
 """
 
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import time
@@ -152,7 +152,7 @@ class DemoModeService:
             else:
                 current = self.redis_client.get(key)
                 return (int(current) if current else 0) <= limit
-        except Exception as e:
+        except Exception as e:  # noqa: F841
             return True
 
     def get_rate_limit_remaining(
@@ -183,7 +183,7 @@ class DemoModeService:
             current = self.redis_client.get(key)
             current = int(current) if current else 0
             return max(0, limit - current)
-        except Exception as e:
+        except Exception as e:  # noqa: F841
             return 999999
 
     def create_demo_session(
@@ -328,7 +328,7 @@ class DemoModeService:
             session_key = self._get_session_key(user_id)
             self.redis_client.delete(session_key)
             self.redis_client.srem(self._get_active_sessions_key(), user_id)
-        except Exception as e:
+        except Exception as e:  # noqa: F841
             pass
 
     def get_active_session_count(self) -> int:
@@ -343,7 +343,7 @@ class DemoModeService:
 
         try:
             return self.redis_client.scard(self._get_active_sessions_key())
-        except Exception as e:
+        except Exception as e:  # noqa: F841
             return 0
 
     def record_api_call(
@@ -418,6 +418,7 @@ class DemoModeService:
 
             return dependency
         except ImportError:
+
             def dependency(user_id: str, session_id: Optional[str] = None):
                 session_info = self.validate_demo_session(user_id, session_id)
                 if check_rate_limit:

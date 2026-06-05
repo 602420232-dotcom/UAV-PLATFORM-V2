@@ -13,8 +13,7 @@ SRC_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file
 if SRC_DIR not in sys.path:
     sys.path.insert(0, SRC_DIR)
 
-import numpy as np
-from typing import TYPE_CHECKING
+import numpy as np  # noqa: E402
 
 
 try:
@@ -35,14 +34,14 @@ except ImportError:
     Dropout = None
     Input = None
     Adam = None
-from scipy.sparse import csr_matrix, diags
-from scipy.sparse.linalg import LinearOperator, cg
-from typing import Optional, Tuple, List, Dict, Any
-import logging
-from datetime import datetime
+from scipy.sparse import csr_matrix, diags  # noqa: E402
+from scipy.sparse.linalg import LinearOperator, cg  # noqa: E402
+from typing import Optional, Any  # noqa: E402
+import logging  # noqa: E402
+from datetime import datetime  # noqa: E402
 
-from bayesian_assimilation.core.base import AssimilationBase
-from bayesian_assimilation.utils.config import BaseConfig
+from bayesian_assimilation.core.base import AssimilationBase  # noqa: E402
+from bayesian_assimilation.utils.config import BaseConfig  # noqa: E402
 
 logger = logging.getLogger(__name__)
 
@@ -111,6 +110,7 @@ class EnhancedBayesianAssimilation(AssimilationBase):
         H = self._build_observation_operator(obs_locations)
 
         class SimpleCovariance:
+
             def __init__(self, grid_shape, resolution):
                 self.grid_shape = grid_shape
                 self.resolution = resolution
@@ -121,7 +121,7 @@ class EnhancedBayesianAssimilation(AssimilationBase):
 
         cov = SimpleCovariance(self.grid_shape, self.resolution)
 
-        B_inv = LinearOperator(
+        B_inv = LinearOperator(  # noqa: F841
             shape=(n, n),
             matvec=cov.apply_inverse     # type: ignore
         )

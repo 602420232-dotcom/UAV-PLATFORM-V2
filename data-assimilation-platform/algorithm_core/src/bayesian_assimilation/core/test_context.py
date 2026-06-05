@@ -20,6 +20,7 @@ class TestAssimilationContext:
     """Test class: AssimilationContext"""
 
     @pytest.fixture
+
     def assimilationcontext_instance(self):
     """Create instance for AssimilationContext"""
         # Initialize with default parameters for testing
@@ -36,6 +37,7 @@ class TestAssimilationContext:
     """Test class: AssimilationContext"""
 
     @pytest.fixture
+
     def assimilationcontext_instance(self):
     """Create instance for AssimilationContext"""
         # Initialize with default parameters for testing
@@ -52,6 +54,7 @@ class TestAssimilationContext:
     """Test class: AssimilationContext"""
 
     @pytest.fixture
+
     def assimilationcontext_instance(self):
     """Create instance for AssimilationContext"""
         # Initialize with default parameters for testing

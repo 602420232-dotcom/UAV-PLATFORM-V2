@@ -24,8 +24,6 @@ assimilation_service: Optional[AssimilationService] = None
 
 
 @asynccontextmanager
-
-
 async def lifespan(app: FastAPI):
     global cluster_manager, assimilation_service
     logger.info("启动Dask计算集群...")
@@ -68,8 +66,6 @@ app.include_router(
 
 
 @app.get("/health")
-
-
 async def health_check():
     return {
         "status": "healthy",

@@ -13,7 +13,7 @@
   - 热力风险 (上升/下沉气流)
 """
 import numpy as np
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Optional, Tuple, List
 
 
@@ -111,7 +111,7 @@ class RiskCostFunction:
                              precip: Optional[float],
                              pos: Tuple[float, float]) -> float:
         """气象风险子代价"""
-        wind_speed = np.sqrt(u**2 + v**2)
+        wind_speed = np.sqrt(u**2 + v**2)  # noqa: F841
         cost = 0.0
 
         # 侧风风险 (垂直航线分量)
@@ -174,8 +174,8 @@ class RiskCostFunction:
         return 0.0
 
     @staticmethod
-    def _interp(field: np.ndarray, pos: Tuple[float, float]) -> float:
-        """双线性插值, 边界处理简单取最近"""
+    def _interp(field: np.ndarray, pos: Tuple[float, float]) -> float:  # noqa: F811
+        """双线性插值, 边界处理简单取最近"""  # noqa: F811
         y, x = pos
         H, W = field.shape
         yi, xi = int(y), int(x)

@@ -1,5 +1,5 @@
 # Type annotations added: 2026-05-08 13:22:43
-from typing import Dict, List, Any, Optional, Callable, Tuple
+from typing import Dict, Any
 
 """
 pytest配置文件
@@ -24,7 +24,7 @@ if SRC_PATH not in sys.path:
 @pytest.fixture
 def sample_config():
     """提供测试配置"""
-    from bayesian_assimilation.utils.config import BaseConfig, AssimilationConfig
+    from bayesian_assimilation.utils.config import AssimilationConfig
 
     return AssimilationConfig(
         method="3DVAR",

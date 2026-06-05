@@ -111,6 +111,7 @@ def generate_report():
             if r.get("status") != "成功":
                 print(f"- {r['service']} {r['endpoint']}: {r.get('error', '未知错误')}")
 
+
 if __name__ == "__main__":
     print("开始测试无人机路径规划系统...")
 

@@ -49,20 +49,20 @@ class DynamicWeightFusion:
         result = None
         total_weight = 0.0
 
-        for name, field in fields.items():
+        for name, model_field in fields.items():
             w = self.weights.get(name, 0.0)
             if w > 0:
                 if result is None:
-                    result = w * field
+                    result = w * model_field
                 else:
                     # 统一分辨率 (双线性插值到风雷分辨率)
-                    if field.shape[-2:
+                    if model_field.shape[-2:
                         ] != result.shape[-2:]:
-                        field = torch.nn.functional.interpolate(
-                            field, size=result.shape[-2:], mode="bilinear", align_corners=False)
-                        result = result + w * field
+                        model_field = torch.nn.functional.interpolate(
+                            model_field, size=result.shape[-2:], mode="bilinear", align_corners=False)
+                        result = result + w * model_field
                     else:
-                        result = result + w * field
+                        result = result + w * model_field
                 total_weight += w
 
         return result / total_weight if total_weight > 0 else result
@@ -105,6 +105,7 @@ class PhysicsConstraint(nn.Module):
     物理一致性约束
     确保融合场满足基本物理定律
     """
+
     def __init__(self):
         super().__init__()
 

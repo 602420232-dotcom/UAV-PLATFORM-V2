@@ -5,7 +5,6 @@ Production Secrets Generator
 
 import secrets
 import string
-import json
 from datetime import datetime
 
 

@@ -6,7 +6,7 @@ XGBoost 气象要素订正模型
 """
 import numpy as np
 import logging
-from typing import Optional, Dict, List
+from typing import Optional, Dict
 
 logger = logging.getLogger(__name__)
 
@@ -107,7 +107,6 @@ class WeightValidator:
         Returns:
             True 如果权重已加载（非随机初始化），False 如果为随机初始化
         """
-        import torch
 
         # 检查第一层卷积的权重是否接近默认初始化
         has_weights = False

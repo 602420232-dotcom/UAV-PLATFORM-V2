@@ -11,18 +11,16 @@ import json
 import sys
 import os
 import logging
-import threading
 from datetime import datetime
 from typing import Dict, List, Optional, Tuple, Any
 from dataclasses import dataclass, asdict
 from enum import Enum
-import hashlib
 
 
 try:
     from tensorflow.keras.models import Sequential, load_model
-    from tensorflow.keras.layers import LSTM, Dense, Dropout, ConvLSTM2D, BatchNormalization, Flatten, Reshape
-    from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, TensorBoard, ReduceLROnPlateau
+    from tensorflow.keras.layers import LSTM, Dense, Dropout, ConvLSTM2D, BatchNormalization, Flatten
+    from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
     from tensorflow.keras.optimizers import Adam
 
 
@@ -44,7 +42,7 @@ from sklearn.preprocessing import MinMaxScaler, StandardScaler, RobustScaler
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 from sklearn.model_selection import TimeSeriesSplit
 from sklearn.gaussian_process import GaussianProcessRegressor
-from sklearn.gaussian_process.kernels import RBF, Matern, WhiteKernel, ConstantKernel
+from sklearn.gaussian_process.kernels import RBF, WhiteKernel, ConstantKernel
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -96,7 +94,7 @@ class TrainingMetrics:
         return asdict(self)
 
 
-from common_utils.cache import Cache
+from common_utils.cache import Cache  # noqa: E402
 
 
 prediction_cache = Cache()
@@ -206,7 +204,6 @@ class HyperparameterTuner:
         }
 
     def generate_configurations(self, n_configs: int = 10) -> List[Dict[str, Any]]:
-        import itertools
         keys = list(self.search_space.keys())
         configurations = []
 
@@ -491,7 +488,7 @@ class MeteorForecast:
 
     def correct(self, forecast_data, observed_data) -> List[float]:
         try:
-            error = np.array(observed_data) - np.array(forecast_data)
+            error = np.array(observed_data) - np.array(forecast_data)  # noqa: F841
             X = np.array(forecast_data).reshape(-1, 1)
             error_pred = self.xgb_model.predict(X)
             corrected_data = np.array(forecast_data) + error_pred
@@ -545,7 +542,7 @@ class MeteorForecast:
             lstm_result = self.train_lstm(X_train, y_train, X_val, y_val, epochs, batch_size)
 
             if lstm_result.get('success'):
-                xgb_result = self.train_xgb(X_train.reshape(X_train.shape[0], -1), y_train)
+                xgb_result = self.train_xgb(X_train.reshape(X_train.shape[0], -1), y_train)  # noqa: F841
 
                 eval_result = self.evaluate(X_val, y_val)
                 current_score = eval_result.get('rmse', float('inf'))

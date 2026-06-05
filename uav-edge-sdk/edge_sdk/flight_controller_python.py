@@ -4,8 +4,7 @@
 UAV Edge SDK - Flight Controller Python Fallback
 """
 import time
-import json
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List
 
 
 class FlightControllerFallback:

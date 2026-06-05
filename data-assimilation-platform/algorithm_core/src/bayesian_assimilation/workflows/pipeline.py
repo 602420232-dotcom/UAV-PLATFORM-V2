@@ -4,7 +4,7 @@
 """
 
 import logging
-from typing import List, Dict, Any, Optional, Callable, Union
+from typing import List, Dict, Any, Optional
 from datetime import datetime
 from dataclasses import dataclass, field
 from enum import Enum
@@ -18,7 +18,9 @@ try:
 
 
 except ImportError:
+
     class BayesianAssimilator:
+
         def __init__(self, config=None):
             self.config = config
             self.logger = logging.getLogger(__name__)
@@ -35,11 +37,14 @@ try:
 
 
 except ImportError:
+
     class WRFDataAdapter:
+
         def __init__(self, config=None):
             self.config = config
 
     class ObservationAdapter:
+
         def __init__(self, config=None):
             self.config = config
 
@@ -48,6 +53,7 @@ try:
 
 
 except ImportError:
+
     def interpolate_data(data: Dict[str, Any], grid: str):
         return data
 
@@ -59,6 +65,7 @@ try:
 except ImportError:
 
     class AssimilationConfig:
+
         def __init__(self, **kwargs):
             for key, value in kwargs.items():
                 setattr(self, key, value)
@@ -68,6 +75,7 @@ try:
 
 
 except ImportError:
+
     def setup_logging(level=None, format_str=None, log_file=None):
         pass
 
@@ -292,7 +300,7 @@ class AssimilationStep(PipelineStep):
     """同化步骤"""
 
 
-class AssimilationStep(PipelineStep):
+class AssimilationStep(PipelineStep):  # noqa: F811
     """同化步骤"""
 
     def __init__(self,

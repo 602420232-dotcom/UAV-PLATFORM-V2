@@ -12,10 +12,10 @@ SRC_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file
 if SRC_DIR not in sys.path:
     sys.path.insert(0, SRC_DIR)
 
-import numpy as np
-from scipy.sparse.linalg import LinearOperator, cg, gmres, bicgstab
-from typing import Optional, Tuple, Callable, Dict, Any, Union
-import logging
+import numpy as np  # noqa: E402
+from scipy.sparse.linalg import LinearOperator, cg, gmres, bicgstab  # noqa: E402
+from typing import Optional, Tuple, Callable, Dict, Any  # noqa: E402
+import logging  # noqa: E402
 
 logger = logging.getLogger(__name__)
 

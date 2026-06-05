@@ -1,6 +1,6 @@
 # service_python/src/api/routes/assimilation.py
 
-from fastapi import APIRouter, HTTPException, BackgroundTasks
+from fastapi import APIRouter, BackgroundTasks
 from api.models.request import AssimilationRequest, SelfImproveRequest
 from api.models.response import AssimilationResponse
 from api.core.assimilation_service import AssimilationService
@@ -25,8 +25,6 @@ def set_assimilation_service(service: AssimilationService):
 
 
 @router.post("/compute", response_model=AssimilationResponse)
-
-
 async def compute_assimilation(
     request: AssimilationRequest,
     background_tasks: BackgroundTasks
@@ -88,8 +86,6 @@ async def compute_assimilation(
 
 
 @router.post("/self-improve")
-
-
 async def self_improve_model(request: SelfImproveRequest):
     """
     自迭代改进模型
@@ -135,8 +131,6 @@ async def self_improve_model(request: SelfImproveRequest):
 
 
 @router.get("/model-performance/{job_id}")
-
-
 async def get_model_performance(job_id: str):
     """
     获取模型性能

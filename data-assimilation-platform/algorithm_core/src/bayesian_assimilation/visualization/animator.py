@@ -5,9 +5,8 @@
 
 import numpy as np
 import logging
-from typing import Optional, Tuple, List, Callable, Dict
-from matplotlib.figure import Figure
-from matplotlib.animation import FuncAnimation, ArtistAnimation, PillowWriter, FFMpegWriter
+from typing import Optional, Tuple, List, Dict
+from matplotlib.animation import FuncAnimation, PillowWriter, FFMpegWriter
 import matplotlib.pyplot as plt
 
 logger = logging.getLogger(__name__)
@@ -213,7 +212,7 @@ class TimeSeriesAnimator:
             axes[1].set_xlabel('X (m)')
             axes[1].set_ylabel('Y (m)')
 
-            im3 = axes[2].imshow(increment.T, origin='lower', cmap='RdBu_r', extent=extent)
+            im3 = axes[2].imshow(increment.T, origin='lower', cmap='RdBu_r', extent=extent)  # noqa: F841
             axes[2].set_title('Increment')
             axes[2].set_xlabel('X (m)')
             axes[2].set_ylabel('Y (m)')
@@ -278,7 +277,7 @@ class VarianceHeatmapAnimator:
                 else:
                     slice_data = data[frame, :, :, i]
 
-                im = ax.imshow(slice_data.T, origin='lower', cmap=cmap, aspect='auto')
+                im = ax.imshow(slice_data.T, origin='lower', cmap=cmap, aspect='auto')  # noqa: F841
                 ax.set_title(f'Level {i} - t={frame}')
                 ax.set_xlabel('X')
                 ax.set_ylabel('Y')
