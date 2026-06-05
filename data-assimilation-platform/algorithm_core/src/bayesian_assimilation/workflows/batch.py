@@ -14,7 +14,7 @@ import os
 
 
 try:
-    from bayesian_assimilation.core.base import AssimilationBase
+    from bayesian_assimilation.core.base import AssimilationBase  # type: ignore[assignment]
 except ImportError:
 
     class AssimilationBase:
@@ -24,7 +24,8 @@ except ImportError:
             self.logger = logging.getLogger(__name__)
 
 try:
-    from bayesian_assimilation.core.assimilator import BayesianAssimilator
+    from bayesian_assimilation.core.assimilator import (  # type: ignore[assignment]
+        BayesianAssimilator)
 
 
 except ImportError:
@@ -42,8 +43,12 @@ except ImportError:
         def assimilate_3dvar(self, background, observations, obs_locations, obs_errors=None):
             return background.copy(), np.zeros_like(background)
 
+        def assimilate(self, background, observations, obs_locations, obs_errors=None):
+            return self.assimilate_3dvar(background, observations, obs_locations, obs_errors)
+
 try:
-    from bayesian_assimilation.adapters.data import WRFDataAdapter, ObservationAdapter
+    from bayesian_assimilation.adapters.data import (  # type: ignore[assignment]
+        WRFDataAdapter, ObservationAdapter)
 
 
 except ImportError:
@@ -53,13 +58,20 @@ except ImportError:
         def __init__(self, config=None):
             self.config = config
 
+        def load(self):
+            return np.zeros((10, 10))
+
     class ObservationAdapter:
 
         def __init__(self, config=None):
             self.config = config
 
+        def load(self):
+            return np.zeros((10, 10)), np.zeros((0, 3)), np.zeros(0)
+
 try:
-    from bayesian_assimilation.adapters.io import NetCDFReader, write_netcdf
+    from bayesian_assimilation.adapters.io import (  # type: ignore[assignment]
+        NetCDFReader, write_netcdf)
 
 
 except ImportError:
@@ -69,11 +81,11 @@ except ImportError:
         def __init__(self, path):
             self.path = path
 
-    def write_netcdf(data: Dict[str, Any], path: str):
+    def write_netcdf(path: str, data: Dict[str, Any]):
         pass
 
 try:
-    from bayesian_assimilation.utils.config import AssimilationConfig
+    from bayesian_assimilation.utils.config import AssimilationConfig  # type: ignore[assignment]
 except ImportError:
 
     class AssimilationConfig:
@@ -83,7 +95,7 @@ except ImportError:
                 setattr(self, key, value)
 
 try:
-    from bayesian_assimilation.utils.metrics import PerformanceMetrics
+    from bayesian_assimilation.utils.metrics import PerformanceMetrics  # type: ignore[assignment]
 
 
 except ImportError:
@@ -91,6 +103,12 @@ except ImportError:
     class PerformanceMetrics:
 
         def __init__(self):
+            pass
+
+        def start(self):
+            pass
+
+        def stop(self):
             pass
 
 logger = logging.getLogger(__name__)
@@ -165,7 +183,7 @@ class BatchAssimilator:
             })
 
             # 更新结果
-            result.update({
+            result.update({  # type: ignore[arg-type]
                 'status': 'success',
                 'end_time': datetime.now().isoformat(),
                 'elapsed_seconds': elapsed,
@@ -186,9 +204,11 @@ class BatchAssimilator:
 
         return result
 
-    def process_batch(self,
-                     tasks: List[Dict[str, str]],
-                     parallel: bool = True) -> List[Dict[str, Any]]:
+    def process_batch(
+        self,
+        tasks: List[Dict[str, str]],
+        parallel: bool = True,
+    ) -> List[Dict[str, Any]]:
         """
         批量处理多个任务
 
@@ -257,7 +277,10 @@ class BatchAssimilator:
         logger.info(f"失败: {failed_count}")
 
         if success_count > 0:
-            total_time = sum(r.get('elapsed_seconds', 0) for r in self.results if r['status'] == 'success')
+            total_time = sum(
+                r.get('elapsed_seconds', 0)
+                for r in self.results
+                if r['status'] == 'success')
             logger.info(f"总耗时: {total_time:.2f} 秒")
             logger.info(f"平均耗时: {total_time/success_count:.2f} 秒")
 
@@ -286,11 +309,13 @@ class BatchAssimilator:
         return summary
 
 
-def batch_assimilate(background_files: List[str],
-                    observation_files: List[str],
-                    output_dir: str,
-                    config: Optional[AssimilationConfig] = None,
-                    max_workers: int = 4) -> List[Dict[str, Any]]:
+def batch_assimilate(
+    background_files: List[str],
+    observation_files: List[str],
+    output_dir: str,
+    config: Optional[AssimilationConfig] = None,
+    max_workers: int = 4,
+) -> List[Dict[str, Any]]:
     """
     批量同化辅助函数
 

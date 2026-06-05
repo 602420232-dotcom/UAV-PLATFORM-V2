@@ -10,7 +10,10 @@ import sys
 import logging
 from typing import Dict, Tuple
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
 logger = logging.getLogger(__name__)
 
 
@@ -28,15 +31,12 @@ class BayesianAssimilation:
         self.background_error = background_error
         self.observation_error = observation_error
 
-    def _three_dimensional_var(self,
-                              background: Dict[str, np.ndarray],
-                              observations: Dict[str, np.ndarray]) -> Tuple[Dict[str, np.ndarray], Dict[str, np.ndarray]]:
-        """
-        3D-VAR同化方法
-        :param background: 背景场
-        :param observations: 观测数据
-        :return: 分析场和不确定性
-        """
+    def _three_dimensional_var(
+        self,
+        background: Dict[str, np.ndarray],
+        observations: Dict[str, np.ndarray]
+    ) -> Tuple[Dict[str, np.ndarray], Dict[str, np.ndarray]]:
+        """3D-VAR同化方法"""
         analysis = {}
         uncertainty = {}
 
@@ -67,15 +67,12 @@ class BayesianAssimilation:
 
         return analysis, uncertainty
 
-    def _ensemble_kalman_filter(self,
-                               background: Dict[str, np.ndarray],
-                               observations: Dict[str, np.ndarray]) -> Tuple[Dict[str, np.ndarray], Dict[str, np.ndarray]]:
-        """
-        集合卡尔曼滤波(EnKF)同化方法
-        :param background: 背景场
-        :param observations: 观测数据
-        :return: 分析场和不确定性
-        """
+    def _ensemble_kalman_filter(
+        self,
+        background: Dict[str, np.ndarray],
+        observations: Dict[str, np.ndarray]
+    ) -> Tuple[Dict[str, np.ndarray], Dict[str, np.ndarray]]:
+        """集合卡尔曼滤波(EnKF)同化方法"""
         analysis = {}
         uncertainty = {}
 
@@ -107,9 +104,10 @@ class BayesianAssimilation:
 
         return analysis, uncertainty
 
-    def _hybrid_method(self,
-                      background: Dict[str, np.ndarray],
-                      observations: Dict[str, np.ndarray]) -> Tuple[Dict[str, np.ndarray], Dict[str, np.ndarray]]:
+    def _hybrid_method(
+            self, background: Dict[str, np.ndarray],
+            observations: Dict[str, np.ndarray]
+    ) -> Tuple[Dict[str, np.ndarray], Dict[str, np.ndarray]]:
         """
         混合同化方法（3D-VAR + EnKF）
         :param background: 背景场
@@ -132,10 +130,12 @@ class BayesianAssimilation:
 
         return analysis, uncertainty
 
-    def assimilate(self,
-                  background: Dict[str, np.ndarray],
-                  observations: Dict[str, np.ndarray],
-                  method: str = 'hybrid') -> Dict:
+    def assimilate(
+        self,
+        background: Dict[str, np.ndarray],
+        observations: Dict[str, np.ndarray],
+        method: str = 'hybrid'
+    ) -> Dict:
         """
         执行贝叶斯同化
         :param background: 背景场

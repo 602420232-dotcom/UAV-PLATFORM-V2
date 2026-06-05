@@ -1,15 +1,17 @@
 import logging
-logger = logging.getLogger(__name__)
 
 from setuptools import setup, find_packages
 import os
 import importlib.util
+
+logger = logging.getLogger(__name__)
 
 here = os.path.abspath(os.path.dirname(__file__))
 
 
 spec = importlib.util.spec_from_file_location(
     '__version__', os.path.join(here, 'src/bayesian_assimilation/__version__.py'))
+assert spec is not None
 mod = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(mod)
 __version__ = getattr(mod, '__version__', '1.0.0')

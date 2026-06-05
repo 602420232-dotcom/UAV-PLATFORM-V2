@@ -15,9 +15,7 @@ import threading
 
 
 try:
-    from bayesian_assimilation.core.assimilator import BayesianAssimilator
-
-
+    from bayesian_assimilation.core.assimilator import BayesianAssimilator  # type: ignore[assignment]  # noqa: E501
 except ImportError:
 
     class BayesianAssimilator:
@@ -33,20 +31,22 @@ except ImportError:
         def assimilate_3dvar(self, background, observations, obs_locations, obs_errors=None):
             return background.copy(), np.zeros_like(background)
 
+        def assimilate(self, background, observations, obs_locations, obs_errors=None):
+            return self.assimilate_3dvar(background, observations, obs_locations, obs_errors)
+
 try:
-    from bayesian_assimilation.utils.config import AssimilationConfig
+    from bayesian_assimilation.utils.config import AssimilationConfig  # type: ignore[assignment]  # noqa: E501
 except ImportError:
 
     class AssimilationConfig:
+        observation_error_scale: float = 1.0
 
         def __init__(self, **kwargs):
             for key, value in kwargs.items():
                 setattr(self, key, value)
 
 try:
-    from bayesian_assimilation.utils.metrics import PerformanceMetrics
-
-
+    from bayesian_assimilation.utils.metrics import PerformanceMetrics  # type: ignore[assignment]  # noqa: E501
 except ImportError:
 
     class PerformanceMetrics:
@@ -162,24 +162,17 @@ class StreamingAssimilator:
         Args:
             background: 新的背景场
         """
+        # 确保线程安全更新背景场
         with self._lock:
             self.background = background
             logger.info(f"背景场已更新: {background.shape}")
 
     def add_observation(self,
-                       observations: np.ndarray,
-                       locations: np.ndarray,
-                       errors: Optional[np.ndarray] = None,
-                       timestamp: Optional[datetime] = None):
-        """
-        添加观测数据
-
-        Args:
-            observations: 观测值
-            locations: 观测位置
-            errors: 观测误差
-            timestamp: 时间戳
-        """
+                        observations: np.ndarray,
+                        locations: np.ndarray,
+                        errors: Optional[np.ndarray] = None,
+                        timestamp: Optional[datetime] = None):
+        """添加观测数据"""
         timestamp = timestamp or datetime.now()
 
         stream_data = StreamData(
@@ -373,7 +366,10 @@ class ContinuousAssimilator:
         self._thread = threading.Thread(target=run_loop, daemon=True)
         self._thread.start()
 
-        logger.info(f"连续同化器已启动，周期: {self.cycle_interval}s")
+        logger.info(
+            f"连续同化器已启动，周期: {self.cycle_interval}s, "
+            f"窗口大小: {self.assimilation_window}周期"
+        )
 
     def stop(self):
         """停止连续同化"""
@@ -421,9 +417,10 @@ def create_stream_processor(config: Optional[AssimilationConfig] = None,
     )
 
 
-def process_data_stream(data_iterator: Iterator[Dict[str, Any]],
-                       config: Optional[AssimilationConfig] = None,
-                       batch_size: int = 10) -> Iterator[List[AssimilationResult]]:
+def process_data_stream(
+        data_iterator: Iterator[Dict[str, Any]],
+        config: Optional[AssimilationConfig] = None,
+        batch_size: int = 10) -> Iterator[List[AssimilationResult]]:
     """
     处理数据流的生成器函数
 

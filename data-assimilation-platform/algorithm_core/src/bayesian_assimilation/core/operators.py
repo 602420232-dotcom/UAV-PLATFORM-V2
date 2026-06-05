@@ -206,11 +206,14 @@ class GaussianOperator(ObservationOperator):
                         iz = iz_center + dk
 
                         if 0 <= ix < self.nx and 0 <= iy < self.ny and 0 <= iz < self.nz:
-                            dist_sq = (di * self.resolution)**2 + (dj * self.resolution)**2 + (dk * self.resolution)**2
+                            dist_sq = (di * self.resolution)**2 + \
+                                (dj * self.resolution)**2 + \
+                                (dk * self.resolution)**2
                             weight = np.exp(-dist_sq / (2 * self.sigma**2))
 
                             if weight > 1e-6:
-                                idx = ix * self.ny * self.nz + iy * self.nz + iz
+                                idx = ix * self.ny * self.nz + \
+                                    iy * self.nz + iz
                                 rows.append(i)
                                 cols.append(idx)
                                 vals.append(weight)
@@ -239,7 +242,9 @@ class GaussianOperator(ObservationOperator):
                         iz = iz_center + dk
 
                         if 0 <= ix < self.nx and 0 <= iy < self.ny and 0 <= iz < self.nz:
-                            dist_sq = (di * self.resolution)**2 + (dj * self.resolution)**2 + (dk * self.resolution)**2
+                            dist_sq = (di * self.resolution)**2 + \
+                                (dj * self.resolution)**2 + \
+                                (dk * self.resolution)**2
                             weight = np.exp(-dist_sq / (2 * self.sigma**2))
                             val += state_3d[ix, iy, iz] * weight
                             total_weight += weight

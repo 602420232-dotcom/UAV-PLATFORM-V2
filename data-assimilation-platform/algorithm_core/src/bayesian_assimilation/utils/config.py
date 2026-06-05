@@ -57,7 +57,8 @@ def merge_configs(base_config: Dict[str, Any], override_config: Dict[str, Any]) 
     return result
 
 
-def load_config_with_inheritance(config_path: str, base_dir: Optional[str] = None) -> Dict[str, Any]:
+def load_config_with_inheritance(
+        config_path: str, base_dir: Optional[str] = None) -> Dict[str, Any]:
     """
     加载支持继承的配置文件
 
@@ -96,7 +97,7 @@ def load_config_with_inheritance(config_path: str, base_dir: Optional[str] = Non
     return config
 
 
-def load_assimilation_config(config_path: Optional[str] = None) -> 'AdaptiveConfig':
+def load_assimilation_config(config_path: Optional[str] = None) -> 'BaseConfig':
     """
     加载同化配置
 
@@ -104,7 +105,7 @@ def load_assimilation_config(config_path: Optional[str] = None) -> 'AdaptiveConf
         config_path: 配置文件路径，如果为 None 则使用默认配置
 
     Returns:
-        AdaptiveConfig 配置实例
+        BaseConfig 配置实例
     """
     if config_path is None:
         return AdaptiveConfig()

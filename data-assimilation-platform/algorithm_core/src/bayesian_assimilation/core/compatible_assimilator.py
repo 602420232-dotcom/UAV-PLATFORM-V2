@@ -40,7 +40,8 @@ class CompatibleAssimilator(AssimilationBase):
     def initialize_grid_safe(self, domain_size: Optional[Tuple[float, float, float]] = None):
         """安全初始化网格"""
         if domain_size is None:
-            if hasattr(self.config, 'domain_size') and self.config.domain_size is not None:  # type: ignore
+            if (hasattr(self.config, 'domain_size') and
+                    self.config.domain_size is not None):  # type: ignore
                 domain_size = self.config.domain_size  # type: ignore
             else:
                 domain_size = (1000.0, 1000.0, 100.0)
@@ -56,9 +57,11 @@ class CompatibleAssimilator(AssimilationBase):
 
         min_res = 1.0
         max_res = 100.0
-        if hasattr(self.config, 'min_resolution') and self.config.min_resolution is not None:  # type: ignore
+        if (hasattr(self.config, 'min_resolution') and
+                self.config.min_resolution is not None):  # type: ignore
             min_res = float(self.config.min_resolution)  # type: ignore
-        if hasattr(self.config, 'max_resolution') and self.config.max_resolution is not None:  # type: ignore
+        if (hasattr(self.config, 'max_resolution') and
+                self.config.max_resolution is not None):  # type: ignore
             max_res = float(self.config.max_resolution)  # type: ignore
 
         self.resolution = float(np.clip(self.resolution, min_res, max_res))
@@ -100,9 +103,11 @@ class CompatibleAssimilator(AssimilationBase):
 
         bg_error_scale = 1.5
         corr_length = 50.0
-        if hasattr(self.config, 'background_error_scale') and self.config.background_error_scale is not None:
+        if (hasattr(self.config, 'background_error_scale') and
+                self.config.background_error_scale is not None):
             bg_error_scale = float(self.config.background_error_scale)
-        if hasattr(self.config, 'correlation_length') and self.config.correlation_length is not None:
+        if (hasattr(self.config, 'correlation_length') and
+                self.config.correlation_length is not None):
             corr_length = float(self.config.correlation_length)
 
         cov = FastSparseBackgroundCovariance(
@@ -117,7 +122,8 @@ class CompatibleAssimilator(AssimilationBase):
         Binv = LinearOperator((n_total, n_total), matvec=apply_inverse)  # type: ignore
 
         obs_err_scale = 0.8
-        if hasattr(self.config, 'observation_error_scale') and self.config.observation_error_scale is not None:
+        if (hasattr(self.config, 'observation_error_scale') and
+                self.config.observation_error_scale is not None):
             obs_err_scale = float(self.config.observation_error_scale)
 
         if obs_err is None:
@@ -134,9 +140,11 @@ class CompatibleAssimilator(AssimilationBase):
 
         max_iter = 200
         cg_tol = 1e-5
-        if hasattr(self.config, 'max_cg_iterations') and self.config.max_cg_iterations is not None:
+        if (hasattr(self.config, 'max_cg_iterations') and
+                self.config.max_cg_iterations is not None):
             max_iter = int(self.config.max_cg_iterations)
-        if hasattr(self.config, 'cg_tolerance') and self.config.cg_tolerance is not None:
+        if (hasattr(self.config, 'cg_tolerance') and
+                self.config.cg_tolerance is not None):
             cg_tol = float(self.config.cg_tolerance)
 
         xa, _ = cg(A, b, x0=xb, maxiter=max_iter, atol=cg_tol)
@@ -156,7 +164,8 @@ class CompatibleAssimilator(AssimilationBase):
         """安全观测算子"""
         if self.grid_shape is None:
             self.initialize_grid_safe()
-        assert self.grid_shape is not None, "grid_shape must be initialized before building observation operator"
+        assert self.grid_shape is not None, \
+            "grid_shape must be initialized before building observation operator"
         if obs_loc is None or len(obs_loc) == 0:
             nx, ny, nz = self.grid_shape
             n_obs = 1
@@ -181,10 +190,16 @@ class CompatibleAssimilator(AssimilationBase):
                 (1-dx)*dy*dz, dx*dy*dz
             ]
 
-            for (di, dj, dk, ww) in [(0, 0, 0, w[0]), (1, 0, 0, w[1]),
-                                  (0, 1, 0, w[2]), (1, 1, 0, w[3]),
-                                  (0, 0, 1, w[4]), (1, 0, 1, w[5]),
-                                  (0, 1, 1, w[6]), (1, 1, 1, w[7])]:
+            for (di, dj, dk, ww) in [
+                (0, 0, 0, w[0]),
+                (1, 0, 0, w[1]),
+                (0, 1, 0, w[2]),
+                (1, 1, 0, w[3]),
+                (0, 0, 1, w[4]),
+                (1, 0, 1, w[5]),
+                (0, 1, 1, w[6]),
+                (1, 1, 1, w[7])
+            ]:
                 if ww > 1e-6:
                     idx = (ix+di)*(ny*nz)+(iy+dj)*nz+(iz+dk)
                     rows.append(i)

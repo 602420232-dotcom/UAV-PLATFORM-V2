@@ -52,7 +52,8 @@ class JWTProvider:
         self.secret = secret or os.environ.get("JWT_SECRET_KEY")
         if not self.secret:
             raise ValueError(
-                "JWT secret key must be provided via parameter or JWT_SECRET_KEY environment variable"
+                "JWT secret key must be provided via parameter or "
+                "JWT_SECRET_KEY environment variable"
             )
         if len(self.secret) < 32:
             logger.warning(
@@ -98,7 +99,8 @@ class DataEncryptor:
         encryption_key = key or os.environ.get("ENCRYPTION_KEY")
         if not encryption_key:
             raise ValueError(
-                "Encryption key must be provided via parameter or ENCRYPTION_KEY environment variable"
+                "Encryption key must be provided via parameter or "
+                "ENCRYPTION_KEY environment variable"
             )
         if len(encryption_key) < 32:
             logger.warning(

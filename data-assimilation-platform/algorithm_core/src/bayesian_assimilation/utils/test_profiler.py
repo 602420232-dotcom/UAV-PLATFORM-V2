@@ -1,4 +1,4 @@
-"""
+r"""
 Auto-generated unit test
 Source: d:\Developer\workplace\py\iteam\trae\data-assimilation-platform\algorithm_core\src\bayesian_assimilation\utils\profiler.py
 Generated: 2026-05-08 12:35:50
@@ -8,7 +8,6 @@ import logging
 logger = logging.getLogger(__name__)
 
 import pytest
-from profiler import *
 
 
 class TestBasic:
@@ -23,101 +22,51 @@ class TestProfiler:
     """Test class: Profiler"""
 
     @pytest.fixture
-
     def profiler_instance(self):
-    """Create instance for Profiler"""
+        """Create instance for Profiler"""
         # Initialize with default parameters for testing
         return None
 
     def test_start(self):
-    """Test method: start"""
+        """Test method: start"""
         # Test logic: Verify basic functionality
         # Args: self, name
+        result = None
         assert result is not None  # Assertion completed
-
-
-class TestProfiler:
-    """Test class: Profiler"""
-
-    @pytest.fixture
-
-    def profiler_instance(self):
-    """Create instance for Profiler"""
-        # Initialize with default parameters for testing
-        return None
 
     def test_stop(self):
-    """Test method: stop"""
+        """Test method: stop"""
         # Test logic: Verify basic functionality
         # Args: self, name
+        result = None
         assert result is not None  # Assertion completed
-
-
-class TestProfiler:
-    """Test class: Profiler"""
-
-    @pytest.fixture
-
-    def profiler_instance(self):
-    """Create instance for Profiler"""
-        # Initialize with default parameters for testing
-        return None
 
     def test_record(self):
-    """Test method: record"""
+        """Test method: record"""
         # Test logic: Verify basic functionality
         # Args: self, name, elapsed
+        result = None
         assert result is not None  # Assertion completed
-
-
-class TestProfiler:
-    """Test class: Profiler"""
-
-    @pytest.fixture
-
-    def profiler_instance(self):
-    """Create instance for Profiler"""
-        # Initialize with default parameters for testing
-        return None
 
     def test_get_stats(self):
-    """Test method: get_stats"""
+        """Test method: get_stats"""
         # Test logic: Verify basic functionality
         # Args: self, name
+        result = None
         assert result is not None  # Assertion completed
-
-
-class TestProfiler:
-    """Test class: Profiler"""
-
-    @pytest.fixture
-
-    def profiler_instance(self):
-    """Create instance for Profiler"""
-        # Initialize with default parameters for testing
-        return None
 
     def test_reset(self):
-    """Test method: reset"""
+        """Test method: reset"""
         # Test logic: Verify basic functionality
         # Args: self, name
+        result = None
         assert result is not None  # Assertion completed
 
-
-class TestProfiler:
-    """Test class: Profiler"""
-
-    @pytest.fixture
-
-    def profiler_instance(self):
-    """Create instance for Profiler"""
-        # Initialize with default parameters for testing
-        return None
-
     def test_print_report(self):
-    """Test method: print_report"""
+        """Test method: print_report"""
         # Test logic: Verify basic functionality
         # Args: self, name, top_n
+        result = None
         assert result is not None  # Assertion completed
 
 
@@ -125,101 +74,51 @@ class TestTimer:
     """Test class: Timer"""
 
     @pytest.fixture
-
     def timer_instance(self):
-    """Create instance for Timer"""
+        """Create instance for Timer"""
         # Initialize with default parameters for testing
         return None
 
     def test_start(self):
-    """Test method: start"""
+        """Test method: start"""
         # Test logic: Verify basic functionality
         # Args: self
+        result = None
         assert result is not None  # Assertion completed
-
-
-class TestTimer:
-    """Test class: Timer"""
-
-    @pytest.fixture
-
-    def timer_instance(self):
-    """Create instance for Timer"""
-        # Initialize with default parameters for testing
-        return None
 
     def test_stop(self):
-    """Test method: stop"""
+        """Test method: stop"""
         # Test logic: Verify basic functionality
         # Args: self
+        result = None
         assert result is not None  # Assertion completed
-
-
-class TestTimer:
-    """Test class: Timer"""
-
-    @pytest.fixture
-
-    def timer_instance(self):
-    """Create instance for Timer"""
-        # Initialize with default parameters for testing
-        return None
 
     def test_pause(self):
-    """Test method: pause"""
+        """Test method: pause"""
         # Test logic: Verify basic functionality
         # Args: self
+        result = None
         assert result is not None  # Assertion completed
-
-
-class TestTimer:
-    """Test class: Timer"""
-
-    @pytest.fixture
-
-    def timer_instance(self):
-    """Create instance for Timer"""
-        # Initialize with default parameters for testing
-        return None
 
     def test_resume(self):
-    """Test method: resume"""
+        """Test method: resume"""
         # Test logic: Verify basic functionality
         # Args: self
+        result = None
         assert result is not None  # Assertion completed
-
-
-class TestTimer:
-    """Test class: Timer"""
-
-    @pytest.fixture
-
-    def timer_instance(self):
-    """Create instance for Timer"""
-        # Initialize with default parameters for testing
-        return None
 
     def test_reset(self):
-    """Test method: reset"""
+        """Test method: reset"""
         # Test logic: Verify basic functionality
         # Args: self
+        result = None
         assert result is not None  # Assertion completed
 
-
-class TestTimer:
-    """Test class: Timer"""
-
-    @pytest.fixture
-
-    def timer_instance(self):
-    """Create instance for Timer"""
-        # Initialize with default parameters for testing
-        return None
-
     def test_get_elapsed(self):
-    """Test method: get_elapsed"""
+        """Test method: get_elapsed"""
         # Test logic: Verify basic functionality
         # Args: self
+        result = None
         assert result is not None  # Assertion completed
 
 

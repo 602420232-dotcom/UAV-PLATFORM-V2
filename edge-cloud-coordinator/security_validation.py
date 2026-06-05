@@ -4,8 +4,10 @@ Coordinator API 安全验证模块
 提供输入消毒、路径保护等安全功能。
 """
 
-from typing import Tuple, Dict
+import re
 import logging
+from typing import Tuple, Dict, Any
+
 logger = logging.getLogger(__name__)
 
 
@@ -14,7 +16,6 @@ def sanitize_task_id(task_id: str) -> str:
     消毒任务 ID，移除危险字符。
     只允许字母数字、连字符和下划线。
     """
-    import re
     sanitized = re.sub(r'[^a-zA-Z0-9\-_]', '', task_id)
     return sanitized if sanitized else 'invalid_id'
 
@@ -45,7 +46,7 @@ def validate_task_data(task_type: str, data: Dict) -> bool:
     return True
 
 
-def safe_get(data: Dict, key: str, default=None):
+def safe_get(data: Dict, key: str, default=None) -> Any:
     """安全获取字典值，避免注入。"""
     value = data.get(key, default)
     if isinstance(value, str) and len(value) > 5000:

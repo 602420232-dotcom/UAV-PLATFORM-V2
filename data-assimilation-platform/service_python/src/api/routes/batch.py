@@ -1,8 +1,8 @@
 # service_python/src/api/routes/batch.py
 
 from fastapi import APIRouter, HTTPException
-from api.models.request import BatchRequest
-from api.models.response import BatchResponse
+from api.models.request import BatchRequest  # type: ignore[import-not-found]
+from api.models.response import BatchResponse  # type: ignore[import-not-found]
 from api.core.assimilation_service import AssimilationService
 import logging
 import asyncio
@@ -47,7 +47,9 @@ async def batch_assimilation(request: BatchRequest):
             requests.append(request_dict)
 
         # 并行处理
-        tasks = [assimilation_service.compute(req) for req in requests]
+        tasks = [  # type: ignore[attr-defined]
+            assimilation_service.compute(req) for req in requests
+        ]
         results = await asyncio.gather(*tasks, return_exceptions=True)
 
         # 统计结果

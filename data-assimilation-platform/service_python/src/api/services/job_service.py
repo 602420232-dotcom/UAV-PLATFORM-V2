@@ -11,7 +11,7 @@ class JobService:
     def __init__(self):
         self._jobs: Dict[str, dict] = {}
 
-    def create_job(self, algorithm: str, config: dict = None) -> str:
+    def create_job(self, algorithm: str, config: dict | None = None) -> str:
         job_id = str(uuid.uuid4())
         self._jobs[job_id] = {
             "id": job_id,
@@ -30,7 +30,7 @@ class JobService:
                 self._jobs[job_id]["result"] = result
             self._jobs[job_id]["updated_at"] = datetime.now().isoformat()
 
-    def get_job(self, job_id: str) -> dict:
+    def get_job(self, job_id: str) -> dict | None:
         return self._jobs.get(job_id)
 
     def list_jobs(self, limit: int = 10) -> list:

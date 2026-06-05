@@ -71,7 +71,7 @@ class TestVarianceFieldOptimizer:
             'correlation_length_scale': 15.0,
             'regularization': 1e-5
         }
-        optimizer = VarianceFieldOptimizer(config=config, use_sparse=True)
+        optimizer = VarianceFieldOptimizer(config=config, use_sparse=True)  # type: ignore[arg-type]
 
         assert optimizer.background_error_scale == 2.0
         assert optimizer.observation_error_scale == 0.2

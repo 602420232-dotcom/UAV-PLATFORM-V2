@@ -50,8 +50,12 @@ class TimeSeriesAnalyzer:
             distance = np.sqrt((xx - system_center_x)**2 + (yy - system_center_y)**2)
 
             # 基于距离的风速分布
-            u_wind = 5.0 + trend + 2.0 * time_factor * np.sin(2 * np.pi * xx / 1000) * np.cos(2 * np.pi * yy / 1000)
-            v_wind = 3.0 + trend + 1.5 * time_factor * np.cos(2 * np.pi * xx / 800) * np.sin(2 * np.pi * yy / 1200)
+            u_wind = (5.0 + trend + 2.0 * time_factor
+                      * np.sin(2 * np.pi * xx / 1000)
+                      * np.cos(2 * np.pi * yy / 1000))
+            v_wind = (3.0 + trend + 1.5 * time_factor
+                      * np.cos(2 * np.pi * xx / 800)
+                      * np.sin(2 * np.pi * yy / 1200))
             # 天气系统中心附近风速增强
             system_effect = 3.0 * np.exp(-(distance / 1000)**2)
             u_wind += system_effect
@@ -90,9 +94,14 @@ class TimeSeriesAnalyzer:
                 'time_step': i,
                 'mean_risk': float(np.mean(risk_data['composite_risk'])),
                 'max_risk': int(np.max(risk_data['composite_risk'])),
-                'high_risk_area': float(np.sum(risk_data['composite_risk'] >= 3) / risk_data['composite_risk'].size * 100),
+                'high_risk_area': float(
+                    np.sum(risk_data['composite_risk'] >= 3)
+                    / risk_data['composite_risk'].size * 100),
                 'risk_std': float(np.std(risk_data['composite_risk'])),
-                'moderate_risk_area': float(np.sum((risk_data['composite_risk'] >= 2) & (risk_data['composite_risk'] < 3)) / risk_data['composite_risk'].size * 100)
+                'moderate_risk_area': float(
+                    np.sum((risk_data['composite_risk'] >= 2)
+                           & (risk_data['composite_risk'] < 3))
+                    / risk_data['composite_risk'].size * 100)
             })
         return trend_data
 

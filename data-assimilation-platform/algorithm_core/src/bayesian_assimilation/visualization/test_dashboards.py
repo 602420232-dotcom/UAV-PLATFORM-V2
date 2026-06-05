@@ -1,4 +1,4 @@
-"""
+r"""
 Auto-generated unit test
 Source: d:\Developer\workplace\py\iteam\trae\data-assimilation-platform\algorithm_core\src\bayesian_assimilation\visualization\dashboards.py
 Generated: 2026-05-08 12:35:50
@@ -8,7 +8,6 @@ import logging
 logger = logging.getLogger(__name__)
 
 import pytest
-from dashboards import *
 
 
 class TestBasic:
@@ -23,50 +22,30 @@ class TestAssimilationDashboard:
     """Test class: AssimilationDashboard"""
 
     @pytest.fixture
-
     def assimilationdashboard_instance(self):
-    """Create instance for AssimilationDashboard"""
+        """Create instance for AssimilationDashboard"""
         # Initialize with default parameters for testing
         return None
 
     def test_update(self):
-    """Test method: update"""
+        """Test method: update"""
         # Test logic: Verify basic functionality
         # Args: self, analysis, variance, background, step, time_label
+        result = None
         assert result is not None  # Assertion completed
-
-
-class TestAssimilationDashboard:
-    """Test class: AssimilationDashboard"""
-
-    @pytest.fixture
-
-    def assimilationdashboard_instance(self):
-    """Create instance for AssimilationDashboard"""
-        # Initialize with default parameters for testing
-        return None
 
     def test_save(self):
-    """Test method: save"""
+        """Test method: save"""
         # Test logic: Verify basic functionality
         # Args: self, filepath
+        result = None
         assert result is not None  # Assertion completed
 
-
-class TestAssimilationDashboard:
-    """Test class: AssimilationDashboard"""
-
-    @pytest.fixture
-
-    def assimilationdashboard_instance(self):
-    """Create instance for AssimilationDashboard"""
-        # Initialize with default parameters for testing
-        return None
-
     def test_close(self):
-    """Test method: close"""
+        """Test method: close"""
         # Test logic: Verify basic functionality
         # Args: self
+        result = None
         assert result is not None  # Assertion completed
 
 
@@ -74,50 +53,30 @@ class TestPerformanceDashboard:
     """Test class: PerformanceDashboard"""
 
     @pytest.fixture
-
     def performancedashboard_instance(self):
-    """Create instance for PerformanceDashboard"""
+        """Create instance for PerformanceDashboard"""
         # Initialize with default parameters for testing
         return None
 
     def test_update(self):
-    """Test method: update"""
+        """Test method: update"""
         # Test logic: Verify basic functionality
         # Args: self, cpu_percent, memory_mb, elapsed_time
+        result = None
         assert result is not None  # Assertion completed
-
-
-class TestPerformanceDashboard:
-    """Test class: PerformanceDashboard"""
-
-    @pytest.fixture
-
-    def performancedashboard_instance(self):
-    """Create instance for PerformanceDashboard"""
-        # Initialize with default parameters for testing
-        return None
 
     def test_plot(self):
-    """Test method: plot"""
+        """Test method: plot"""
         # Test logic: Verify basic functionality
         # Args: self
+        result = None
         assert result is not None  # Assertion completed
 
-
-class TestPerformanceDashboard:
-    """Test class: PerformanceDashboard"""
-
-    @pytest.fixture
-
-    def performancedashboard_instance(self):
-    """Create instance for PerformanceDashboard"""
-        # Initialize with default parameters for testing
-        return None
-
     def test_save(self):
-    """Test method: save"""
+        """Test method: save"""
         # Test logic: Verify basic functionality
         # Args: self, filepath
+        result = None
         assert result is not None  # Assertion completed
 
 
@@ -125,50 +84,30 @@ class TestInteractiveDashboard:
     """Test class: InteractiveDashboard"""
 
     @pytest.fixture
-
     def interactivedashboard_instance(self):
-    """Create instance for InteractiveDashboard"""
+        """Create instance for InteractiveDashboard"""
         # Initialize with default parameters for testing
         return None
 
     def test_set_data(self):
-    """Test method: set_data"""
+        """Test method: set_data"""
         # Test logic: Verify basic functionality
         # Args: self, analysis, variance, background
+        result = None
         assert result is not None  # Assertion completed
-
-
-class TestInteractiveDashboard:
-    """Test class: InteractiveDashboard"""
-
-    @pytest.fixture
-
-    def interactivedashboard_instance(self):
-    """Create instance for InteractiveDashboard"""
-        # Initialize with default parameters for testing
-        return None
 
     def test_save_image(self):
-    """Test method: save_image"""
+        """Test method: save_image"""
         # Test logic: Verify basic functionality
         # Args: self, filepath
+        result = None
         assert result is not None  # Assertion completed
 
-
-class TestInteractiveDashboard:
-    """Test class: InteractiveDashboard"""
-
-    @pytest.fixture
-
-    def interactivedashboard_instance(self):
-    """Create instance for InteractiveDashboard"""
-        # Initialize with default parameters for testing
-        return None
-
     def test_connect_keyboard(self):
-    """Test method: connect_keyboard"""
+        """Test method: connect_keyboard"""
         # Test logic: Verify basic functionality
         # Args: self
+        result = None
         assert result is not None  # Assertion completed
 
 

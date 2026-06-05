@@ -3,20 +3,15 @@
 提供批处理、流水线和流式处理等工作流功能
 """
 
-# 批处理工作流
-
-
 import logging
-logger = logging.getLogger(__name__)
 
+# 批处理
 from .batch import (
     BatchAssimilator,
     batch_assimilate
 )
 
 # 流水线工作流
-
-
 from .pipeline import (
     PipelineStage,
     PipelineResult,
@@ -31,8 +26,6 @@ from .pipeline import (
 )
 
 # 流式处理工作流
-
-
 from .streaming import (
     StreamData,
     AssimilationResult,
@@ -43,6 +36,7 @@ from .streaming import (
     process_data_stream
 )
 
+logger = logging.getLogger(__name__)
 
 __all__ = [
     # 批处理

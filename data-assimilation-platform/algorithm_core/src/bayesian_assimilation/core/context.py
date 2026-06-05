@@ -34,10 +34,7 @@ class AssimilationContext:
     # 缓存
     cache: Dict[str, Any] = field(default_factory=dict)
 
-    def update_state(self,
-                    analysis: np.ndarray,
-                    variance: np.ndarray,
-                    background: np.ndarray):
+    def update_state(self, analysis: np.ndarray, variance: np.ndarray, background: np.ndarray):
         """更新状态（用于下一次增量）"""
         self.previous_analysis = analysis.copy()
         self.previous_variance = variance.copy()

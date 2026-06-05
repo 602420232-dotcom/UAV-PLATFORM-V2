@@ -8,7 +8,6 @@ import org.springframework.web.client.RestTemplate;
 import java.util.List;
 import java.util.Map;
 import java.util.ArrayList;
-import java.util.Objects;
 
 /**
  * 中央气象台 (CMA) 天气数据源

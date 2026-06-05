@@ -1,4 +1,4 @@
-"""
+r"""
 Auto-generated unit test
 Source: d:\Developer\workplace\py\iteam\trae\data-assimilation-platform\service_python\src\api\utils\serializers.py
 Generated: 2026-05-08 12:35:50

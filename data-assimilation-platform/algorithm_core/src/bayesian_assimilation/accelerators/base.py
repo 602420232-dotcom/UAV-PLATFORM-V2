@@ -3,11 +3,10 @@
 """
 
 import logging
-logger = logging.getLogger(__name__)
-
 from abc import ABC, abstractmethod
 from enum import Enum
 from typing import Optional, Any, Dict, Type
+logger = logging.getLogger(__name__)
 
 
 class AcceleratorType(Enum):

@@ -11,7 +11,7 @@ def serialize_grid(grid_data: np.ndarray) -> dict:
     }
 
 
-def serialize_analysis(analysis: np.ndarray, variance: np.ndarray = None) -> dict:
+def serialize_analysis(analysis: np.ndarray, variance: np.ndarray | None = None) -> dict:
     result = {"analysis": serialize_grid(analysis)}
     if variance is not None:
         result["variance"] = serialize_grid(variance)

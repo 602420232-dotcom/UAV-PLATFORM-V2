@@ -1,4 +1,4 @@
-"""
+r"""
 Auto-generated unit test
 Source: d:\Developer\workplace\py\iteam\trae\data-assimilation-platform\service_python\src\api\core\assimilation_service.py
 Generated: 2026-05-08 12:35:50
@@ -20,14 +20,13 @@ class TestAssimilationService:
     """Test class: AssimilationService"""
 
     @pytest.fixture
-
     def assimilationservice_instance(self):
-    """Create instance for AssimilationService"""
+        """Create instance for AssimilationService"""
         # Initialize with default parameters for testing
         return None
 
     def test_execute(self):
-    """Test method: execute"""
+        """Test method: execute"""
         # Test logic: Verify basic functionality
         # Args: self, algorithm, background, observations, config
         assert result is not None  # Assertion completed

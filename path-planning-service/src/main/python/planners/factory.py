@@ -1,3 +1,15 @@
+"""
+规划器工厂模块
+
+提供统一的规划器创建接口，支持多种路径规划算法：
+- RRT*
+- Dijkstra
+- 遗传算法
+- 粒子群优化
+- 蚁群算法
+- 冲突基搜索(CBS)
+"""
+
 from .cbs import CBSPlanner
 from .informed_rrt_star import InformedRRTStarPlanner
 from .aco import ACOPlanner
@@ -7,6 +19,7 @@ from .dijkstra import DijkstraPlanner
 from .rrt_star import RRTP
 from typing import Dict, List, Optional, Tuple
 import logging
+
 logger = logging.getLogger(__name__)
 
 
@@ -53,7 +66,8 @@ class PlannerFactory:
         if planner_cls is None:
             available = ', '.join(sorted(set(cls._registry.keys())))
             raise ValueError(
-                f"未知的规划器类型: '{planner_type}'。可用类型: {available}")
+                f"未知的规划器类型: '{planner_type}'。可用类型: {available}"
+            )
         return planner_cls(**kwargs)
 
     @classmethod
@@ -62,9 +76,13 @@ class PlannerFactory:
         return sorted(set(cls._registry.keys()))
 
 
-def create_planner(planner_type: str, start: Optional[Tuple[float, float]] = None,
-                   goal: Optional[Tuple[float, float]] = None,
-                   obstacles: Optional[List] = None, **kwargs) -> object:
+def create_planner(
+    planner_type: str,
+    start: Optional[Tuple[float, float]] = None,
+    goal: Optional[Tuple[float, float]] = None,
+    obstacles: Optional[List] = None,
+    **kwargs
+) -> object:
     """
     便捷函数：创建规划器实例
 
@@ -79,4 +97,5 @@ def create_planner(planner_type: str, start: Optional[Tuple[float, float]] = Non
         规划器实例
     """
     return PlannerFactory.create(
-        planner_type, start=start, goal=goal, obstacles=obstacles, **kwargs)
+        planner_type, start=start, goal=goal, obstacles=obstacles, **kwargs
+    )

@@ -14,9 +14,7 @@ import numpy as np
 
 
 try:
-    from bayesian_assimilation.core.assimilator import BayesianAssimilator
-
-
+    from bayesian_assimilation.core.assimilator import BayesianAssimilator  # type: ignore[assignment]  # noqa: E501
 except ImportError:
 
     class BayesianAssimilator:
@@ -25,17 +23,19 @@ except ImportError:
             self.config = config
             self.logger = logging.getLogger(__name__)
 
-        def initialize_grid(self: Any, domain_size:     int, resolution: Any = None):
+        def initialize_grid(self: Any, domain_size: int, resolution: Any = None):
             self.domain_size = domain_size
             self.resolution = resolution
 
         def assimilate_3dvar(self, background, observations, obs_locations, obs_errors=None):
             return background.copy(), np.zeros_like(background)
 
+        def assimilate(self, background, observations, obs_locations, obs_errors=None):
+            return self.assimilate_3dvar(background, observations, obs_locations, obs_errors)
+
 try:
-    from bayesian_assimilation.adapters.data import WRFDataAdapter, ObservationAdapter
-
-
+    from bayesian_assimilation.adapters.data import WRFDataAdapter  # type: ignore[assignment]  # noqa: E501
+    from bayesian_assimilation.adapters.data import ObservationAdapter  # type: ignore[assignment]  # noqa: E501
 except ImportError:
 
     class WRFDataAdapter:
@@ -43,25 +43,30 @@ except ImportError:
         def __init__(self, config=None):
             self.config = config
 
+        def load(self):
+            return np.zeros((10, 10))
+
     class ObservationAdapter:
 
         def __init__(self, config=None):
             self.config = config
 
+        def load(self):
+            return np.zeros((10, 10)), np.zeros((0, 3)), np.zeros(0)
+
 try:
-    from bayesian_assimilation.adapters.grid import interpolate_data, resample_data
-
-
+    from bayesian_assimilation.adapters.grid import interpolate_data  # type: ignore[assignment]  # noqa: E501
+    from bayesian_assimilation.adapters.grid import resample_data  # type: ignore[assignment]  # noqa: E501
 except ImportError:
 
-    def interpolate_data(data: Dict[str, Any], grid: str):
+    def interpolate_data(data: np.ndarray, new_shape: Any, method: str = 'linear'):
         return data
 
-    def resample_data(data: Dict[str, Any], factor: Any):
+    def resample_data(data: np.ndarray, target_resolution: Any = None, method: str = 'linear'):
         return data
 
 try:
-    from bayesian_assimilation.utils.config import AssimilationConfig
+    from bayesian_assimilation.utils.config import AssimilationConfig  # type: ignore[assignment]  # noqa: E501
 except ImportError:
 
     class AssimilationConfig:
@@ -71,9 +76,7 @@ except ImportError:
                 setattr(self, key, value)
 
 try:
-    from bayesian_assimilation.utils.logging import setup_logging
-
-
+    from bayesian_assimilation.utils.logging import setup_logging  # type: ignore[assignment]  # noqa: E501
 except ImportError:
 
     def setup_logging(level=None, format_str=None, log_file=None):
@@ -225,7 +228,10 @@ class DataLoadingStep(PipelineStep):
                 elapsed_time=elapsed
             )
 
-            logger.info(f"数据加载成功: 背景场 {background.shape}, 观测 {len(observations)} 个")
+            logger.info(
+                f"数据加载成功: 背景场 {background.shape}, "
+                f"观测 {len(observations)} 个"
+            )
 
         except Exception as e:
             result = PipelineResult(
@@ -281,7 +287,10 @@ class PreprocessingStep(PipelineStep):
                 metadata={'resolution': self.target_resolution}
             )
 
-            logger.info(f"数据预处理成功: 分辨率 {self.target_resolution}")
+            logger.info(
+                f"数据预处理成功: 分辨率 {self.target_resolution}, "
+                f"插值方法 {self.interpolation_method}"
+            )
 
         except Exception as e:
             result = PipelineResult(
@@ -297,10 +306,6 @@ class PreprocessingStep(PipelineStep):
 
 
 class AssimilationStep(PipelineStep):
-    """同化步骤"""
-
-
-class AssimilationStep(PipelineStep):  # noqa: F811
     """同化步骤"""
 
     def __init__(self,
@@ -565,7 +570,7 @@ def create_standard_pipeline(background_path: str,
     if target_resolution is not None:
         pipeline.add_step(PreprocessingStep(target_resolution=target_resolution))
 
-    pipeline.add_step(AssimilationStep(config=config))
+    pipeline.add_step(AssimilationStep(assimilation_config=config))  # type: ignore[arg-type]
     pipeline.add_step(PostprocessingStep(compute_statistics=True))
 
     return pipeline

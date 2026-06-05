@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 
 class AppException(Exception):
 
-    def __init__(self, status_code: int, message: str, details: str = None):
+    def __init__(self, status_code: int, message: str, details: str | None = None):
         self.status_code = status_code
         self.message = message
         self.details = details

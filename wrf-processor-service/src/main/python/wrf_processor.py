@@ -13,14 +13,23 @@ import logging
 import math
 from typing import Optional, Dict, List
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
 logger = logging.getLogger(__name__)
 
 
 # ─── 常量定义 ─────────────────────────────────────────────────────────────
 HEIGHT_LAYERS = [0, 10, 50, 100, 200, 300, 500, 800, 1000]  # 0-1000m分层
 TURBULENCE_THRESHOLDS = {'LOW': 0.5, 'MODERATE': 1.5, 'SEVERE': 3.0}
-VISIBILITY_THRESHOLDS = {'EXCELLENT': 20000, 'GOOD': 10000, 'MODERATE': 5000, 'POOR': 2000, 'HAZARDOUS': 0}
+VISIBILITY_THRESHOLDS = {
+    'EXCELLENT': 20000,
+    'GOOD': 10000,
+    'MODERATE': 5000,
+    'POOR': 2000,
+    'HAZARDOUS': 0
+}
 LIGHTNING_RISK_LEVELS = ['LOW', 'MODERATE', 'HIGH', 'EXTREME']
 
 # ─── NetCDF 格式检测 ─────────────────────────────────────────────────────
@@ -274,7 +283,10 @@ class WrfProcessor:
 
             if temperature is not None and humidity is not None:
                 # 计算饱和水汽压 (Magnus公式)
-                es = 6.112 * math.exp(17.67 * (temperature - 273.15) / ((temperature - 273.15) + 243.5))
+                es = 6.112 * math.exp(
+                    17.67 * (temperature - 273.15) /
+                    ((temperature - 273.15) + 243.5)
+                )
 
                 # 计算实际水汽压
                 if humidity > 1:  # 相对湿度为百分比
@@ -377,7 +389,8 @@ class WrfProcessor:
             # 优先级2: 从温湿度估算对流参数
             if not has_convective_data:
                 T_var = self.dataset.variables.get('T', None)
-                Q_var = self.dataset.variables.get('Q2', None) or self.dataset.variables.get('QVAPOR', None)
+                Q_var = self.dataset.variables.get('Q2', None) \
+                    or self.dataset.variables.get('QVAPOR', None)
                 if T_var is not None and Q_var is not None:
                     T_mean = float(np.mean(T_var[:])) + 300
                     Q_mean = float(np.mean(Q_var[:]))
@@ -515,8 +528,10 @@ class WrfProcessor:
                     if len(z_flat) > 0:
                         idx = np.argmin(np.abs(z_flat - h))
                         if u_profile.ndim > 1:
-                            u_h = float(np.mean(u_profile[..., idx])) if idx < u_profile.shape[-1] else 0
-                            v_h = float(np.mean(v_profile[..., idx])) if idx < v_profile.shape[-1] else 0
+                            u_h = float(np.mean(u_profile[..., idx])) \
+                                if idx < u_profile.shape[-1] else 0
+                            v_h = float(np.mean(v_profile[..., idx])) \
+                                if idx < v_profile.shape[-1] else 0
                         else:
                             u_h = float(u_profile[idx])
                             v_h = float(v_profile[idx])
@@ -527,11 +542,13 @@ class WrfProcessor:
                         layer_data['v_component'] = round(v_h, 2)
 
                         if t_profile is not None:
-                            t_h = float(np.mean(t_profile[..., idx])) if t_profile.ndim > 1 else float(t_profile[idx])
+                            t_h = float(np.mean(t_profile[..., idx])) \
+                                if t_profile.ndim > 1 else float(t_profile[idx])
                             layer_data['temperature'] = round(t_h + 300, 1)
 
                         if q_profile is not None:
-                            q_h = float(np.mean(q_profile[..., idx])) if q_profile.ndim > 1 else float(q_profile[idx])
+                            q_h = float(np.mean(q_profile[..., idx])) \
+                                if q_profile.ndim > 1 else float(q_profile[idx])
                             layer_data['humidity'] = round(q_h * 100 if q_h < 1 else q_h, 1)
 
                 # 无垂直剖面时使用基础数据
@@ -541,7 +558,9 @@ class WrfProcessor:
                     if base_data.get('wind_speed'):
                         ws = float(np.mean(base_data['wind_speed']))
                         layer_data['wind_speed'] = round(ws * height_factor, 2)
-                        layer_data['wind_direction'] = float(np.mean(base_data.get('wind_direction', [0]))) if base_data.get('wind_direction') else 0
+                        layer_data['wind_direction'] = float(
+                            np.mean(base_data.get('wind_direction', [0]))) \
+                            if base_data.get('wind_direction') else 0
 
                 if 'temperature' not in layer_data:
                     # 温度递减率 ~6.5°C/km

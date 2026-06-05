@@ -316,7 +316,9 @@ class MeteorForecast:
                     n_estimators=100, learning_rate=0.1, max_depth=5, n_jobs=-1)
 
             # 继续训练LSTM模型
-            history = self.lstm_model.fit(X, y, epochs=epochs, batch_size=batch_size, verbose=1, validation_split=0.2)  # noqa: F841
+            _ = self.lstm_model.fit(
+                    X, y, epochs=epochs, batch_size=batch_size,
+                    verbose=1, validation_split=0.2)
 
             # 训练XGBoost模型
             self.xgb_model.fit(X.reshape(X.shape[0], -1), y)
@@ -333,7 +335,8 @@ class MeteorForecast:
             })
 
             # 保存最佳模型
-            if current_score < self.best_score and self.lstm_model is not None and self.xgb_model is not None:
+            if (current_score < self.best_score and
+                    self.lstm_model is not None and self.xgb_model is not None):
                 self.best_score = current_score
                 lstm_model_path = os.path.join(self.model_path, 'lstm_model.h5')
                 xgb_model_path = os.path.join(self.model_path, 'xgb_model.json')

@@ -29,21 +29,14 @@ class AssimilationStrategy:
         self.name = name
         self.stats: Dict[str, Any] = {}
 
-    def execute(self, background: np.ndarray, observations: np.ndarray,
-               obs_locations: np.ndarray, **kwargs) -> Tuple[np.ndarray, np.ndarray]:
-        """
-        执行同化策略
-
-        Args:
-            background: 背景场
-            observations: 观测数据
-            obs_locations: 观测位置
-            **kwargs: 额外参数
-
-        Returns:
-            analysis: 分析场
-            variance: 方差场
-        """
+    def execute(
+        self,
+        background: np.ndarray,
+        observations: np.ndarray,
+        obs_locations: np.ndarray,
+        **kwargs
+    ) -> Tuple[np.ndarray, np.ndarray]:
+        """执行同化策略"""
         raise NotImplementedError("子类必须实现 execute 方法")
 
     def get_stats(self) -> Dict[str, Any]:
@@ -61,8 +54,13 @@ class ThreeDVARStrategy(AssimilationStrategy):
         super().__init__('3dvar')
         self.assimilator = None
 
-    def execute(self, background: np.ndarray, observations: np.ndarray,
-               obs_locations: np.ndarray, **kwargs) -> Tuple[np.ndarray, np.ndarray]:
+    def execute(
+        self,
+        background: np.ndarray,
+        observations: np.ndarray,
+        obs_locations: np.ndarray,
+        **kwargs
+    ) -> Tuple[np.ndarray, np.ndarray]:
         """执行3DVAR同化"""
         from bayesian_assimilation.core.assimilator import BayesianAssimilator
 
@@ -97,8 +95,13 @@ class EnsembleStrategy(AssimilationStrategy):
         super().__init__('ensemble')
         self.ensemble_size = ensemble_size
 
-    def execute(self, background: np.ndarray, observations: np.ndarray,
-               obs_locations: np.ndarray, **kwargs) -> Tuple[np.ndarray, np.ndarray]:
+    def execute(
+        self,
+        background: np.ndarray,
+        observations: np.ndarray,
+        obs_locations: np.ndarray,
+        **kwargs
+    ) -> Tuple[np.ndarray, np.ndarray]:
         """执行集合同化"""
         start_time = datetime.now()
 
@@ -136,8 +139,13 @@ class IncrementalStrategy(AssimilationStrategy):
         self.previous_analysis: Optional[np.ndarray] = None
         self.previous_variance: Optional[np.ndarray] = None
 
-    def execute(self, background: np.ndarray, observations: np.ndarray,
-               obs_locations: np.ndarray, **kwargs) -> Tuple[np.ndarray, np.ndarray]:
+    def execute(
+        self,
+        background: np.ndarray,
+        observations: np.ndarray,
+        obs_locations: np.ndarray,
+        **kwargs
+    ) -> Tuple[np.ndarray, np.ndarray]:
         """执行增量同化"""
         from bayesian_assimilation.core.assimilator import BayesianAssimilator
 
@@ -164,14 +172,19 @@ class IncrementalStrategy(AssimilationStrategy):
                 bg_sub = background[region]
 
                 obs_mask = (
-                    (obs_locations[:, 0] >= i_min * 50) & (obs_locations[:, 0] < i_max * 50) &
-                    (obs_locations[:, 1] >= j_min * 50) & (obs_locations[:, 1] < j_max * 50) &
-                    (obs_locations[:, 2] >= k_min * 50) & (obs_locations[:, 2] < k_max * 50)
+                    (obs_locations[:, 0] >= i_min * 50) &
+                    (obs_locations[:, 0] < i_max * 50) &
+                    (obs_locations[:, 1] >= j_min * 50) &
+                    (obs_locations[:, 1] < j_max * 50) &
+                    (obs_locations[:, 2] >= k_min * 50) &
+                    (obs_locations[:, 2] < k_max * 50)
                 )
 
                 if np.any(obs_mask):
                     obs_sub = observations[obs_mask]
-                    obs_loc_sub = obs_locations[obs_mask] - np.array([i_min * 50, j_min * 50, k_min * 50])
+                    obs_loc_sub = obs_locations[obs_mask] - np.array([
+                        i_min * 50, j_min * 50, k_min * 50
+                    ])
 
                     assimilator = BayesianAssimilator()
                     analysis_sub, variance_sub = assimilator.assimilate_3dvar(
@@ -223,8 +236,9 @@ class HybridStrategy(AssimilationStrategy):
             'incremental': IncrementalStrategy()
         }
 
-    def execute(self, background: np.ndarray, observations: np.ndarray,
-               obs_locations: np.ndarray, **kwargs) -> Tuple[np.ndarray, np.ndarray]:
+    def execute(
+            self, background: np.ndarray, observations: np.ndarray,
+            obs_locations: np.ndarray, **kwargs) -> Tuple[np.ndarray, np.ndarray]:
         """执行混合同化策略"""
         n_obs = len(observations)
         grid_size = int(np.prod(background.shape))
@@ -336,8 +350,9 @@ class StrategyManager:
             self.strategies[name] = StrategyFactory.create(name)
         self.current_strategy = name
 
-    def execute(self, background: np.ndarray, observations: np.ndarray,
-               obs_locations: np.ndarray, **kwargs) -> Tuple[np.ndarray, np.ndarray]:
+    def execute(
+            self, background: np.ndarray, observations: np.ndarray,
+            obs_locations: np.ndarray, **kwargs) -> Tuple[np.ndarray, np.ndarray]:
         """执行当前策略"""
         if self.current_strategy is None:
             self.select_strategy('3dvar')

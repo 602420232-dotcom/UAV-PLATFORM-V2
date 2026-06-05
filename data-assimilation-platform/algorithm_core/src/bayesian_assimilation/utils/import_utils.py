@@ -16,7 +16,10 @@ class MockClass:
         pass
 
 
-def safe_import(module_name: str, class_name: Optional[str] = None, mock_methods: Optional[Dict[str, Callable]] = None) -> Any:
+def safe_import(
+        module_name: str,
+        class_name: Optional[str] = None,
+        mock_methods: Optional[Dict[str, Callable]] = None) -> Any:
     """
     安全导入模块或类，失败时返回模拟类
 
@@ -89,10 +92,16 @@ def create_bayesian_assimilator_mock() -> Type:
         def assimilate_4dvar(self, background, observations, obs_locations, times, obs_errors=None):
             return background.copy(), np.zeros_like(background)
 
-        def assimilate_enkf(self, background_ensemble, observations, obs_locations, obs_errors=None):
-            n_members = background_ensemble.shape[0] if len(background_ensemble.shape) > 1 else 1
-            analysis = background_ensemble.copy() if n_members > 1 else background_ensemble
-            variance = np.zeros_like(background_ensemble) if n_members == 1 else np.zeros_like(background_ensemble[0])
+        def assimilate_enkf(
+                self, background_ensemble, observations,
+                obs_locations, obs_errors=None):
+            n_members = (background_ensemble.shape[0]
+                         if len(background_ensemble.shape) > 1 else 1)
+            analysis = (background_ensemble.copy()
+                        if n_members > 1 else background_ensemble)
+            variance = (np.zeros_like(background_ensemble)
+                        if n_members == 1
+                        else np.zeros_like(background_ensemble[0]))
             return analysis, variance
 
     return BayesianAssimilatorMock

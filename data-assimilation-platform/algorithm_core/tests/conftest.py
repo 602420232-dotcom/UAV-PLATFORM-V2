@@ -1,19 +1,19 @@
 # Type annotations added: 2026-05-08 13:22:43
 import logging
-logger = logging.getLogger(__name__)
-
 from typing import Dict, Any
-
-"""
-pytest配置文件
-提供共享的fixture和测试配置
-"""
 
 import sys
 import os
 import pytest
 import numpy as np
 from datetime import datetime
+
+logger = logging.getLogger(__name__)
+
+"""
+pytest配置文件
+提供共享的fixture和测试配置
+"""
 
 # 添加src目录到Python路径
 SRC_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -168,7 +168,7 @@ class TestDataGenerators:
         return observations, obs_idx.astype(int)
 
 
-def pytest_configure(config: Dict[str, Any]):
+def pytest_configure(config):  # type: ignore[reportMissingParameterType]
     """pytest配置钩子"""
     config.addinivalue_line(
         "markers", "slow: marks tests as slow (deselect with '-m \"not slow\"')"

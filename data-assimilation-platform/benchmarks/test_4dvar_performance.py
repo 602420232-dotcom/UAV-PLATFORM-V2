@@ -19,8 +19,8 @@ def test_4dvar_performance(grid_size, time_steps, obs_per_step):
     from bayesian_assimilation.models.four_dimensional_var import FourDimensionalVar
 
     model = FourDimensionalVar(
-        time_window=time_steps,
-        assimilation_window=3600,
+        time_window=time_steps,  # type: ignore[call-arg]
+        assimilation_window=3600,  # type: ignore[call-arg]
     )
 
     nx, ny, nz = grid_size
@@ -36,7 +36,7 @@ def test_4dvar_performance(grid_size, time_steps, obs_per_step):
     analysis = model.assimilate(
         background=background,
         observations=observations,
-        obs_locations=obs_locations,
+        obs_locations=obs_locations,  # type: ignore[call-arg]
     )
     elapsed = time.perf_counter() - start
 
@@ -48,7 +48,7 @@ def test_4dvar_performance(grid_size, time_steps, obs_per_step):
 def test_4dvar_memory_usage(small_grid):
     from bayesian_assimilation.models.four_dimensional_var import FourDimensionalVar
 
-    model = FourDimensionalVar(time_window=5, assimilation_window=3600)
+    model = FourDimensionalVar(time_window=5, assimilation_window=3600)  # type: ignore[call-arg]
     g = small_grid
     nx, ny, nz = g["shape"]
     background = np.repeat(g["background"][..., np.newaxis], 5, axis=-1)
@@ -63,7 +63,7 @@ def test_4dvar_memory_usage(small_grid):
         process = psutil.Process(os.getpid())
         mem_before = process.memory_info().rss / 1024 / 1024
 
-        model.assimilate(background=background, observations=obs_4d, obs_locations=obs_loc_4d)
+        model.assimilate(background=background, observations=obs_4d, obs_locations=obs_loc_4d)  # type: ignore[call-arg]
 
         mem_after = process.memory_info().rss / 1024 / 1024
         mem_delta = mem_after - mem_before

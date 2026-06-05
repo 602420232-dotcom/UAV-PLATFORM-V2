@@ -1,12 +1,25 @@
 package com.uav.common.integration;
 
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import static org.junit.jupiter.api.Assertions.*;
-import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 /**
  * 路径规划服务集成测试
  * 

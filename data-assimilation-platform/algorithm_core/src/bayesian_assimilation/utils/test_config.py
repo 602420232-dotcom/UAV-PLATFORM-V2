@@ -1,14 +1,14 @@
-"""
+r"""
 Auto-generated unit test
 Source: d:\Developer\workplace\py\iteam\trae\data-assimilation-platform\algorithm_core\src\bayesian_assimilation\utils\config.py
 Generated: 2026-05-08 12:35:50
 """
 
 import logging
-logger = logging.getLogger(__name__)
 
 import pytest
-from config import *
+
+logger = logging.getLogger(__name__)
 
 
 class TestBasic:
@@ -23,33 +23,23 @@ class TestConfigFactory:
     """Test class: ConfigFactory"""
 
     @pytest.fixture
-
     def configfactory_instance(self):
-    """Create instance for ConfigFactory"""
+        """Create instance for ConfigFactory"""
         # Initialize with default parameters for testing
         return None
 
     def test_create(self):
-    """Test method: create"""
+        """Test method: create"""
         # Test logic: Verify basic functionality
         # Args: config_type
+        result = None
         assert result is not None  # Assertion completed
 
-
-class TestConfigFactory:
-    """Test class: ConfigFactory"""
-
-    @pytest.fixture
-
-    def configfactory_instance(self):
-    """Create instance for ConfigFactory"""
-        # Initialize with default parameters for testing
-        return None
-
     def test_from_dict(self):
-    """Test method: from_dict"""
+        """Test method: from_dict"""
         # Test logic: Verify basic functionality
         # Args: config_dict
+        result = None
         assert result is not None  # Assertion completed
 
 

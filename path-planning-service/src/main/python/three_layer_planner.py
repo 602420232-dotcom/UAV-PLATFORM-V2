@@ -230,8 +230,12 @@ class AStarPlanner:
     A*路径规划器
     """
 
-    def __init__(self, weather_data: Optional[Dict] = None, obstacles: Optional[List[Obstacle]]
-                 = None, no_fly_zones: Optional[List[NoFlyZone]] = None):
+    def __init__(
+        self,
+        weather_data: Optional[Dict] = None,
+        obstacles: Optional[List[Obstacle]] = None,
+        no_fly_zones: Optional[List[NoFlyZone]] = None
+    ):
         self.weather_data = weather_data or {}
         self.obstacles = obstacles or []
         self.no_fly_zones = no_fly_zones or []
@@ -266,9 +270,11 @@ class AStarPlanner:
         """
         try:
             # 生成缓存键
-            cache_key = str(start) + str(goal) + str([(o.location,
-                                                       o.radius) for o in self.obstacles]) + str([(n.location,
-                                                                                                   n.radius) for n in self.no_fly_zones])
+            cache_key = (
+                    str(start) + str(goal) +
+                    str([(o.location, o.radius) for o in self.obstacles]) +
+                    str([(n.location, n.radius) for n in self.no_fly_zones])
+                )
             # 检查缓存
             cached_result = astar_cache.get(cache_key)
             if cached_result:
@@ -362,8 +368,12 @@ class DERRTStarPlanner:
     DE-RRT*路径规划器
     """
 
-    def __init__(self, weather_data: Optional[Dict] = None, obstacles: Optional[List[Obstacle]]
-                 = None, no_fly_zones: Optional[List[NoFlyZone]] = None):
+    def __init__(
+        self,
+        weather_data: Optional[Dict] = None,
+        obstacles: Optional[List[Obstacle]] = None,
+        no_fly_zones: Optional[List[NoFlyZone]] = None
+    ):
         self.weather_data = weather_data or {}
         self.obstacles = obstacles or []
         self.no_fly_zones = no_fly_zones or []
@@ -470,9 +480,11 @@ class DERRTStarPlanner:
         """
         try:
             # 生成缓存键
-            cache_key = str(start) + str(goal) + str([(o.location,
-                                                       o.radius) for o in self.obstacles]) + str([(n.location,
-                                                                                                   n.radius) for n in self.no_fly_zones])
+            cache_key = (
+                    str(start) + str(goal) +
+                    str([(o.location, o.radius) for o in self.obstacles]) +
+                    str([(n.location, n.radius) for n in self.no_fly_zones])
+                )
             # 检查缓存
             cached_result = derrt_cache.get(cache_key)
             if cached_result:
@@ -663,8 +675,14 @@ class ThreeLayerPlanner:
     三层路径规划器
     """
 
-    def __init__(self, drones: List[Drone], tasks: List[Task], weather_data: Optional[Dict] = None,
-                 obstacles: Optional[List[Obstacle]] = None, no_fly_zones: Optional[List[NoFlyZone]] = None):
+    def __init__(
+        self,
+        drones: List[Drone],
+        tasks: List[Task],
+        weather_data: Optional[Dict] = None,
+        obstacles: Optional[List[Obstacle]] = None,
+        no_fly_zones: Optional[List[NoFlyZone]] = None
+    ):
         self.drones = drones
         self.tasks = tasks
         self.weather_data = weather_data or {}
@@ -676,7 +694,10 @@ class ThreeLayerPlanner:
         self.dwa = DWAPlanner(weather_data, obstacles)
 
     def calculate_comprehensive_cost(
-            self, route: Dict, weather_data: Optional[Dict] = None) -> float:
+        self,
+        route: Dict,
+        weather_data: Optional[Dict] = None
+    ) -> float:
         """
         计算四维综合代价：距离 + 能耗 + 时间 + 气象风险
 
@@ -774,8 +795,13 @@ class ThreeLayerPlanner:
                 'error': str(e)
             }
 
-    def dynamic_replan(self, current_route: Dict, new_weather_data: Optional[Dict] = None, new_obstacles: Optional[
-                       List[Obstacle]] = None, new_no_fly_zones: Optional[List[NoFlyZone]] = None) -> Dict:
+    def dynamic_replan(
+        self,
+        current_route: Dict,
+        new_weather_data: Optional[Dict] = None,
+        new_obstacles: Optional[List[Obstacle]] = None,
+        new_no_fly_zones: Optional[List[NoFlyZone]] = None
+    ) -> Dict:
         """
         动态重规划
         :param current_route: 当前路径

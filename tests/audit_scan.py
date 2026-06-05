@@ -31,12 +31,15 @@ for dp, dn, fn in os.walk(ROOT):
 
         # Check empty source files
         try:
-            if os.path.getsize(fp) == 0 and f.endswith(('.java', '.py', '.xml', '.yml', '.yaml', '.properties', '.json', '.sh')):
+            if os.path.getsize(fp) == 0 and f.endswith(
+            ('.java', '.py', '.xml', '.yml', '.yaml', '.properties', '.json', '.sh')):
                 issues['empty_files'].append(rel)
         except Exception:
             pass
 
-        if not f.endswith(('.java', '.py', '.xml', '.yml', '.yaml', '.properties', '.sh', '.json', '.js', '.ts', '.vue', '.css')):
+        if not f.endswith(
+                ('.java', '.py', '.xml', '.yml', '.yaml', '.properties', '.sh',
+                 '.json', '.js', '.ts', '.vue', '.css')):
             continue
 
         try:
@@ -58,7 +61,9 @@ for dp, dn, fn in os.walk(ROOT):
             pass
 
         # Hardcoded secrets
-        if re.search(r'(?:password|secret|token|apikey|api[-_]?key)\s*[:=]\s*["\'](?!\$\{|""|null)(?!changeme|test|example|your-|demo-)[^"\']{4,}["\']', content, re.IGNORECASE):
+        pattern = r'(?:password|secret|token|apikey|api[-_]?key)\s*[:=]\s*["\']' \
+                  r'(?!\$\{|""|null)(?!changeme|test|example|your-|demo-)[^"\']{4,}["\']'
+        if re.search(pattern, content, re.IGNORECASE):
             issues['hardcoded_secrets'].append(rel)
 
         # TODO/FIXME
@@ -84,8 +89,7 @@ for dp, dn, fn in os.walk(ROOT):
 
 for cat, lst in issues.items():
     print(f'\n### {cat.upper()}: {len(lst)} items')
-    for item in lst[:
-        20]:
+    for item in lst[:20]:
         print(f'  - {item}')
     if len(lst) > 20:
         print(f'  ... and {len(lst)-20} more')

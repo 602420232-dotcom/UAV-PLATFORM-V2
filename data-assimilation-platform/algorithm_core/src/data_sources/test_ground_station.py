@@ -1,4 +1,4 @@
-"""
+r"""
 Auto-generated unit test
 Source: d:\Developer\workplace\py\iteam\trae\data-assimilation-platform\algorithm_core\src\data_sources\ground_station.py
 Generated: 2026-05-08 12:35:50
@@ -8,7 +8,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 import pytest
-from ground_station import *
+from ground_station import DataSourceBase, GroundStationDataSource
 
 
 class TestBasic:
@@ -23,16 +23,16 @@ class TestDataSourceBase:
     """Test class: DataSourceBase"""
 
     @pytest.fixture
-
     def datasourcebase_instance(self):
-    """Create instance for DataSourceBase"""
+        """Create instance for DataSourceBase"""
         # Initialize with default parameters for testing
         return None
 
     def test_load_data(self):
-    """Test method: load_data"""
+        """Test method: load_data"""
         # Test logic: Verify basic functionality
         # Args: self
+        result = None
         assert result is not None  # Assertion completed
 
 
@@ -40,50 +40,30 @@ class TestGroundStationDataSource:
     """Test class: GroundStationDataSource"""
 
     @pytest.fixture
-
     def groundstationdatasource_instance(self):
-    """Create instance for GroundStationDataSource"""
+        """Create instance for GroundStationDataSource"""
         # Initialize with default parameters for testing
         return None
 
     def test_load_data(self):
-    """Test method: load_data"""
+        """Test method: load_data"""
         # Test logic: Verify basic functionality
         # Args: self, file_path
+        result = None
         assert result is not None  # Assertion completed
-
-
-class TestGroundStationDataSource:
-    """Test class: GroundStationDataSource"""
-
-    @pytest.fixture
-
-    def groundstationdatasource_instance(self):
-    """Create instance for GroundStationDataSource"""
-        # Initialize with default parameters for testing
-        return None
 
     def test_process_data(self):
-    """Test method: process_data"""
+        """Test method: process_data"""
         # Test logic: Verify basic functionality
         # Args: self
+        result = None
         assert result is not None  # Assertion completed
 
-
-class TestGroundStationDataSource:
-    """Test class: GroundStationDataSource"""
-
-    @pytest.fixture
-
-    def groundstationdatasource_instance(self):
-    """Create instance for GroundStationDataSource"""
-        # Initialize with default parameters for testing
-        return None
-
     def test_get_observations(self):
-    """Test method: get_observations"""
+        """Test method: get_observations"""
         # Test logic: Verify basic functionality
         # Args: self
+        result = None
         assert result is not None  # Assertion completed
 
 

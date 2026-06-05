@@ -87,8 +87,7 @@ class CovarianceOperator:
         return np.exp(-distance**2 / (2 * length_scale**2))
 
     @staticmethod
-    def localize_covariance(covariance: np.ndarray, localization_radius: float,
-                           grid_shape: tuple) -> np.ndarray:
+    def localize_covariance(covariance: np.ndarray, localization_radius: float, grid_shape: tuple) -> np.ndarray:
         """
         本地化协方差矩阵
 
@@ -120,7 +119,9 @@ class CovarianceOperator:
                     # 使用 Gaspari-Cohn 本地化函数
                     r = distance / localization_radius
                     if r <= 1:
-                        localization[i, j] = ((-0.25 * r + 0.5) * r + 0.625) * r**2 - 0.875 * r + 1.0
+                        localization[i, j] = (
+                            (-0.25 * r + 0.5) * r + 0.625
+                        ) * r**2 - 0.875 * r + 1.0
                     elif r <= 2:
                         localization[i, j] = ((1/12 * r - 0.5) * r + 0.625) * r**2 + \
                                             (5/3 * r - 5.0) * r + 4.0/3

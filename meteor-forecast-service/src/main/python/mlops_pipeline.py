@@ -113,15 +113,24 @@ class MLOpsPipeline:
         from sklearn.metrics import mean_squared_error
 
         result = {
-            'model_a': {'version': model_a, 'mse': float(mean_squared_error(y_test, pred_a))},
-            'model_b': {'version': model_b, 'mse': float(mean_squared_error(y_test, pred_b))},
-            'winner': model_a if mean_squared_error(y_test, pred_a) < mean_squared_error(y_test, pred_b) else model_b
+            'model_a': {
+                'version': model_a,
+                'mse': float(mean_squared_error(y_test, pred_a))
+            },
+            'model_b': {
+                'version': model_b,
+                'mse': float(mean_squared_error(y_test, pred_b))
+            },
+            'winner': model_a
+            if mean_squared_error(y_test, pred_a) < mean_squared_error(y_test, pred_b)
+            else model_b
         }
         logger.info(f"A/B 测试结果: {result['winner']} 胜出")
         return result
 
-    def auto_rollback(self, name: str, current_version: str,
-                      previous_version: str, threshold: float = 0.05):
+    def auto_rollback(
+            self, name: str, current_version: str,
+            previous_version: str, threshold: float = 0.05):
         """自动回滚机制"""
         current = next((m for m in self.models['models']
                        if m['name'] == name and m['version'] == current_version), None)

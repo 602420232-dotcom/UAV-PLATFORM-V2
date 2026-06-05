@@ -30,8 +30,11 @@ class SecurityMiddleware:
         if not self.enabled:
             logger.warning("⚠️ 安全认证已禁用，服务端点将对外开放")
 
-    async def verify(self, request: Request,
-                     credentials: Optional[HTTPAuthorizationCredentials] = Security(security)) -> bool:
+    async def verify(
+        self,
+        request: Request,
+        credentials: Optional[HTTPAuthorizationCredentials] = Security(security)
+    ) -> bool:
         """验证请求认证"""
         if not self.enabled:
             return True

@@ -62,7 +62,11 @@ class SparseBackgroundCovariance:
         y_flat = y_3d.flatten() * self.variance
         return y_flat
 
-    def apply_inverse(self, x: np.ndarray, preconditioner: Optional[np.ndarray] = None) -> np.ndarray:
+    def apply_inverse(
+        self,
+        x: np.ndarray,
+        preconditioner: Optional[np.ndarray] = None
+    ) -> np.ndarray:
         """应用协方差逆的近似"""
         if preconditioner is None:
             preconditioner = 1.0 / (self.variance + 1e-6)

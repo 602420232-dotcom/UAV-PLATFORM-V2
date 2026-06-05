@@ -42,8 +42,12 @@ class MultiRegionDeployer:
 
     def add_region(self, name: str, endpoint: str, priority: int = 1):
         """注册区域"""
-        self.regions[name] = Region(name=name, endpoint=endpoint,
-                                     status=RegionStatus.STANDBY, priority=priority)
+        self.regions[name] = Region(
+            name=name,
+            endpoint=endpoint,
+            status=RegionStatus.STANDBY,
+            priority=priority
+        )
         self.missed_heartbeats[name] = 0
         if not self.active_region or priority == max(r.priority for r in self.regions.values()):
             self.active_region = name
@@ -79,7 +83,10 @@ class MultiRegionDeployer:
         if not region or region.status == RegionStatus.FAILED:
             return
 
-        logger.warning(f"触发故障转移: {failed_region} 已连续 {self.missed_heartbeats.get(failed_region, 0)} 次心跳丢失")
+        logger.warning(
+            f"触发故障转移: {failed_region} 已连续 "
+            f"{self.missed_heartbeats.get(failed_region, 0)} 次心跳丢失"
+        )
         region.status = RegionStatus.FAILED
         logger.info(f"区域 {failed_region} 状态已标记为 FAILED")
         self._failover(failed_region)
@@ -95,7 +102,10 @@ class MultiRegionDeployer:
             new_active = available[0][0]
             self.active_region = new_active
             self.regions[new_active].status = RegionStatus.ACTIVE
-            logger.info(f"故障转移完成: {failed_region} → {new_active} (优先级={self.regions[new_active].priority})")
+            logger.info(
+                f"故障转移完成: {failed_region} → {new_active} "
+                f"(优先级={self.regions[new_active].priority})"
+            )
         else:
             logger.error("故障转移失败: 没有可用的 STANDBY 区域可提升为 ACTIVE")
 
@@ -107,7 +117,8 @@ class MultiRegionDeployer:
                 logger.info(f"同步 {sync_type} 数据到 {name}: {len(json.dumps(data))} bytes")
                 region.last_heartbeat = time.time()
                 self.missed_heartbeats[name] = 0
-                region.status = RegionStatus.ACTIVE if name == self.active_region else RegionStatus.STANDBY
+                region.status = RegionStatus.ACTIVE \
+                    if name == self.active_region else RegionStatus.STANDBY
 
     def get_active_endpoint(self) -> Optional[str]:
         """获取当前活跃区域端点"""
@@ -139,7 +150,11 @@ class DisasterRecovery:
         logger.info(f"检查点创建: {path}")
         return path
 
-    def restore_from_checkpoint(self, service_name: str, checkpoint_path: str = None) -> Optional[dict]:
+    def restore_from_checkpoint(
+        self,
+        service_name: str,
+        checkpoint_path: str | None = None
+    ) -> Optional[dict]:
         """从检查点恢复"""
         import glob
         if not checkpoint_path:

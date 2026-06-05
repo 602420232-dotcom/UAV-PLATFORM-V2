@@ -182,12 +182,11 @@ def main():
 
         # 显示示例
         print("\n示例（前10个）：")
-        for item in all_changes[:
-            10]:
+        for item in all_changes[:10]:
             print(f"\n{item['file']}")
-            for change in item['changes'][:
-                3]:
-                print(f"  {change['function']}({', '.join(change['args'])}) -> {dict(zip(change['args'], change['types']))}")
+            for change in item['changes'][:3]:
+                print(f"  {change['function']}({', '.join(change['args'])}"
+                      f") -> {dict(zip(change['args'], change['types']))}")
 
     print("\n" + "=" * 60)
     print("提示：此工具提供类型注解建议，请手动验证后应用")

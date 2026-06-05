@@ -15,9 +15,9 @@ def test_enkf_ensemble_scaling(ensemble_size, small_grid):
     from bayesian_assimilation.models.enkf import EnKF
 
     enkf = EnKF(
-        ensemble_size=ensemble_size,
-        inflation_factor=1.05,
-        localization_radius=5000,
+        ensemble_size=ensemble_size,  # type: ignore[call-arg]
+        inflation_factor=1.05,  # type: ignore[call-arg]
+        localization_radius=5000,  # type: ignore[call-arg]
     )
 
     g = small_grid
@@ -25,7 +25,7 @@ def test_enkf_ensemble_scaling(ensemble_size, small_grid):
     ensemble = np.random.rand(ensemble_size, nx, ny, nz)
 
     start = time.perf_counter()
-    analysis_ensemble = enkf.update(
+    analysis_ensemble = enkf.update(  # type: ignore[attr-defined]
         ensemble=ensemble,
         observations=g["observations"],
         obs_locations=g["obs_locations"],
@@ -45,14 +45,14 @@ def test_enkf_inflation_effect(small_grid):
 
     for inflation in [1.0, 1.05, 1.1, 1.2]:
         enkf = EnKF(
-            ensemble_size=30,
-            inflation_factor=inflation,
-            localization_radius=5000,
+            ensemble_size=30,  # type: ignore[call-arg]
+            inflation_factor=inflation,  # type: ignore[call-arg]
+            localization_radius=5000,  # type: ignore[call-arg]
         )
         ensemble = np.random.rand(30, nx, ny, nz)
 
         start = time.perf_counter()
-        analysis = enkf.update(
+        analysis = enkf.update(  # type: ignore[attr-defined]
             ensemble=ensemble,
             observations=g["observations"],
             obs_locations=g["obs_locations"],
@@ -69,9 +69,9 @@ def test_enkf_localization_scaling(localization_radius, small_grid):
     from bayesian_assimilation.models.enkf import EnKF
 
     enkf = EnKF(
-        ensemble_size=30,
-        inflation_factor=1.05,
-        localization_radius=localization_radius,
+        ensemble_size=30,  # type: ignore[call-arg]
+        inflation_factor=1.05,  # type: ignore[call-arg]
+        localization_radius=localization_radius,  # type: ignore[call-arg]
     )
 
     g = small_grid
@@ -79,7 +79,7 @@ def test_enkf_localization_scaling(localization_radius, small_grid):
     ensemble = np.random.rand(30, nx, ny, nz)
 
     start = time.perf_counter()
-    analysis = enkf.update(
+    analysis = enkf.update(  # type: ignore[attr-defined]
         ensemble=ensemble,
         observations=g["observations"],
         obs_locations=g["obs_locations"],

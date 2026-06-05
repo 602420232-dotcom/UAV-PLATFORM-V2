@@ -1,21 +1,37 @@
-[tool.black]
-line-length = 100
-target-version = ['py38', 'py39', 'py310', 'py311']
-include = '\.pyi?$'
-exclude = '''
-/(
-  \.git
-  | \.venv
-  | \.mvn
-  | node_modules
-  | target
-  | build
-  | dist
-)/
-'''
+[tool.flake8]
+max-line-length = 100
+extend-ignore = ["E203", "W503"]
+exclude = [
+    ".git",
+    "__pycache__",
+    "*.pyc",
+    "*.pyo",
+    "node_modules",
+    "*.egg-info",
+]
 
-[tool.isort]
-profile = "black"
-line_length = 100
-skip_gitignore = true
-known_first_party = ["bayesian_assimilation"]
+[tool.pyright]
+typeCheckingMode = "basic"
+exclude = [
+    "**/__pycache__",
+    "**/*.pyc",
+    "**/*.pyo",
+    "node_modules",
+]
+
+[tool.basedpyright]
+typeCheckingMode = "basic"
+exclude = [
+    "**/__pycache__",
+    "**/*.pyc",
+    "**/*.pyo",
+    "node_modules",
+]
+
+[tool.autoflake]
+remove-all-unused-imports = true
+remove-unused-variables = true
+
+[tool.autopep8]
+max-line-length = 100
+aggressive = 2

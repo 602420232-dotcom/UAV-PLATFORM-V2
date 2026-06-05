@@ -10,9 +10,6 @@ import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.Base64;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -373,15 +370,4 @@ public class PythonScriptInvoker {
         throw new SecurityException("No valid Python executable found in allowed list");
     }
 
-    private String computeFileHash(String filePath) throws NoSuchAlgorithmException {
-        try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] fileBytes = Files.readAllBytes(Paths.get(filePath));
-            byte[] hashBytes = digest.digest(fileBytes);
-            return Base64.getEncoder().encodeToString(hashBytes);
-        } catch (Exception e) {
-            log.warn("Failed to compute file hash: {}", e.getMessage());
-            return null;
-        }
-    }
 }

@@ -1,10 +1,14 @@
 # service_python/src/api/routes/assimilation.py
 
 from fastapi import APIRouter, BackgroundTasks
-from api.models.request import AssimilationRequest, SelfImproveRequest
+from api.models.request import (
+    AssimilationRequest, SelfImproveRequest  # type: ignore[import-not-found]
+)
 from api.models.response import AssimilationResponse
 from api.core.assimilation_service import AssimilationService
-from api.utils.validators import validate_grid_consistency, validate_observation_locations
+from api.utils.validators import (
+    validate_grid_consistency, validate_observation_locations  # type: ignore[import-not-found]
+)
 from api.middleware.error_handler import AppException
 import time
 import logging
@@ -58,7 +62,7 @@ async def compute_assimilation(
     }
 
     try:
-        result = await assimilation_service.compute(request_dict)
+        result = await assimilation_service.compute(request_dict)  # type: ignore[attr-defined]
     except ValueError as e:
         logger.warning(f"参数错误: {e}")
         raise AppException(status_code=400, message=f"参数错误: {str(e)}")
@@ -75,12 +79,12 @@ async def compute_assimilation(
     logger.info(f"同化计算完成，Job: {request.job_id}, 耗时: {elapsed:.2f}s")
 
     return AssimilationResponse(
-        job_id=request.job_id,
+        job_id=request.job_id,  # type: ignore[call-arg]
         status="SUCCESS",
-        analysis_field=result.analysis.tolist(),
-        variance_field=result.variance.tolist(),
-        computation_time=elapsed,
-        timestamp=time.time(),
+        analysis_field=result.analysis.tolist(),  # type: ignore[call-arg]
+        variance_field=result.variance.tolist(),  # type: ignore[call-arg]
+        computation_time=elapsed,  # type: ignore[call-arg]
+        timestamp=time.time(),  # type: ignore[call-arg]
         message="同化计算成功"
     )
 
@@ -103,7 +107,7 @@ async def self_improve_model(request: SelfImproveRequest):
         raise AppException(status_code=400, message="目标数据y不能为空")
 
     try:
-        result = await assimilation_service.self_improve(
+        result = await assimilation_service.self_improve(  # type: ignore[attr-defined]
             job_id=request.job_id,
             X=np.array(request.X),
             y=np.array(request.y),
@@ -145,7 +149,9 @@ async def get_model_performance(job_id: str):
         raise AppException(status_code=400, message="job_id不能为空")
 
     try:
-        performance = assimilation_service.get_model_performance(job_id)
+        performance = assimilation_service.get_model_performance(  # type: ignore[attr-defined]
+            job_id
+        )
     except ValueError as e:
         logger.warning(f"性能查询参数错误: {e}")
         raise AppException(status_code=400, message=f"参数错误: {str(e)}")

@@ -176,8 +176,7 @@ class SimpleConfigChecker:
 
         if self.issues:
             print("\nIssues found:")
-            for issue in self.issues[:
-                10]:
+            for issue in self.issues[:10]:
                 print(f"  - [{issue['severity']}] {issue['type']}")
                 print(f"    {issue['file']}")
 

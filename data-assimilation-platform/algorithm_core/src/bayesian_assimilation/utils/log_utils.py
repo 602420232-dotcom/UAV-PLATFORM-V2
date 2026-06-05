@@ -1,11 +1,12 @@
 import logging
-logger = logging.getLogger(__name__)
 from typing import Optional
+
+logger = logging.getLogger(__name__)
 
 
 def setup_logging(level: int = logging.INFO,
-                 format_str: Optional[str] = None,
-                 log_file: Optional[str] = None) -> logging.Logger:
+                  format_str: Optional[str] = None,
+                  log_file: Optional[str] = None) -> logging.Logger:
     if format_str is None:
         format_str = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     logger = logging.getLogger()

@@ -16,12 +16,12 @@ logger = logging.getLogger(__name__)
 
 
 try:
-    from pyflink.datastream import StreamExecutionEnvironment
-    from pyflink.datastream.connectors.kafka import (
+    from pyflink.datastream import StreamExecutionEnvironment  # type: ignore[import-not-found]
+    from pyflink.datastream.connectors.kafka import (  # type: ignore[import-not-found]
         KafkaSource, KafkaSink, KafkaRecordSerializationSchema
     )
-    from pyflink.common import WatermarkStrategy
-    from pyflink.common.serialization import SimpleStringSchema
+    from pyflink.common import WatermarkStrategy  # type: ignore[import-not-found]
+    from pyflink.common.serialization import SimpleStringSchema  # type: ignore[import-not-found]
     FLINK_AVAILABLE = True
 
 

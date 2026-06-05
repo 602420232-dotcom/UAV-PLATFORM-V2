@@ -1,3 +1,13 @@
+"""
+路径规划器基类
+
+提供所有路径规划算法共享的工具方法，包括：
+- 距离计算
+- 碰撞检测
+- 路径碰撞检查
+- 统一结果格式化
+"""
+
 import numpy as np
 import logging
 from typing import List, Tuple, Optional, Dict
@@ -16,9 +26,12 @@ class BasePlanner:
     - Unified result formatting
     """
 
-    def __init__(self, start: Optional[Tuple[float, float]] = None,
-                 goal: Optional[Tuple[float, float]] = None,
-                 obstacles: Optional[List] = None):
+    def __init__(
+        self,
+        start: Optional[Tuple[float, float]] = None,
+        goal: Optional[Tuple[float, float]] = None,
+        obstacles: Optional[List] = None
+    ):
         self.start = start
         self.goal = goal
         self.obstacles = obstacles or []
@@ -36,8 +49,12 @@ class BasePlanner:
                 return True
         return False
 
-    def is_path_collision(self, start: Tuple[float, float],
-                          end: Tuple[float, float], steps: int = 10) -> bool:
+    def is_path_collision(
+        self,
+        start: Tuple[float, float],
+        end: Tuple[float, float],
+        steps: int = 10
+    ) -> bool:
         """Check if the straight-line path between start and end collides with any obstacle."""
         for i in range(steps + 1):
             t = i / steps
@@ -52,8 +69,12 @@ class BasePlanner:
         raise NotImplementedError("子类必须实现 plan 方法")
 
     @staticmethod
-    def _make_result(success: bool, path: Optional[List] = None,
-                     cost: Optional[float] = None, error: Optional[str] = None) -> Dict:
+    def _make_result(
+        success: bool,
+        path: Optional[List] = None,
+        cost: Optional[float] = None,
+        error: Optional[str] = None
+    ) -> Dict:
         """Build a standardized planning result dict."""
         if success:
             return {'success': True, 'path': path, 'cost': cost}

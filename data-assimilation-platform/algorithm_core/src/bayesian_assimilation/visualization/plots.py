@@ -58,15 +58,15 @@ class VarianceFieldPlotter:
         if slice_axis == 0:
             data_slice = variance_field[slice_index, :, :]
             xlabel, ylabel = 'Y (m)', 'Z (m)'
-            extent = [0, ny * self.resolution, 0, nz * self.resolution]
+            extent = (0, ny * self.resolution, 0, nz * self.resolution)
         elif slice_axis == 1:
             data_slice = variance_field[:, slice_index, :]
             xlabel, ylabel = 'X (m)', 'Z (m)'
-            extent = [0, nx * self.resolution, 0, nz * self.resolution]
+            extent = (0, nx * self.resolution, 0, nz * self.resolution)
         else:
             data_slice = variance_field[:, :, slice_index]
             xlabel, ylabel = 'X (m)', 'Y (m)'
-            extent = [0, nx * self.resolution, 0, ny * self.resolution]
+            extent = (0, nx * self.resolution, 0, ny * self.resolution)
 
         fig, ax = plt.subplots(figsize=figsize)
         im = ax.imshow(data_slice.T, origin='lower', cmap=cmap, extent=extent, aspect='auto')
@@ -78,11 +78,13 @@ class VarianceFieldPlotter:
         logger.info(f"绘制2D切片: axis={slice_axis}, index={slice_index}")
         return fig
 
-    def plot_3d_surface(self,
-                       variance_field: np.ndarray,
-                       threshold: Optional[float] = None,
-                       title: str = 'Variance Field 3D Surface',
-                       figsize: Tuple[int, int] = (12, 10)) -> Figure:
+    def plot_3d_surface(
+        self,
+        variance_field: np.ndarray,
+        threshold: Optional[float] = None,
+        title: str = 'Variance Field 3D Surface',
+        figsize: Tuple[int, int] = (12, 10),
+    ) -> Figure:
         """
         绘制3D表面图
 
@@ -122,12 +124,14 @@ class VarianceFieldPlotter:
         logger.info("绘制3D表面图")
         return fig
 
-    def plot_contour(self,
-                    variance_field: np.ndarray,
-                    slice_index: int = -1,
-                    levels: int = 20,
-                    title: Optional[str] = None,
-                    figsize: Tuple[int, int] = (10, 8)) -> Figure:
+    def plot_contour(
+        self,
+        variance_field: np.ndarray,
+        slice_index: int = -1,
+        levels: int = 20,
+        title: Optional[str] = None,
+        figsize: Tuple[int, int] = (10, 8),
+    ) -> Figure:
         """
         绘制等值线图
 
@@ -158,11 +162,13 @@ class VarianceFieldPlotter:
         logger.info("绘制等值线图")
         return fig
 
-    def plot_histogram(self,
-                      variance_field: np.ndarray,
-                      bins: int = 50,
-                      title: str = 'Variance Distribution',
-                      figsize: Tuple[int, int] = (10, 6)) -> Figure:
+    def plot_histogram(
+        self,
+        variance_field: np.ndarray,
+        bins: int = 50,
+        title: str = 'Variance Distribution',
+        figsize: Tuple[int, int] = (10, 6),
+    ) -> Figure:
         """
         绘制方差分布直方图
 
@@ -178,12 +184,19 @@ class VarianceFieldPlotter:
         data = variance_field.flatten()
 
         fig, ax = plt.subplots(figsize=figsize)
-        ax.hist(data, bins=bins, color='steelblue', edgecolor='black', alpha=0.7)
+        ax.hist(
+            data, bins=bins,
+            color='steelblue', edgecolor='black', alpha=0.7
+        )
         ax.set_xlabel('Variance')
         ax.set_ylabel('Frequency')
         ax.set_title(title)
-        ax.axvline(np.mean(data), color='red', linestyle='--', label=f'Mean: {np.mean(data):.4f}')
-        ax.axvline(np.median(data), color='green', linestyle='--', label=f'Median: {np.median(data):.4f}')
+        mean_val = float(np.mean(data))
+        median_val = float(np.median(data))
+        ax.axvline(mean_val, color='red', linestyle='--',
+                   label=f'Mean: {mean_val:.4f}')
+        ax.axvline(median_val, color='green', linestyle='--',
+                   label=f'Median: {median_val:.4f}')
         ax.legend()
 
         logger.info("绘制直方图")
@@ -203,13 +216,15 @@ class WindFieldPlotter:
         """
         self.resolution = resolution
 
-    def plot_quiver(self,
-                   u: np.ndarray,
-                   v: np.ndarray,
-                   slice_index: int = -1,
-                   skip: int = 3,
-                   title: str = 'Wind Field',
-                   figsize: Tuple[int, int] = (10, 8)) -> Figure:
+    def plot_quiver(
+        self,
+        u: np.ndarray,
+        v: np.ndarray,
+        slice_index: int = -1,
+        skip: int = 3,
+        title: str = 'Wind Field',
+        figsize: Tuple[int, int] = (10, 8),
+    ) -> Figure:
         """
         绘制风场矢量图（箭头图）
 
@@ -242,9 +257,10 @@ class WindFieldPlotter:
         V_sub = data_slice_v[::skip, ::skip]
 
         fig, ax = plt.subplots(figsize=figsize)
-        q = ax.quiver(X_sub, Y_sub, U_sub, V_sub,
-                     np.sqrt(U_sub**2 + V_sub**2),
-                     cmap='coolwarm', scale=50, width=0.003)
+        q = ax.quiver(
+            X_sub, Y_sub, U_sub, V_sub,
+            np.sqrt(U_sub**2 + V_sub**2),
+            cmap='coolwarm', scale=50, width=0.003)
         ax.set_xlabel('X (m)')
         ax.set_ylabel('Y (m)')
         ax.set_title(title)
@@ -253,13 +269,15 @@ class WindFieldPlotter:
         logger.info("绘制风场矢量图")
         return fig
 
-    def plot_streamlines(self,
-                        u: np.ndarray,
-                        v: np.ndarray,
-                        slice_index: int = -1,
-                        density: float = 2.0,
-                        title: str = 'Wind Streamlines',
-                        figsize: Tuple[int, int] = (10, 8)) -> Figure:
+    def plot_streamlines(
+        self,
+        u: np.ndarray,
+        v: np.ndarray,
+        slice_index: int = -1,
+        density: float = 2.0,
+        title: str = 'Wind Streamlines',
+        figsize: Tuple[int, int] = (10, 8),
+    ) -> Figure:
         """
         绘制流线图
 
@@ -283,8 +301,9 @@ class WindFieldPlotter:
 
         fig, ax = plt.subplots(figsize=figsize)
         speed = np.sqrt(data_slice_u**2 + data_slice_v**2)
-        strm = ax.streamplot(x, y, data_slice_u.T, data_slice_v.T,
-                           color=speed.T, cmap='coolwarm', density=density)
+        strm = ax.streamplot(
+            x, y, data_slice_u.T, data_slice_v.T,
+            color=speed.T, cmap='coolwarm', density=density)
         ax.set_xlabel('X (m)')
         ax.set_ylabel('Y (m)')
         ax.set_title(title)
@@ -293,13 +312,15 @@ class WindFieldPlotter:
         logger.info("绘制流线图")
         return fig
 
-    def plot_wind_speed_contourf(self,
-                                  u: np.ndarray,
-                                  v: np.ndarray,
-                                  slice_index: int = -1,
-                                  levels: int = 20,
-                                  title: str = 'Wind Speed Contour',
-                                  figsize: Tuple[int, int] = (10, 8)) -> Figure:
+    def plot_wind_speed_contourf(
+        self,
+        u: np.ndarray,
+        v: np.ndarray,
+        slice_index: int = -1,
+        levels: int = 20,
+        title: str = 'Wind Speed Contour',
+        figsize: Tuple[int, int] = (10, 8),
+    ) -> Figure:
         """
         绘制风速等值线填色图
 
@@ -343,14 +364,16 @@ class ComparisonPlotter:
     def __init__(self, resolution: float = 100.0):
         self.resolution = resolution
 
-    def plot_horizontal_comparison(self,
-                                  background: np.ndarray,
-                                  analysis: np.ndarray,
-                                  observations: Optional[np.ndarray] = None,
-                                  obs_locations: Optional[np.ndarray] = None,
-                                  slice_index: int = -1,
-                                  title: Optional[str] = None,
-                                  figsize: Tuple[int, int] = (16, 5)) -> Figure:
+    def plot_horizontal_comparison(
+        self,
+        background: np.ndarray,
+        analysis: np.ndarray,
+        observations: Optional[np.ndarray] = None,
+        obs_locations: Optional[np.ndarray] = None,
+        slice_index: int = -1,
+        title: Optional[str] = None,
+        figsize: Tuple[int, int] = (16, 5),
+    ) -> Figure:
         """
         水平对比图：背景场 vs 分析场
 
@@ -375,20 +398,23 @@ class ComparisonPlotter:
 
         vmin = min(np.nanmin(bg_slice), np.nanmin(analysis_slice))
         vmax = max(np.nanmax(bg_slice), np.nanmax(analysis_slice))
+        cmp_extent = (0, nx * self.resolution, 0, ny * self.resolution)
 
         fig, axes = plt.subplots(1, 3, figsize=figsize)
 
         # 背景场
-        im1 = axes[0].imshow(bg_slice.T, origin='lower', cmap='RdBu_r',
-                            vmin=vmin, vmax=vmax, extent=[0, nx*self.resolution, 0, ny*self.resolution])
+        im1 = axes[0].imshow(
+            bg_slice.T, origin='lower', cmap='RdBu_r',
+            vmin=vmin, vmax=vmax, extent=cmp_extent)
         axes[0].set_xlabel('X (m)')
         axes[0].set_ylabel('Y (m)')
         axes[0].set_title('Background Field')
         plt.colorbar(im1, ax=axes[0])
 
         # 分析场
-        im2 = axes[1].imshow(analysis_slice.T, origin='lower', cmap='RdBu_r',
-                            vmin=vmin, vmax=vmax, extent=[0, nx*self.resolution, 0, ny*self.resolution])
+        im2 = axes[1].imshow(
+            analysis_slice.T, origin='lower', cmap='RdBu_r',
+            vmin=vmin, vmax=vmax, extent=cmp_extent)
         axes[1].set_xlabel('X (m)')
         axes[1].set_ylabel('Y (m)')
         axes[1].set_title('Analysis Field')
@@ -396,8 +422,9 @@ class ComparisonPlotter:
 
         # 增量
         increment = analysis_slice - bg_slice
-        im3 = axes[2].imshow(increment.T, origin='lower', cmap='RdBu_r',
-                            extent=[0, nx*self.resolution, 0, ny*self.resolution])
+        im3 = axes[2].imshow(
+            increment.T, origin='lower', cmap='RdBu_r',
+            extent=cmp_extent)
         axes[2].set_xlabel('X (m)')
         axes[2].set_ylabel('Y (m)')
         axes[2].set_title('Increment (Analysis - Background)')
@@ -409,12 +436,14 @@ class ComparisonPlotter:
         logger.info("绘制水平对比图")
         return fig
 
-    def plot_profile_comparison(self,
-                               background: np.ndarray,
-                               analysis: np.ndarray,
-                               point: Tuple[int, int],
-                               title: str = 'Vertical Profile Comparison',
-                               figsize: Tuple[int, int] = (10, 6)) -> Figure:
+    def plot_profile_comparison(
+        self,
+        background: np.ndarray,
+        analysis: np.ndarray,
+        point: Tuple[int, int],
+        title: str = 'Vertical Profile Comparison',
+        figsize: Tuple[int, int] = (10, 6),
+    ) -> Figure:
         """
         绘制垂直廊线对比图
 

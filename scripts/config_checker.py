@@ -252,8 +252,7 @@ class ConfigChecker:
 
         if self.issues:
             print("\nTop issues:")
-            for issue in self.issues[:
-                5]:
+            for issue in self.issues[:5]:
                 print(f"  - [{issue['severity']}] {issue['issue']}")
                 print(f"    File: {issue['file']}")
 

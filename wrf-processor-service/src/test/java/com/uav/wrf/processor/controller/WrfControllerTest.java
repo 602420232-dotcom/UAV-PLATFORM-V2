@@ -10,6 +10,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.uav.wrf.processor.service.WrfDataService;
+import com.uav.common.script.PythonScriptInvoker;
 
 import java.util.Map;
 
@@ -30,9 +31,12 @@ class WrfControllerTest {
     @Mock
     private WrfDataService wrfDataService;
 
+    @Mock
+    private PythonScriptInvoker pythonScriptInvoker;
+
     @BeforeEach
     void setUp() {
-        wrfController = new WrfController(wrfDataService);
+        wrfController = new WrfController(wrfDataService, pythonScriptInvoker);
         assertNotNull(wrfController);
         ReflectionTestUtils.setField(wrfController, "pythonScriptPath", "wrf_processor.py");
         ReflectionTestUtils.setField(wrfController, "dataPath", "./data");

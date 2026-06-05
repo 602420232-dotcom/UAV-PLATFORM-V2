@@ -6,7 +6,7 @@ import logging
 
 
 try:
-    from .base import DataSourceBase
+    from .base import DataSourceBase  # type: ignore[assignment]
 
 
 except ImportError:
@@ -24,7 +24,7 @@ except ImportError:
             pass
 
 try:
-    from .satellite import SatelliteDataSource
+    from .satellite import SatelliteDataSource  # type: ignore[assignment]
 
 
 except ImportError:
@@ -38,7 +38,7 @@ except ImportError:
             return False
 
 try:
-    from .radar import RadarDataSource
+    from .radar import RadarDataSource  # type: ignore[assignment]
 
 
 except ImportError:
@@ -67,17 +67,11 @@ class DataSourceFactory:
     }
 
     @classmethod
-    def create_data_source(cls, source_type: str, config: Optional[Dict[str, Any]] = None) -> Optional[DataSourceBase]:
-        """
-        创建数据源实例
-
-        Args:
-            source_type: 数据源类型
-            config: 配置参数
-
-        Returns:
-            Optional[DataSourceBase]: 数据源实例
-        """
+    def create_data_source(
+            cls,
+            source_type: str,
+            config: Optional[Dict[str, Any]] = None) -> Optional[DataSourceBase]:
+        """创建数据源实例"""
         try:
             if source_type not in cls._data_source_types:
                 logger.error(f"不支持的数据源类型: {source_type}")

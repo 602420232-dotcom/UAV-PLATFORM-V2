@@ -9,7 +9,7 @@ import logging
 
 
 try:
-    from .base import DataSourceBase
+    from .base import DataSourceBase  # type: ignore[assignment]
 
 
 except ImportError:
@@ -110,7 +110,7 @@ class RadarDataSource(DataSourceBase):
         Returns:
             Any: 处理后的数据
         """
-        if not self.validate_data():
+        if not self.validate_data():  # type: ignore[attr-defined]
             return None
 
         try:
@@ -216,10 +216,13 @@ class RadarDataSource(DataSourceBase):
                 reflectivity = np.array(self.data['reflectivity'])
                 # 剔除无效值（通常是 < 0 或 NaN）
                 reflectivity = np.where(np.isnan(reflectivity), -999.0, reflectivity)
+                valid_mask = reflectivity > -999.0
+                min_refl = float(np.min(reflectivity[valid_mask])) \
+                    if np.any(valid_mask) else -999.0
                 result['quality_metrics'] = {
                     'total_gates': int(reflectivity.size),
-                    'valid_gates': int(np.sum(reflectivity > -999.0)),
-                    'min_reflectivity': float(np.min(reflectivity[reflectivity > -999.0])) if np.any(reflectivity > -999.0) else -999.0,
+                    'valid_gates': int(np.sum(valid_mask)),
+                    'min_reflectivity': min_refl,
                     'max_reflectivity': float(np.max(reflectivity)),
                 }
 
@@ -237,7 +240,7 @@ class RadarDataSource(DataSourceBase):
         Returns:
             Tuple[观测值列表, 观测位置列表, 观测误差列表]
         """
-        if not self.validate_data():
+        if not self.validate_data():  # type: ignore[attr-defined]
             return [], [], []
 
         try:

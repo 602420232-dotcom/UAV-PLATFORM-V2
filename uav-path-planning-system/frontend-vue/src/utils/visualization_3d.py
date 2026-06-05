@@ -31,8 +31,9 @@ class TrajectoryVisualizer3D:
         }
 
     @staticmethod
-    def generate_waypoint_markers(waypoints: List[Tuple[float, float, float]],
-                                   drone_id: str) -> dict:
+    def generate_waypoint_markers(
+            waypoints: List[Tuple[float, float, float]],
+            drone_id: str) -> dict:
         """生成航点标记"""
         features = []
         for i, (lat, lng, alt) in enumerate(waypoints):
@@ -42,7 +43,9 @@ class TrajectoryVisualizer3D:
                     "drone_id": drone_id,
                     "waypoint_index": i,
                     "altitude": alt,
-                    "marker-color": "#ff6b6b" if i == 0 else "#ffd700" if i == len(waypoints) - 1 else "#4ecdc4",
+                    "marker-color": "#ff6b6b"
+                    if i == 0 else "#ffd700"
+                    if i == len(waypoints) - 1 else "#4ecdc4",
                     "marker-size": "large",
                     "marker-symbol": "circle"
                 },
@@ -65,7 +68,11 @@ class WeatherFieldVisualizer:
                 "u": cell.get("wind_u", 0),
                 "v": cell.get("wind_v", 0),
                 "speed": cell.get("wind_speed", 0),
-                "color": "#ff0000" if cell.get("wind_speed", 0) > 10 else "#ffaa00" if cell.get("wind_speed", 0) > 5 else "#00ff00"
+                "color": "#ff0000"
+                if cell.get("wind_speed", 0) > 10
+                else "#ffaa00"
+                if cell.get("wind_speed", 0) > 5
+                else "#00ff00"
             })
         return {
             "type": "wind_field",

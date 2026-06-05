@@ -1,4 +1,4 @@
-"""
+r"""
 Auto-generated unit test
 Source: d:\Developer\workplace\py\iteam\trae\data-assimilation-platform\algorithm_core\src\bayesian_assimilation\visualization\plots.py
 Generated: 2026-05-08 12:35:50
@@ -8,7 +8,6 @@ import logging
 logger = logging.getLogger(__name__)
 
 import pytest
-from plots import *
 
 
 class TestBasic:
@@ -23,67 +22,37 @@ class TestVarianceFieldPlotter:
     """Test class: VarianceFieldPlotter"""
 
     @pytest.fixture
-
     def variancefieldplotter_instance(self):
-    """Create instance for VarianceFieldPlotter"""
+        """Create instance for VarianceFieldPlotter"""
         # Initialize with default parameters for testing
         return None
 
     def test_plot_2d_slice(self):
-    """Test method: plot_2d_slice"""
+        """Test method: plot_2d_slice"""
         # Test logic: Verify basic functionality
         # Args: self, variance_field, slice_axis, slice_index, title, cmap, figsize
+        result = None
         assert result is not None  # Assertion completed
-
-
-class TestVarianceFieldPlotter:
-    """Test class: VarianceFieldPlotter"""
-
-    @pytest.fixture
-
-    def variancefieldplotter_instance(self):
-    """Create instance for VarianceFieldPlotter"""
-        # Initialize with default parameters for testing
-        return None
 
     def test_plot_3d_surface(self):
-    """Test method: plot_3d_surface"""
+        """Test method: plot_3d_surface"""
         # Test logic: Verify basic functionality
         # Args: self, variance_field, threshold, title, figsize
+        result = None
         assert result is not None  # Assertion completed
-
-
-class TestVarianceFieldPlotter:
-    """Test class: VarianceFieldPlotter"""
-
-    @pytest.fixture
-
-    def variancefieldplotter_instance(self):
-    """Create instance for VarianceFieldPlotter"""
-        # Initialize with default parameters for testing
-        return None
 
     def test_plot_contour(self):
-    """Test method: plot_contour"""
+        """Test method: plot_contour"""
         # Test logic: Verify basic functionality
         # Args: self, variance_field, slice_index, levels, title, figsize
+        result = None
         assert result is not None  # Assertion completed
 
-
-class TestVarianceFieldPlotter:
-    """Test class: VarianceFieldPlotter"""
-
-    @pytest.fixture
-
-    def variancefieldplotter_instance(self):
-    """Create instance for VarianceFieldPlotter"""
-        # Initialize with default parameters for testing
-        return None
-
     def test_plot_histogram(self):
-    """Test method: plot_histogram"""
+        """Test method: plot_histogram"""
         # Test logic: Verify basic functionality
         # Args: self, variance_field, bins, title, figsize
+        result = None
         assert result is not None  # Assertion completed
 
 
@@ -91,50 +60,30 @@ class TestWindFieldPlotter:
     """Test class: WindFieldPlotter"""
 
     @pytest.fixture
-
     def windfieldplotter_instance(self):
-    """Create instance for WindFieldPlotter"""
+        """Create instance for WindFieldPlotter"""
         # Initialize with default parameters for testing
         return None
 
     def test_plot_quiver(self):
-    """Test method: plot_quiver"""
+        """Test method: plot_quiver"""
         # Test logic: Verify basic functionality
         # Args: self, u, v, slice_index, skip, title, figsize
+        result = None
         assert result is not None  # Assertion completed
-
-
-class TestWindFieldPlotter:
-    """Test class: WindFieldPlotter"""
-
-    @pytest.fixture
-
-    def windfieldplotter_instance(self):
-    """Create instance for WindFieldPlotter"""
-        # Initialize with default parameters for testing
-        return None
 
     def test_plot_streamlines(self):
-    """Test method: plot_streamlines"""
+        """Test method: plot_streamlines"""
         # Test logic: Verify basic functionality
         # Args: self, u, v, slice_index, density, title, figsize
+        result = None
         assert result is not None  # Assertion completed
 
-
-class TestWindFieldPlotter:
-    """Test class: WindFieldPlotter"""
-
-    @pytest.fixture
-
-    def windfieldplotter_instance(self):
-    """Create instance for WindFieldPlotter"""
-        # Initialize with default parameters for testing
-        return None
-
     def test_plot_wind_speed_contourf(self):
-    """Test method: plot_wind_speed_contourf"""
+        """Test method: plot_wind_speed_contourf"""
         # Test logic: Verify basic functionality
         # Args: self, u, v, slice_index, levels, title, figsize
+        result = None
         assert result is not None  # Assertion completed
 
 
@@ -142,33 +91,23 @@ class TestComparisonPlotter:
     """Test class: ComparisonPlotter"""
 
     @pytest.fixture
-
     def comparisonplotter_instance(self):
-    """Create instance for ComparisonPlotter"""
+        """Create instance for ComparisonPlotter"""
         # Initialize with default parameters for testing
         return None
 
     def test_plot_horizontal_comparison(self):
-    """Test method: plot_horizontal_comparison"""
+        """Test method: plot_horizontal_comparison"""
         # Test logic: Verify basic functionality
         # Args: self, background, analysis, observations, obs_locations, slice_index, title, figsize
+        result = None
         assert result is not None  # Assertion completed
 
-
-class TestComparisonPlotter:
-    """Test class: ComparisonPlotter"""
-
-    @pytest.fixture
-
-    def comparisonplotter_instance(self):
-    """Create instance for ComparisonPlotter"""
-        # Initialize with default parameters for testing
-        return None
-
     def test_plot_profile_comparison(self):
-    """Test method: plot_profile_comparison"""
+        """Test method: plot_profile_comparison"""
         # Test logic: Verify basic functionality
         # Args: self, background, analysis, point, title, figsize
+        result = None
         assert result is not None  # Assertion completed
 
 

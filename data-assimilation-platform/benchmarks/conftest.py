@@ -1,5 +1,4 @@
 # Type annotations added: 2026-05-08 13:22:43
-from typing import Dict, Any
 
 """
 pytest 配置：定义性能基准测试的共享 fixture 和全局参数
@@ -50,14 +49,14 @@ def pytest_addoption(parser):
     )
 
 
-def pytest_configure(config: Dict[str, Any]):
+def pytest_configure(config):
     config.addinivalue_line(
         "markers",
         "benchmark: 标记性能基准测试，使用 --benchmark 选项运行",
     )
 
 
-def pytest_collection_modifyitems(config: Dict[str, Any], items: Any):
+def pytest_collection_modifyitems(config, items):  # type: ignore[reportMissingParameterType]
     if not config.getoption("--benchmark"):
         skip_benchmark = pytest.mark.skip(reason="需要 --benchmark 选项才能运行")
         for item in items:

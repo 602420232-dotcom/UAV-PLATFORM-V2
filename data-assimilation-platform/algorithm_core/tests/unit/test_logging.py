@@ -97,7 +97,7 @@ class TestGetLogger:
 
     def test_get_logger_with_level(self):
         """测试带级别的日志器"""
-        logger = get_logger('level_test', level=logging.WARNING)
+        logger = get_logger('level_test', level=logging.WARNING)  # type: ignore[call-arg]
 
         assert logger.level == logging.WARNING
 
@@ -175,7 +175,7 @@ class TestLogFunctionCall:
         """测试带自定义日志器的装饰器"""
         custom_logger = logging.getLogger('custom')
 
-        @log_function_call(logger=custom_logger)
+        @log_function_call(logger=custom_logger)  # type: ignore[call-overload]
         def func_with_custom_logger():
             return True
 

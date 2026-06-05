@@ -3,11 +3,9 @@
 提供数据可视化、动画生成和监控面板功能
 """
 
-# 静态绘图模块
-
-
 import logging
-logger = logging.getLogger(__name__)
+
+# 静态绘图模块
 
 from .plots import (
     VarianceFieldPlotter,
@@ -19,7 +17,6 @@ from .plots import (
 
 # 动画生成模块
 
-
 from .animator import (
     TimeSeriesAnimator,
     VarianceHeatmapAnimator,
@@ -30,7 +27,6 @@ from .animator import (
 
 # 监控面板模块
 
-
 from .dashboards import (
     AssimilationDashboard,
     PerformanceDashboard,
@@ -38,6 +34,7 @@ from .dashboards import (
     create_summary_dashboard
 )
 
+logger = logging.getLogger(__name__)
 
 __all__ = [
     # 静态绘图

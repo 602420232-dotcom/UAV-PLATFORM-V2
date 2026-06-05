@@ -38,14 +38,14 @@ def test_quick_start():
 
     try:
         from bayesian_assimilation.utils.config import ConfigFactory
-        from bayesian_assimilation.core.assimilator import BaseAssimilator
+        from bayesian_assimilation.core.assimilator import BayesianAssimilator
         import numpy as np
 
         # 创建配置
         config = ConfigFactory.create("base", grid_resolution=50.0)
 
         # 创建同化器
-        assim = BaseAssimilator(config)
+        assim = BayesianAssimilator(config)
 
         # 初始化小网格
         assim.initialize_grid((200, 200, 50), resolution=50)

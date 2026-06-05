@@ -18,7 +18,7 @@ import numpy as np
 logger = logging.getLogger(__name__)
 
 
-def benchmark_3dvar(grid_size: str, obs_count: int):
+def benchmark_3dvar(grid_size: tuple, obs_count: int):
     from bayesian_assimilation.core.assimilator import BayesianAssimilator
     assim = BayesianAssimilator()
     assim.initialize_grid(domain_size=grid_size)

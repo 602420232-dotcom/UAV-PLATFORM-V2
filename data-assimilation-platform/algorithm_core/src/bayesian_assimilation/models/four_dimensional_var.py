@@ -87,7 +87,10 @@ class FourDimensionalVar(AssimilationBase):
             )
 
         # 3. 读取 wrfout 全部时刻
-        wrfout_files = sorted([f for f in os.listdir(self.config["wrf_input_dir"]) if 'wrfout' in f])
+        wrfout_files = sorted([
+            f for f in os.listdir(self.config["wrf_input_dir"])
+            if 'wrfout' in f
+        ])
         history = []
         for f in wrfout_files:
             try:
@@ -130,9 +133,15 @@ class FourDimensionalVar(AssimilationBase):
 
         return history
 
-    def cost_function(self, x0_flat: np.ndarray, xb: Dict[str, np.ndarray],
-                     B_inv: np.ndarray, R_inv: np.ndarray,
-                     observations: List[Dict], H) -> float:
+    def cost_function(
+        self,
+        x0_flat: np.ndarray,
+        xb: Dict[str, np.ndarray],
+        B_inv: np.ndarray,
+        R_inv: np.ndarray,
+        observations: List[Dict],
+        H
+    ) -> float:
         """
         4D-Var 代价函数
         J = 0.5*(x-xb)ᵀB⁻¹(x-xb) + 0.5*Σ(H(xₖ)-yₖ)ᵀR⁻¹(H(xₖ)-yₖ)
@@ -174,9 +183,10 @@ class FourDimensionalVar(AssimilationBase):
 
         return Jb + Jo
 
-    def adjoint_gradient(self, x0_flat: np.ndarray, xb: Dict[str, np.ndarray],
-                        B_inv: np.ndarray, R_inv: np.ndarray,
-                        observations: List[Dict], H) -> np.ndarray:
+    def adjoint_gradient(
+            self, x0_flat: np.ndarray, xb: Dict[str, np.ndarray],
+            B_inv: np.ndarray, R_inv: np.ndarray,
+            observations: List[Dict], H) -> np.ndarray:
         """
         伴随模式 → 输出代价函数梯度
         用于 L-BFGS 快速优化
@@ -211,7 +221,9 @@ class FourDimensionalVar(AssimilationBase):
                     # 观测算子H的伴随 - 只对对应位置添加贡献
                     lat_idx = int(obs.get('lat_idx', 0))
                     lon_idx = int(obs.get('lon_idx', 0))
-                    if lambda_T.ndim >= 2 and 0 <= lat_idx < lambda_T.shape[0] and 0 <= lon_idx < lambda_T.shape[1]:  # type: ignore
+                    if (lambda_T.ndim >= 2 and
+                            0 <= lat_idx < lambda_T.shape[0] and
+                            0 <= lon_idx < lambda_T.shape[1]):  # type: ignore
                         lambda_T[lat_idx, lon_idx] += adj_obs[obs_idx] * 1.0
                         lambda_U[lat_idx, lon_idx] += adj_obs[obs_idx] * 0.2
                         lambda_V[lat_idx, lon_idx] += adj_obs[obs_idx] * 0.2
@@ -378,14 +390,29 @@ if __name__ == "__main__":
     }
 
     observations = [
-        {'time_idx': 0, 'lat_idx': 2, 'lon_idx': 3, 'variable': 'temperature', 'value': 25.0},
-        {'time_idx': 1, 'lat_idx': 5, 'lon_idx': 5, 'variable': 'u_wind', 'value': 3.0},
-        {'time_idx': 2, 'lat_idx': 7, 'lon_idx': 2, 'variable': 'v_wind', 'value': -2.0}
+        {
+            'time_idx': 0, 'lat_idx': 2, 'lon_idx': 3,
+            'variable': 'temperature', 'value': 25.0
+        },
+        {
+            'time_idx': 1, 'lat_idx': 5, 'lon_idx': 5,
+            'variable': 'u_wind', 'value': 3.0
+        },
+        {
+            'time_idx': 2, 'lat_idx': 7, 'lon_idx': 2,
+            'variable': 'v_wind', 'value': -2.0
+        }
     ]
 
     analysis, variance = model.assimilate(background, observations)
-    logger.info(f"分析场温度范围: [{analysis['variables']['temperature'].min():.2f}, {analysis['variables']['temperature'].max():.2f}]")
-    logger.info(f"分析场风场范围: [{analysis['variables']['u_wind'].min():.2f}, {analysis['variables']['u_wind'].max():.2f}]")
+    logger.info(
+        f"分析场温度范围: [{analysis['variables']['temperature'].min():.2f}, "
+        f"{analysis['variables']['temperature'].max():.2f}]"
+    )
+    logger.info(
+        f"分析场风场范围: [{analysis['variables']['u_wind'].min():.2f}, "
+        f"{analysis['variables']['u_wind'].max():.2f}]"
+    )
     logger.info("测试通过！")
 
 # 便捷函数

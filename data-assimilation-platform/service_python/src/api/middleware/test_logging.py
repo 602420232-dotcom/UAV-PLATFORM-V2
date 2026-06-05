@@ -5,7 +5,6 @@ Generated: 2026-05-08 12:35:50
 """
 
 import pytest
-from logging import *
 
 
 class TestBasic:

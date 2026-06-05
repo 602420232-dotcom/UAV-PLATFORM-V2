@@ -100,7 +100,10 @@ def add_annotations_to_file(file_path: str) -> Dict:
                     continue
 
                 # Parse arguments
-                args = [arg.strip().split(':')[0].strip() for arg in args_str.split(',') if arg.strip()]
+                args = [
+                    arg.strip().split(':')[0].strip()
+                    for arg in args_str.split(',') if arg.strip()
+                ]
 
                 # Skip if no arguments or too many
                 if not args or len(args) > 5:
@@ -118,7 +121,9 @@ def add_annotations_to_file(file_path: str) -> Dict:
                     continue
 
                 # Create annotated arguments
-                annotated_args = ', '.join([f'{arg}: {arg_type}' for arg, arg_type in zip(args, arg_types)])
+                annotated_args = ', '.join([
+                    f'{arg}: {arg_type}' for arg, arg_type in zip(args, arg_types)
+                ])
 
                 # Replace line
                 new_line = f'{indent}def {func_name}({annotated_args}):\n'
@@ -241,8 +246,7 @@ def main():
             if result['status'] == 'SUCCESS':
                 f.write(f"\n{result['file']}\n")
                 f.write(f"  Annotations added: {result['changes']}\n")
-                for detail in result['details'][:
-                    3]:  # Show first 3
+                for detail in result['details'][:3]:  # Show first 3
                     f.write(f"  - {detail['function']}({', '.join(detail['args'])})\n")
 
     print(f"\nReport: {report_file}")

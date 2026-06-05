@@ -19,7 +19,10 @@ from enum import Enum
 
 try:
     from tensorflow.keras.models import Sequential, load_model
-    from tensorflow.keras.layers import LSTM, Dense, Dropout, ConvLSTM2D, BatchNormalization, Flatten
+    from tensorflow.keras.layers import (
+            LSTM, Dense, Dropout, ConvLSTM2D,
+            BatchNormalization, Flatten
+        )
     from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
     from tensorflow.keras.optimizers import Adam
 

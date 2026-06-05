@@ -15,7 +15,9 @@ for dp, dn, fn in os.walk(ROOT):
     dn[:] = [d for d in dn if d not in {'.git', 'node_modules', 'target', '__pycache__', '.idea', '.pytest_cache'}]
     for f in fn:
         fp = os.path.join(dp, f)
-        if not f.endswith(('.py', '.java', '.yml', '.yaml', '.xml', '.json', '.sh', '.md', '.properties', '.js', '.ts', '.vue', '.css')):
+        if not f.endswith(
+                ('.py', '.java', '.yml', '.yaml', '.xml', '.json', '.sh',
+                 '.md', '.properties', '.js', '.ts', '.vue', '.css')):
             continue
         try:
             with open(fp, 'rb') as fh:

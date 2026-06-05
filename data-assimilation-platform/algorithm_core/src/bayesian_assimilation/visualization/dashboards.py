@@ -104,8 +104,9 @@ class AssimilationDashboard:
 
         vmin, vmax = np.nanmin(slice_data), np.nanmax(slice_data)
         im = ax.imshow(slice_data.T, origin='lower', cmap='viridis',
-                      vmin=vmin, vmax=vmax, extent=extent, aspect='auto')
-        ax.set_title(f'Analysis Field - Step {step}' + (f' ({time_label})' if time_label else ''))
+                       vmin=vmin, vmax=vmax, extent=extent, aspect='auto')
+        time_suffix = f' ({time_label})' if time_label else ''
+        ax.set_title(f'Analysis Field - Step {step}{time_suffix}')
         ax.set_xlabel('X (m)')
         ax.set_ylabel('Y (m)')
 
@@ -120,11 +121,16 @@ class AssimilationDashboard:
         ax.clear()
 
         var_data = variance.flatten()
-        ax.hist(var_data, bins=50, color='steelblue', edgecolor='black', alpha=0.7)
+        ax.hist(
+            var_data, bins=50,
+            color='steelblue', edgecolor='black', alpha=0.7
+        )
         ax.set_title('Variance Distribution')
         ax.set_xlabel('Variance')
         ax.set_ylabel('Frequency')
-        ax.axvline(np.mean(var_data), color='red', linestyle='--', label=f'Mean: {np.mean(var_data):.4f}')
+        var_mean = float(np.mean(var_data))
+        ax.axvline(var_mean, color='red', linestyle='--',
+                   label=f'Mean: {var_mean:.4f}')
         ax.legend(fontsize=8)
 
         # 更新统计信息
@@ -134,8 +140,8 @@ class AssimilationDashboard:
 
         stats_text = self._format_stats(analysis, variance, background)
         ax.text(0.1, 0.5, stats_text, transform=ax.transAxes,
-               fontsize=10, verticalalignment='center',
-               fontfamily='monospace')
+                fontsize=10, verticalalignment='center',
+                fontfamily='monospace')
 
         # 更新时间序列（简化版本：绘制当前值的趋势）
         ax = self.axes['timeseries']
@@ -157,13 +163,13 @@ class AssimilationDashboard:
 
         ax.set_title('Vertical Profile at Center')
 
-        self.fig.canvas.draw()
-        self.fig.canvas.flush_events()
+        self.fig.canvas.draw()  # type: ignore[union-attr]
+        self.fig.canvas.flush_events()  # type: ignore[union-attr]
 
         logger.debug(f"仪表盘已更新: 步骤 {step}")
 
     def _format_stats(self, analysis: np.ndarray, variance: np.ndarray,
-                     background: Optional[np.ndarray]) -> str:
+                      background: Optional[np.ndarray]) -> str:
         """格式化统计信息"""
         lines = [
             "=" * 30,
@@ -282,8 +288,8 @@ class PerformanceDashboard:
             采样次数: {current + 1}
             """
             ax.text(0.3, 0.5, stats_text, transform=ax.transAxes,
-                   fontsize=12, verticalalignment='center',
-                   fontfamily='monospace')
+                    fontsize=12, verticalalignment='center',
+                    fontfamily='monospace')
 
         # 统计摘要
         ax = axes[1, 1]
@@ -300,8 +306,8 @@ class PerformanceDashboard:
             总耗时: {self.history['time'][-1]:.1f} 秒
             """
             ax.text(0.3, 0.5, summary_text, transform=ax.transAxes,
-                   fontsize=12, verticalalignment='center',
-                   fontfamily='monospace')
+                    fontsize=12, verticalalignment='center',
+                    fontfamily='monospace')
 
         plt.tight_layout()
         return fig
@@ -366,27 +372,34 @@ class InteractiveDashboard:
         self.slice_slider.on_changed(self._on_slice_change)
 
         # 切片标签
-        self.ax_slice_label.text(0.5, 0.5, f'Slice: {self.current_slice}',
-                                transform=self.ax_slice_label.transAxes,
-                                ha='center', va='center', fontsize=12)
+        self.ax_slice_label.text(
+            0.5, 0.5, f'Slice: {self.current_slice}',
+            transform=self.ax_slice_label.transAxes,
+            ha='center', va='center', fontsize=12)
 
         # 按钮
-        self.ax_buttons.text(0.1, 0.7, 'Controls:', transform=self.ax_buttons.transAxes, fontsize=10)
-        self.ax_buttons.text(0.1, 0.4, 'Space: Next Step\nS: Save Image\nQ: Quit',
-                           transform=self.ax_buttons.transAxes, fontsize=9)
+        self.ax_buttons.text(
+            0.1, 0.7, 'Controls:',
+            transform=self.ax_buttons.transAxes, fontsize=10)
+        self.ax_buttons.text(
+            0.1, 0.4, 'Space: Next Step\nS: Save Image\nQ: Quit',
+            transform=self.ax_buttons.transAxes, fontsize=9)
 
     def _on_slice_change(self, val):
         """切片滑块回调"""
         self.current_slice = int(val)
-        self.ax_slice_label.text(0.5, 0.5, f'Slice: {self.current_slice}',
-                                transform=self.ax_slice_label.transAxes,
-                                ha='center', va='center', fontsize=12)
+        self.ax_slice_label.text(
+            0.5, 0.5, f'Slice: {self.current_slice}',
+            transform=self.ax_slice_label.transAxes,
+            ha='center', va='center', fontsize=12)
         self._redraw()
 
-    def set_data(self,
-                analysis: np.ndarray,
-                variance: np.ndarray,
-                background: Optional[np.ndarray] = None):
+    def set_data(
+        self,
+        analysis: np.ndarray,
+        variance: np.ndarray,
+        background: Optional[np.ndarray] = None,
+    ):
         """
         设置显示数据
 
@@ -426,7 +439,7 @@ class InteractiveDashboard:
             bg_slice = None
 
         nx, ny = slice_data.shape
-        extent = [0, nx * self.resolution, 0, ny * self.resolution]
+        extent = (0, nx * self.resolution, 0, ny * self.resolution)
 
         if self.show_increment and bg_slice is not None:
             data = slice_data - bg_slice
@@ -441,16 +454,17 @@ class InteractiveDashboard:
         ax.set_ylabel('Y (m)')
         plt.colorbar(im, ax=ax)
 
-        self.fig.canvas.draw()
+        self.fig.canvas.draw()  # type: ignore[union-attr]
 
     def save_image(self, filepath: str):
         """保存当前图像"""
-        self.fig.savefig(filepath, dpi=150, bbox_inches='tight')
+        self.fig.savefig(filepath, dpi=150, bbox_inches='tight')  # type: ignore[union-attr]
         logger.info(f"图像已保存到: {filepath}")
 
     def connect_keyboard(self):
         """连接键盘事件"""
-        self.fig.canvas.mpl_connect('key_press_event', self._on_key_press)
+        self.fig.canvas.mpl_connect(  # type: ignore[union-attr]
+            'key_press_event', self._on_key_press)
 
     def _on_key_press(self, event):
         """键盘事件处理"""
@@ -468,12 +482,14 @@ class InteractiveDashboard:
             plt.close(self.fig)
 
 
-def create_summary_dashboard(analysis: np.ndarray,
-                            variance: np.ndarray,
-                            background: Optional[np.ndarray] = None,
-                            observations: Optional[np.ndarray] = None,
-                            resolution: float = 100.0,
-                            figsize: Tuple[int, int] = (16, 12)) -> Figure:
+def create_summary_dashboard(
+    analysis: np.ndarray,
+    variance: np.ndarray,
+    background: Optional[np.ndarray] = None,
+    observations: Optional[np.ndarray] = None,
+    resolution: float = 100.0,
+    figsize: Tuple[int, int] = (16, 12),
+) -> Figure:
     """
     创建综合摘要面板
 
@@ -498,8 +514,9 @@ def create_summary_dashboard(analysis: np.ndarray,
     else:
         data = analysis
     nx, ny = data.shape
-    extent = [0, nx * resolution, 0, ny * resolution]
-    im1 = ax1.imshow(data.T, origin='lower', cmap='viridis', extent=extent, aspect='auto')
+    extent = (0, nx * resolution, 0, ny * resolution)
+    im1 = ax1.imshow(data.T, origin='lower', cmap='viridis',
+                     extent=extent, aspect='auto')
     ax1.set_title('Analysis Field')
     ax1.set_xlabel('X (m)')
     ax1.set_ylabel('Y (m)')
@@ -539,7 +556,9 @@ def create_summary_dashboard(analysis: np.ndarray,
     ax4.set_title('Variance Distribution')
     ax4.set_xlabel('Variance')
     ax4.set_ylabel('Frequency')
-    ax4.axvline(np.mean(variance), color='red', linestyle='--', label=f'Mean: {np.mean(variance):.4f}')
+    mean_val = float(np.mean(variance))
+    ax4.axvline(mean_val, color='red', linestyle='--',
+                label=f'Mean: {mean_val:.4f}')
     ax4.legend()
 
     # 垂直廊线对比
@@ -586,9 +605,11 @@ def create_summary_dashboard(analysis: np.ndarray,
             f"观测数量: {len(observations)}",
         ])
 
-    ax6.text(0.1, 0.9, "\n".join(stats), transform=ax6.transAxes,
-            fontsize=10, verticalalignment='top',
-            fontfamily='monospace')
+    ax6.text(
+        0.1, 0.9, "\n".join(stats),
+        transform=ax6.transAxes,
+        fontsize=10, verticalalignment='top',
+        fontfamily='monospace')
 
     # 时间/空间平均廊线
     ax7 = fig.add_subplot(gs[2, :])

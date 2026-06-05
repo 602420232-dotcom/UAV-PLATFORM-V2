@@ -7,7 +7,6 @@
 
 
 import logging
-logger = logging.getLogger(__name__)
 
 from .config import (
     BaseConfig,
@@ -60,6 +59,7 @@ from .validation import (
     validate_assimilation_inputs
 )
 
+logger = logging.getLogger(__name__)
 
 __all__ = [
     # 配置

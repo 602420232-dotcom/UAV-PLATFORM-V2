@@ -31,7 +31,7 @@ class TestInputValidation:
     def test_validate_grid_consistency_valid(self):
         """测试有效网格一致性验证"""
         try:
-            from api.utils.validators import validate_grid_consistency
+            from api.utils.validators import validate_grid_consistency  # type: ignore[import-not-found]
         except ImportError:
             pytest.skip("validators module not available")
 
@@ -49,7 +49,7 @@ class TestInputValidation:
     def test_validate_grid_consistency_invalid(self):
         """测试无效网格一致性验证"""
         try:
-            from api.utils.validators import validate_grid_consistency
+            from api.utils.validators import validate_grid_consistency  # type: ignore[import-not-found]
         except ImportError:
             pytest.skip("validators module not available")
 
@@ -67,7 +67,7 @@ class TestInputValidation:
     def test_validate_observation_locations_valid(self):
         """测试有效观测位置验证"""
         try:
-            from api.utils.validators import validate_observation_locations
+            from api.utils.validators import validate_observation_locations  # type: ignore[import-not-found]
         except ImportError:
             pytest.skip("validators module not available")
 
@@ -83,7 +83,7 @@ class TestInputValidation:
     def test_validate_observation_locations_mismatch(self):
         """测试观测位置数量不匹配"""
         try:
-            from api.utils.validators import validate_observation_locations
+            from api.utils.validators import validate_observation_locations  # type: ignore[import-not-found]
         except ImportError:
             pytest.skip("validators module not available")
 
@@ -105,7 +105,7 @@ class TestAppException:
     def test_app_exception_init(self):
         """测试AppException初始化"""
         try:
-            from api.middleware.error_handler import AppException
+            from api.middleware.error_handler import AppException  # type: ignore[import-not-found]
         except ImportError:
             pytest.skip("error_handler module not available")
 
@@ -117,7 +117,7 @@ class TestAppException:
     def test_app_exception_default_details(self):
         """测试AppException默认details"""
         try:
-            from api.middleware.error_handler import AppException
+            from api.middleware.error_handler import AppException  # type: ignore[import-not-found]
         except ImportError:
             pytest.skip("error_handler module not available")
 
@@ -134,7 +134,7 @@ class TestSecurityValidation:
     def test_script_name_validation(self):
         """测试脚本名称验证"""
         try:
-            from common_utils.python_executor import PythonExecutor
+            from common_utils.python_executor import PythonExecutor  # type: ignore[import-not-found]
         except ImportError:
             pytest.skip("common_utils module not available")
 

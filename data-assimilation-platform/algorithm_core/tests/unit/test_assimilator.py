@@ -138,6 +138,7 @@ class TestObservationOperator:
         )
 
         # 验证是稀疏矩阵
+        assert H is not None
         assert hasattr(H, 'toarray') or hasattr(H, 'nnz')
         assert H.shape[0] == len(observations)
 

@@ -1,3 +1,15 @@
+"""
+遗传算法路径规划器
+
+使用遗传算法（Genetic Algorithm）进行无人机路径规划。
+通过选择、交叉、变异操作迭代优化路径，寻找最短且无碰撞的路径。
+
+特点：
+- 全局搜索能力强，不易陷入局部最优
+- 适合处理复杂约束条件
+- 支持多目标优化（距离、安全性等）
+"""
+
 import random
 import logging
 from typing import Tuple, Optional, List, Dict
@@ -14,10 +26,15 @@ class GeneticAlgorithmPlanner(BasePlanner):
     使用遗传算法（GA）进行路径规划，通过选择、交叉、变异操作优化路径。
     """
 
-    def __init__(self, start: Tuple[float, float], goal: Tuple[float, float],
-                 obstacles: Optional[List] = None,
-                 population_size: int = 50, generations: int = 100,
-                 mutation_rate: float = 0.1):
+    def __init__(
+        self,
+        start: Tuple[float, float],
+        goal: Tuple[float, float],
+        obstacles: Optional[List] = None,
+        population_size: int = 50,
+        generations: int = 100,
+        mutation_rate: float = 0.1
+    ):
         super().__init__(start=start, goal=goal, obstacles=obstacles)
         self.population_size = population_size
         self.generations = generations
@@ -47,8 +64,11 @@ class GeneticAlgorithmPlanner(BasePlanner):
         )
         return 1 / (total_distance + collision_penalty + 1e-6)
 
-    def select_parents(self, population: List[List[Tuple[float, float]]],
-                       fitnesses: List[float]):
+    def select_parents(
+        self,
+        population: List[List[Tuple[float, float]]],
+        fitnesses: List[float]
+    ):
         """Select two parent individuals using fitness-proportional (roulette wheel) selection."""
         total_fitness = sum(fitnesses)
         probabilities = [f / total_fitness for f in fitnesses]
@@ -85,8 +105,10 @@ class GeneticAlgorithmPlanner(BasePlanner):
 
     def plan(self) -> Dict:
         try:
-            population = [self.generate_individual()
-                          for _ in range(self.population_size)]
+            population = [
+                self.generate_individual()
+                for _ in range(self.population_size)
+            ]
             best_individual = None
             best_fitness = -float('inf')
 

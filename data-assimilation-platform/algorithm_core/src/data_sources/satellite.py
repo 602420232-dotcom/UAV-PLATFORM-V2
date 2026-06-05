@@ -8,7 +8,7 @@ import logging
 
 
 try:
-    from .base import DataSourceBase
+    from .base import DataSourceBase  # type: ignore[assignment]
 
 
 except ImportError:
@@ -109,7 +109,7 @@ class SatelliteDataSource(DataSourceBase):
         Returns:
             Any: 处理后的数据
         """
-        if not self.validate_data():
+        if not self.validate_data():  # type: ignore[attr-defined]
             return None
 
         try:
@@ -150,7 +150,7 @@ class SatelliteDataSource(DataSourceBase):
         Returns:
             Tuple[观测值列表, 观测位置列表, 观测误差列表]
         """
-        if not self.validate_data():
+        if not self.validate_data():  # type: ignore[attr-defined]
             return [], [], []
 
         try:

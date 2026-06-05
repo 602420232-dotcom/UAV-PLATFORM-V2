@@ -19,7 +19,8 @@ from bayesian_assimilation.utils.config import BaseConfig  # noqa: E402
 from bayesian_assimilation.models.three_dimensional_var import ThreeDimensionalVAR  # noqa: E402
 from bayesian_assimilation.models.enkf import EnKF  # noqa: E402
 from bayesian_assimilation.models.four_dimensional_var import FourDimensionalVar  # noqa: E402
-from bayesian_assimilation.models.enhanced_bayesian import EnhancedBayesianAssimilation  # noqa: E402
+from bayesian_assimilation.models.enhanced_bayesian import \
+    EnhancedBayesianAssimilation  # noqa: E402
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +31,11 @@ class HybridAssimilation(AssimilationBase):
     结合3D-VAR和EnKF的优势，支持多种算法组合
     """
 
-    def __init__(self, config: Optional[BaseConfig] = None, algorithm_types: List[str] = None):  # type: ignore
+    def __init__(
+        self,
+        config: Optional[BaseConfig] = None,
+        algorithm_types: List[str] = None
+    ):  # type: ignore
         """
         初始化混合同化器
 
@@ -84,15 +89,12 @@ class HybridAssimilation(AssimilationBase):
         if self.resolution is None:
             self.resolution = 50.0
 
-    def initialize_grid(self, domain_size: Tuple[float, float, float],
-                       resolution: Optional[float] = None):
-        """
-        初始化网格
-
-        Args:
-            domain_size: 域大小 (x, y, z)
-            resolution: 分辨率
-        """
+    def initialize_grid(
+        self,
+        domain_size: Tuple[float, float, float],
+        resolution: Optional[float] = None
+    ):
+        """初始化网格"""
         super().initialize_grid(domain_size, resolution)
         for name, algo in self.algorithms.items():
             algo.initialize_grid(domain_size, resolution)
@@ -135,7 +137,9 @@ class HybridAssimilation(AssimilationBase):
         results = {}
         for name, algo in self.algorithms.items():
             logger.info(f"执行 {name} 同化...")
-            analysis, variance = algo.assimilate(background, observations, obs_locations, obs_errors)
+            analysis, variance = algo.assimilate(
+                background, observations, obs_locations, obs_errors
+            )
             results[name] = {'analysis': analysis, 'variance': variance}
 
         analysis = None
@@ -187,7 +191,11 @@ class AdaptiveHybridAssimilation(HybridAssimilation):
     根据同化质量动态调整各算法权重
     """
 
-    def __init__(self, config: Optional[BaseConfig] = None, algorithm_types: List[str] = None):  # type: ignore
+    def __init__(
+        self,
+        config: Optional[BaseConfig] = None,
+        algorithm_types: List[str] = None
+    ):  # type: ignore
         super().__init__(config, algorithm_types)
         self.adaptation_rate = 0.1
         self.max_weight = 0.85
@@ -202,7 +210,9 @@ class AdaptiveHybridAssimilation(HybridAssimilation):
         scores = {}
 
         for name, algo in self.algorithms.items():
-            analysis, variance = algo.assimilate(background, observations, obs_locations, obs_errors)
+            analysis, variance = algo.assimilate(
+                background, observations, obs_locations, obs_errors
+            )
             results[name] = {'analysis': analysis, 'variance': variance}
 
             if analysis is not None:
@@ -222,9 +232,13 @@ class AdaptiveHybridAssimilation(HybridAssimilation):
 
             for name in self.weights:
                 if name == best_algo:
-                    self.weights[name] = min(self.weights[name] + self.adaptation_rate, self.max_weight)
+                    self.weights[name] = min(
+                        self.weights[name] + self.adaptation_rate, self.max_weight
+                    )
                 elif name == worst_algo:
-                    self.weights[name] = max(self.weights[name] - self.adaptation_rate, self.min_weight)
+                    self.weights[name] = max(
+                        self.weights[name] - self.adaptation_rate, self.min_weight
+                    )
 
             self._normalize_weights()
 
@@ -256,8 +270,11 @@ class AdaptiveHybridAssimilation(HybridAssimilation):
 
         return analysis, variance
 
-    def _build_observation_operator(self, obs_locations: np.ndarray,
-                                   nx: int, ny: int, nz: int) -> np.ndarray:
+    def _build_observation_operator(
+        self,
+        obs_locations: np.ndarray,
+        nx: int, ny: int, nz: int
+    ) -> np.ndarray:
         """
         构建观测算子用于评估
         """

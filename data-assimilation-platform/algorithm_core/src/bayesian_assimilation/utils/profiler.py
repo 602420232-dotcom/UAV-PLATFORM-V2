@@ -3,17 +3,17 @@
 提供代码性能剖析、函数耗时统计、调用次数分析等功能
 """
 
-import logging
-logger = logging.getLogger(__name__)
-
-import time
 import cProfile
-import pstats
 import io
+import logging
+import pstats
 import threading
-from typing import Dict, Any, Optional, Callable, Union, TypeVar, ParamSpec
+import time
 from contextlib import contextmanager
 from functools import wraps
+from typing import Any, Callable, Dict, Optional, ParamSpec, TypeVar, Union
+
+logger = logging.getLogger(__name__)
 
 
 class Profiler:
@@ -127,7 +127,9 @@ class Profiler:
                         return {
                             'total_time': data['total_time'],
                             'count': data['count'],
-                            'avg_time': data['total_time'] / data['count'] if data['count'] > 0 else 0,
+                            'avg_time': (
+                                data['total_time'] / data['count']
+                                if data['count'] > 0 else 0),
                             'min_time': data['min_time'] if data['min_time'] != float('inf') else 0,
                             'max_time': data['max_time']
                         }
@@ -142,7 +144,9 @@ class Profiler:
                         summary[key] = {
                             'total_time': data['total_time'],
                             'count': data['count'],
-                            'avg_time': data['total_time'] / data['count'] if data['count'] > 0 else 0
+                            'avg_time': (
+                                data['total_time'] / data['count']
+                                if data['count'] > 0 else 0)
                         }
                 return summary
 
@@ -189,7 +193,10 @@ class Profiler:
                     report_lines.append(f"\n>>> {name} <<<")
                     report_lines.append(f"  调用次数: {data['count']}")
                     report_lines.append(f"  总耗时: {data['total_time']:.6f} 秒")
-                    report_lines.append(f"  平均耗时: {data['total_time'] / data['count']:.6f} 秒" if data['count'] > 0 else "  平均耗时: N/A")
+                    avg_msg = (
+                        f"  平均耗时: {data['total_time'] / data['count']:.6f} 秒"
+                        if data['count'] > 0 else "  平均耗时: N/A")
+                    report_lines.append(avg_msg)
                     report_lines.append(f"  最小耗时: {data['min_time']:.6f} 秒")
                     report_lines.append(f"  最大耗时: {data['max_time']:.6f} 秒")
             else:
@@ -201,7 +208,9 @@ class Profiler:
                         report_lines.append(f"    调用次数: {data['count']}")
                         report_lines.append(f"    总耗时: {data['total_time']:.6f} 秒")
                         if data['count'] > 0:
-                            report_lines.append(f"    平均耗时: {data['total_time'] / data['count']:.6f} 秒")
+                            avg = data['total_time'] / data['count']
+                            report_lines.append(
+                                f"    平均耗时: {avg:.6f} 秒")
                             report_lines.append(f"    最小耗时: {data['min_time']:.6f} 秒")
                             report_lines.append(f"    最大耗时: {data['max_time']:.6f} 秒")
 
@@ -233,7 +242,13 @@ P = ParamSpec('P')
 R = TypeVar('R')
 
 
-def profile_function(func: Optional[Callable[P, R]] = None, *, name: Optional[str] = None) -> Union[Callable[[Callable[P, R]], Callable[P, R]], Callable[P, R]]:
+ReturnDecorator = Callable[[Callable[P, R]], Callable[P, R]]
+ReturnType = Union[ReturnDecorator, Callable[P, R]]
+
+
+def profile_function(
+        func: Optional[Callable[P, R]] = None,
+        *, name: Optional[str] = None) -> ReturnType:
     """
     函数性能分析装饰器
 

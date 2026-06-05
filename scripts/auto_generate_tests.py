@@ -67,7 +67,9 @@ def generate_test_file(python_file: str, functions: List[Dict]) -> Tuple[bool, s
 
     # Find src directory
     try:
-        src_idx = next(i for i, p in enumerate(parts) if p in ['src', 'algorithm_core', 'platform-core'])  # noqa: F841
+        src_idx = next(i for i, p in enumerate(parts) if p in [
+            'src', 'algorithm_core', 'platform-core'
+        ])  # noqa: F841
         base_name = path.stem
         test_file = path.parent / f'test_{base_name}.py'
 
@@ -211,7 +213,10 @@ def scan_and_generate_tests(root_dir: str) -> Dict[str, any]:
 
     # Scan Python files
     python_files = []
-    exclude_dirs = {'__pycache__', '.git', '.idea', 'venv', 'env', 'node_modules', 'test', 'tests', 'example', 'examples'}
+    exclude_dirs = {
+        '__pycache__', '.git', '.idea', 'venv', 'env',
+        'node_modules', 'test', 'tests', 'example', 'examples'
+    }
 
     for root, dirs, files in os.walk(root_dir):
         # Exclude directories
@@ -290,8 +295,7 @@ def scan_and_generate_tests(root_dir: str) -> Dict[str, any]:
     # Show examples
     if generated:
         print("\nExamples (first 5):")
-        for item in generated[:
-            5]:
+        for item in generated[:5]:
             print(f"\nGenerated: {item['test_file']}")
             print(f"  Contains: {item['functions']} test functions")
 

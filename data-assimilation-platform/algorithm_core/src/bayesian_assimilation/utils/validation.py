@@ -51,7 +51,7 @@ class DataValidator:
 
     @staticmethod
     def validate_shape(data: np.ndarray, expected_shape: Tuple[int, ...],
-                      name: str = 'data') -> bool:
+                       name: str = 'data') -> bool:
         """
         验证数组形状
 
@@ -74,7 +74,7 @@ class DataValidator:
 
     @staticmethod
     def validate_range(data: np.ndarray, min_val: float, max_val: float,
-                      name: str = 'data') -> bool:
+                       name: str = 'data') -> bool:
         """
         验证数组值范围
 
@@ -94,14 +94,17 @@ class DataValidator:
         data_max = np.max(data)
 
         if data_min < min_val or data_max > max_val:
-            logger.warning(f"{name} 值范围超出限制: [{data_min:.2f}, {data_max:.2f}], 期望 [{min_val}, {max_val}]")
+            logger.warning(
+                f"{name} 值范围超出限制: [{data_min:.2f}, {data_max:.2f}], "
+                f"期望 [{min_val}, {max_val}]"
+            )
             return False
 
         return True
 
     @staticmethod
     def validate_dict(data: Dict[str, Any], required_keys: List[str],
-                     name: str = 'data') -> bool:
+                      name: str = 'data') -> bool:
         """
         验证字典数据
 

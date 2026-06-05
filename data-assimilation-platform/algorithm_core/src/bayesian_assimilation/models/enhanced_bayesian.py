@@ -90,10 +90,12 @@ class EnhancedBayesianAssimilation(AssimilationBase):
 
         logger.info(f"🚀 开始增强贝叶斯同化，网格: {self.grid_shape}")
 
-        analysis, variance = self._assimilate_3dvar(background, observations, obs_locations, obs_errors)
+        analysis, variance = self._assimilate_3dvar(
+                background, observations, obs_locations, obs_errors)
 
         if self.ml_model or self.dl_model:
-            analysis, variance = self._enhance_with_ml(analysis, variance, background, observations, obs_locations)
+            analysis, variance = self._enhance_with_ml(
+                analysis, variance, background, observations, obs_locations)
 
         self.analysis = analysis
         self.variance = variance
@@ -221,7 +223,9 @@ class EnhancedBayesianAssimilation(AssimilationBase):
         使用机器学习模型增强同化结果
         """
         try:
-            input_data = self._prepare_ml_input(analysis, variance, background, observations, obs_locations)
+            input_data = self._prepare_ml_input(
+                analysis, variance, background, observations, obs_locations
+            )
 
             if self.dl_model:
                 enhanced_analysis = self.dl_model.predict(input_data)
@@ -318,7 +322,10 @@ class EnhancedBayesianAssimilation(AssimilationBase):
                 self.build_dl_model(X.shape[1:])
 
             if self.dl_model:
-                history = self.dl_model.fit(X, y, epochs=epochs, batch_size=batch_size, validation_split=0.2, verbose=1)
+                history = self.dl_model.fit(
+                    X, y, epochs=epochs, batch_size=batch_size,
+                    validation_split=0.2, verbose=1
+                )
 
                 self.history.append({
                     'timestamp': datetime.now().isoformat(),

@@ -181,12 +181,14 @@ class ConflictDetector:
                     )
                     time_seps.append(sep)
             if time_seps:
+                mean_sep = sum(time_seps) / len(time_seps)
+                variance = sum((s - mean_sep) ** 2 for s in time_seps) / len(time_seps)
                 separations_over_time.append({
                     'time': t * self.time_step,
-                    'mean': sum(time_seps) / len(time_seps),
+                    'mean': mean_sep,
                     'min': min(time_seps),
                     'max': max(time_seps),
-                    'std': math.sqrt(sum((s - sum(time_seps) / len(time_seps))**2 for s in time_seps) / len(time_seps))
+                    'std': math.sqrt(variance)
                 })
 
         avg_seps = [s['mean'] for s in separations_over_time]

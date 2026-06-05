@@ -11,6 +11,7 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import com.uav.common.script.PythonScriptInvoker;
 import com.uav.wrf.processor.service.WrfDataService;
 
 import java.util.Map;
@@ -29,12 +30,17 @@ class WrfControllerEnhancedTest {
     @Mock
     private WrfDataService wrfDataService;
 
+    @Mock
+    private PythonScriptInvoker pythonScriptInvoker;
+
     @BeforeEach
     void setUp() {
-        wrfController = new WrfController(wrfDataService);
+        wrfController = new WrfController(wrfDataService, pythonScriptInvoker);
         ReflectionTestUtils.setField(wrfController, "pythonScriptPath", "wrf_processor.py");
         ReflectionTestUtils.setField(wrfController, "dataPath", "./data");
-        ReflectionTestUtils.setField(wrfController, "timeout", 30000);
+
+        when(pythonScriptInvoker.execute(anyString(), anyString(), anyMap()))
+            .thenReturn("{\"success\": true}");
 
         when(wrfDataService.getWeatherData(anyString())).thenReturn(Map.of("success", true, "data", Map.of()));
         when(wrfDataService.getStatistics(anyString())).thenReturn(Map.of("success", true, "data", Map.of()));

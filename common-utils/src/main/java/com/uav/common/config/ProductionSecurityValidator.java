@@ -25,16 +25,6 @@ public class ProductionSecurityValidator {
             "qwerty"
     );
 
-    private static final List<String> CRITICAL_VARS = Arrays.asList(
-            "DB_PASSWORD",
-            "JWT_SECRET",
-            "SECURITY_USER_PASSWORD",
-            "GRAFANA_ADMIN_PASSWORD",
-            "SPRING_DATASOURCE_PASSWORD",
-            "REDIS_PASSWORD",
-            "RABBITMQ_PASSWORD"
-    );
-
     @Value("${spring.profiles.active:}")
     private String activeProfile;
 

@@ -59,7 +59,10 @@ def fix_duplicate_footers(root_dir):
 
                     # 2. 移除重复的新页脚（只保留最后一个）
                     # 先移除所有现有的新页脚
-                    new_footer_pattern = r'---\s*\n> \*\*最后更新\*\*: 2026-05-08  \n> \*\*版本\*\*: 2\.1  \n> \*\*维护者\*\*: DITHIOTHREITOL'
+                    new_footer_pattern = (
+                    r'---\s*\n> \*\*最后更新\*\*: 2026-05-08  \n'
+                    r'> \*\*版本\*\*: 2\.1  \n> \*\*维护者\*\*: DITHIOTHREITOL'
+                )
                     content = re.sub(new_footer_pattern, '', content)
 
                     # 清理多余的空行和分隔线

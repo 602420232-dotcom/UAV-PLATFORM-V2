@@ -1,4 +1,4 @@
-"""
+r"""
 Auto-generated unit test
 Source: d:\Developer\workplace\py\iteam\trae\data-assimilation-platform\algorithm_core\src\data_sources\buoy.py
 Generated: 2026-05-08 12:35:50
@@ -8,7 +8,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 import pytest
-from buoy import *
+from buoy import BuoyDataSource
 
 
 class TestBasic:
@@ -23,33 +23,23 @@ class TestBuoyDataSource:
     """Test class: BuoyDataSource"""
 
     @pytest.fixture
-
     def buoydatasource_instance(self):
-    """Create instance for BuoyDataSource"""
+        """Create instance for BuoyDataSource"""
         # Initialize with default parameters for testing
         return None
 
     def test_fetch(self):
-    """Test method: fetch"""
+        """Test method: fetch"""
         # Test logic: Verify basic functionality
         # Args: self, params
+        result = None
         assert result is not None  # Assertion completed
 
-
-class TestBuoyDataSource:
-    """Test class: BuoyDataSource"""
-
-    @pytest.fixture
-
-    def buoydatasource_instance(self):
-    """Create instance for BuoyDataSource"""
-        # Initialize with default parameters for testing
-        return None
-
     def test_get_metadata(self):
-    """Test method: get_metadata"""
+        """Test method: get_metadata"""
         # Test logic: Verify basic functionality
         # Args: self
+        result = None
         assert result is not None  # Assertion completed
 
 

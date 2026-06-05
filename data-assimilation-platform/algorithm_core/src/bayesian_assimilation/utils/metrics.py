@@ -142,7 +142,7 @@ class AssimilationMetrics:
 
     @staticmethod
     def calculate_observation_impact(observations: np.ndarray, analysis: np.ndarray,
-                                    obs_locations: np.ndarray) -> float:
+                                     obs_locations: np.ndarray) -> float:
         """计算观测影响"""
         if len(observations) == 0:
             return 0.0
@@ -160,12 +160,16 @@ class AssimilationMetrics:
 
     @staticmethod
     def compute_all(background: np.ndarray, analysis: np.ndarray, variance: np.ndarray,
-                   observations: Optional[np.ndarray] = None,
-                   obs_locations: Optional[np.ndarray] = None) -> Dict[str, Any]:
+                    observations: Optional[np.ndarray] = None,
+                    obs_locations: Optional[np.ndarray] = None) -> Dict[str, Any]:
         """计算所有同化指标"""
+        improvement = AssimilationMetrics.calculate_analysis_improvement(
+            background, analysis)
+        spread = AssimilationMetrics.calculate_spread_reduction(
+            background, analysis)
         metrics = {
-            'analysis_improvement': AssimilationMetrics.calculate_analysis_improvement(background, analysis),
-            'spread_reduction': AssimilationMetrics.calculate_spread_reduction(background, analysis),
+            'analysis_improvement': improvement,
+            'spread_reduction': spread,
             'mean_analysis': float(np.mean(analysis)),
             'mean_variance': float(np.mean(variance)),
             'max_variance': float(np.max(variance)),

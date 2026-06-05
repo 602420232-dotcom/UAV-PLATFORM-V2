@@ -30,7 +30,8 @@ class EnKF(AssimilationBase):
         super().__init__(config)
         self.ensemble_size = self._get_config_value(config, 'ensemble_size', 30)
         self.background_error_scale = self._get_config_value(config, 'background_error_scale', 1.0)
-        self.observation_error_scale = self._get_config_value(config, 'observation_error_scale', 0.1)
+        self.observation_error_scale = self._get_config_value(
+            config, 'observation_error_scale', 0.1)
         self._ensure_defaults()
 
     def _get_config_value(self, config, attr_name, default_value):

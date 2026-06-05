@@ -1,4 +1,4 @@
-"""
+r"""
 Auto-generated unit test
 Source: d:\Developer\workplace\py\iteam\trae\data-assimilation-platform\algorithm_core\src\bayesian_assimilation\utils\metrics.py
 Generated: 2026-05-08 12:35:50
@@ -8,7 +8,6 @@ import logging
 logger = logging.getLogger(__name__)
 
 import pytest
-from metrics import *
 
 
 class TestBasic:
@@ -23,50 +22,30 @@ class TestPerformanceMetrics:
     """Test class: PerformanceMetrics"""
 
     @pytest.fixture
-
     def performancemetrics_instance(self):
-    """Create instance for PerformanceMetrics"""
+        """Create instance for PerformanceMetrics"""
         # Initialize with default parameters for testing
         return None
 
     def test_start(self):
-    """Test method: start"""
+        """Test method: start"""
         # Test logic: Verify basic functionality
         # Args: self
+        result = None
         assert result is not None  # Assertion completed
-
-
-class TestPerformanceMetrics:
-    """Test class: PerformanceMetrics"""
-
-    @pytest.fixture
-
-    def performancemetrics_instance(self):
-    """Create instance for PerformanceMetrics"""
-        # Initialize with default parameters for testing
-        return None
 
     def test_stop(self):
-    """Test method: stop"""
+        """Test method: stop"""
         # Test logic: Verify basic functionality
         # Args: self
+        result = None
         assert result is not None  # Assertion completed
 
-
-class TestPerformanceMetrics:
-    """Test class: PerformanceMetrics"""
-
-    @pytest.fixture
-
-    def performancemetrics_instance(self):
-    """Create instance for PerformanceMetrics"""
-        # Initialize with default parameters for testing
-        return None
-
     def test_get_metrics(self):
-    """Test method: get_metrics"""
+        """Test method: get_metrics"""
         # Test logic: Verify basic functionality
         # Args: self
+        result = None
         assert result is not None  # Assertion completed
 
 
@@ -74,152 +53,72 @@ class TestDataQualityMetrics:
     """Test class: DataQualityMetrics"""
 
     @pytest.fixture
-
     def dataqualitymetrics_instance(self):
-    """Create instance for DataQualityMetrics"""
+        """Create instance for DataQualityMetrics"""
         # Initialize with default parameters for testing
         return None
 
     def test_calculate_mean(self):
-    """Test method: calculate_mean"""
+        """Test method: calculate_mean"""
         # Test logic: Verify basic functionality
         # Args: data
+        result = None
         assert result is not None  # Assertion completed
-
-
-class TestDataQualityMetrics:
-    """Test class: DataQualityMetrics"""
-
-    @pytest.fixture
-
-    def dataqualitymetrics_instance(self):
-    """Create instance for DataQualityMetrics"""
-        # Initialize with default parameters for testing
-        return None
 
     def test_calculate_std(self):
-    """Test method: calculate_std"""
+        """Test method: calculate_std"""
         # Test logic: Verify basic functionality
         # Args: data
+        result = None
         assert result is not None  # Assertion completed
-
-
-class TestDataQualityMetrics:
-    """Test class: DataQualityMetrics"""
-
-    @pytest.fixture
-
-    def dataqualitymetrics_instance(self):
-    """Create instance for DataQualityMetrics"""
-        # Initialize with default parameters for testing
-        return None
 
     def test_calculate_min(self):
-    """Test method: calculate_min"""
+        """Test method: calculate_min"""
         # Test logic: Verify basic functionality
         # Args: data
+        result = None
         assert result is not None  # Assertion completed
-
-
-class TestDataQualityMetrics:
-    """Test class: DataQualityMetrics"""
-
-    @pytest.fixture
-
-    def dataqualitymetrics_instance(self):
-    """Create instance for DataQualityMetrics"""
-        # Initialize with default parameters for testing
-        return None
 
     def test_calculate_max(self):
-    """Test method: calculate_max"""
+        """Test method: calculate_max"""
         # Test logic: Verify basic functionality
         # Args: data
+        result = None
         assert result is not None  # Assertion completed
-
-
-class TestDataQualityMetrics:
-    """Test class: DataQualityMetrics"""
-
-    @pytest.fixture
-
-    def dataqualitymetrics_instance(self):
-    """Create instance for DataQualityMetrics"""
-        # Initialize with default parameters for testing
-        return None
 
     def test_calculate_range(self):
-    """Test method: calculate_range"""
+        """Test method: calculate_range"""
         # Test logic: Verify basic functionality
         # Args: data
+        result = None
         assert result is not None  # Assertion completed
-
-
-class TestDataQualityMetrics:
-    """Test class: DataQualityMetrics"""
-
-    @pytest.fixture
-
-    def dataqualitymetrics_instance(self):
-    """Create instance for DataQualityMetrics"""
-        # Initialize with default parameters for testing
-        return None
 
     def test_calculate_valid_ratio(self):
-    """Test method: calculate_valid_ratio"""
+        """Test method: calculate_valid_ratio"""
         # Test logic: Verify basic functionality
         # Args: data
+        result = None
         assert result is not None  # Assertion completed
-
-
-class TestDataQualityMetrics:
-    """Test class: DataQualityMetrics"""
-
-    @pytest.fixture
-
-    def dataqualitymetrics_instance(self):
-    """Create instance for DataQualityMetrics"""
-        # Initialize with default parameters for testing
-        return None
 
     def test_calculate_outlier_ratio(self):
-    """Test method: calculate_outlier_ratio"""
+        """Test method: calculate_outlier_ratio"""
         # Test logic: Verify basic functionality
         # Args: data, threshold
+        result = None
         assert result is not None  # Assertion completed
-
-
-class TestDataQualityMetrics:
-    """Test class: DataQualityMetrics"""
-
-    @pytest.fixture
-
-    def dataqualitymetrics_instance(self):
-    """Create instance for DataQualityMetrics"""
-        # Initialize with default parameters for testing
-        return None
 
     def test_calculate_correlation(self):
-    """Test method: calculate_correlation"""
+        """Test method: calculate_correlation"""
         # Test logic: Verify basic functionality
         # Args: data1, data2
+        result = None
         assert result is not None  # Assertion completed
 
-
-class TestDataQualityMetrics:
-    """Test class: DataQualityMetrics"""
-
-    @pytest.fixture
-
-    def dataqualitymetrics_instance(self):
-    """Create instance for DataQualityMetrics"""
-        # Initialize with default parameters for testing
-        return None
-
     def test_compute_all(self):
-    """Test method: compute_all"""
+        """Test method: compute_all"""
         # Test logic: Verify basic functionality
         # Args: data, name
+        result = None
         assert result is not None  # Assertion completed
 
 
@@ -227,67 +126,37 @@ class TestAssimilationMetrics:
     """Test class: AssimilationMetrics"""
 
     @pytest.fixture
-
     def assimilationmetrics_instance(self):
-    """Create instance for AssimilationMetrics"""
+        """Create instance for AssimilationMetrics"""
         # Initialize with default parameters for testing
         return None
 
     def test_calculate_analysis_improvement(self):
-    """Test method: calculate_analysis_improvement"""
+        """Test method: calculate_analysis_improvement"""
         # Test logic: Verify basic functionality
         # Args: background, analysis
+        result = None
         assert result is not None  # Assertion completed
-
-
-class TestAssimilationMetrics:
-    """Test class: AssimilationMetrics"""
-
-    @pytest.fixture
-
-    def assimilationmetrics_instance(self):
-    """Create instance for AssimilationMetrics"""
-        # Initialize with default parameters for testing
-        return None
 
     def test_calculate_spread_reduction(self):
-    """Test method: calculate_spread_reduction"""
+        """Test method: calculate_spread_reduction"""
         # Test logic: Verify basic functionality
         # Args: background, analysis
+        result = None
         assert result is not None  # Assertion completed
-
-
-class TestAssimilationMetrics:
-    """Test class: AssimilationMetrics"""
-
-    @pytest.fixture
-
-    def assimilationmetrics_instance(self):
-    """Create instance for AssimilationMetrics"""
-        # Initialize with default parameters for testing
-        return None
 
     def test_calculate_observation_impact(self):
-    """Test method: calculate_observation_impact"""
+        """Test method: calculate_observation_impact"""
         # Test logic: Verify basic functionality
         # Args: observations, analysis, obs_locations
+        result = None
         assert result is not None  # Assertion completed
 
-
-class TestAssimilationMetrics:
-    """Test class: AssimilationMetrics"""
-
-    @pytest.fixture
-
-    def assimilationmetrics_instance(self):
-    """Create instance for AssimilationMetrics"""
-        # Initialize with default parameters for testing
-        return None
-
     def test_compute_all(self):
-    """Test method: compute_all"""
+        """Test method: compute_all"""
         # Test logic: Verify basic functionality
         # Args: background, analysis, variance, observations, obs_locations
+        result = None
         assert result is not None  # Assertion completed
 
 

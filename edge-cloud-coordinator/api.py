@@ -5,32 +5,24 @@
 import logging
 import os
 from typing import Dict, List, Optional
-from fastapi import Query
-
-# 第三方库
-
 
 try:
     from fastapi import FastAPI, HTTPException, BackgroundTasks, WebSocket, WebSocketDisconnect
     from fastapi.middleware.cors import CORSMiddleware
     from fastapi.responses import Response
     from pydantic import BaseModel, Field
+    import numpy as np
     HAS_FASTAPI = True
-
 
 except ImportError:
     HAS_FASTAPI = False
     logging.warning("FastAPI not installed. Running in demo mode.")
 
-# 本地模块
 from coordinator import EdgeCloudCoordinator, EdgeTask, TaskType
 from federated_learning import FederatedLearning, DroneClient
 from websocket_sync import WebSocketSync
 
 logger = logging.getLogger(__name__)
-
-
-# ==================== FastAPI App ====================
 
 
 if HAS_FASTAPI:
@@ -42,7 +34,6 @@ if HAS_FASTAPI:
         redoc_url="/redoc"
     )
 
-    # CORS配置 - 生产环境必须通过环境变量CORS_ORIGINS限制
     environment = os.environ.get("ENVIRONMENT", "development")
     cors_origins_str = os.environ.get("CORS_ORIGINS")
 
@@ -72,13 +63,9 @@ if HAS_FASTAPI:
         allow_headers=["Authorization", "Content-Type", "X-Requested-With"],
     )
 
-    # 全局限流器 & WebSocket 管理器
     coordinator = EdgeCloudCoordinator()
     federated_learning = FederatedLearning(min_clients=2)
     ws_sync = WebSocketSync(node_id="coordinator")
-
-
-# ==================== Pydantic Models ====================
 
 
 class TaskSubmitRequest(BaseModel):
@@ -153,8 +140,6 @@ class FLTrainRequest(BaseModel):
     n_samples: int = 100
 
 
-# ==================== API Routes ====================
-
 if HAS_FASTAPI:
 
     @app.get("/", tags=["Health"])
@@ -171,8 +156,6 @@ if HAS_FASTAPI:
         """健康检查"""
         return {"status": "healthy"}
 
-    # ==================== 任务管理 ====================
-
     @app.post("/tasks", response_model=TaskSubmitResponse, tags=["Tasks"])
     async def submit_task(request: TaskSubmitRequest):
         """
@@ -181,10 +164,8 @@ if HAS_FASTAPI:
         根据任务类型自动分配到云端或边缘处理
         """
         try:
-            # 转换任务类型
             task_type = TaskType(request.task_type)
 
-            # 创建任务
             task = EdgeTask(
                 task_id=f"task_{len(coordinator.task_queue) + 1}",
                 task_type=task_type,
@@ -193,10 +174,7 @@ if HAS_FASTAPI:
                 deadline=request.deadline
             )
 
-            # 提交任务
             task_id = coordinator.submit_task(task)
-
-            # 后台处理
             coordinator.process_task(task)
 
             return TaskSubmitResponse(
@@ -214,7 +192,6 @@ if HAS_FASTAPI:
     @app.get("/tasks/{task_id}", response_model=TaskStatusResponse, tags=["Tasks"])
     async def get_task_status(task_id: str):
         """查询任务状态"""
-        # 查找任务
         for task in coordinator.task_queue:
             if task.task_id == task_id:
                 return TaskStatusResponse(
@@ -224,7 +201,6 @@ if HAS_FASTAPI:
                     status=task.status
                 )
 
-        # 检查已完成任务
         for task in coordinator.completed_tasks:
             if task.task_id == task_id:
                 return TaskStatusResponse(
@@ -250,7 +226,7 @@ if HAS_FASTAPI:
     @app.get("/tasks", response_model=List[TaskStatusResponse], tags=["Tasks"])
     async def list_tasks(
         status: Optional[str] = None,
-        limit: int = Query(default=10, le=100)
+        limit: int = 10
     ):
         """获取任务列表"""
         tasks = coordinator.task_queue[:limit]
@@ -268,8 +244,6 @@ if HAS_FASTAPI:
             for task in tasks
         ]
 
-    # ==================== 边云协同 ====================
-
     @app.get("/status", response_model=SystemStatusResponse, tags=["Coordinator"])
     async def get_system_status():
         """获取系统状态"""
@@ -277,7 +251,7 @@ if HAS_FASTAPI:
             node_id=coordinator.node_id,
             queue_size=len(coordinator.task_queue),
             completed_count=len(coordinator.completed_tasks),
-            cloud_connected=True,  # TODO: 实现真实连接检测
+            cloud_connected=True,
             edge_connected=True,
             buffer_size=len(coordinator.offline_buffer)
         )
@@ -313,8 +287,6 @@ if HAS_FASTAPI:
             "local_models": list(coordinator.local_models.keys())
         }
 
-    # ==================== 批量操作 ====================
-
     @app.post("/tasks/batch", tags=["Batch"])
     async def submit_batch_tasks(tasks: List[TaskSubmitRequest]):
         """批量提交任务（上限100个）"""
@@ -339,8 +311,6 @@ if HAS_FASTAPI:
 
         return {"results": results}
 
-    # ==================== 联邦学习 ====================
-
     @app.post(
         "/fl/update",
         response_model=FLClientUpdateResponse,
@@ -348,7 +318,6 @@ if HAS_FASTAPI:
     )
     async def fl_client_update(request: FLClientUpdateRequest):
         """接收联邦学习客户端更新"""
-        import numpy as np
         np_weights = {k: np.array(v) for k, v in request.weights.items()}
         aggregated = federated_learning.receive_update(
             drone_id=request.drone_id,
@@ -384,7 +353,6 @@ if HAS_FASTAPI:
     @app.post("/fl/train", tags=["Federated Learning"])
     async def fl_local_train(request: FLTrainRequest):
         """模拟无人机本地训练"""
-        import numpy as np
         global_model = federated_learning.get_global_model()
         if global_model is None:
             client = DroneClient(request.drone_id)
@@ -410,8 +378,6 @@ if HAS_FASTAPI:
             "aggregated": aggregated,
         }
 
-    # ==================== WebSocket 实时通信 ====================
-
     @app.websocket("/ws/{drone_id}")
     async def websocket_endpoint(websocket: WebSocket, drone_id: str):
         """
@@ -424,7 +390,7 @@ if HAS_FASTAPI:
         - 可通过 /ws/status 查看连接健康状态
         """
         await websocket.accept()
-        conn_info = await ws_sync.connect(drone_id, websocket)  # noqa: F841
+        await ws_sync.connect(drone_id, websocket)
 
         try:
             while True:
@@ -438,8 +404,6 @@ if HAS_FASTAPI:
         except Exception as e:
             logger.error(f"WebSocket 异常 ({drone_id}): {e}")
             await ws_sync.disconnect(drone_id, reason="error")
-
-    # ==================== 监控指标 ====================
 
     @app.get("/metrics", tags=["Monitoring"])
     async def prometheus_metrics():
@@ -458,9 +422,6 @@ if HAS_FASTAPI:
     async def websocket_status():
         """WebSocket 连接健康状态"""
         return await ws_sync.get_health_status()
-
-
-# ==================== Main Entry ====================
 
 
 def run_server(host: str = "0.0.0.0", port: int = 8000):

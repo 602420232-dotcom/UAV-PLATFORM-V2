@@ -38,7 +38,10 @@ class CodeQualityChecker:
     def _find_code_files(self) -> List[str]:
         """Find all code files"""
         code_files = []
-        exclude_dirs = {'__pycache__', '.git', '.idea', 'venv', 'node_modules', 'build', 'dist', 'target'}
+        exclude_dirs = {
+            '__pycache__', '.git', '.idea', 'venv',
+            'node_modules', 'build', 'dist', 'target'
+        }
 
         extensions = {'.py', '.java', '.js', '.ts', '.jsx', '.tsx'}
 
@@ -133,8 +136,7 @@ class CodeQualityChecker:
             f.write("-" * 60 + "\n")
 
             if self.info:
-                for item in self.info[:
-                    20]:  # Show first 20
+                for item in self.info[:20]:  # Show first 20
                     f.write(f"\n{item['file']}: {item['type']} ({item['count']})\n")
             else:
                 f.write("No additional info\n")
@@ -162,8 +164,7 @@ class CodeQualityChecker:
 
         if self.warnings:
             print("\nTop warnings:")
-            for warning in self.warnings[:
-                10]:
+            for warning in self.warnings[:10]:
                 print(f"  - {warning['type']} ({warning['count']})")
                 print(f"    {warning['file']}")
 

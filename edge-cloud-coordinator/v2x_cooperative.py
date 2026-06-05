@@ -14,11 +14,11 @@ logger = logging.getLogger(__name__)
 
 
 class V2XMessageType(Enum):
-    BSM = "basic_safety"  # 基本安全消息
-    PSM = "personal_safety"  # 个人安全消息
-    MAP = "map_data"  # 地图数据
+    BSM = "basic_safety"       # 基本安全消息
+    PSM = "personal_safety"    # 个人安全消息
+    MAP = "map_data"           # 地图数据
     SPaT = "signal_phase_timing"  # 信号灯相位
-    RSM = "roadside_safety"  # 路侧安全
+    RSM = "roadside_safety"    # 路侧安全
     CAM = "cooperative_awareness"  # 协同感知
 
 
@@ -76,16 +76,26 @@ class V2XCommunicator:
             handler(msg)
 
     def _calc_distance(self, pos1: Tuple, pos2: Tuple) -> float:
-        return np.sqrt((pos1[0] - pos2[0])**2 + (pos1[1] - pos2[1])**2 +
-                       (pos1[2] - pos2[2])**2) if len(pos1) > 2 else np.sqrt(
-            (pos1[0] - pos2[0])**2 + (pos1[1] - pos2[1])**2)
+        if len(pos1) > 2:
+            return np.sqrt(
+                (pos1[0] - pos2[0])**2 +
+                (pos1[1] - pos2[1])**2 +
+                (pos1[2] - pos2[2])**2
+            )
+        return np.sqrt(
+            (pos1[0] - pos2[0])**2 +
+            (pos1[1] - pos2[1])**2
+        )
 
     def _get_self_position(self) -> Tuple:
         return (0, 0, 0)
 
     def get_nearby_vehicles(self) -> List[dict]:
-        return [{"id": vid, **vinfo} for vid, vinfo in self.nearby_vehicles.items()
-                if time.time() - vinfo["last_seen"] < 5]
+        return [
+            {"id": vid, **vinfo}
+            for vid, vinfo in self.nearby_vehicles.items()
+            if time.time() - vinfo["last_seen"] < 5
+        ]
 
 
 class CooperativePerception:
@@ -95,8 +105,13 @@ class CooperativePerception:
         self.observations: Dict[str, List[dict]] = {}
         self.fused_map = {}
 
-    def share_observation(self, drone_id: str, obstacles: List[dict],
-                          weather: dict, position: Tuple[float, float]):
+    def share_observation(
+        self,
+        drone_id: str,
+        obstacles: List[dict],
+        weather: dict,
+        position: Tuple[float, float]
+    ):
         """共享感知数据"""
         if drone_id not in self.observations:
             self.observations[drone_id] = []
@@ -112,8 +127,7 @@ class CooperativePerception:
         """融合多源观测"""
         all_obstacles = {}
         for did, obs_list in self.observations.items():
-            for obs in obs_list[-5:
-                                ]:
+            for obs in obs_list[-5:]:
                 for ob in obs.get("obstacles", []):
                     key = (round(ob.get("lon", 0), 4), round(ob.get("lat", 0), 4))
                     if key in all_obstacles:
@@ -138,8 +152,12 @@ class SwarmIntelligence:
         self.consensus_threshold = 0.6
 
     def register_drone(self, drone_id: str, capability: List[str] = None):
-        self.drones[drone_id] = {"id": drone_id, "capabilities": capability or [],
-                                 "votes": {}, "last_vote": 0}
+        self.drones[drone_id] = {
+            "id": drone_id,
+            "capabilities": capability or [],
+            "votes": {},
+            "last_vote": 0
+        }
 
     def propose_route(self, proposer: str, route: List[Tuple]) -> dict:
         """蜂群路线提议与共识"""
@@ -157,8 +175,10 @@ class SwarmIntelligence:
                 votes_against += 1
 
         consensus = votes_for / total >= self.consensus_threshold
-        logger.info(f"蜂群共识: {proposer} 路线提议 {'通过' if consensus else '拒绝'} "
-                    f"({votes_for}/{total})")
+        logger.info(
+            f"蜂群共识: {proposer} 路线提议 {'通过' if consensus else '拒绝'} "
+            f"({votes_for}/{total})"
+        )
         return {
             "proposer": proposer,
             "consensus_reached": consensus,

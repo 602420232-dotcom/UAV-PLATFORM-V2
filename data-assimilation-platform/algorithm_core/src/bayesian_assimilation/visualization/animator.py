@@ -61,16 +61,16 @@ class TimeSeriesAnimator:
 
             if slice_axis == 0:
                 data = variance_fields[frame][slice_index, :, :]
-                extent = [0, variance_fields[frame].shape[1] * self.resolution,
-                         0, variance_fields[frame].shape[2] * self.resolution]
+                extent = (0, variance_fields[frame].shape[1] * self.resolution,
+                          0, variance_fields[frame].shape[2] * self.resolution)
             elif slice_axis == 1:
                 data = variance_fields[frame][:, slice_index, :]
-                extent = [0, variance_fields[frame].shape[0] * self.resolution,
-                         0, variance_fields[frame].shape[2] * self.resolution]
+                extent = (0, variance_fields[frame].shape[0] * self.resolution,
+                          0, variance_fields[frame].shape[2] * self.resolution)
             else:
                 data = variance_fields[frame][:, :, slice_index]
-                extent = [0, variance_fields[frame].shape[0] * self.resolution,
-                         0, variance_fields[frame].shape[1] * self.resolution]
+                extent = (0, variance_fields[frame].shape[0] * self.resolution,
+                          0, variance_fields[frame].shape[1] * self.resolution)
 
             im = ax.imshow(data.T, origin='lower', cmap=cmap, extent=extent, aspect='auto')
 
@@ -85,7 +85,7 @@ class TimeSeriesAnimator:
             return [im]
 
         ani = FuncAnimation(fig, update, frames=len(variance_fields),
-                           interval=interval, blit=True)
+                            interval=interval, blit=True)
 
         logger.info(f"创建方差演变动画: {len(variance_fields)} 帧")
         return ani
@@ -137,9 +137,9 @@ class TimeSeriesAnimator:
             speed = np.sqrt(u_slice**2 + v_slice**2)
 
             quiver = ax.quiver(X[::skip, ::skip], Y[::skip, ::skip],
-                              u_slice[::skip, ::skip], v_slice[::skip, ::skip],
-                              speed[::skip, ::skip], cmap='coolwarm',
-                              scale=100, width=0.002)
+                               u_slice[::skip, ::skip], v_slice[::skip, ::skip],
+                               speed[::skip, ::skip], cmap='coolwarm',
+                               scale=100, width=0.002)
 
             if times:
                 ax.set_title(f'{title} - {times[frame]}')
@@ -154,20 +154,22 @@ class TimeSeriesAnimator:
             return [quiver]
 
         ani = FuncAnimation(fig, update, frames=len(u_fields),
-                           interval=interval, blit=True)
+                            interval=interval, blit=True)
 
         logger.info(f"创建风场动画: {len(u_fields)} 帧")
         return ani
 
-    def create_assimilation_comparison_animation(self,
-                                                  backgrounds: List[np.ndarray],
-                                                  analyses: List[np.ndarray],
-                                                  observations: Optional[List[np.ndarray]] = None,
-                                                  times: Optional[List[str]] = None,
-                                                  slice_index: int = -1,
-                                                  title: str = 'Assimilation Comparison',
-                                                  interval: int = 300,
-                                                  figsize: Tuple[int, int] = (16, 5)) -> FuncAnimation:
+    def create_assimilation_comparison_animation(
+        self,
+        backgrounds: List[np.ndarray],
+        analyses: List[np.ndarray],
+        observations: Optional[List[np.ndarray]] = None,
+        times: Optional[List[str]] = None,
+        slice_index: int = -1,
+        title: str = 'Assimilation Comparison',
+        interval: int = 300,
+        figsize: Tuple[int, int] = (16, 5),
+    ) -> FuncAnimation:
         """
         创建同化效果对比动画
 
@@ -201,18 +203,19 @@ class TimeSeriesAnimator:
             vmax = max(np.nanmax(bg_slice), np.nanmax(analysis_slice))
 
             axes[0].imshow(bg_slice.T, origin='lower', cmap='RdBu_r',
-                          vmin=vmin, vmax=vmax, extent=extent)
+                           vmin=vmin, vmax=vmax, extent=extent)
             axes[0].set_title('Background')
             axes[0].set_xlabel('X (m)')
             axes[0].set_ylabel('Y (m)')
 
             axes[1].imshow(analysis_slice.T, origin='lower', cmap='RdBu_r',
-                          vmin=vmin, vmax=vmax, extent=extent)
+                           vmin=vmin, vmax=vmax, extent=extent)
             axes[1].set_title('Analysis')
             axes[1].set_xlabel('X (m)')
             axes[1].set_ylabel('Y (m)')
 
-            im3 = axes[2].imshow(increment.T, origin='lower', cmap='RdBu_r', extent=extent)  # noqa: F841
+            im3 = axes[2].imshow(  # noqa: F841
+                increment.T, origin='lower', cmap='RdBu_r', extent=extent)
             axes[2].set_title('Increment')
             axes[2].set_xlabel('X (m)')
             axes[2].set_ylabel('Y (m)')
@@ -225,7 +228,7 @@ class TimeSeriesAnimator:
             return []
 
         ani = FuncAnimation(fig, update, frames=len(backgrounds),
-                           interval=interval, blit=False)
+                            interval=interval, blit=False)
 
         logger.info(f"创建同化对比动画: {len(backgrounds)} 帧")
         return ani
@@ -240,12 +243,14 @@ class VarianceHeatmapAnimator:
     def __init__(self, resolution: float = 100.0):
         self.resolution = resolution
 
-    def create_heatmap_animation(self,
-                                  data: np.ndarray,
-                                  title: str = 'Data Heatmap Evolution',
-                                  cmap: str = 'hot',
-                                  interval: int = 100,
-                                  figsize: Tuple[int, int] = (12, 4)) -> FuncAnimation:
+    def create_heatmap_animation(
+        self,
+        data: np.ndarray,
+        title: str = 'Data Heatmap Evolution',
+        cmap: str = 'hot',
+        interval: int = 100,
+        figsize: Tuple[int, int] = (12, 4),
+    ) -> FuncAnimation:
         """
         创建热力图动画（沿时间轴播放不同z层）
 
@@ -264,12 +269,14 @@ class VarianceHeatmapAnimator:
 
         n_time, nx, ny, nz = data.shape
 
-        fig, axes = plt.subplots(1, nz, figsize=figsize) if nz > 1 else plt.subplots(figsize=figsize)
-        if nz == 1:
-            axes = [axes]
+        if nz > 1:
+            fig, axes = plt.subplots(1, nz, figsize=figsize)
+        else:
+            fig, ax = plt.subplots(figsize=figsize)
+            axes = [ax]  # type: ignore[assignment]
 
         def update(frame):
-            for i, ax in enumerate(axes):
+            for i, ax in enumerate(axes):  # type: ignore[arg-type]
                 ax.clear()
 
                 if nz == 1:
@@ -398,5 +405,5 @@ def display_animation(ani: FuncAnimation):
     Args:
         ani: FuncAnimation对象
     """
-    from IPython.display import HTML
+    from IPython.display import HTML  # type: ignore[import-untyped]
     return HTML(ani.to_jshtml())

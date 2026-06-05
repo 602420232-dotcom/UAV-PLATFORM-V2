@@ -1,7 +1,4 @@
-# data_sources/__init__.py
-
 import logging
-logger = logging.getLogger(__name__)
 
 from .base import DataSourceBase
 from .satellite import SatelliteDataSource
@@ -9,6 +6,8 @@ from .radar import RadarDataSource
 from .ground_station import GroundStationDataSource
 from .buoy import BuoyDataSource
 from .factory import DataSourceFactory
+
+logger = logging.getLogger(__name__)
 
 
 __all__ = [

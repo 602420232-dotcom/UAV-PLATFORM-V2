@@ -29,7 +29,8 @@ class AdaptiveAssimilator:
         self._register_algorithms()
 
     def _register_algorithms(self):
-        from bayesian_assimilation.models.three_dimensional_var import ThreeDimensionalVAR as ThreeDimensionalVar
+        from bayesian_assimilation.models.three_dimensional_var import \
+            ThreeDimensionalVAR as ThreeDimensionalVar
         from bayesian_assimilation.models.four_dimensional_var import FourDimensionalVar
         from bayesian_assimilation.models.enkf import EnKF
 
@@ -74,18 +75,26 @@ class AdaptiveAssimilator:
         for name, algo_cls in self.algorithms.items():
             score = 0
             if name == '3dvar':
-                score = data_quality['completeness'] * 40 + (100 - compute_resources['memory_percent']) * 30 + 30
+                score = data_quality['completeness'] * 40 + \
+                    (100 - compute_resources['memory_percent']) * 30 + 30
             elif name == '4dvar':
-                score = data_quality['completeness'] * 30 + compute_resources['memory_available'] * 40 + 30
+                score = data_quality['completeness'] * 30 + \
+                    compute_resources['memory_available'] * 40 + 30
             elif name == 'enkf':
-                score = data_quality['spatial_variability'] * 30 + data_quality['temporal_variability'] * 30 + 40
+                score = data_quality['spatial_variability'] * 30 + \
+                    data_quality['temporal_variability'] * 30 + 40
             scores[name] = score
 
         best_algo = max(scores, key=scores.get)
         logger.info(f"自适应选择算法: {best_algo} (评分: {scores})")
         return best_algo
 
-    def assimilate(self, background: np.ndarray, observations: np.ndarray, method: Optional[str] = None) -> tuple:
+    def assimilate(
+        self,
+        background: np.ndarray,
+        observations: np.ndarray,
+        method: Optional[str] = None
+    ) -> tuple:
         """执行自适应同化"""
         algorithm_name = self.select_algorithm(observations, method)
         algo_cls = self.algorithms[algorithm_name]

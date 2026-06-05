@@ -174,7 +174,7 @@ class TestPipelineWorkflow:
                     elapsed_time=0.1
                 )
 
-        pipeline.add_step(PassThroughStep())
+        pipeline.add_step(PassThroughStep())  # type: ignore[arg-type]
 
         result = pipeline.execute(input_data)
 
@@ -217,8 +217,8 @@ class TestPipelineWorkflow:
                     elapsed_time=self._result.elapsed_time
                 )
 
-        pipeline.add_step(MockStep(0.5))
-        pipeline.add_step(MockStep(1.0))
+        pipeline.add_step(MockStep(0.5))  # type: ignore[arg-type]
+        pipeline.add_step(MockStep(1.0))  # type: ignore[arg-type]
 
         pipeline.execute()
 
@@ -404,7 +404,7 @@ class TestWorkflowPerformance:
                 )
 
         for _ in range(10):
-            pipeline.add_step(PerfMockStep())
+            pipeline.add_step(PerfMockStep())  # type: ignore[arg-type]
 
         start_time = time.time()
         result = pipeline.execute()

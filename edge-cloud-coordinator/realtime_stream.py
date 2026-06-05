@@ -196,8 +196,12 @@ class RealtimeRiskAssessor:
             return {"risk": "unknown", "trend": "stable"}
         recent = np.mean([e.wind_speed for e in events[-10:]])
         older = np.mean([e.wind_speed for e in events[:10]]) if len(events) >= 20 else recent
-        trend = "rising" if recent > older * 1.1 else "falling" if recent < older * 0.9 else "stable"
-        return {"risk": "HIGH" if recent > 10 else "MEDIUM" if recent > 5 else "LOW", "trend": trend}
+        trend = "rising" if recent > older * 1.1 else \
+            "falling" if recent < older * 0.9 else "stable"
+        return {
+            "risk": "HIGH" if recent > 10 else "MEDIUM" if recent > 5 else "LOW",
+            "trend": trend
+        }
 
 
 class FlinkStreamProcessor:

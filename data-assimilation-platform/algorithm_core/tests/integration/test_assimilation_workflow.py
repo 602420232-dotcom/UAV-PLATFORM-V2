@@ -39,7 +39,7 @@ class TestAssimilationWorkflow:
 
         # 2. 创建同化器
         config = ConfigFactory.create("assimilation")
-        assimilator = BayesianAssimilator(config)
+        assimilator = BayesianAssimilator(config)  # type: ignore[arg-type]
 
         # 3. 执行同化
         analysis, variance = assimilator.assimilate(
@@ -78,7 +78,7 @@ class TestAssimilationWorkflow:
 
         results = []
         for config in configs:
-            assimilator = BayesianAssimilator(config)
+            assimilator = BayesianAssimilator(config)  # type: ignore[arg-type]
             analysis, variance = assimilator.assimilate(
                 background_field, observations, obs_locations, obs_errors
             )

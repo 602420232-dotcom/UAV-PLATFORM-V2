@@ -183,7 +183,6 @@ class GPRPathPlanner:
         smooth = []
         for i in t:
             # 伯恩斯坦多项式 (n=3 级数)
-            n = min(len(path_xy) - 1, 3)  # noqa: F841
             seg_idx = min(int(i * (len(path_xy) - 1)), len(path_xy) - 2)
             p0 = path_xy[max(0, seg_idx - 1)]
             p1 = path_xy[seg_idx]
