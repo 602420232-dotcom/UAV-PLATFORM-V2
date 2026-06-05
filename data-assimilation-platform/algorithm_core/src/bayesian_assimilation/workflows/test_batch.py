@@ -31,6 +31,7 @@ class TestBayesianAssimilator:
         # Args: self, domain_size, resolution
         assert result is not None  # Assertion completed
 
+
 class TestBayesianAssimilator:
     """Test class: BayesianAssimilator"""
 
@@ -45,6 +46,7 @@ class TestBayesianAssimilator:
         # Test logic: Verify basic functionality
         # Args: self, background, observations, obs_locations, obs_errors
         assert result is not None  # Assertion completed
+
 
 class TestBatchAssimilator:
     """Test class: BatchAssimilator"""
@@ -61,6 +63,7 @@ class TestBatchAssimilator:
         # Args: self, background_path, observation_path, output_path, config
         assert result is not None  # Assertion completed
 
+
 class TestBatchAssimilator:
     """Test class: BatchAssimilator"""
 
@@ -75,6 +78,7 @@ class TestBatchAssimilator:
         # Test logic: Verify basic functionality
         # Args: self, tasks, parallel
         assert result is not None  # Assertion completed
+
 
 class TestBatchAssimilator:
     """Test class: BatchAssimilator"""
@@ -114,7 +118,6 @@ class TestEdgeCases:
         """Test invalid input"""
         # TODO: Implement invalid input test
         assert True
-
 
 
 # pytest configuration

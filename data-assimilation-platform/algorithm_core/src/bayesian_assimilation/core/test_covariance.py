@@ -31,6 +31,7 @@ class TestSparseBackgroundCovariance:
         # Args: self, x
         assert result is not None  # Assertion completed
 
+
 class TestSparseBackgroundCovariance:
     """Test class: SparseBackgroundCovariance"""
 
@@ -46,6 +47,7 @@ class TestSparseBackgroundCovariance:
         # Args: self, x, preconditioner
         assert result is not None  # Assertion completed
 
+
 class TestFastSparseBackgroundCovariance:
     """Test class: FastSparseBackgroundCovariance"""
 
@@ -60,6 +62,7 @@ class TestFastSparseBackgroundCovariance:
         # Test logic: Verify basic functionality
         # Args: self, x
         assert result is not None  # Assertion completed
+
 
 class TestFastSparseBackgroundCovariance:
     """Test class: FastSparseBackgroundCovariance"""
@@ -99,7 +102,6 @@ class TestEdgeCases:
         """Test invalid input"""
         # TODO: Implement invalid input test
         assert True
-
 
 
 # pytest configuration

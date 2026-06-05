@@ -9,9 +9,11 @@ __license__ = "Apache 2.0"
 
 VERSION = __version__
 
+
 def get_version():
     """获取版本信息"""
     return __version__
+
 
 def get_version_info():
     """获取完整的版本信息"""

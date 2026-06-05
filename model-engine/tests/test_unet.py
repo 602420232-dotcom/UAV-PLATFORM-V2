@@ -2,11 +2,13 @@
 import torch
 from unet_downscaler.model import UNetDownscaler, UNetConfig
 
+
 def test_unet_forward():
     model = UNetDownscaler()
     x = torch.randn(2, 6, 50, 50)
     out = model(x)
     assert out.shape == (2, 6, 150, 150), f"Expected (2,6,150,150), got {out.shape}"
+
 
 def test_unet_with_obs():
     """带观测同化"""
@@ -16,6 +18,7 @@ def test_unet_with_obs():
     mask = (torch.rand(2, 1, 50, 50) > 0.9).float()
     out = model(x, obs, mask)
     assert out.shape == (2, 6, 150, 150)
+
 
 def test_unet_device():
     device = "cuda" if torch.cuda.is_available() else "cpu"

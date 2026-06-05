@@ -31,6 +31,7 @@ class TestBayesianAssimilator:
         # Args: self, background, observations, obs_locations, obs_errors
         assert result is not None  # Assertion completed
 
+
 class TestBayesianAssimilator:
     """Test class: BayesianAssimilator"""
 
@@ -46,6 +47,7 @@ class TestBayesianAssimilator:
         # Args: self, background, observations, obs_locations, obs_errors
         assert result is not None  # Assertion completed
 
+
 class TestBayesianAssimilator:
     """Test class: BayesianAssimilator"""
 
@@ -60,6 +62,7 @@ class TestBayesianAssimilator:
         # Test logic: Verify basic functionality
         # Args: self
         assert result is not None  # Assertion completed
+
 
 class TestBayesianAssimilator:
     """Test class: BayesianAssimilator"""
@@ -99,7 +102,6 @@ class TestEdgeCases:
         """Test invalid input"""
         # TODO: Implement invalid input test
         assert True
-
 
 
 # pytest configuration

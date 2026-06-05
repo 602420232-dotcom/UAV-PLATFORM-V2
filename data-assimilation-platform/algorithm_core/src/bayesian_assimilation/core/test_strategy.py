@@ -31,6 +31,7 @@ class TestAssimilationStrategy:
         # Args: self, background, observations, obs_locations
         assert result is not None  # Assertion completed
 
+
 class TestAssimilationStrategy:
     """Test class: AssimilationStrategy"""
 
@@ -45,6 +46,7 @@ class TestAssimilationStrategy:
         # Test logic: Verify basic functionality
         # Args: self
         assert result is not None  # Assertion completed
+
 
 class TestThreeDVARStrategy:
     """Test class: ThreeDVARStrategy"""
@@ -61,6 +63,7 @@ class TestThreeDVARStrategy:
         # Args: self, background, observations, obs_locations
         assert result is not None  # Assertion completed
 
+
 class TestEnsembleStrategy:
     """Test class: EnsembleStrategy"""
 
@@ -76,6 +79,7 @@ class TestEnsembleStrategy:
         # Args: self, background, observations, obs_locations
         assert result is not None  # Assertion completed
 
+
 class TestIncrementalStrategy:
     """Test class: IncrementalStrategy"""
 
@@ -90,6 +94,7 @@ class TestIncrementalStrategy:
         # Test logic: Verify basic functionality
         # Args: self, background, observations, obs_locations
         assert result is not None  # Assertion completed
+
 
 class TestIncrementalStrategy:
     """Test class: IncrementalStrategy"""
@@ -106,6 +111,7 @@ class TestIncrementalStrategy:
         # Args: self
         assert result is not None  # Assertion completed
 
+
 class TestHybridStrategy:
     """Test class: HybridStrategy"""
 
@@ -120,6 +126,7 @@ class TestHybridStrategy:
         # Test logic: Verify basic functionality
         # Args: self, background, observations, obs_locations
         assert result is not None  # Assertion completed
+
 
 class TestStrategyFactory:
     """Test class: StrategyFactory"""
@@ -136,6 +143,7 @@ class TestStrategyFactory:
         # Args: strategy_type
         assert result is not None  # Assertion completed
 
+
 class TestStrategyManager:
     """Test class: StrategyManager"""
 
@@ -150,6 +158,7 @@ class TestStrategyManager:
         # Test logic: Verify basic functionality
         # Args: self, name, strategy
         assert result is not None  # Assertion completed
+
 
 class TestStrategyManager:
     """Test class: StrategyManager"""
@@ -166,6 +175,7 @@ class TestStrategyManager:
         # Args: self, name
         assert result is not None  # Assertion completed
 
+
 class TestStrategyManager:
     """Test class: StrategyManager"""
 
@@ -180,6 +190,7 @@ class TestStrategyManager:
         # Test logic: Verify basic functionality
         # Args: self, background, observations, obs_locations
         assert result is not None  # Assertion completed
+
 
 class TestStrategyManager:
     """Test class: StrategyManager"""
@@ -219,7 +230,6 @@ class TestEdgeCases:
         """Test invalid input"""
         # TODO: Implement invalid input test
         assert True
-
 
 
 # pytest configuration

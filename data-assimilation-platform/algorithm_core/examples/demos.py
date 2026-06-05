@@ -16,6 +16,8 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 src_path = os.path.join(project_root, 'src')
+
+
 if src_path not in sys.path:
     sys.path.insert(0, src_path)
 
@@ -24,13 +26,14 @@ if src_path not in sys.path:
 # pip install -e .
 # 导入同化器
 
-from bayesian_assimilation.core.assimilator import BayesianAssimilator # type: ignore
-from bayesian_assimilation.core.compatible_assimilator import CompatibleAssimilator # type: ignore
-from bayesian_assimilation.utils.config import AssimilationConfig # type: ignore
+from bayesian_assimilation.core.assimilator import BayesianAssimilator  # type: ignore
+from bayesian_assimilation.core.compatible_assimilator import CompatibleAssimilator  # type: ignore
+from bayesian_assimilation.utils.config import AssimilationConfig  # type: ignore
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '3'  # 启用oneDNN的所有优化
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # 不显示任何信息
 import tensorflow as tf  # 进一步设置TensorFlow日志级别
 tf.get_logger().setLevel('ERROR')
+
 
 logging.basicConfig(
     level=logging.INFO,
@@ -39,7 +42,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def create_synthetic_data(domain_size: int, resolution: Any, n_obs=20: Any):
+def create_synthetic_data(domain_size: int, resolution: Any, n_obs: Any = 20):
     """创建合成数据"""
     nx = int(domain_size[0] / resolution) + 1
     ny = int(domain_size[1] / resolution) + 1
@@ -86,7 +89,7 @@ def demo_bayesian():
 
     config = AssimilationConfig(
         domain_size=(1000, 1000, 100),  # 1km x 1km x 100m
-        target_resolution=50.0,          # 50米分辨率
+        target_resolution=50.0,  # 50米分辨率
         background_error_scale=1.5,
         observation_error_scale=0.8
     )

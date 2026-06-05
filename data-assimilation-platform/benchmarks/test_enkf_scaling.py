@@ -10,6 +10,8 @@ import numpy as np
 
 
 @pytest.mark.benchmark
+
+
 @pytest.mark.parametrize("ensemble_size", [10, 20, 50, 100])
 def test_enkf_ensemble_scaling(ensemble_size, small_grid):
     from bayesian_assimilation.models.enkf import EnKF
@@ -64,6 +66,8 @@ def test_enkf_inflation_effect(small_grid):
 
 
 @pytest.mark.benchmark
+
+
 @pytest.mark.parametrize("localization_radius", [1000, 5000, 10000])
 def test_enkf_localization_scaling(localization_radius, small_grid):
     from bayesian_assimilation.models.enkf import EnKF

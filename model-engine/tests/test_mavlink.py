@@ -3,6 +3,7 @@ import json
 from pathlib import Path
 from dataclasses import dataclass
 
+
 from path_planning.mavlink_output import (
     GeoConverter, MissionPlanGenerator, MAVLinkEncoder, export_to_mavlink
 )

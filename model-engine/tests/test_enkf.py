@@ -2,6 +2,7 @@
 import numpy as np
 from gpr_risk.enkf import EnsembleKalmanFilter
 
+
 def test_enkf_generate_ensemble():
     enkf = EnsembleKalmanFilter(n_ensemble=20)
     mean = np.random.randn(6, 50, 50) * 0.1
@@ -10,6 +11,7 @@ def test_enkf_generate_ensemble():
     assert ensemble.shape == (20, 6, 50, 50)
     # 集合均值应接近原始均值
     assert abs(ensemble.mean() - mean.mean()) < 0.5
+
 
 def test_enkf_assimilate():
     enkf = EnsembleKalmanFilter(n_ensemble=20)
@@ -34,6 +36,7 @@ def test_enkf_assimilate():
 
     # 同化后中心点应接近观测值 1.0
     assert abs(analysis_mean[0, 5, 5] - 1.0) < 0.5
+
 
 def test_enkf_uncertainty_reduction():
     """同化后不确定性应下降"""

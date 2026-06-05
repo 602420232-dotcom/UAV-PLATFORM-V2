@@ -2,12 +2,14 @@
 EnKF 贝叶斯动态同化模块
 对应论文第四阶段 "4. 贝叶斯动态同化模块"
 
+
 原理:
   1. 概率 U-Net 给出均值和方差，生成 N 个集合成员
   2. 集合成员前向传播 (时间演变)
   3. 新观测到达 → EnKF 分析更新
   4. 更新后集合均值 = 同化后分析场
   5. 更新后集合方差 = 不确定性 (下降了)
+
 
 公式:
   X^a = X^f + K (Y - H X^f)
@@ -64,7 +66,7 @@ class EnsembleKalmanFilter:
         """
         N = self.config.n_ensemble
         std = np.exp(0.5 * log_var)
-        noise = np.random.normal(0, 1, (N,) + mean.shape)
+        noise = np.random.normal(0, 1, (N, ) + mean.shape)
         ensemble = mean + noise * std  # 每个成员 = 均值 + 扰动 × 标准差
         return ensemble
 
@@ -102,7 +104,7 @@ class EnsembleKalmanFilter:
 
         Args:
             forecast: (N, C, H, W) 预报集合
-            observations: (M,) 观测值
+            observations: (M, ) 观测值
             obs_positions: (M, 2) 观测位置 (y, x)
             obs_operator: H 函数，将网格插值到观测位置
 

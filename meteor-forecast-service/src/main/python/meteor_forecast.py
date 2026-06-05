@@ -23,16 +23,18 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(level
 logger = logging.getLogger(__name__)
 
 # 缓存机制
+
+
 class Cache:
     def __init__(self, max_size=1000):
         self.max_size = max_size
         self.cache = {}
         self.lock = threading.Lock()
-    
+
     def get(self, key):
         with self.lock:
             return self.cache.get(key)
-    
+
     def set(self, key, value):
         with self.lock:
             if len(self.cache) >= self.max_size:
@@ -41,16 +43,18 @@ class Cache:
                 del self.cache[oldest_key]
             self.cache[key] = value
 
+
 # 全局缓存实例
 prediction_cache = Cache()
 fusion_cache = Cache()
 risk_cache = Cache()
 
+
 class MeteorForecast:
     """
     气象预测与订正模型
     """
-    
+
     def __init__(self, model_path=None):
         """
         初始化气象预测模型
@@ -67,7 +71,7 @@ class MeteorForecast:
         self.ghr_data = None  # 风乌GHR数据
         # 预加载模型
         self.load_models()
-    
+
     def prepare_data(self, data, look_back=24):
         """
         准备时间序列数据
@@ -80,7 +84,7 @@ class MeteorForecast:
             X.append(data[i:(i + look_back)])
             y.append(data[i + look_back])
         return np.array(X), np.array(y)
-    
+
     def train_lstm(self, X, y, epochs=50, batch_size=32):
         """
         训练LSTM模型
@@ -98,21 +102,21 @@ class MeteorForecast:
             self.lstm_model.add(Dropout(0.2))
             self.lstm_model.add(Dense(25))
             self.lstm_model.add(Dense(1))
-            
+
             # 编译模型
             self.lstm_model.compile(optimizer='adam', loss='mean_squared_error')
-            
+
             # 训练模型
             self.lstm_model.fit(X, y, epochs=epochs, batch_size=batch_size, verbose=1)
-            
+
             # 保存模型
             lstm_model_path = os.path.join(self.model_path, 'lstm_model.h5')
             self.lstm_model.save(lstm_model_path)
             logger.info(f"LSTM模型保存成功: {lstm_model_path}")
-            
+
         except Exception as e:
             logger.error(f"训练LSTM模型失败: {e}")
-    
+
     def train_xgb(self, X, y):
         """
         训练XGBoost模型
@@ -122,18 +126,18 @@ class MeteorForecast:
         try:
             # 构建XGBoost模型
             self.xgb_model = XGBRegressor(n_estimators=100, learning_rate=0.1, max_depth=5, n_jobs=-1)
-            
+
             # 训练模型
             self.xgb_model.fit(X, y)
-            
+
             # 保存模型
             xgb_model_path = os.path.join(self.model_path, 'xgb_model.json')
             self.xgb_model.save_model(xgb_model_path)
             logger.info(f"XGBoost模型保存成功: {xgb_model_path}")
-            
+
         except Exception as e:
             logger.error(f"训练XGBoost模型失败: {e}")
-    
+
     def load_models(self):
         """
         加载保存的模型
@@ -146,7 +150,7 @@ class MeteorForecast:
                 logger.info(f"LSTM模型加载成功: {lstm_model_path}")
             else:
                 logger.warning(f"LSTM模型文件不存在: {lstm_model_path}")
-            
+
             # 加载XGBoost模型
             xgb_model_path = os.path.join(self.model_path, 'xgb_model.json')
             if os.path.exists(xgb_model_path):
@@ -155,10 +159,10 @@ class MeteorForecast:
                 logger.info(f"XGBoost模型加载成功: {xgb_model_path}")
             else:
                 logger.warning(f"XGBoost模型文件不存在: {xgb_model_path}")
-            
+
         except Exception as e:
             logger.error(f"加载模型失败: {e}")
-    
+
     def predict(self, input_data):
         """
         执行气象预测
@@ -173,36 +177,36 @@ class MeteorForecast:
             if cached_result:
                 logger.info("使用缓存的预测结果")
                 return cached_result
-            
+
             # 数据预处理
             scaled_data = self.scaler.transform(np.array(input_data).reshape(-1, 1))
             X, _ = self.prepare_data(scaled_data, look_back=24)
-            
+
             # 检查模型是否存在
             if self.lstm_model is None or self.xgb_model is None:
                 logger.warning("模型未初始化，无法进行预测")
                 return []
-            
+
             # LSTM预测
             lstm_pred = self.lstm_model.predict(X, batch_size=32)
-            
+
             # XGBoost预测（使用LSTM的预测结果作为特征）
             xgb_pred = self.xgb_model.predict(lstm_pred)
-            
+
             # 反归一化
             predictions = self.scaler.inverse_transform(xgb_pred.reshape(-1, 1))
             result = predictions.tolist()
-            
+
             # 缓存结果
             prediction_cache.set(cache_key, result)
-            
+
             logger.info("气象预测完成")
             return result
-            
+
         except Exception as e:
             logger.error(f"预测失败: {e}")
             return []
-    
+
     def correct(self, forecast_data, observed_data):
         """
         执行气象数据订正
@@ -213,23 +217,23 @@ class MeteorForecast:
         try:
             # 计算预测误差
             error = np.array(observed_data) - np.array(forecast_data)
-            
+
             # 准备特征数据（使用预测值作为特征）
             X = np.array(forecast_data).reshape(-1, 1)
-            
+
             # 预测误差
             error_pred = self.xgb_model.predict(X)
-            
+
             # 应用订正值
             corrected_data = np.array(forecast_data) + error_pred
-            
+
             logger.info("气象数据订正完成")
             return corrected_data.tolist()
-            
+
         except Exception as e:
             logger.error(f"订正失败: {e}")
             return forecast_data
-    
+
     def evaluate(self, X, y):
         """
         评估模型性能
@@ -242,27 +246,27 @@ class MeteorForecast:
             if self.lstm_model is None or self.xgb_model is None:
                 logger.warning("模型未初始化，无法进行评估")
                 return {}
-            
+
             # LSTM预测
             lstm_pred = self.lstm_model.predict(X, batch_size=32)
-            
+
             # XGBoost预测
             xgb_pred = self.xgb_model.predict(lstm_pred)
-            
+
             # 计算MSE
             mse = mean_squared_error(y, xgb_pred)
             rmse = np.sqrt(mse)
-            
+
             logger.info(f"模型评估完成，RMSE: {rmse}")
             return {
                 'mse': float(mse),
                 'rmse': float(rmse)
             }
-            
+
         except Exception as e:
             logger.error(f"评估失败: {e}")
             return {}
-    
+
     def self_improve(self, new_data, epochs=20, batch_size=32):
         """
         自迭代改进模型
@@ -273,11 +277,11 @@ class MeteorForecast:
         """
         try:
             logger.info("开始自迭代改进模型...")
-            
+
             # 准备数据
             scaled_data = self.scaler.transform(np.array(new_data).reshape(-1, 1))
             X, y = self.prepare_data(scaled_data, look_back=24)
-            
+
             # 检查模型是否存在，如果不存在则创建新模型
             if self.lstm_model is None:
                 logger.info("LSTM模型未初始化，创建新模型")
@@ -289,28 +293,28 @@ class MeteorForecast:
                 self.lstm_model.add(Dense(25))
                 self.lstm_model.add(Dense(1))
                 self.lstm_model.compile(optimizer='adam', loss='mean_squared_error')
-            
+
             if self.xgb_model is None:
                 logger.info("XGBoost模型未初始化，创建新模型")
                 self.xgb_model = XGBRegressor(n_estimators=100, learning_rate=0.1, max_depth=5, n_jobs=-1)
-            
+
             # 继续训练LSTM模型
             history = self.lstm_model.fit(X, y, epochs=epochs, batch_size=batch_size, verbose=1, validation_split=0.2)
-            
+
             # 训练XGBoost模型
             self.xgb_model.fit(X.reshape(X.shape[0], -1), y)
-            
+
             # 评估模型
             eval_result = self.evaluate(X, y)
             current_score = eval_result.get('rmse', float('inf'))
-            
+
             # 保存训练历史
             self.history.append({
                 'timestamp': pd.Timestamp.now().isoformat(),
                 'rmse': current_score,
                 'epochs': epochs
             })
-            
+
             # 保存最佳模型
             if current_score < self.best_score and self.lstm_model is not None and self.xgb_model is not None:
                 self.best_score = current_score
@@ -322,21 +326,21 @@ class MeteorForecast:
                 # 清空缓存，确保使用新模型
                 prediction_cache.cache.clear()
                 fusion_cache.cache.clear()
-            
+
             logger.info("模型自迭代改进完成")
             return {
                 'success': True,
                 'rmse': current_score,
                 'best_rmse': self.best_score
             }
-            
+
         except Exception as e:
             logger.error(f"自迭代改进失败: {e}")
             return {
                 'success': False,
                 'error': str(e)
             }
-    
+
     def load_wrf_data(self, wrf_data):
         """
         加载WRF数据
@@ -349,7 +353,7 @@ class MeteorForecast:
         except Exception as e:
             logger.error(f"加载WRF数据失败: {e}")
             return False
-    
+
     def load_ghr_data(self, ghr_data):
         """
         加载风乌GHR数据
@@ -430,50 +434,50 @@ class MeteorForecast:
             if cached_result:
                 logger.info("使用缓存的融合预测结果")
                 return cached_result
-            
+
             # 数据预处理
             scaled_data = self.scaler.transform(np.array(input_data).reshape(-1, 1))
             X, _ = self.prepare_data(scaled_data, look_back=24)
-            
+
             # 检查模型是否存在
             if self.lstm_model is None or self.xgb_model is None:
                 logger.warning("模型未初始化，无法进行融合预测")
                 return []
-            
+
             # LSTM预测
             lstm_pred = self.lstm_model.predict(X, batch_size=32)
-            
+
             # XGBoost预测（使用LSTM的预测结果作为特征）
             xgb_pred = self.xgb_model.predict(lstm_pred)
-            
+
             # 反归一化
             predictions = self.scaler.inverse_transform(xgb_pred.reshape(-1, 1))
-            
+
             # 如果有WRF和GHR数据，进行融合
             if self.wrf_data and self.ghr_data:
                 # 这里实现简单的加权融合，实际应用中可以使用更复杂的融合策略
                 wrf_pred = np.array(self.wrf_data.get('predictions', []))
                 ghr_pred = np.array(self.ghr_data.get('predictions', []))
-                
+
                 if len(wrf_pred) > 0 and len(ghr_pred) > 0:
                     # 加权融合
                     weights = [0.4, 0.3, 0.3]  # LSTM+XGBoost, WRF, GHR的权重
-                    fused_predictions = (predictions * weights[0] + 
-                                        wrf_pred[:len(predictions)] * weights[1] + 
+                    fused_predictions = (predictions * weights[0] +
+                                        wrf_pred[:len(predictions)] * weights[1] +
                                         ghr_pred[:len(predictions)] * weights[2])
                     predictions = fused_predictions
-            
+
             result = predictions.tolist()
             # 缓存结果
             fusion_cache.set(cache_key, result)
-            
+
             logger.info("双预报引擎融合预测完成")
             return result
-            
+
         except Exception as e:
             logger.error(f"融合预测失败: {e}")
             return []
-    
+
     def generate_risk_heatmap(self, forecast_data):
         """
         生成风险热力图
@@ -488,7 +492,7 @@ class MeteorForecast:
             if cached_result:
                 logger.info("使用缓存的风险热力图结果")
                 return cached_result
-            
+
             # 这里实现简单的风险热力图生成，实际应用中可以使用更复杂的算法
             risk_data = []
             for i, value in enumerate(forecast_data):
@@ -508,16 +512,17 @@ class MeteorForecast:
                     'value': value,
                     'risk_level': risk_level
                 })
-            
+
             # 缓存结果
             risk_cache.set(cache_key, risk_data)
-            
+
             logger.info("风险热力图生成完成")
             return risk_data
-            
+
         except Exception as e:
             logger.error(f"生成风险热力图失败: {e}")
             return []
+
 
 def load_input(file_index):
     """从文件加载JSON输入数据，防止命令注入"""
@@ -539,10 +544,10 @@ def main():
             'error': '缺少命令参数'
         }))
         return
-    
+
     command = sys.argv[1]
     model = MeteorForecast()
-    
+
     if command == 'predict':
         # 预测命令
         if len(sys.argv) < 3:
@@ -552,7 +557,7 @@ def main():
                 'error': '缺少输入数据'
             }))
             return
-        
+
         try:
             input_data = load_input(2)
             predictions = model.predict(input_data)
@@ -567,7 +572,7 @@ def main():
                 'success': False,
                 'error': str(e)
             }))
-            
+
     elif command == 'correct':
         # 订正命令
         if len(sys.argv) < 4:
@@ -577,7 +582,7 @@ def main():
                 'error': '缺少预测数据和观测数据'
             }))
             return
-        
+
         try:
             forecast_data = load_input(2)
             observed_data = load_input(3)
@@ -591,7 +596,7 @@ def main():
                 'success': False,
                 'error': str(e)
             }))
-    
+
     elif command == 'train':
         # 训练命令
         if len(sys.argv) < 3:
@@ -600,7 +605,7 @@ def main():
                 'error': '缺少训练数据'
             }))
             return
-        
+
         try:
             training_data = load_input(2)
             # 准备数据
@@ -618,7 +623,7 @@ def main():
                 'success': False,
                 'error': str(e)
             }))
-    
+
     elif command == 'improve':
         # 自迭代改进命令
         if len(sys.argv) < 3:
@@ -627,7 +632,7 @@ def main():
                 'error': '缺少改进数据'
             }))
             return
-        
+
         try:
             improve_data = load_input(2)
             new_data = improve_data.get('data', [])
@@ -644,7 +649,7 @@ def main():
                 'success': False,
                 'error': str(e)
             }))
-    
+
     elif command == 'fusion':
         # 双预报引擎融合预测命令
         if len(sys.argv) < 3:
@@ -653,17 +658,17 @@ def main():
                 'error': '缺少输入数据'
             }))
             return
-        
+
         try:
             input_data = load_input(2)
             forecast_data = input_data.get('forecast_data', [])
             wrf_data = input_data.get('wrf_data', {})
             ghr_data = input_data.get('ghr_data', {})
-            
+
             # 加载数据
             model.load_wrf_data(wrf_data)
             model.load_ghr_data(ghr_data)
-            
+
             # 执行融合预测
             predictions = model.fusion_forecast(forecast_data)
             print(json.dumps({
@@ -675,7 +680,7 @@ def main():
                 'success': False,
                 'error': str(e)
             }))
-    
+
     elif command == 'risk':
         # 生成风险热力图命令
         if len(sys.argv) < 3:
@@ -684,11 +689,11 @@ def main():
                 'error': '缺少预测数据'
             }))
             return
-        
+
         try:
             input_data = load_input(2)
             forecast_data = input_data.get('forecast_data', [])
-            
+
             # 生成风险热力图
             risk_data = model.generate_risk_heatmap(forecast_data)
             print(json.dumps({
@@ -700,12 +705,13 @@ def main():
                 'success': False,
                 'error': str(e)
             }))
-    
+
     else:
         print(json.dumps({
             'success': False,
             'error': '未知命令'
         }))
+
 
 if __name__ == "__main__":
     main()

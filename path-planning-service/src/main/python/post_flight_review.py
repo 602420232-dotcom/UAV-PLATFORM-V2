@@ -44,40 +44,40 @@ class FlightSegment:
 class PostFlightReview:
     """
     飞行后复盘分析器
-    
+
     分析飞行日志，生成结构化复盘报告。
     """
-    
+
     def __init__(self, mission_name: str = ""):
         self.mission_name = mission_name
         self.events: List[FlightEvent] = []
         self.segments: List[FlightSegment] = []
         self.start_time: Optional[float] = None
         self.end_time: Optional[float] = None
-    
+
     def add_event(self, event: FlightEvent):
         """添加飞行事件"""
         self.events.append(event)
         self.events.sort(key=lambda e: e.timestamp)
-    
+
     def add_segment(self, segment: FlightSegment):
         """添加飞行段"""
         self.segments.append(segment)
-    
+
     def set_flight_time(self, start: float, end: float):
         """设置飞行起止时间"""
         self.start_time = start
         self.end_time = end
-    
+
     def analyze_anomalies(self) -> List[Dict]:
         """
         检测飞行中的异常事件
-        
+
         Returns:
             异常事件列表
         """
         anomalies = []
-        
+
         # 检查急转弯
         for i in range(1, len(self.segments)):
             seg = self.segments[i]
@@ -89,7 +89,7 @@ class PostFlightReview:
                     'severity': 'WARNING',
                     'suggestion': '建议降低巡航速度至10m/s以下以提高安全性'
                 })
-        
+
         # 检查高风险区域
         for seg in self.segments:
             if seg.risk_score > 50:
@@ -100,7 +100,7 @@ class PostFlightReview:
                     'severity': 'WARNING',
                     'suggestion': '建议重新规划路径避开高风险区域'
                 })
-        
+
         # 检查能耗异常
         if len(self.segments) >= 2:
             avg_energy = sum(s.energy_consumed for s in self.segments) / len(self.segments)
@@ -113,27 +113,27 @@ class PostFlightReview:
                         'severity': 'INFO',
                         'suggestion': '检查该段是否存在逆风或载重变化'
                     })
-        
+
         return anomalies
-    
+
     def generate_report(self) -> Dict:
         """
         生成完整复盘报告
-        
+
         Returns:
             结构化复盘报告
         """
         anomalies = self.analyze_anomalies()
-        
+
         # 统计
         total_distance = sum(s.distance for s in self.segments)
         total_energy = sum(s.energy_consumed for s in self.segments)
         avg_speed = sum(s.avg_speed for s in self.segments) / len(self.segments) if self.segments else 0
         max_risk = max((s.risk_score for s in self.segments), default=0)
-        
+
         # 事件统计
         warning_count = sum(1 for e in self.events if e.severity == 'WARNING' or e.severity == 'ERROR')
-        
+
         # 生成改进建议
         improvements = []
         if total_energy > 100:
@@ -144,7 +144,7 @@ class PostFlightReview:
             improvements.append(f"飞行中存在{warning_count}个异常事件，建议检查飞行参数")
         if self.segments and avg_speed < 5:
             improvements.append("平均航速较低，可优化时间窗规划")
-        
+
         report = {
             'mission_name': self.mission_name,
             'report_generated': datetime.now().isoformat(),
@@ -181,9 +181,9 @@ class PostFlightReview:
                 for s in self.segments
             ]
         }
-        
+
         return report
-    
+
     def export_json(self, filepath: str):
         """导出复盘报告为JSON文件"""
         report = self.generate_report()
@@ -195,16 +195,16 @@ class PostFlightReview:
 if __name__ == "__main__":
     # 演示
     review = PostFlightReview("示例任务-001")
-    
+
     review.set_flight_time(0, 600)
-    review.add_segment(FlightSegment(0, 120, (0,0), (100,0), 100, 8.3, 12.0, 15.0, 20))
-    review.add_segment(FlightSegment(120, 240, (100,0), (200,50), 111.8, 8.3, 18.0, 18.0, 65))
-    review.add_segment(FlightSegment(240, 600, (200,50), (0,0), 206.2, 8.3, 10.0, 30.0, 30))
-    
+    review.add_segment(FlightSegment(0, 120, (0, 0), (100, 0), 100, 8.3, 12.0, 15.0, 20))
+    review.add_segment(FlightSegment(120, 240, (100, 0), (200, 50), 111.8, 8.3, 18.0, 18.0, 65))
+    review.add_segment(FlightSegment(240, 600, (200, 50), (0, 0), 206.2, 8.3, 10.0, 30.0, 30))
+
     review.add_event(FlightEvent(0, "TAKEOFF", "无人机起飞", "INFO"))
     review.add_event(FlightEvent(120, "WAYPOINT", "到达航点 1", "INFO"))
     review.add_event(FlightEvent(240, "WAYPOINT", "到达航点 2", "INFO"))
     review.add_event(FlightEvent(600, "LANDING", "降落完成", "INFO"))
-    
+
     report = review.generate_report()
     print(json.dumps(report, ensure_ascii=False, indent=2))

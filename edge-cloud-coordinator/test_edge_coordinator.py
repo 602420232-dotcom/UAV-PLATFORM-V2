@@ -2,7 +2,11 @@
 edge-cloud-coordinator 单元测试
 覆盖所有14个模块的核心功能
 """
-import os, sys, json, time, pytest
+import os
+import sys
+import json
+import time
+import pytest
 from unittest.mock import MagicMock, patch, AsyncMock
 
 # Add src to path
@@ -10,6 +14,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 # Test data
+
+
 SAMPLE_UAV_DATA = {
     "drone_id": "UAV001", "lat": 39.9, "lon": 116.4,
     "altitude": 100, "speed": 15, "battery": 85,

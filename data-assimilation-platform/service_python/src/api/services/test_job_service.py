@@ -31,6 +31,7 @@ class TestJobService:
         # Args: self, algorithm, config
         assert result is not None  # Assertion completed
 
+
 class TestJobService:
     """Test class: JobService"""
 
@@ -45,6 +46,7 @@ class TestJobService:
         # Test logic: Verify basic functionality
         # Args: self, job_id, status, result
         assert result is not None  # Assertion completed
+
 
 class TestJobService:
     """Test class: JobService"""
@@ -61,6 +63,7 @@ class TestJobService:
         # Args: self, job_id
         assert result is not None  # Assertion completed
 
+
 class TestJobService:
     """Test class: JobService"""
 
@@ -75,6 +78,7 @@ class TestJobService:
         # Test logic: Verify basic functionality
         # Args: self, limit
         assert result is not None  # Assertion completed
+
 
 class TestJobService:
     """Test class: JobService"""
@@ -114,7 +118,6 @@ class TestEdgeCases:
         """Test invalid input"""
         # TODO: Implement invalid input test
         assert True
-
 
 
 # pytest configuration

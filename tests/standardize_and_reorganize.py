@@ -11,18 +11,22 @@ import json
 from datetime import datetime
 
 ROOT = r'd:\Developer\workplace\py\iteam\trae'
+
+
 SKIP_DIRS = {'.git', 'node_modules', 'target', '__pycache__', '.idea',
              '.pytest_cache', '.trae', 'dist', 'build'}
 
 FOOTER = """
 ---
 
-> **最后更新**: 2026-05-08  
-> **版本**: 2.1  
+> **最后更新**: 2026-05-08
+> **版本**: 2.1
 > **维护者**: DITHIOTHREITOL
 """
 
 # ========== PHASE 1: Add footer to all .md files ==========
+
+
 def add_footer():
     updated = 0
     skipped = 0
@@ -39,11 +43,11 @@ def add_footer():
             try:
                 with open(fp, 'r', encoding='utf-8') as fh:
                     content = fh.read()
-            except:
+            except Exception:
                 try:
                     with open(fp, 'r', encoding='gbk') as fh:
                         content = fh.read()
-                except:
+                except Exception:
                     skipped += 1
                     continue
 
@@ -69,7 +73,10 @@ def add_footer():
     print(f'Skipped: {skipped} files')
     return updated
 
+
 # ========== PHASE 2: Reorganize docs/ ==========
+
+
 ARCHIVE_FILES = [
     'ADDITIONAL_CIRCUIT_BREAKER_IMPLEMENTATION_REPORT.md',
     'CIRCUIT_BREAKER_IMPLEMENTATION_COMPLETE_REPORT.md',
@@ -85,9 +92,11 @@ ARCHIVE_FILES = [
     'UAV_PATH_PLANNING_SYSTEM_DOCUMENTATION_REPORT.md',
 ]
 
+
 DELETE_FILES = [
     'DEPLOYMENT (2).md',
 ]
+
 
 MOVE_MAP = {
     # deployment/
@@ -103,6 +112,7 @@ MOVE_MAP = {
     'COMPREHENSIVE_AUDIT_REPORT_v2.1.md': 'reports/COMPREHENSIVE_AUDIT_REPORT_v2.1.md',
     'COMPREHENSIVE_QUALITY_ASSESSMENT.md': 'reports/COMPREHENSIVE_QUALITY_ASSESSMENT.md',
 }
+
 
 def reorganize_docs():
     docs_d = os.path.join(ROOT, 'docs')
@@ -145,7 +155,10 @@ def reorganize_docs():
 
     return changes
 
+
 # ========== MAIN ==========
+
+
 if __name__ == '__main__':
     print('=' * 60)
     print('PHASE 1: Standardizing .md footers')
@@ -167,13 +180,13 @@ if __name__ == '__main__':
     report_path = os.path.join(ROOT, 'docs', 'reports', 'DOCUMENTATION_REORGANIZATION_REPORT.md')
     os.makedirs(os.path.dirname(report_path), exist_ok=True)
 
-    report_md = f"""# 文档整理变更报告
+    report_md = """# 文档整理变更报告
 
 > **日期**: 2026-05-08
 > **版本**: 2.1
 > **操作**: 项目 Markdown 文档标准化与重组
 
-## 统计概览
+# # 统计概览
 
 | 操作 | 数量 |
 |------|:----:|
@@ -183,7 +196,7 @@ if __name__ == '__main__':
 | 移至分类目录 | {len(changes['moved'])} |
 | 新建目录 | {len(changes['dirs_created'])} |
 
-## Footer 标准化
+# # Footer 标准化
 
 所有 {footer_count} 个 .md 文件已添加统一页脚：
 
@@ -194,26 +207,26 @@ if __name__ == '__main__':
 > **维护者**: DITHIOTHREITOL
 ```
 
-## 归档文件 (archive/)
+# # 归档文件 (archive/)
 
 以下 12 份中期报告已被主报告替代，移至 archive/ 保留备查：
 
 {chr(10).join(f'- `{f}`' for f in changes['archived'])}
 
-## 删除文件
+# # 删除文件
 
 {chr(10).join(f'- `{f}` — 重复文件' for f in changes['deleted'])}
 {'(无)' if not changes['deleted'] else ''}
 
-## 目录重组
+# # 目录重组
 
-### 新建目录
+# ## 新建目录
 {chr(10).join(f'- `{d}/`' for d in changes['dirs_created'])}
 
-### 文件移动
+# ## 文件移动
 {chr(10).join(f'- `{src}` → `{dst}`' for src, dst in changes['moved'])}
 
-## 重组后的 docs/ 结构
+# # 重组后的 docs/ 结构
 
 ```
 docs/
@@ -241,6 +254,8 @@ docs/
 │   ├── CIRCUIT_BREAKER_USAGE_EXAMPLES.md
 │   ├── EXCEPTION_HTTP_STATUS_GUIDE.md
 │   └── PRODUCTION_SECRETS_GUIDE.md
+
+
 └── reports/                  (当前活跃报告)
     ├── COMPREHENSIVE_AUDIT_REPORT_v2.1.md
     └── COMPREHENSIVE_QUALITY_ASSESSMENT.md

@@ -17,7 +17,8 @@ os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 src_path = os.path.join(os.path.dirname(__file__), '..', 'src')
 sys.path.insert(0, src_path)
 
-from bayesian_assimilation import ( # type: ignore
+
+from bayesian_assimilation import (  # type: ignore
     BayesianAssimilator,
     AssimilationConfig,
     MeteorologicalQualityControl,
@@ -29,6 +30,8 @@ from bayesian_assimilation import ( # type: ignore
 )
 
 # 配置日志
+
+
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
@@ -76,7 +79,7 @@ def load_wrf_data_mock(file_path=None):
     wind_speed = MeteorologicalQualityControl.validate_wind_speed(wind_speed)
     temperature = MeteorologicalQualityControl.validate_temperature(temperature)
 
-    logger.info(f"模拟WRF数据加载完成")
+    logger.info("模拟WRF数据加载完成")
     logger.info(f"网格: {nx}x{ny}x{nz}")
     logger.info(f"风速范围: [{wind_speed.min():.2f}, {wind_speed.max():.2f}] m/s")
     logger.info(f"温度范围: [{temperature.min():.2f}, {temperature.max():.2f}] K")
@@ -144,7 +147,7 @@ def process_observation_data():
     else:
         validated_obs = observations
 
-    logger.info(f"模拟观测数据加载完成")
+    logger.info("模拟观测数据加载完成")
     logger.info(f"站点数量: {n_stations}")
     logger.info(f"总观测数: {len(validated_obs)}")
 
@@ -204,7 +207,7 @@ def run_assimilation(background_data, observation_data):
         analysis = MeteorologicalQualityControl.validate_wind_speed(analysis)
         analysis = MeteorologicalQualityControl.check_wind_gradient(analysis)
 
-        logger.info(f"同化完成")
+        logger.info("同化完成")
         logger.info(f"分析场形状: {analysis.shape}")
         logger.info(f"分析场范围: [{analysis.min():.2f}, {analysis.max():.2f}] m/s")
         logger.info(f"方差范围: [{variance.min():.4f}, {variance.max():.4f}]")
@@ -248,9 +251,9 @@ def generate_risk_heatmap(analysis, variance, precipitation_data=None):
     high_risk_mask = variance > risk_threshold
     risk_percentage = np.sum(high_risk_mask) / total_points * 100
 
-    logger.info(f"传统风险评估:")
+    logger.info("传统风险评估:")
     logger.info(f"  高风险区域: {np.sum(high_risk_mask)} 点 ({risk_percentage:.2f}%)")
-    logger.info(f"\n增强版综合风险评估:")
+    logger.info("\n增强版综合风险评估:")
     logger.info(f"  高风险区域: {np.sum(composite_high_risk)} 点 ({composite_risk_percentage:.2f}%)")
     logger.info(f"  最大风险等级: {np.max(risk_assessment['composite_risk'])}")
 
@@ -265,8 +268,8 @@ def generate_risk_heatmap(analysis, variance, precipitation_data=None):
         'precipitation_risk': risk_assessment['precipitation_risk'],
         'composite_risk_percentage': composite_risk_percentage,
         'vertical_shear': risk_assessment['vertical_shear'],
-        'risk_zones': ["低风险: 整体风险可控"] if composite_risk_percentage <= 10 else 
-                      ["中等风险: 中等风险区域，需要注意"] if composite_risk_percentage <= 20 else 
+        'risk_zones': ["低风险: 整体风险可控"] if composite_risk_percentage <= 10 else
+                      ["中等风险: 中等风险区域，需要注意"] if composite_risk_percentage <= 20 else
                       ["高风险: 高风险区域比例大，建议重新规划路线"]
     }
 
@@ -314,7 +317,7 @@ def save_results(background_data, observation_data, assimilation_result, risk_re
     # 保存分析场和方差场
     np.save(os.path.join(output_dir, f'analysis_field_{timestamp}.npy'), assimilation_result['analysis'])
     np.save(os.path.join(output_dir, f'variance_field_{timestamp}.npy'), assimilation_result['variance'])
-    logger.info(f"分析场和方差场已保存")
+    logger.info("分析场和方差场已保存")
 
     return {
         'summary_path': summary_path,
@@ -361,11 +364,11 @@ def main():
         # 时间序列分析
         time_series = TimeSeriesAnalyzer.generate_time_series_data(wrf_data['domain_size'], n_time_steps=6)
         risk_time_series = []
-        
+
         for time_data in time_series:
             variance = np.random.randn(*time_data['wind_speed'].shape) * 0.5 + 1.0
             variance = np.abs(variance) * (0.1 * time_data['wind_speed'] + 0.5)
-            
+
             time_risk = MeteorologicalRiskAssessment.composite_risk_assessment(
                 time_data['wind_speed'], variance
             )
@@ -373,16 +376,16 @@ def main():
                 'time_step': time_data['time_step'],
                 'composite_risk': time_risk['composite_risk']
             })
-        
+
         trend_data = TimeSeriesAnalyzer.analyze_risk_trend(risk_time_series)
-        
+
         # 检测风险异常
         anomalies = TimeSeriesAnalyzer.detect_risk_anomalies(trend_data)
         if anomalies:
             logger.info("\n检测到风险异常:")
             for anomaly in anomalies:
                 logger.info(f"  时间步 {anomaly['time_step']}: 平均风险 {anomaly['mean_risk']:.2f}")
-        
+
         # 风险预测
         predictions = TimeSeriesAnalyzer.advanced_time_series_prediction(trend_data, n_steps=3)
         if predictions:
@@ -402,7 +405,7 @@ def main():
 
         # 停止性能监控
         performance_metrics = performance_monitor.stop()
-        
+
         logger.info("\n" + "="*60)
         logger.info("性能监控指标")
         logger.info("="*60)

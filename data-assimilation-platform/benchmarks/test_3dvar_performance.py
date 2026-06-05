@@ -9,11 +9,15 @@ import numpy as np
 
 
 @pytest.mark.benchmark
+
+
 @pytest.mark.parametrize("grid_size,obs_count", [
     ((50, 50, 20), 500),
     ((100, 100, 50), 2000),
     ((200, 200, 100), 5000),
 ])
+
+
 def test_3dvar_performance(grid_size, obs_count):
     from bayesian_assimilation.core.assimilator import BayesianAssimilator
 

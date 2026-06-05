@@ -4,6 +4,7 @@ FengWu Weather Forecast Service
 REST API for global weather forecasting using the FengWu ONNX model.
 Provides endpoints for submitting ERA5 data and retrieving forecasts.
 
+
 Security: API Key authentication required for all endpoints except /health
           CORS must be restricted to known service origins in production.
 """
@@ -17,6 +18,7 @@ import time
 from contextlib import asynccontextmanager
 from typing import Optional
 
+
 sys.path.insert(
     0, os.path.join(os.path.dirname(__file__), "..", "common-utils", "src", "main", "python")
 )
@@ -28,6 +30,7 @@ from pydantic import BaseModel, Field
 
 from inference_engine import get_engine, FengWuEngine
 from security_middleware import SecurityMiddleware
+
 
 logging.basicConfig(
     level=logging.INFO,
@@ -43,6 +46,8 @@ _FENGWU_ENV = os.getenv("FENGWU_ENV", "development").lower()
 _IS_PRODUCTION = _FENGWU_ENV == "production"
 
 _API_KEY = os.getenv("FENGWU_API_KEY", "")
+
+
 if not _API_KEY:
     if _IS_PRODUCTION:
         raise RuntimeError(
@@ -57,6 +62,8 @@ if not _API_KEY:
 
 def verify_api_key(
     x_api_key: str = Header(default="", alias="X-API-Key"),
+
+
 ):
     if not _API_KEY:
         return True
@@ -76,9 +83,13 @@ def verify_api_key(
 # Must be set via CORS_ORIGINS environment variable.
 # Development defaults allow localhost origins only.
 _cors_origins_str = os.getenv("CORS_ORIGINS")
+
+
 if _cors_origins_str:
     _ALLOWED_ORIGINS = [o.strip() for o in _cors_origins_str.split(",")]
     logger.info("CORS configured for origins: %s", _ALLOWED_ORIGINS)
+
+
 else:
     _ALLOWED_ORIGINS = ["http://localhost:3000", "http://localhost:8080"]
     if _IS_PRODUCTION:
@@ -94,7 +105,11 @@ else:
 
 
 # ─── Lifespan: load model on startup ───────────────────────────────────────
+
+
 @asynccontextmanager
+
+
 async def lifespan(app: FastAPI):
     logger.info("Loading FengWu model...")
     engine = get_engine()
@@ -114,6 +129,8 @@ app = FastAPI(
 )
 
 # CORS configuration - restrict to explicit origins
+
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_ALLOWED_ORIGINS,
@@ -125,6 +142,8 @@ logger.info("🔒 CORS enabled for origins: %s", _ALLOWED_ORIGINS)
 # JWT 认证中间件（与 Java 后端共享 JWT_SECRET，补充 API Key 认证）
 _jwt_secret = os.getenv("JWT_SECRET", "") or os.getenv("JWT_SECRET_KEY", "")
 _jwt_middleware = None
+
+
 if _jwt_secret:
     _jwt_middleware = SecurityMiddleware(
         secret_key=_jwt_secret,
@@ -135,6 +154,8 @@ if _jwt_secret:
         public_paths=["/health", "/actuator/health", "/health/ready"],
     )
     logger.info("JWT authentication enabled")
+
+
 else:
     logger.warning(
         "JWT_SECRET not set — authentication DISABLED. "
@@ -143,6 +164,8 @@ else:
 
 
 # ─── Models ─────────────────────────────────────────────────────────────────
+
+
 class ForecastRequest(BaseModel):
     input_0h: list[list[list[float]]] = Field(
         description="ERA5 atmospheric data at T+0h, shape (69, 721, 1440)"
@@ -184,7 +207,11 @@ _start_time = time.time()
 
 
 # ─── Endpoints ──────────────────────────────────────────────────────────────
+
+
 @app.get("/health", response_model=HealthResponse)
+
+
 async def health():
     engine = get_engine()
     return HealthResponse(
@@ -196,12 +223,16 @@ async def health():
 
 
 @app.get("/actuator/health", response_model=HealthResponse)
+
+
 async def actuator_health():
     """Spring Boot Actuator 兼容的健康检查端点。"""
     return await health()
 
 
 @app.get("/health/ready")
+
+
 async def readiness():
     """Kubernetes readiness probe."""
     engine = get_engine()
@@ -215,6 +246,8 @@ async def readiness():
     response_model=ForecastResponse,
     dependencies=[Depends(verify_api_key)],
 )
+
+
 async def forecast(request: ForecastRequest):
     """
     Run FengWu weather forecast.
@@ -289,6 +322,8 @@ async def forecast(request: ForecastRequest):
     "/api/v1/forecast/wind",
     dependencies=[Depends(verify_api_key)],
 )
+
+
 async def forecast_wind(request: ForecastRequest):
     """
     Lightweight endpoint — returns only wind speed/direction as grid summary.
@@ -340,6 +375,8 @@ async def forecast_wind(request: ForecastRequest):
     "/api/v1/model/info",
     dependencies=[Depends(verify_api_key)],
 )
+
+
 async def model_info():
     """Return model metadata."""
     engine = get_engine()

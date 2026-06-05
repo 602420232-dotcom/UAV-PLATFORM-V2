@@ -1,45 +1,49 @@
 package com.uav.common.filter;
 
-import jakarta.servlet.*;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.MDC;
-import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
 
-import java.io.IOException;
 import java.util.UUID;
 
 /**
- * 日志追踪ID过滤器
- * 为每个请求生成唯一的traceId，串联微服务间日志
+ * 日志追踪ID过滤器核心逻辑（不实现servlet接口，避免Reactive环境加载问题）
+ * 
+ * 在Servlet环境下，由 TraceIdFilterRegistration 自动注册为Servlet Filter。
+ * Reactive环境（如API Gateway）不受影响。
  */
-@Component
-@Order(Integer.MIN_VALUE)
-public class TraceIdFilter implements Filter {
+public class TraceIdFilter {
 
     private static final String TRACE_ID_HEADER = "X-Trace-Id";
     private static final String TRACE_ID_MDC_KEY = "traceId";
 
-    @Override
-    public void doFilter(ServletRequest request, ServletResponse response,
-                         FilterChain chain) throws IOException, ServletException {
+    public String getTraceIdHeader() {
+        return TRACE_ID_HEADER;
+    }
 
-        HttpServletRequest httpRequest = (HttpServletRequest) request;
-        HttpServletResponse httpResponse = (HttpServletResponse) response;
+    public String getTraceIdMdcKey() {
+        return TRACE_ID_MDC_KEY;
+    }
 
-        String traceId = httpRequest.getHeader(TRACE_ID_HEADER);
-        if (traceId == null || traceId.isEmpty()) {
-            traceId = UUID.randomUUID().toString().replace("-", "").substring(0, 16);
+    /**
+     * 从请求头获取或生成traceId
+     */
+    public String resolveTraceId(String existingTraceId) {
+        if (existingTraceId != null && !existingTraceId.isEmpty()) {
+            return existingTraceId;
         }
+        return UUID.randomUUID().toString().replace("-", "").substring(0, 16);
+    }
 
+    /**
+     * 设置MDC上下文
+     */
+    public void setupMdc(String traceId) {
         MDC.put(TRACE_ID_MDC_KEY, traceId);
-        httpResponse.setHeader(TRACE_ID_HEADER, traceId);
+    }
 
-        try {
-            chain.doFilter(request, response);
-        } finally {
-            MDC.remove(TRACE_ID_MDC_KEY);
-        }
+    /**
+     * 清理MDC上下文
+     */
+    public void cleanup() {
+        MDC.remove(TRACE_ID_MDC_KEY);
     }
 }

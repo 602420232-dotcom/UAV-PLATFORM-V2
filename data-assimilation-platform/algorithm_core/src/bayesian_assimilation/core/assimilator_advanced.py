@@ -9,6 +9,8 @@ import os
 import sys
 
 SRC_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+
 if SRC_DIR not in sys.path:
     sys.path.insert(0, SRC_DIR)
 
@@ -243,7 +245,7 @@ class AdvancedBayesianAssimilator(BayesianAssimilator):
         obs_errors: Optional[np.ndarray] = None,
         strategy: Literal['auto', 'full', 'incremental', 'block'] = 'auto'
     ) -> Tuple[np.ndarray, np.ndarray]:
-        
+
         """智能同化"""
         start_time = datetime.now()
 
@@ -432,15 +434,14 @@ class AdvancedBayesianAssimilator(BayesianAssimilator):
 if __name__ == "__main__":
     assimilator = AdvancedBayesianAssimilator()
     assimilator.initialize_grid(domain_size=(1000.0, 1000.0, 100.0), resolution=10.0)
-    
+
     bg = np.random.rand(101, 101, 11) * 10
     obs = np.array([5.0, 6.0, 7.0])
     obs_loc = np.array([[100.0, 100.0, 50.0], [200.0, 200.0, 50.0], [300.0, 300.0, 50.0]])
-    
+
     analysis, variance = assimilator.assimilate(bg, obs, obs_loc, strategy='full')
     logger.info(f"网格形状: {assimilator.grid_shape}")
     logger.info(f"分辨率: {assimilator.resolution}")
     logger.info(f"分析场范围: [{analysis.min():.2f}, {analysis.max():.2f}]")
     logger.info(f"方差场范围: [{variance.min():.4f}, {variance.max():.4f}]")
     logger.info("测试通过！")
-

@@ -4,6 +4,7 @@
 from dataclasses import dataclass, field
 from typing import List
 
+
 @dataclass
 class DomainConfig:
     """成都平原计算域"""
@@ -38,8 +39,8 @@ class CMADataConfig:
     tianzi_url: str = "https://api.cma.cn/tianzi/v1/forecast"
     tianzi_key: str = ""               # 需要注册获取
     tianzi_params: dict = field(default_factory=lambda: {
-        "model": "GRAPES_GFS",         # 全球谱模式
-        "resolution": "0.25",          # 0.25° ≈ 25km
+        "model": "GRAPES_GFS",  # 全球谱模式
+        "resolution": "0.25",  # 0.25° ≈ 25km
         "levels": ["1000", "925", "850", "700", "500"],
         "fcst_hours": [0, 3, 6, 12, 24, 48, 72],
     })
@@ -48,8 +49,8 @@ class CMADataConfig:
     fenglei_url: str = "https://api.cma.cn/fenglei/v1/forecast"
     fenglei_key: str = ""
     fenglei_params: dict = field(default_factory=lambda: {
-        "model": "GRAPES_MESO",        # 中尺度区域模式
-        "resolution": "0.03",          # 3km
+        "model": "GRAPES_MESO",  # 中尺度区域模式
+        "resolution": "0.03",  # 3km
         "levels": ["1000", "925", "850", "700", "500", "300"],
         "fcst_hours": [0, 1, 3, 6, 12, 24],
     })
@@ -64,14 +65,14 @@ class VariableConfig:
     """气象变量映射"""
     variables: dict = field(default_factory=lambda: {
         # [CMA 变量名, 中文名, 单位]
-        "u10":  "10m_u_wind",          "v10":  "10m_v_wind",
-        "t2m":  "2m_temperature",      "rh2m": "2m_relative_humidity",
-        "ps":   "surface_pressure",    "blh":  "boundary_layer_height",
+        "u10":  "10m_u_wind", "v10":  "10m_v_wind",
+        "t2m":  "2m_temperature", "rh2m": "2m_relative_humidity",
+        "ps":   "surface_pressure", "blh":  "boundary_layer_height",
         "swr":  "shortwave_radiation", "lwr":  "longwave_radiation",
         "hpbl": "pbl_height",
         # 高空层
-        "u":  "winds",  "v": "winds",  "t":  "temperature",
-        "q":  "humidity",  "w": "vertical_velocity",
+        "u":  "winds", "v": "winds", "t":  "temperature",
+        "q":  "humidity", "w": "vertical_velocity",
     })
 
     # 地面变量（张量通道顺序）

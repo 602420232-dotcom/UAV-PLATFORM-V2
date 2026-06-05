@@ -56,7 +56,6 @@ class TestEdgeCases:
         assert True
 
 
-
 # pytest configuration
 # =====================
 #

@@ -2,6 +2,8 @@
 GPR 风险场驱动的路径规划
 
 保留原 Java path-planning-service 作为传统方法 baseline。
+
+
 此模块为新增的 Python 路径规划器，专为新架构设计:
   - 读入 GPR 风险方差场
   - 在风险约束下做路径优化
@@ -242,6 +244,7 @@ class GPRPathPlanner:
 
 
 # ── 新旧路径规划对比 ────────────────────────────
+
 
 class PathPlanningComparison:
     """

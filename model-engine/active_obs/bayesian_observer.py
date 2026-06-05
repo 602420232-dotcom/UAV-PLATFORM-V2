@@ -1,15 +1,18 @@
 """
 贝叶斯主动观测决策算法
 
+
 问题:
   无人机观测资源有限 (电量/时间), 每次只能采集少量站点。
   应该去哪些位置采集观测值, 才能最大化对预报的改进?
+
 
 方法:
   贝叶斯主动学习 (Bayesian Active Learning)
   - 用 GPR 的预测方差衡量每个位置的"信息量"
   - 选择方差最大的位置去采集 (不确定性采样)
   - 采集后更新 GPR, 方差下降 → 选择下一个位置
+
 
 流程:
   1. 用当前 GPR 风险场计算全局方差场
@@ -35,7 +38,7 @@ class ActiveObsConfig:
 
     # 约束
     max_flight_range_km: float = 50.0       # 单次飞行最远
-    max_observation_altitude: float = 300.0 # m
+    max_observation_altitude: float = 300.0  # m
     min_distance_between_obs: float = 2.0   # km, 避免重复
 
     # GPR

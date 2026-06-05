@@ -22,17 +22,21 @@ src_path = os.path.join(os.path.dirname(__file__), '..', 'src')
 sys.path.insert(0, src_path)
 
 # 直接导入所需模块，避免触发包的 __init__.py
-from bayesian_assimilation.core.assimilator import BayesianAssimilator # type: ignore
-from bayesian_assimilation.utils.config import AssimilationConfig # type: ignore
+from bayesian_assimilation.core.assimilator import BayesianAssimilator  # type: ignore
+from bayesian_assimilation.utils.config import AssimilationConfig  # type: ignore
+
 
 try:
     import matplotlib
     matplotlib.use('Agg')
     import matplotlib.pyplot as plt
     HAS_MATPLOTLIB = True
+
+
 except ImportError:
     HAS_MATPLOTLIB = False
     plt = None
+
 
 logging.basicConfig(
     level=logging.INFO,
@@ -46,115 +50,115 @@ os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 class MeteorologicalQualityControl:
     """气象数据质量控制模块"""
-    
+
     @staticmethod
     def validate_wind_speed(wind_speed):
         """验证风速数据"""
         min_wind = 0.0
         max_wind = 83.3  # 300 km/h，台风级风速上限
-        
+
         # 检查异常值
         mask = (wind_speed < min_wind) | (wind_speed > max_wind)
         if np.any(mask):
             count = np.sum(mask)
             logger.warning(f"发现 {count} 个无效风速值，已裁剪到有效范围")
             wind_speed = np.clip(wind_speed, min_wind, max_wind)
-        
+
         return wind_speed
-    
+
     @staticmethod
     def validate_temperature(temperature):
         """验证温度数据"""
         min_temp = 200.0  # 约 -73°C
         max_temp = 330.0  # 约 57°C
-        
+
         mask = (temperature < min_temp) | (temperature > max_temp)
         if np.any(mask):
             count = np.sum(mask)
             logger.warning(f"发现 {count} 个无效温度值，已裁剪到有效范围")
             temperature = np.clip(temperature, min_temp, max_temp)
-        
+
         return temperature
-    
+
     @staticmethod
     def validate_humidity(humidity: str):
         """验证湿度数据"""
         min_humidity = 0.0
         max_humidity = 100.0
-        
+
         mask = (humidity < min_humidity) | (humidity > max_humidity)
         if np.any(mask):
             count = np.sum(mask)
             logger.warning(f"发现 {count} 个无效湿度值，已裁剪到有效范围")
             humidity = np.clip(humidity, min_humidity, max_humidity)
-        
+
         return humidity
-    
+
     @staticmethod
-    def detect_outliers(data: Dict[str, Any], threshold=3.0: Any):
+    def detect_outliers(data: Dict[str, Any], threshold: Any = 3.0):
         """检测异常值"""
         mean = np.mean(data)
         std = np.std(data)
         outliers = np.abs(data - mean) > threshold * std
         return outliers
-    
+
     @staticmethod
     def check_wind_gradient(wind_speed, max_gradient=5.0):
         """检查风速梯度，检测不合理的风速突变"""
         if wind_speed.ndim != 3:
             return wind_speed
-        
+
         # 计算水平梯度
         gradient_x = np.abs(np.diff(wind_speed, axis=0))
         gradient_y = np.abs(np.diff(wind_speed, axis=1))
-        
+
         # 计算垂直梯度
         gradient_z = np.abs(np.diff(wind_speed, axis=2))
-        
+
         # 检查梯度是否超过阈值
         max_gradient_x = gradient_x.max()
         max_gradient_y = gradient_y.max()
         max_gradient_z = gradient_z.max()
-        
+
         if max_gradient_x > max_gradient or max_gradient_y > max_gradient or max_gradient_z > max_gradient:
             logger.warning(f"风速梯度超过阈值: x={max_gradient_x:.2f}, y={max_gradient_y:.2f}, z={max_gradient_z:.2f} m/s")
-            
+
             # 平滑处理
             from scipy.ndimage import gaussian_filter
             wind_speed = gaussian_filter(wind_speed, sigma=1.0)
             wind_speed = MeteorologicalQualityControl.validate_wind_speed(wind_speed)
-        
+
         return wind_speed
-    
+
     @staticmethod
-    def check_time_consistency(time_series_data: float, max_change=10.0: Any):
+    def check_time_consistency(time_series_data: float, max_change: Any = 10.0):
         """检查时间一致性，确保气象数据随时间合理变化"""
         if len(time_series_data) < 2:
             return time_series_data
-        
+
         for i in range(1, len(time_series_data)):
             current_data = time_series_data[i]['wind_speed']
             previous_data = time_series_data[i-1]['wind_speed']
-            
+
             # 计算时间变化
             time_change = np.abs(current_data - previous_data)
             max_time_change = time_change.max()
-            
+
             if max_time_change > max_change:
                 logger.warning(f"检测到时间不一致: 最大变化 {max_time_change:.2f} m/s 超过阈值 {max_change:.2f} m/s")
-                
+
                 # 平滑处理
                 time_series_data[i]['wind_speed'] = 0.7 * current_data + 0.3 * previous_data
                 time_series_data[i]['wind_speed'] = MeteorologicalQualityControl.validate_wind_speed(time_series_data[i]['wind_speed'])
-        
+
         return time_series_data
-    
+
     @staticmethod
     def quality_control_observations(observations, obs_types):
         """质量控制观测数据"""
         validated_obs = []
         valid_mask = []
-        
+
         for i, (obs, obs_type) in enumerate(zip(observations, obs_types)):
             if obs_type == 'wind_speed':
                 # 风速质量控制
@@ -183,87 +187,87 @@ class MeteorologicalQualityControl:
             else:
                 validated_obs.append(obs)
                 valid_mask.append(True)
-        
+
         return np.array(validated_obs), np.array(valid_mask)
 
 
 class MeteorologicalRiskAssessment:
     """气象风险评估模块"""
-    
+
     @staticmethod
     def assess_wind_risk(wind_speed):
         """评估风速风险"""
         # 风速风险等级（m/s）
         thresholds = {
-            'low': 10.8,      # 6级风
+            'low': 10.8,  # 6级风
             'moderate': 17.2,  # 8级风
-            'high': 24.5,     # 10级风
+            'high': 24.5,  # 10级风
             'extreme': 32.7   # 12级风
         }
-        
+
         risk_levels = np.zeros_like(wind_speed, dtype=int)
         risk_levels[wind_speed > thresholds['extreme']] = 4
         risk_levels[(wind_speed > thresholds['high']) & (wind_speed <= thresholds['extreme'])] = 3
         risk_levels[(wind_speed > thresholds['moderate']) & (wind_speed <= thresholds['high'])] = 2
         risk_levels[(wind_speed > thresholds['low']) & (wind_speed <= thresholds['moderate'])] = 1
-        
+
         return risk_levels
-    
+
     @staticmethod
     def assess_turbulence_risk(wind_speed, variance):
         """评估湍流风险"""
         # 基于风速和方差的湍流风险评估
         turbulence_index = wind_speed * np.sqrt(variance)
-        
+
         thresholds = {
-            'low': 5,      # 低湍流
-            'moderate': 15, # 中等湍流
-            'high': 25,    # 高湍流
+            'low': 5,  # 低湍流
+            'moderate': 15,  # 中等湍流
+            'high': 25,  # 高湍流
             'extreme': 35   # 极端湍流
         }
-        
+
         risk_levels = np.zeros_like(turbulence_index, dtype=int)
         risk_levels[turbulence_index > thresholds['extreme']] = 4
         risk_levels[(turbulence_index > thresholds['high']) & (turbulence_index <= thresholds['extreme'])] = 3
         risk_levels[(turbulence_index > thresholds['moderate']) & (turbulence_index <= thresholds['high'])] = 2
         risk_levels[(turbulence_index > thresholds['low']) & (turbulence_index <= thresholds['moderate'])] = 1
-        
+
         return risk_levels
-    
+
     @staticmethod
     def assess_shear_risk(vertical_shear):
         """评估垂直风切变风险"""
         # 垂直风切变风险等级（m/s/km）
         thresholds = {
-            'low': 2.0,      # 低切变
+            'low': 2.0,  # 低切变
             'moderate': 4.0,  # 中等切变
-            'high': 6.0,     # 高切变
+            'high': 6.0,  # 高切变
             'extreme': 8.0   # 极端切变
         }
-        
+
         risk_levels = np.zeros_like(vertical_shear, dtype=int)
         risk_levels[vertical_shear > thresholds['extreme']] = 4
         risk_levels[(vertical_shear > thresholds['high']) & (vertical_shear <= thresholds['extreme'])] = 3
         risk_levels[(vertical_shear > thresholds['moderate']) & (vertical_shear <= thresholds['high'])] = 2
         risk_levels[(vertical_shear > thresholds['low']) & (vertical_shear <= thresholds['moderate'])] = 1
-        
+
         return risk_levels
-    
+
     @staticmethod
     def composite_risk_assessment(analysis, variance, wind_speed=None):
         """综合风险评估"""
         if wind_speed is None:
             wind_speed = analysis
-        
+
         # 评估风速风险
         wind_risk = MeteorologicalRiskAssessment.assess_wind_risk(wind_speed)
-        
+
         # 评估湍流风险
         turbulence_risk = MeteorologicalRiskAssessment.assess_turbulence_risk(wind_speed, variance)
-        
+
         # 综合风险（加权平均）
         composite_risk = (0.6 * wind_risk + 0.4 * turbulence_risk).astype(int)
-        
+
         return {
             'wind_risk': wind_risk,
             'turbulence_risk': turbulence_risk,
@@ -276,19 +280,19 @@ def calculate_vertical_shear(wind_field):
     # 检查维度
     if wind_field.ndim != 3:
         raise ValueError("Wind field must be 3D (x, y, z)")
-    
+
     # 计算垂直方向的梯度
     vertical_shear = np.zeros_like(wind_field)
-    
+
     # 计算层间风速差
     for z in range(1, wind_field.shape[2]):
         # 计算当前层与上一层的风速差
         shear = np.abs(wind_field[:, :, z] - wind_field[:, :, z-1])
         vertical_shear[:, :, z] = shear
-    
+
     # 第一层设为0
     vertical_shear[:, :, 0] = 0
-    
+
     return vertical_shear
 
 
@@ -296,17 +300,17 @@ def enhanced_risk_assessment(analysis, variance):
     """增强版风险评估，增加更多气象因素考量"""
     # 风速风险
     wind_risk = MeteorologicalRiskAssessment.assess_wind_risk(analysis)
-    
+
     # 湍流风险
     turbulence_risk = MeteorologicalRiskAssessment.assess_turbulence_risk(analysis, variance)
-    
+
     # 垂直风切变风险
     vertical_shear = calculate_vertical_shear(analysis)
     shear_risk = MeteorologicalRiskAssessment.assess_shear_risk(vertical_shear)
-    
+
     # 综合风险（加权平均）
     composite_risk = (0.5 * wind_risk + 0.3 * turbulence_risk + 0.2 * shear_risk).astype(int)
-    
+
     return {
         'wind_risk': wind_risk,
         'turbulence_risk': turbulence_risk,
@@ -317,21 +321,21 @@ def enhanced_risk_assessment(analysis, variance):
 
 class TimeSeriesAnalyzer:
     """时间序列分析模块"""
-    
+
     @staticmethod
-    def generate_time_series_data(domain_size: int, n_time_steps=6: float):
+    def generate_time_series_data(domain_size: int, n_time_steps: float = 6):
         """生成时间序列数据"""
         time_series = []
-        
+
         for t in range(n_time_steps):
             # 生成随时间变化的风速场
             nx, ny, nz = 50, 50, 10
             x = np.linspace(0, domain_size[0], nx)
             y = np.linspace(0, domain_size[1], ny)
             z = np.linspace(0, domain_size[2], nz)
-            
+
             xx, yy, zz = np.meshgrid(x, y, z, indexing='ij')
-            
+
             # 随时间变化的风速模式 - 更真实的时间演变
             time_factor = np.sin(2*np.pi*t/12)  # 12小时周期
             # 添加趋势成分
@@ -339,10 +343,10 @@ class TimeSeriesAnalyzer:
             # 天气系统移动
             system_center_x = domain_size[0] / 2 + 500 * np.sin(2*np.pi*t/24)
             system_center_y = domain_size[1] / 2 + 500 * np.cos(2*np.pi*t/24)
-            
+
             # 计算距离天气系统中心的距离
             distance = np.sqrt((xx - system_center_x)**2 + (yy - system_center_y)**2)
-            
+
             # 基于距离的风速分布
             u_wind = 5.0 + trend + 2.0 * time_factor * np.sin(2*np.pi*xx/1000) * np.cos(2*np.pi*yy/1000)
             v_wind = 3.0 + trend + 1.5 * time_factor * np.cos(2*np.pi*xx/800) * np.sin(2*np.pi*yy/1200)
@@ -350,13 +354,13 @@ class TimeSeriesAnalyzer:
             system_effect = 3.0 * np.exp(-(distance/1000)**2)
             u_wind += system_effect
             v_wind += system_effect
-            
+
             wind_speed = np.sqrt(u_wind**2 + v_wind**2)
-            
+
             # 添加一些随机变化
             wind_speed += 0.5 * np.random.randn(nx, ny, nz)
             wind_speed = np.clip(wind_speed, 0, 83.3)
-            
+
             time_series.append({
                 'time_step': t,
                 'wind_speed': wind_speed,
@@ -364,12 +368,12 @@ class TimeSeriesAnalyzer:
                 'trend': trend,
                 'system_center': (system_center_x, system_center_y)
             })
-        
+
         # 时间一致性检查
         time_series = MeteorologicalQualityControl.check_time_consistency(time_series)
-        
+
         return time_series
-    
+
     @staticmethod
     def analyze_risk_trend(risk_time_series: float):
         """分析风险趋势"""
@@ -384,14 +388,14 @@ class TimeSeriesAnalyzer:
                 'moderate_risk_area': float(np.sum((risk_data['composite_risk'] >= 2) & (risk_data['composite_risk'] < 3)) / risk_data['composite_risk'].size * 100)
             })
         return trend_data
-    
+
     @staticmethod
     def detect_risk_anomalies(trend_data, threshold=2.0):
         """检测风险异常"""
         mean_risks = [item['mean_risk'] for item in trend_data]
         mean = np.mean(mean_risks)
         std = np.std(mean_risks)
-        
+
         anomalies = []
         for i, item in enumerate(trend_data):
             if abs(item['mean_risk'] - mean) > threshold * std:
@@ -402,20 +406,20 @@ class TimeSeriesAnalyzer:
                     'threshold': threshold * std
                 })
         return anomalies
-    
+
     @staticmethod
     def predict_risk_trend(trend_data, n_steps=2):
         """预测风险趋势"""
         if len(trend_data) < 3:
             return []
-        
+
         mean_risks = [item['mean_risk'] for item in trend_data]
-        
+
         # 简单线性预测
         x = np.arange(len(mean_risks))
         coefficients = np.polyfit(x, mean_risks, 1)
         polynomial = np.poly1d(coefficients)
-        
+
         predictions = []
         for i in range(n_steps):
             next_step = len(mean_risks) + i
@@ -424,7 +428,7 @@ class TimeSeriesAnalyzer:
                 'time_step': next_step,
                 'predicted_mean_risk': max(0, min(4, predicted_risk))  # 限制在0-4范围内
             })
-        
+
         return predictions
 
 
@@ -486,12 +490,12 @@ def load_wrf_data_mock(file_path=None):
     temperature = 288.15 - 0.0065 * zz + 2.0 * np.random.randn(nx, ny, nz)
 
     wind_speed = np.sqrt(u_wind**2 + v_wind**2)
-    
+
     # 质量控制
     wind_speed = MeteorologicalQualityControl.validate_wind_speed(wind_speed)
     temperature = MeteorologicalQualityControl.validate_temperature(temperature)
 
-    logger.info(f"模拟WRF数据加载完成")
+    logger.info("模拟WRF数据加载完成")
     logger.info(f"网格: {nx}x{ny}x{nz}")
     logger.info(f"风速范围: [{wind_speed.min():.2f}, {wind_speed.max():.2f}] m/s")
     logger.info(f"温度范围: [{temperature.min():.2f}, {temperature.max():.2f}] K")
@@ -557,10 +561,10 @@ def process_observation_data(obs_file=None):
     observations = np.array(observations)
     obs_locations = np.array(obs_locations)
     obs_types = np.array(obs_types)
-    
+
     # 质量控制观测数据
     validated_obs, valid_mask = MeteorologicalQualityControl.quality_control_observations(observations, obs_types)
-    
+
     # 过滤无效观测
     if len(validated_obs) < len(observations):
         logger.info(f"已过滤 {len(observations) - len(validated_obs)} 个无效观测值")
@@ -569,7 +573,7 @@ def process_observation_data(obs_file=None):
     else:
         validated_obs = observations
 
-    logger.info(f"模拟观测数据加载完成")
+    logger.info("模拟观测数据加载完成")
     logger.info(f"站点数量: {n_stations}")
     logger.info(f"总观测数: {len(validated_obs)}")
     logger.info(f"观测类型: {set(obs_types)}")
@@ -627,19 +631,19 @@ def run_assimilation(background_data, observation_data):
 
         # 数据合理性检查和异常值处理
         analysis = MeteorologicalQualityControl.validate_wind_speed(analysis)
-        
+
         # 风速梯度检查
         analysis = MeteorologicalQualityControl.check_wind_gradient(analysis)
-        
+
         # 进一步的合理性检查
         max_analysis_value = analysis.max()
         min_analysis_value = analysis.min()
-        
-        logger.info(f"同化完成")
+
+        logger.info("同化完成")
         logger.info(f"分析场形状: {analysis.shape}")
         logger.info(f"分析场范围: [{min_analysis_value:.2f}, {max_analysis_value:.2f}] m/s")
         logger.info(f"方差范围: [{variance.min():.4f}, {variance.max():.4f}]")
-        
+
         # 检查每一层的风速范围
         n_layers = analysis.shape[2]
         for i in range(n_layers):
@@ -673,7 +677,7 @@ def generate_risk_heatmap(analysis, variance):
 
     # 增强版风险评估
     risk_assessment = enhanced_risk_assessment(analysis, variance)
-    
+
     # 传统基于方差的风险评估
     risk_threshold = variance.mean() + 2 * variance.std()
     high_risk_mask = variance > risk_threshold
@@ -686,21 +690,21 @@ def generate_risk_heatmap(analysis, variance):
     composite_high_risk = risk_assessment['composite_risk'] >= 3
     composite_risk_percentage = np.sum(composite_high_risk) / total_points * 100
 
-    logger.info(f"传统风险评估:")
+    logger.info("传统风险评估:")
     logger.info(f"  高风险区域: {n_high_risk} 个点 ({risk_percentage:.2f}%)")
     logger.info(f"  风险阈值: {risk_threshold:.4f}")
     logger.info(f"  方差范围: [{variance.min():.4f}, {variance.max():.4f}]")
-    
-    logger.info(f"\n增强型综合风险评估:")
+
+    logger.info("\n增强型综合风险评估:")
     logger.info(f"  高风险区域: {np.sum(composite_high_risk)} 个点 ({composite_risk_percentage:.2f}%)")
     logger.info(f"  最大风险等级: {np.max(risk_assessment['composite_risk'])}")
-    
+
     # 计算垂直风切变统计
     vertical_shear = calculate_vertical_shear(analysis)
-    logger.info(f"\n垂直风切变分析:")
+    logger.info("\n垂直风切变分析:")
     logger.info(f"  切变范围: [{vertical_shear.min():.2f}, {vertical_shear.max():.2f}] m/s")
     logger.info(f"  平均切变: {vertical_shear.mean():.2f} m/s")
-    
+
     risk_zones = []
     if composite_risk_percentage > 20:
         risk_zones.append("高风险：高风险区域比例较高，建议重新规划路线")
@@ -858,20 +862,20 @@ def save_results(background_data, observation_data, assimilation_result, risk_re
                 # 分离实际数据和预测数据
                 actual_data = [item for item in time_series_data if 'predicted' not in item or not item['predicted']]
                 predicted_data = [item for item in time_series_data if 'predicted' in item and item['predicted']]
-                
+
                 fig2, axes2 = plt.subplots(3, 1, figsize=(12, 12))
-                
+
                 # 实际数据
                 actual_time_steps = [item['time_step'] for item in actual_data]
                 actual_mean_risks = [item['mean_risk'] for item in actual_data]
                 actual_max_risks = [item['max_risk'] for item in actual_data]
                 actual_high_risk_areas = [item['high_risk_area'] for item in actual_data]
                 actual_moderate_risk_areas = [item.get('moderate_risk_area', 0) for item in actual_data]
-                
+
                 # 预测数据
                 predicted_time_steps = [item['time_step'] for item in predicted_data]
                 predicted_mean_risks = [item['mean_risk'] for item in predicted_data]
-                
+
                 # 风险水平趋势
                 axes2[0].plot(actual_time_steps, actual_mean_risks, 'b-o', label='平均风险 (实际)', linewidth=2)
                 axes2[0].plot(actual_time_steps, actual_max_risks, 'r-s', label='最大风险 (实际)', linewidth=2)
@@ -882,7 +886,7 @@ def save_results(background_data, observation_data, assimilation_result, risk_re
                 axes2[0].set_ylabel('风险等级', fontsize=10)
                 axes2[0].legend()
                 axes2[0].grid(True, alpha=0.3)
-                
+
                 # 风险区域百分比
                 axes2[1].plot(actual_time_steps, actual_high_risk_areas, 'g-^', label='高风险区域 (%)', linewidth=2)
                 axes2[1].plot(actual_time_steps, actual_moderate_risk_areas, 'y-^', label='中等风险区域 (%)', linewidth=2)
@@ -891,7 +895,7 @@ def save_results(background_data, observation_data, assimilation_result, risk_re
                 axes2[1].set_ylabel('百分比 (%)', fontsize=10)
                 axes2[1].legend()
                 axes2[1].grid(True, alpha=0.3)
-                
+
                 # 风险标准差
                 if 'risk_std' in actual_data[0]:
                     actual_risk_std = [item['risk_std'] for item in actual_data]
@@ -901,7 +905,7 @@ def save_results(background_data, observation_data, assimilation_result, risk_re
                     axes2[2].set_ylabel('标准差', fontsize=10)
                     axes2[2].legend()
                     axes2[2].grid(True, alpha=0.3)
-                
+
                 plt.tight_layout()
                 time_series_path = os.path.join(output_dir, f'risk_time_series_{timestamp}.png')
                 plt.savefig(time_series_path, dpi=150, bbox_inches='tight')
@@ -943,15 +947,15 @@ def main():
         # 生成时间序列数据并分析
         time_series = TimeSeriesAnalyzer.generate_time_series_data(wrf_data['domain_size'], n_time_steps=12)  # 增加时间步长
         risk_time_series = []
-        
+
         for time_data in time_series:
             # 生成更合理的方差场
             variance = np.random.randn(*time_data['wind_speed'].shape) * 0.5 + 1.0
             # 方差与风速相关
             variance = np.abs(variance) * (0.1 * time_data['wind_speed'] + 0.5)
-            
+
             time_risk = MeteorologicalRiskAssessment.composite_risk_assessment(
-                time_data['wind_speed'], 
+                time_data['wind_speed'],
                 variance
             )
             risk_time_series.append({
@@ -960,23 +964,23 @@ def main():
                 'wind_risk': time_risk['wind_risk'],
                 'turbulence_risk': time_risk['turbulence_risk']
             })
-        
+
         trend_data = TimeSeriesAnalyzer.analyze_risk_trend(risk_time_series)
-        
+
         # 检测风险异常
         anomalies = TimeSeriesAnalyzer.detect_risk_anomalies(trend_data)
         if anomalies:
             logger.info("\n检测到风险异常:")
             for anomaly in anomalies:
                 logger.info(f"  时间步 {anomaly['time_step']}: 平均风险 {anomaly['mean_risk']:.2f}, 偏差 {anomaly['deviation']:.2f}")
-        
+
         # 预测风险趋势
         predictions = TimeSeriesAnalyzer.predict_risk_trend(trend_data, n_steps=3)
         if predictions:
             logger.info("\n风险趋势预测:")
             for pred in predictions:
                 logger.info(f"  时间步 {pred['time_step']}: 预测平均风险 {pred['predicted_mean_risk']:.2f}")
-        
+
         # 扩展趋势数据，包含预测结果
         extended_trend_data = trend_data.copy()
         for pred in predictions:
@@ -989,14 +993,14 @@ def main():
                 'moderate_risk_area': 0.0,
                 'predicted': True
             })
-        
+
         save_results(wrf_data, obs_data, assimilation_result, risk_result, OUTPUT_DIR, extended_trend_data)
 
         logger.info("\n" + "="*60)
         logger.info("案例分析结果")
         logger.info("="*60)
-        logger.info(f"同化分析完成")
-        logger.info(f"风险热力图已生成")
+        logger.info("同化分析完成")
+        logger.info("风险热力图已生成")
         logger.info(f"识别到 {len(risk_result['risk_zones'])} 个风险区域")
         logger.info(f"综合风险百分比: {risk_result['composite_risk_percentage']:.2f}%")
 

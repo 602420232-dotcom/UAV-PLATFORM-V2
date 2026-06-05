@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
 """Fix wildcard imports and broad exceptions in Java files."""
-import re, os
+import re
+import os
 
 ROOT = r'd:\Developer\workplace\py\iteam\trae'
-SKIP = {'.git','node_modules','target','__pycache__','.idea','.pytest_cache','.trae'}
+SKIP = {'.git', 'node_modules', 'target', '__pycache__', '.idea', '.pytest_cache', '.trae'}
 
 # Map of packages to their common types
+
+
 PKG_TYPES = {
     'java.util': ['List', 'Map', 'ArrayList', 'HashMap', 'Set', 'HashSet', 'Optional',
                   'Arrays', 'Collections', 'Date', 'Objects', 'Queue', 'Deque',
@@ -26,13 +29,16 @@ PKG_TYPES = {
 }
 
 # Global type detection - build a set of all Java identifiers used
-JAVA_KEYWORDS = {'abstract','assert','boolean','break','byte','case','catch','char',
-    'class','const','continue','default','do','double','else','enum','extends',
-    'final','finally','float','for','goto','if','implements','import','instanceof',
-    'int','interface','long','native','new','package','private','protected','public',
-    'return','short','static','strictfp','super','switch','synchronized','this',
-    'throw','throws','transient','try','void','volatile','while','true','false','null',
-    'var','yield','sealed','permits','record'}
+
+
+JAVA_KEYWORDS = {'abstract', 'assert', 'boolean', 'break', 'byte', 'case', 'catch', 'char',
+    'class', 'const', 'continue', 'default', 'do', 'double', 'else', 'enum', 'extends',
+    'final', 'finally', 'float', 'for', 'goto', 'if', 'implements', 'import', 'instanceof',
+    'int', 'interface', 'long', 'native', 'new', 'package', 'private', 'protected', 'public',
+    'return', 'short', 'static', 'strictfp', 'super', 'switch', 'synchronized', 'this',
+    'throw', 'throws', 'transient', 'try', 'void', 'volatile', 'while', 'true', 'false', 'null',
+    'var', 'yield', 'sealed', 'permits', 'record'}
+
 
 def detect_used_types(content):
     """Detect capitalized type names used in code (excluding keywords/annotations)"""
@@ -42,6 +48,7 @@ def detect_used_types(content):
         if name not in JAVA_KEYWORDS and not name.endswith('Test') and not name.endswith('Tests'):
             types.add(name)
     return types
+
 
 def fix_wildcard_file(fp):
     """Replace wildcard imports with explicit ones"""
@@ -84,7 +91,7 @@ def fix_wildcard_file(fp):
                 imp = f'import {pkg}.{t};'
                 if imp not in [l.strip() for l in new_lines]:
                     added_imports.append(imp)
-    
+
     if not added_imports:
         # Fallback: keep the wildcard
         for pkg in removed_packages:
@@ -112,12 +119,16 @@ def fix_wildcard_file(fp):
         f.write(result)
     return True
 
+
 # Process all files
 fixed = 0
+
+
 for dp, dn, fn in os.walk(ROOT):
     dn[:] = [d for d in dn if d not in SKIP]
     for f in fn:
-        if not f.endswith('.java'): continue
+        if not f.endswith('.java'):
+            continue
         fp = os.path.join(dp, f)
         try:
             if fix_wildcard_file(fp):

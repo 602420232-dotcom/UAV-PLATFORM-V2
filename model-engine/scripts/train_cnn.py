@@ -5,6 +5,7 @@ CNN 空间订正器 — 训练脚本
 训练: CNN 订正粗网格预报 (3km → 3km 误差订正)
 输入: 粗网格场 (11ch) + DEM (1ch) → 输出: 订正后场 (6ch)
 
+
 用法:
   python scripts/train_cnn.py                    # 模拟数据训练
   python scripts/train_cnn.py --real-data ./data  # 真实数据
@@ -23,6 +24,7 @@ from torch.utils.tensorboard import SummaryWriter
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from cnn_corrector.model import CNNCorrector, CNNConfig
 from data_pipeline.dataset import WeatherDataset, WeatherDataModule
+
 
 logging.basicConfig(level=logging.INFO,
                     format="%(asctime)s [%(levelname)s] %(message)s")

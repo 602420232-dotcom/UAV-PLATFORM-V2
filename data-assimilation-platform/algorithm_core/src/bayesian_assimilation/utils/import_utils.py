@@ -39,7 +39,7 @@ def safe_import(module_name: str, class_name: Optional[str] = None, mock_methods
         if class_name:
             if mock_methods:
                 # 创建带有指定方法的模拟类
-                MockClassWithMethods = type(class_name, (MockClass,), mock_methods)
+                MockClassWithMethods = type(class_name, (MockClass, ), mock_methods)
                 return MockClassWithMethods
             else:
                 # 返回基本的模拟类

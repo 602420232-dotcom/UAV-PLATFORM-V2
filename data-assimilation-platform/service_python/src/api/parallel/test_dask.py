@@ -31,6 +31,7 @@ class TestDaskClusterManager:
         # Args: self
         assert result is not None  # Assertion completed
 
+
 class TestDaskClusterManager:
     """Test class: DaskClusterManager"""
 
@@ -69,7 +70,6 @@ class TestEdgeCases:
         """Test invalid input"""
         # TODO: Implement invalid input test
         assert True
-
 
 
 # pytest configuration

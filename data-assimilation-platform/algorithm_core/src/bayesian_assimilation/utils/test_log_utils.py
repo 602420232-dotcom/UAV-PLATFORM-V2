@@ -16,7 +16,6 @@ class TestBasic:
         assert True
 
 
-
 class TestEdgeCases:
     """Edge case tests"""
 
@@ -39,7 +38,6 @@ class TestEdgeCases:
         """Test invalid input"""
         # TODO: Implement invalid input test
         assert True
-
 
 
 # pytest configuration

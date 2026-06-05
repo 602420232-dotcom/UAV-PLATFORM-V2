@@ -184,7 +184,7 @@ def check_frontend_implementation():
             logger.info(f"[ERROR] {file_path} 不存在")
 
     if existing_count == 0:
-        logger.info(f"[INFO] 前端目录可能不存在或使用了不同的目录结构")
+        logger.info("[INFO] 前端目录可能不存在或使用了不同的目录结构")
 
 
 def check_security_implementation():
@@ -209,7 +209,7 @@ def check_security_implementation():
             logger.info(f"[ERROR] {file_path} 不存在")
 
     if existing_count == 0:
-        logger.info(f"[INFO] 后端Spring目录可能不存在或使用了不同的目录结构")
+        logger.info("[INFO] 后端Spring目录可能不存在或使用了不同的目录结构")
 
 
 def check_deployment():

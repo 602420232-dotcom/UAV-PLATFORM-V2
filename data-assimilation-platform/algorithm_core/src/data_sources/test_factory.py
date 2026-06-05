@@ -31,6 +31,7 @@ class TestDataSourceBase:
         # Args: self
         assert result is not None  # Assertion completed
 
+
 class TestSatelliteDataSource:
     """Test class: SatelliteDataSource"""
 
@@ -45,6 +46,7 @@ class TestSatelliteDataSource:
         # Test logic: Verify basic functionality
         # Args: self
         assert result is not None  # Assertion completed
+
 
 class TestRadarDataSource:
     """Test class: RadarDataSource"""
@@ -61,6 +63,7 @@ class TestRadarDataSource:
         # Args: self
         assert result is not None  # Assertion completed
 
+
 class TestDataSourceFactory:
     """Test class: DataSourceFactory"""
 
@@ -76,6 +79,7 @@ class TestDataSourceFactory:
         # Args: cls, source_type, config
         assert result is not None  # Assertion completed
 
+
 class TestDataSourceFactory:
     """Test class: DataSourceFactory"""
 
@@ -90,6 +94,7 @@ class TestDataSourceFactory:
         # Test logic: Verify basic functionality
         # Args: cls
         assert result is not None  # Assertion completed
+
 
 class TestDataSourceFactory:
     """Test class: DataSourceFactory"""
@@ -129,7 +134,6 @@ class TestEdgeCases:
         """Test invalid input"""
         # TODO: Implement invalid input test
         assert True
-
 
 
 # pytest configuration

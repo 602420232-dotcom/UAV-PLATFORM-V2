@@ -17,15 +17,21 @@ router = APIRouter()
 # 全局服务实例
 assimilation_service = None
 
+
 def set_assimilation_service(service: AssimilationService):
     """设置同化服务实例"""
     global assimilation_service
     assimilation_service = service
 
+
 @router.post("/compute", response_model=AssimilationResponse)
+
+
 async def compute_assimilation(
     request: AssimilationRequest,
     background_tasks: BackgroundTasks
+
+
 ):
     """
     执行贝叶斯同化计算
@@ -80,7 +86,10 @@ async def compute_assimilation(
         message="同化计算成功"
     )
 
+
 @router.post("/self-improve")
+
+
 async def self_improve_model(request: SelfImproveRequest):
     """
     自迭代改进模型
@@ -124,7 +133,10 @@ async def self_improve_model(request: SelfImproveRequest):
         "timestamp": time.time()
     }
 
+
 @router.get("/model-performance/{job_id}")
+
+
 async def get_model_performance(job_id: str):
     """
     获取模型性能
@@ -158,6 +170,7 @@ async def get_model_performance(job_id: str):
         "performance": performance,
         "timestamp": time.time()
     }
+
 
 async def persist_result(job_id: str, result):
     """异步持久化结果"""

@@ -168,10 +168,10 @@ class FengWuEngine:
         surface = []
         for r in results:
             surface.append({
-                "u10": r[0].tolist(),     # 10m U wind
-                "v10": r[1].tolist(),     # 10m V wind
-                "t2m": r[2].tolist(),     # 2m temperature
-                "msl": r[3].tolist(),     # Mean sea level pressure
+                "u10": r[0].tolist(),  # 10m U wind
+                "v10": r[1].tolist(),  # 10m V wind
+                "t2m": r[2].tolist(),  # 2m temperature
+                "msl": r[3].tolist(),  # Mean sea level pressure
             })
         return surface
 

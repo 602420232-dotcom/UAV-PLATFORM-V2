@@ -31,6 +31,7 @@ class TestAssimilationContext:
         # Args: self, analysis, variance, background
         assert result is not None  # Assertion completed
 
+
 class TestAssimilationContext:
     """Test class: AssimilationContext"""
 
@@ -45,6 +46,7 @@ class TestAssimilationContext:
         # Test logic: Verify basic functionality
         # Args: self
         assert result is not None  # Assertion completed
+
 
 class TestAssimilationContext:
     """Test class: AssimilationContext"""
@@ -84,7 +86,6 @@ class TestEdgeCases:
         """Test invalid input"""
         # TODO: Implement invalid input test
         assert True
-
 
 
 # pytest configuration

@@ -132,8 +132,8 @@ class GPRiskEstimator:
             coords: 查询点坐标 (M, 2)
 
         Returns:
-            mean: 预测均值 (M,)
-            variance: 预测方差 (M,) — 高方差 = 高风险
+            mean: 预测均值 (M, )
+            variance: 预测方差 (M, ) — 高方差 = 高风险
         """
         if not self.trained:
             raise RuntimeError("GPR not fitted yet")

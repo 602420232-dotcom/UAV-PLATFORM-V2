@@ -31,6 +31,7 @@ class TestObservationOperator:
         # Args: self, obs_locations
         assert result is not None  # Assertion completed
 
+
 class TestObservationOperator:
     """Test class: ObservationOperator"""
 
@@ -46,6 +47,7 @@ class TestObservationOperator:
         # Args: self, state, obs_locations
         assert result is not None  # Assertion completed
 
+
 class TestNearestNeighborOperator:
     """Test class: NearestNeighborOperator"""
 
@@ -61,6 +63,7 @@ class TestNearestNeighborOperator:
         # Args: self, obs_locations
         assert result is not None  # Assertion completed
 
+
 class TestNearestNeighborOperator:
     """Test class: NearestNeighborOperator"""
 
@@ -75,6 +78,7 @@ class TestNearestNeighborOperator:
         # Test logic: Verify basic functionality
         # Args: self, state, obs_locations
         assert result is not None  # Assertion completed
+
 
 class TestBilinearOperator:
     """Test class: BilinearOperator"""
@@ -91,6 +95,7 @@ class TestBilinearOperator:
         # Args: self, obs_locations
         assert result is not None  # Assertion completed
 
+
 class TestBilinearOperator:
     """Test class: BilinearOperator"""
 
@@ -105,6 +110,7 @@ class TestBilinearOperator:
         # Test logic: Verify basic functionality
         # Args: self, state, obs_locations
         assert result is not None  # Assertion completed
+
 
 class TestGaussianOperator:
     """Test class: GaussianOperator"""
@@ -121,6 +127,7 @@ class TestGaussianOperator:
         # Args: self, obs_locations
         assert result is not None  # Assertion completed
 
+
 class TestGaussianOperator:
     """Test class: GaussianOperator"""
 
@@ -135,6 +142,7 @@ class TestGaussianOperator:
         # Test logic: Verify basic functionality
         # Args: self, state, obs_locations
         assert result is not None  # Assertion completed
+
 
 class TestOperatorFactory:
     """Test class: OperatorFactory"""
@@ -174,7 +182,6 @@ class TestEdgeCases:
         """Test invalid input"""
         # TODO: Implement invalid input test
         assert True
-
 
 
 # pytest configuration

@@ -31,6 +31,7 @@ class TestConfigFactory:
         # Args: config_type
         assert result is not None  # Assertion completed
 
+
 class TestConfigFactory:
     """Test class: ConfigFactory"""
 
@@ -69,7 +70,6 @@ class TestEdgeCases:
         """Test invalid input"""
         # TODO: Implement invalid input test
         assert True
-
 
 
 # pytest configuration

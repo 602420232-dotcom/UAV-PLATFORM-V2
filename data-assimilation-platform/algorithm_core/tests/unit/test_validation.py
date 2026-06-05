@@ -11,8 +11,12 @@ import sys
 SRC_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 SRC_PATH = os.path.join(SRC_DIR, 'src')
 API_PATH = os.path.join(SRC_DIR, 'service_python', 'src')
+
+
 if SRC_PATH not in sys.path:
     sys.path.insert(0, SRC_PATH)
+
+
 if API_PATH not in sys.path:
     sys.path.insert(0, API_PATH)
 
@@ -158,7 +162,7 @@ class TestDataValidation:
         """测试空数组处理"""
         empty = np.array([])
         assert len(empty) == 0
-        assert empty.shape == (0,)
+        assert empty.shape == (0, )
 
     def test_invalid_grid_shape(self):
         """测试无效网格形状"""

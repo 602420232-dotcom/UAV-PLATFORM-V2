@@ -1,7 +1,7 @@
 # Type annotations added: 2026-05-08 13:22:43
 from typing import Dict, List, Any, Optional, Callable, Tuple
 
-﻿"""
+"""
 公平并行计算演示
 确保串行和并行使用相同数据规模，进行公平的性能对比
 优化版本：使用numpy向量化、减少内存复制、优化并行效率
@@ -33,12 +33,15 @@ logging.getLogger('plasma').setLevel(logging.ERROR)
 logging.getLogger('zmq').setLevel(logging.ERROR)
 logging.getLogger('loky').setLevel(logging.ERROR)
 
+
 try:
     import tensorflow as tf
     import os
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
     tf.get_logger().setLevel('ERROR')
-except:
+
+
+except Exception:
     pass
 
 import numpy as np
@@ -52,11 +55,13 @@ from datetime import datetime
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 src_path = os.path.join(project_root, 'src')
+
+
 if src_path not in sys.path:
     sys.path.insert(0, src_path)
 
-from bayesian_assimilation.core.assimilator import BayesianAssimilator # type: ignore
-from bayesian_assimilation.utils.config import AssimilationConfig # type: ignore
+from bayesian_assimilation.core.assimilator import BayesianAssimilator  # type: ignore
+from bayesian_assimilation.utils.config import AssimilationConfig  # type: ignore
 
 # 创建日志目录
 log_dir = os.path.join(os.path.dirname(__file__), '..', 'logs')
@@ -87,6 +92,8 @@ logger = logging.getLogger(__name__)
 
 # 数据规模预设
 # 分辨率、分块和数据点严格随等级递增
+
+
 DATA_PRESETS = {
     'small': {
         'domain': (2000, 2000, 200),
@@ -153,7 +160,7 @@ def monitor_resources():
     }
 
 
-def create_synthetic_data(domain_size: int, resolution: Any, n_obs=50: Any):
+def create_synthetic_data(domain_size: int, resolution: Any, n_obs: Any = 50):
     """优化版本：使用numpy向量化操作"""
     nx = int(domain_size[0] / resolution) + 1
     ny = int(domain_size[1] / resolution) + 1
@@ -163,10 +170,10 @@ def create_synthetic_data(domain_size: int, resolution: Any, n_obs=50: Any):
     logger.info(f"创建数据: {nx}×{ny}×{nz} = {total_points:,} 点")
     logger.info(f"观测数: {n_obs}")
     estimated_memory_gb = (total_points * 64) / (1024**3)
-    
+
     if estimated_memory_gb > 2.0:  # 超过2GB警告
         logger.warning(f"大内存警告！将创建 {total_points:,} 点 ({estimated_memory_gb:.1f} GB)")
-        logger.warning(f"建议使用 --size medium 或更小规模开始测试")
+        logger.warning("建议使用 --size medium 或更小规模开始测试")
     # 使用numpy向量化操作
     x = np.linspace(0, domain_size[0], nx)
     y = np.linspace(0, domain_size[1], ny)
@@ -191,7 +198,7 @@ def create_synthetic_data(domain_size: int, resolution: Any, n_obs=50: Any):
     return background, observations, obs_locations
 
 
-def run_sequential(background: Any, observations: Any, obs_locations: Any, config: Dict[str, Any], iterations=10: Any):
+def run_sequential(background: Any, observations: Any, obs_locations: Any, config: Dict[str, Any], iterations: Any = 10):
     """运行串行计算"""
     assimilator = BayesianAssimilator(config)
     assimilator.initialize_grid(config.domain_size)
@@ -204,7 +211,7 @@ def run_sequential(background: Any, observations: Any, obs_locations: Any, confi
             analysis, variance = assimilator.assimilate_3dvar(
                 background, observations, obs_locations
             )
-        
+
         elapsed = time.time() - start_time
         end_resources = monitor_resources()
 
@@ -225,15 +232,15 @@ def run_sequential(background: Any, observations: Any, obs_locations: Any, confi
 def run_block_parallel_optimized(background, observations, obs_locations, config, n_blocks=4, iterations=10):
     """智能版本：根据数据规模决定是否使用并行"""
     data_points = background.size
-    
+
     # 策略：小数据用串行，大数据才用并行
     if data_points < 1000000:  # <1M点
         logger.info(f"数据规模较小 ({data_points:,}点)，使用串行计算更高效")
         return run_sequential(background, observations, obs_locations, config, iterations)
-    
+
     # 中等数据：使用分块并行
     try:
-        from bayesian_assimilation.parallel.block import BlockParallelAssimilator # type: ignore
+        from bayesian_assimilation.parallel.block import BlockParallelAssimilator  # type: ignore
 
         assimilator = BlockParallelAssimilator(config)
         assimilator.initialize_grid(config.domain_size)
@@ -268,42 +275,42 @@ def run_dask_parallel(background, observations, obs_locations, config, dask_clie
     """优化：只在超大规模启用Dask"""
     data_points = background.size
     data_size_mb = background.nbytes / (1024**2)
-    
+
     # 策略：小于10M点的数据，完全跳过Dask
     if data_points < 10000000:  # <10M点
         logger.info(f"数据规模较小 ({data_points:,}点, {data_size_mb:.1f}MB)")
-        logger.info(f"   Dask通信开销大于并行收益，跳过Dask测试")
-        logger.info(f"   建议: 使用 --size xlarge 或 huge 测试Dask")
+        logger.info("   Dask通信开销大于并行收益，跳过Dask测试")
+        logger.info("   建议: 使用 --size xlarge 或 huge 测试Dask")
         return {
             'success': False,
             'elapsed': 0,
             'skip_reason': 'data_too_small_for_dask',
             'method': 'skipped'
         }
-    
+
     # 只有超大规模才使用Dask
     logger.info(f"数据规模足够大 ({data_points:,}点)，使用Dask并行")
-    
+
     try:
         import dask
         from dask.distributed import Client, LocalCluster
-        from bayesian_assimilation.parallel.dask import DaskParallelAssimilator # type: ignore
+        from bayesian_assimilation.parallel.dask import DaskParallelAssimilator  # type: ignore
 
         assimilator = DaskParallelAssimilator(config)
         assimilator.initialize_grid(config.domain_size)
 
         client = dask_client
         cluster = None
-        
+
         if client is None:
             cpu_count = psutil.cpu_count(logical=False) or 4
-            
+
             # 超大规模使用更多workers
             if data_points < 50000000:  # 10-50M点
                 n_workers = min(16, cpu_count)
             else:  # >50M点
                 n_workers = min(24, max(12, cpu_count // 2))
-            
+
             logger.info(f"创建Dask集群: {n_workers} workers...")
             cluster = LocalCluster(
                 n_workers=n_workers,
@@ -326,14 +333,14 @@ def run_dask_parallel(background, observations, obs_locations, config, dask_clie
         actual_iterations = min(iterations, 2)
         if iterations > 2:
             logger.info(f"减少迭代次数: {iterations} -> {actual_iterations}")
-        
+
         for i in range(actual_iterations):
             analysis, variance = assimilator.assimilate_parallel(
                 background, observations, obs_locations
             )
 
         elapsed = time.time() - start_time
-        
+
         if actual_iterations < iterations:
             elapsed = elapsed * (iterations / actual_iterations)
 
@@ -353,7 +360,7 @@ def run_dask_parallel(background, observations, obs_locations, config, dask_clie
             'estimated_iterations': iterations,
             'method': 'dask_parallel'
         }
-        
+
     except Exception as e:
         logger.error(f"Dask并行计算失败: {e}")
         import traceback
@@ -364,35 +371,35 @@ def run_dask_parallel(background, observations, obs_locations, config, dask_clie
 def run_multiprocessing_parallel(background, observations, obs_locations, config, n_processes=None, iterations=10):
     """使用Python原生multiprocessing，避免Dask开销"""
     data_points = background.size
-    
+
     # 策略：中等规模使用multiprocessing
     if data_points < 1000000:  # <1M点
         logger.info(f"数据规模太小 ({data_points:,}点)，使用串行")
         return run_sequential(background, observations, obs_locations, config, iterations)
-    
+
     try:
         from multiprocessing import Pool, cpu_count
-        from bayesian_assimilation.parallel.block import BlockParallelAssimilator # type: ignore
-        
+        from bayesian_assimilation.parallel.block import BlockParallelAssimilator  # type: ignore
+
         # 自动设置进程数
         if n_processes is None:
             n_processes = min(cpu_count(), 8)  # 最多8个进程
-        
+
         logger.info(f"使用multiprocessing: {n_processes}进程")
-        
+
         assimilator = BlockParallelAssimilator(config)
         assimilator.initialize_grid(config.domain_size)
-        
+
         start_time = time.time()
-        
+
         for i in range(iterations):
             analysis, variance = assimilator.assimilate_block_parallel(
                 background, observations, obs_locations, n_blocks=n_processes
             )
-        
+
         elapsed = time.time() - start_time
         end_resources = monitor_resources()
-        
+
         return {
             'success': True,
             'elapsed': elapsed,
@@ -402,7 +409,7 @@ def run_multiprocessing_parallel(background, observations, obs_locations, config
             'resources': end_resources,
             'method': 'multiprocessing'
         }
-        
+
     except Exception as e:
         logger.error(f"Multiprocessing并行计算失败: {e}")
         import traceback
@@ -410,19 +417,19 @@ def run_multiprocessing_parallel(background, observations, obs_locations, config
         return {'success': False, 'elapsed': 0, 'method': 'failed'}
 
 
-def run_smart_parallel(background: Any, observations: Any, obs_locations: Any, config: Dict[str, Any], iterations=10: Any):
+def run_smart_parallel(background: Any, observations: Any, obs_locations: Any, config: Dict[str, Any], iterations: Any = 10):
     """智能并行：根据数据规模自动选择最优策略"""
     data_points = background.size
     data_size_gb = background.nbytes / (1024**3)
-    
-    logger.info(f"智能并行策略选择:")
+
+    logger.info("智能并行策略选择:")
     logger.info(f"  数据规模: {data_points:,}点 ({data_size_gb:.2f}GB)")
-    
+
     # 策略1: 小数据 (<1M点) - 使用串行
     if data_points < 1000000:
-        logger.info(f"  -> 策略: 串行 (数据太小，并行开销大于收益)")
+        logger.info("  -> 策略: 串行 (数据太小，并行开销大于收益)")
         return run_sequential(background, observations, obs_locations, config, iterations)
-    
+
     # 策略2: 中等数据 (1M-50M点) - 使用multiprocessing
     elif data_points < 50000000:
         n_procs = min(psutil.cpu_count(logical=False) or 4, 8)
@@ -432,10 +439,10 @@ def run_smart_parallel(background: Any, observations: Any, obs_locations: Any, c
             n_processes=n_procs,
             iterations=iterations
         )
-    
+
     # 策略3: 大数据 (>50M点) - 使用Dask本地调度器
     else:
-        logger.info(f"  -> 策略: Dask本地调度器 (超大规模)")
+        logger.info("  -> 策略: Dask本地调度器 (超大规模)")
         return run_dask_parallel(
             background, observations, obs_locations, config, None, iterations
         )
@@ -530,11 +537,11 @@ def run_fair_benchmark(background, observations, obs_locations, config, n_blocks
         elif 'skip_reason' in results['dask_parallel']:
             logger.info("Dask并行计算:")
             logger.info(f"  [跳过] 原因: {results['dask_parallel']['skip_reason']}")
-            logger.info(f"  原因: 数据规模太小，Dask通信开销大于并行收益")
+            logger.info("  原因: 数据规模太小，Dask通信开销大于并行收益")
             print()
         else:
             logger.info("Dask并行计算:")
-            logger.info(f"  [失败]")
+            logger.info("  [失败]")
             print()
     else:
         # 巨规模模式，只对比并行方法
@@ -563,7 +570,9 @@ def run_fair_benchmark(background, observations, obs_locations, config, n_blocks
     print("="*80)
 
     return results
-def calculate_adaptive_iterations(data_size: int, min_total_time=3.0: float, max_total_time=10.0: float):
+
+
+def calculate_adaptive_iterations(data_size: int, min_total_time: float, max_total_time: float = 10.0):
     """
     基于实际硬件性能的智能迭代计算
     min_total_time: 最小总测试时间（秒）
@@ -571,17 +580,17 @@ def calculate_adaptive_iterations(data_size: int, min_total_time=3.0: float, max
     """
     preset = DATA_PRESETS[data_size]
     target_points = preset['target_points']
-    
+
     # 基准性能：现代CPU (i7/i9) 在 medium 规模 (800k点) 下的性能
     # 测试数据：i7-12700K 在 medium 规模下单次迭代约 0.3-0.5秒
     base_performance = {
-        'small': {'points': 30000, 'time_per_iter': 0.01},    # 30k点: 0.01秒/次
-        'medium': {'points': 800000, 'time_per_iter': 0.4},   # 800k点: 0.4秒/次  
-        'large': {'points': 6400000, 'time_per_iter': 3.0},   # 6.4M点: 3秒/次
-        'xlarge': {'points': 51200000, 'time_per_iter': 25.0}, # 51.2M点: 25秒/次
-        'huge': {'points': 195000000, 'time_per_iter': 100.0} # 195M点: 100+秒/次
+        'small': {'points': 30000, 'time_per_iter': 0.01},  # 30k点: 0.01秒/次
+        'medium': {'points': 800000, 'time_per_iter': 0.4},  # 800k点: 0.4秒/次
+        'large': {'points': 6400000, 'time_per_iter': 3.0},  # 6.4M点: 3秒/次
+        'xlarge': {'points': 51200000, 'time_per_iter': 25.0},  # 51.2M点: 25秒/次
+        'huge': {'points': 195000000, 'time_per_iter': 100.0}  # 195M点: 100+秒/次
     }
-    
+
     # 估算单次迭代时间
     if data_size in base_performance:
         time_per_iter = base_performance[data_size]['time_per_iter']
@@ -589,7 +598,7 @@ def calculate_adaptive_iterations(data_size: int, min_total_time=3.0: float, max
         # 动态估算：时间与点数成正比
         medium_perf = base_performance['medium']
         time_per_iter = medium_perf['time_per_iter'] * (target_points / medium_perf['points'])
-    
+
     # 根据数据规模设置不同的总测试时间目标（优化：减少迭代次数）
     if data_size == 'small':
         target_total_time = 2.0    # 小规模减少到2秒
@@ -599,10 +608,10 @@ def calculate_adaptive_iterations(data_size: int, min_total_time=3.0: float, max
         target_total_time = 5.0    # 大规模减少到5秒
     else:  # xlarge, huge
         target_total_time = 2.0    # 超大规模只跑1-2次
-    
+
     # 计算迭代次数
     iterations = max(1, int(target_total_time / max(time_per_iter, 0.001)))
-    
+
     # 设置硬性限制防止内存溢出（优化：进一步减少迭代次数）
     if data_size == 'small':
         iterations = min(iterations, 1000)
@@ -614,53 +623,56 @@ def calculate_adaptive_iterations(data_size: int, min_total_time=3.0: float, max
         iterations = min(iterations, 3)    # 51M点，3次足够
     else:  # huge
         iterations = min(iterations, 2)    # 195M点，2次足够
-    
+
     logger.info(f"智能迭代规划: {data_size}规模")
     logger.info(f"   目标点数: {target_points:,} 点")
     logger.info(f"   估算单次耗时: {time_per_iter:.2f} 秒")
     logger.info(f"   计划迭代次数: {iterations} 次")
     logger.info(f"   预计总耗时: {iterations * time_per_iter:.1f} 秒")
-    
+
     return iterations, time_per_iter
+
+
 def validate_memory_safety(data_size: int, iterations: Any):
     """在创建数据前验证内存安全性"""
     preset = DATA_PRESETS[data_size]
     total_points = preset['target_points']
-    
+
     # 估算内存需求（每个点约64字节 = 8字节×8个变量）
     bytes_per_point = 64
     total_memory_bytes = total_points * bytes_per_point * iterations
-    
+
     # 转换为GB
     total_memory_gb = total_memory_bytes / (1024**3)
-    
+
     # 获取系统可用内存
     available_memory = psutil.virtual_memory().available / (1024**3)
-    
-    logger.info(f"MemoryWarning 内存安全检查:")
+
+    logger.info("MemoryWarning 内存安全检查:")
     logger.info("内存安全检查:")
     logger.info(f"   单次数据内存需求: {total_points * bytes_per_point / (1024**3):.2f} GB")
     logger.info(f"   {iterations}次迭代总需求: {total_memory_gb:.2f} GB")
     logger.info(f"   系统可用内存: {available_memory:.2f} GB")
-    
+
     # 安全阈值：不超过可用内存的70%
     if total_memory_gb > available_memory * 0.7:
         logger.warning("[警告] 内存风险警告！调整迭代次数...")
-        
+
         # 重新计算安全的迭代次数
         safe_memory_limit = available_memory * 0.6  # 60% 安全阈值
         safe_iterations = max(1, int((safe_memory_limit * (1024**3)) / (total_points * bytes_per_point)))
-        
+
         # 应用硬性上限
         if data_size == 'xlarge' and safe_iterations > 5:
             safe_iterations = 5
         elif data_size == 'huge' and safe_iterations > 2:
             safe_iterations = 2
-        
+
         logger.warning(f"   → 将迭代次数从 {iterations} 降低到 {safe_iterations} 次")
         return safe_iterations
-    
+
     return iterations
+
 
 def main():
     """主函数"""
@@ -684,10 +696,10 @@ def main():
         iterations, est_time = calculate_adaptive_iterations(args.size)
     else:
         iterations = args.iterations
-    
+
     # 2. 内存安全验证（关键！）
     iterations = validate_memory_safety(args.size, iterations)
-    
+
     # 3. 创建合成数据
     logger.info(f"创建 {args.size} 规模合成数据...")
     preset = DATA_PRESETS[args.size]
@@ -720,17 +732,17 @@ def main():
     # 智能Dask策略：只在超大规模启用
     preset = DATA_PRESETS[args.size]
     should_use_dask = False  # 默认禁用
-    
+
     # 只有xlarge和huge才启用Dask
     if preset['target_points'] >= 50000000:  # >=50M点
         should_use_dask = True
         logger.info(f"启用Dask: 数据规模 {preset['target_points']:,} 点")
     else:
         logger.warning(f"禁用Dask: 数据规模 {preset['target_points']:,} 点 (< 50M)")
-        logger.warning(f"   原因: Dask通信开销大于并行收益")
-        logger.warning(f"   建议: 使用 --size xlarge 或 huge 测试Dask")
+        logger.warning("   原因: Dask通信开销大于并行收益")
+        logger.warning("   建议: 使用 --size xlarge 或 huge 测试Dask")
         args.no_dask = True
-    
+
     # 创建Dask客户端（仅在需要时）
     dask_client = None
     dask_cluster = None
@@ -739,15 +751,15 @@ def main():
             from dask.distributed import Client, LocalCluster
             dask_logger = logging.getLogger('distributed')
             dask_logger.setLevel(logging.WARNING)
-            
+
             cpu_count = psutil.cpu_count(logical=False) or 4
-            
+
             # 根据数据规模设置workers
             if preset['target_points'] < 100000000:  # <100M点
                 n_workers = min(16, cpu_count)
             else:  # >=100M点
                 n_workers = min(24, max(12, cpu_count // 2))
-            
+
             logger.info(f"创建Dask集群: {n_workers} workers...")
             dask_cluster = LocalCluster(
                 n_workers=n_workers,
@@ -781,7 +793,7 @@ def main():
             dask_client.close()
             dask_cluster.close()
             logger.info("Dask集群已关闭")
-        except:
+        except Exception:
             pass
 
     logger.info("\n" + "="*60)

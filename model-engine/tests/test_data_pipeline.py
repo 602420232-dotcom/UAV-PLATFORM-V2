@@ -2,6 +2,7 @@
 import numpy as np
 from data_pipeline.training_data import PhysicsConstrainedGenerator
 
+
 def test_generate_pair():
     gen = PhysicsConstrainedGenerator(seed=42)
     patterns = ["plain_winter", "summer_heat", "rain_event",
@@ -13,12 +14,14 @@ def test_generate_pair():
         assert not np.any(np.isnan(coarse))
         assert not np.any(np.isnan(fine))
 
+
 def test_physical_constraints():
     """物理约束检验: 温度不能低于180K"""
     gen = PhysicsConstrainedGenerator()
     for p in ["plain_winter", "summer_heat"]:
         coarse, fine = gen.generate_pair(p)
         assert (fine[2] > 180).all(), f"{p}: t2m < 180K"
+
 
 def test_dem():
     gen = PhysicsConstrainedGenerator()

@@ -12,6 +12,7 @@ from api.core.assimilation_service import AssimilationService
 from api.parallel.dask import DaskClusterManager
 from api.routes import assimilation, batch
 
+
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - [%(filename)s:%(lineno)d] - %(message)s",
     level=logging.INFO
@@ -23,6 +24,8 @@ assimilation_service: Optional[AssimilationService] = None
 
 
 @asynccontextmanager
+
+
 async def lifespan(app: FastAPI):
     global cluster_manager, assimilation_service
     logger.info("启动Dask计算集群...")
@@ -44,6 +47,8 @@ app = FastAPI(
 )
 
 app.add_middleware(GZipMiddleware, minimum_size=1000)
+
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -54,6 +59,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 app.include_router(
     assimilation.router,
     prefix="/api/v1/assimilation",
@@ -62,6 +68,8 @@ app.include_router(
 
 
 @app.get("/health")
+
+
 async def health_check():
     return {
         "status": "healthy",
@@ -73,4 +81,3 @@ async def health_check():
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000, workers=1)
-

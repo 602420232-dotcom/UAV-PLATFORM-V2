@@ -7,6 +7,8 @@ import os
 import sys
 
 SRC_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+
 if SRC_DIR not in sys.path:
     sys.path.insert(0, SRC_DIR)
 
@@ -225,6 +227,8 @@ def solve_linear_system(
     max_iter: int = 200,
     tol: float = 1e-6,
     **kwargs
+
+
 ) -> Tuple[np.ndarray, Dict[str, Any]]:
     """
     求解线性方程组的便捷函数
@@ -249,6 +253,8 @@ def solve_linear_system(
 def build_linear_operator(
     apply_func: Callable[[np.ndarray], np.ndarray],
     shape: Tuple[int, int]
+
+
 ) -> LinearOperator:
     """
     构建线性算子
@@ -260,7 +266,7 @@ def build_linear_operator(
     Returns:
         LinearOperator 实例
     """
-    return LinearOperator(shape=shape, matvec=apply_func) # type: ignore
+    return LinearOperator(shape=shape, matvec=apply_func)  # type: ignore
 
 
 class Preconditioner:

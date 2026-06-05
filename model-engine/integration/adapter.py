@@ -9,6 +9,7 @@ import logging
 from typing import Optional, Dict, Any
 import numpy as np
 
+
 from .bridge import (
     LEGACY_AVAILABLE,
     MeteorForecast, MeteorForecastEnhanced,

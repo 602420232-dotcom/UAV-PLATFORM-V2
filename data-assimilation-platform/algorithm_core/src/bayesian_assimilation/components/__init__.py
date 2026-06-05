@@ -8,6 +8,7 @@ from .block_decomp import BlockDecomposition
 from .incremental import IncrementalDetector
 from .covariance import FastSparseBackgroundCovariance
 
+
 __all__ = [
     'GPUAccelerator',
     'AdaptiveResolutionSelector',

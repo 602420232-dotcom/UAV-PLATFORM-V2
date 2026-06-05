@@ -1,6 +1,7 @@
 """
 概率 U-Net — 论文核心模型
 
+
 与确定性 U-Net 的区别:
   输出从 (B, C, H, W) 变成 (B, C, H, W) × 2 = [mean, log_var]
   损失从 MSE 变成 负对数似然 (NLL)
@@ -19,11 +20,11 @@ from unet_downscaler.model import UNetConfig, DoubleConv, Down, Up, SpatialObsEn
 class ProbabilisticUNet(nn.Module):
     """
     概率 U-Net
-    
+
     输出:
       mean:   (B, C, H, W)  — 预报均值
       log_var: (B, C, H, W) — 对数方差 (取 exp 得方差)
-    
+
     用法:
         model = ProbabilisticUNet()
         mean, log_var = model(x)
@@ -103,6 +104,7 @@ class ProbabilisticUNet(nn.Module):
 
 
 # ── 概率模型的损失函数 ──────────────────────────
+
 
 def negative_log_likelihood(mean: torch.Tensor, log_var: torch.Tensor,
                             target: torch.Tensor) -> torch.Tensor:

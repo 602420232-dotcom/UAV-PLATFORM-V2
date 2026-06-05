@@ -9,15 +9,23 @@ from typing import Dict, List, Optional, Any, Callable
 import logging
 
 # 尝试导入ray
+
+
 try:
     import ray
     RAY_AVAILABLE = True
+
+
 except ImportError:
     RAY_AVAILABLE = False
 
 # 尝试导入ParallelManager
+
+
 try:
     from .base import ParallelManager, ParallelType
+
+
 except ImportError:
     # 如果无法导入，创建一个基类
     class ParallelManager:
@@ -25,19 +33,19 @@ except ImportError:
             self.config = config or {}
             self.initialized = False
             self.logger = logging.getLogger(__name__)
-        
+
         def start(self):
             return True
-        
+
         def stop(self):
             return True
-        
+
         def is_running(self):
             return False
-        
+
         def parallelize(self: Any, func: Any, data: Dict[str, Any], **kwargs: Any):
             return [func(item, **kwargs) for item in data]
-    
+
     class ParallelType:
         RAY = 'ray'
         SEQUENTIAL = 'sequential'
@@ -58,7 +66,7 @@ class RayParallelManager(ParallelManager):
         self.config.setdefault("include_dashboard", True)
         self.config.setdefault("dashboard_port", 8265)
         self.config.setdefault("local_mode", False)
-        
+
         self.initialized = False
         self.logger = logging.getLogger(__name__)
 
@@ -94,7 +102,7 @@ class RayParallelManager(ParallelManager):
 
             self.initialized = True
             self.logger.info("Ray集群启动成功")
-            
+
             # 输出集群信息
             if ray.is_initialized():
                 cluster_resources = ray.cluster_resources()
@@ -112,7 +120,7 @@ class RayParallelManager(ParallelManager):
         try:
             if self.initialized and RAY_AVAILABLE and ray.is_initialized():
                 ray.shutdown()
-            
+
             self.initialized = False
             self.logger.info("Ray集群已停止")
             return True
@@ -186,18 +194,18 @@ class RayParallelManager(ParallelManager):
 
             # 分批处理
             batches = [data[i:i+batch_size] for i in range(0, len(data), batch_size)]
-            
+
             # 提交所有批次
             futures = [remote_task.remote(batch, **kwargs) for batch in batches]
-            
+
             # 等待并获取结果
             batch_results = ray.get(futures)
-            
+
             # 展平结果
             results = []
             for batch_result in batch_results:
                 results.extend(batch_result)
-            
+
             return results
         except Exception as e:
             self.logger.error(f"Ray批量并行执行失败: {e}")
@@ -215,7 +223,7 @@ class RayParallelManager(ParallelManager):
         """
         if not self.is_running():
             return obj
-        
+
         return ray.put(obj)
 
     def get_object(self, obj_ref: Any) -> Any:
@@ -230,7 +238,7 @@ class RayParallelManager(ParallelManager):
         """
         if not self.is_running():
             return obj_ref
-        
+
         return ray.get(obj_ref)
 
     def get_resource_info(self) -> Dict:
@@ -247,7 +255,7 @@ class RayParallelManager(ParallelManager):
         try:
             cluster_resources = ray.cluster_resources()
             available_resources = ray.available_resources()
-            
+
             return {
                 "status": "running",
                 "parallel_type": "ray",
@@ -264,19 +272,23 @@ class RayParallelManager(ParallelManager):
 
 
 # 尝试导入必要的类
+
+
 try:
     from bayesian_assimilation.core.assimilator import BayesianAssimilator
+
+
 except ImportError:
     # 如果无法导入，创建一个基类
     class BayesianAssimilator:
         def __init__(self, config=None):
             self.config = config
             self.logger = logging.getLogger(__name__)
-        
+
         def initialize_grid(self: Any, domain_size: int, resolution: Any = None):
             self.domain_size = domain_size
             self.resolution = resolution
-        
+
         def assimilate_3dvar(self, background, observations, obs_locations, obs_errors=None):
             return background.copy(), np.zeros_like(background)
 
@@ -332,11 +344,11 @@ class RayParallelAssimilator(BayesianAssimilator):
             @ray.remote
             def process_block(task: Callable):
                 start_x, end_x, bg, obs, obs_loc, obs_err = task
-                
+
                 # 创建同化器实例（在远程进程中）
                 from bayesian_assimilation.core.assimilator import BayesianAssimilator
                 from bayesian_assimilation.utils.config import AssimilationConfig
-                
+
                 # 复制配置
                 config = AssimilationConfig(
                     domain_size=(end_x - start_x, ny, nz),
@@ -344,23 +356,23 @@ class RayParallelAssimilator(BayesianAssimilator):
                     background_error_scale=getattr(self.config, 'background_error_scale', 1.5) if hasattr(self, 'config') else 1.5,
                     observation_error_scale=getattr(self.config, 'observation_error_scale', 0.8) if hasattr(self, 'config') else 0.8
                 )
-                
+
                 assimilator = BayesianAssimilator(config)
                 assimilator.initialize_grid((end_x - start_x, ny, nz))
-                
+
                 # 提取块数据
                 bg_block = bg[start_x:end_x, :, :]
-                
+
                 # 筛选该块内的观测
                 x_min = start_x * (config.target_resolution if hasattr(config, 'target_resolution') else 50.0)
                 x_max = end_x * (config.target_resolution if hasattr(config, 'target_resolution') else 50.0)
                 mask = (obs_loc[:, 0] >= x_min) & (obs_loc[:, 0] < x_max)
-                
+
                 if np.any(mask):
                     block_obs = obs[mask]
                     block_obs_loc = obs_loc[mask].copy()
                     block_obs_loc[:, 0] -= start_x * (config.target_resolution if hasattr(config, 'target_resolution') else 50.0)
-                    
+
                     # 执行同化
                     analysis_block, variance_block = assimilator.assimilate_3dvar(
                         bg_block, block_obs, block_obs_loc, obs_err
@@ -369,7 +381,7 @@ class RayParallelAssimilator(BayesianAssimilator):
                     # 无观测的块，直接使用背景场
                     analysis_block = bg_block.copy()
                     variance_block = np.zeros_like(bg_block)
-                
+
                 return start_x, end_x, analysis_block, variance_block
 
             # 提交所有任务
@@ -397,6 +409,8 @@ class RayParallelAssimilator(BayesianAssimilator):
 
 
 # 便捷函数
+
+
 def create_ray_client(config: Optional[Dict] = None) -> RayParallelManager:
     """
     创建Ray客户端

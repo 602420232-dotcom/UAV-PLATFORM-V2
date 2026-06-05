@@ -1,6 +1,7 @@
 """
 MAVLink 输出 — PX4/ArduPilot 原生支持
 
+
 将 GPR 风险规划路径转为:
   1. .plan 任务文件 (QGroundControl 可导入)
   2. 实时 MAVLink 指令 (串口/UDP)
@@ -18,6 +19,7 @@ from datetime import datetime
 
 
 # ── 坐标系统 ────────────────────────────────────
+
 
 @dataclass
 class GeoConfig:
@@ -115,6 +117,7 @@ class GeoConverter:
 
 # ── .plan 任务文件生成 ──────────────────────────
 
+
 class MissionPlanGenerator:
     """
     生成 QGroundControl 可导入的 .plan 文件
@@ -124,10 +127,10 @@ class MissionPlanGenerator:
       "version": 1,
       "mission": {
         "cruiseSpeed": 15,
-        "firmwareType": 12,          // PX4
+        "firmwareType": 12, // PX4
         "items": [
           {"type": "missionItem",
-           "command": 16,             // MAV_CMD_NAV_WAYPOINT
+           "command": 16, // MAV_CMD_NAV_WAYPOINT
            "params": [0, 0, 0, 0, lat, lon, alt],
            "autoContinue": true},
           ...
@@ -181,7 +184,8 @@ class MissionPlanGenerator:
             ))
 
         # 2. 途径点
-        for i, wp in enumerate(waypoints[1:-1], 1):
+        for i, wp in enumerate(waypoints[1:
+            -1], 1):
             gp = self.geo.waypoint_to_geo(wp)
             items.append(self._make_item(
                 command=MAV_CMD.NAV_WAYPOINT,
@@ -245,6 +249,7 @@ class MissionPlanGenerator:
 
 # ── 实时 MAVLink 指令 (轻量实现) ───────────────
 
+
 class MAVLinkEncoder:
     """
     轻量 MAVLink 消息编码器
@@ -265,13 +270,13 @@ class MAVLinkEncoder:
     def _encode_frame(self, msg_id: int, payload: bytes) -> bytes:
         """MAVLink v2 帧封装"""
         header = bytearray([
-            0xFD,               # 起始字节 (MAVLink 2)
-            len(payload),       # 负载长度
-            0, 0,               # 不兼容/兼容标志
-            0, 0,               # 序列号 (简化)
-            self.sys_id,        # 系统 ID
-            self.comp_id,       # 组件 ID
-            msg_id & 0xFF,      # 消息 ID (低8位)
+            0xFD,  # 起始字节 (MAVLink 2)
+            len(payload),  # 负载长度
+            0, 0,  # 不兼容/兼容标志
+            0, 0,  # 序列号 (简化)
+            self.sys_id,  # 系统 ID
+            self.comp_id,  # 组件 ID
+            msg_id & 0xFF,  # 消息 ID (低8位)
             (msg_id >> 8) & 0xFF,
             (msg_id >> 16) & 0xFF,
         ])
@@ -297,19 +302,19 @@ class MAVLinkEncoder:
     def heartbeat(self, armed: bool = False) -> bytes:
         """HEARTBEAT (#0) — 告诉飞控地面站在线"""
         payload = struct.pack('<IBBBBB',
-            0,                          # custom_mode
-            4 if armed else 0,          # type (4=地面站)
-            0,                          # autopilot
-            3,                          # base_mode (3=guided)
-            0,                          # custom_state
-            0,                          # system_status
+            0,  # custom_mode
+            4 if armed else 0,  # type (4=地面站)
+            0,  # autopilot
+            3,  # base_mode (3=guided)
+            0,  # custom_state
+            0,  # system_status
         )
         return self._encode_frame(0, payload)
 
     def goto_waypoint(self, lat: float, lon: float,
                       alt: float, speed: float = 10.0) -> bytes:
         """
-        COMMAND_LONG (#76) — 发送 MAV_CMD_NAV_WAYPOINT
+        COMMAND_LONG (  #76) — 发送 MAV_CMD_NAV_WAYPOINT
         """
         payload = struct.pack('<BBfffffffH',
             self.target_sys,
@@ -343,30 +348,31 @@ class MAVLinkEncoder:
                             lat: float, lon: float, alt: float,
                             current: bool = False) -> bytes:
         """
-        MISSION_ITEM_INT (#73) — 上传单个任务航点
+        MISSION_ITEM_INT (  #73) — 上传单个任务航点
 
         批量上传流程:
-          1. MISSION_COUNT (#44) 告知飞控总航点数
-          2. 飞控回复 MISSION_REQUEST_INT (#51)
-          3. 逐个发送 MISSION_ITEM_INT (#73)
-          4. 飞控回复 MISSION_ACK (#47)
+          1. MISSION_COUNT (  #44) 告知飞控总航点数
+          2. 飞控回复 MISSION_REQUEST_INT (  #51)
+          3. 逐个发送 MISSION_ITEM_INT (  #73)
+          4. 飞控回复 MISSION_ACK (  #47)
         """
         payload = struct.pack('<BBBBHfffHHhh',
             self.target_sys, self.target_comp,
-            0,                          # seq
+            0,  # seq
             MAV_FRAME.GLOBAL_RELATIVE_ALT,  # frame
-            command,                     # command
+            command,  # command
             0, 0, 0,  # current, autocontinue, param1
-            0, 0,      # param2, param3
-            int(lat * 1e7),              # x (纬度 × 1e7)
-            int(lon * 1e7),              # y (经度 × 1e7)
-            int(alt * 1000),             # z (高度 mm)
+            0, 0,  # param2, param3
+            int(lat * 1e7),  # x (纬度 × 1e7)
+            int(lon * 1e7),  # y (经度 × 1e7)
+            int(alt * 1000),  # z (高度 mm)
             0, 0, 0, 0,  # param4-7
         )
         return self._encode_frame(73, payload)
 
 
 # ── 一键输出 ────────────────────────────────────
+
 
 def export_to_mavlink(waypoints: list,
                       output_type: str = "plan",

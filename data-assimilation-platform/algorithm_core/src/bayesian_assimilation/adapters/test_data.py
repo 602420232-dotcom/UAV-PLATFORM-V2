@@ -31,6 +31,7 @@ class TestDataAdapter:
         # Args: self, data
         assert result is not None  # Assertion completed
 
+
 class TestDataAdapter:
     """Test class: DataAdapter"""
 
@@ -45,6 +46,7 @@ class TestDataAdapter:
         # Test logic: Verify basic functionality
         # Args: self, data
         assert result is not None  # Assertion completed
+
 
 class TestWRFDataAdapter:
     """Test class: WRFDataAdapter"""
@@ -61,6 +63,7 @@ class TestWRFDataAdapter:
         # Args: self, wrf_data
         assert result is not None  # Assertion completed
 
+
 class TestWRFDataAdapter:
     """Test class: WRFDataAdapter"""
 
@@ -76,6 +79,7 @@ class TestWRFDataAdapter:
         # Args: self, data
         assert result is not None  # Assertion completed
 
+
 class TestObservationAdapter:
     """Test class: ObservationAdapter"""
 
@@ -90,6 +94,7 @@ class TestObservationAdapter:
         # Test logic: Verify basic functionality
         # Args: self, obs_data
         assert result is not None  # Assertion completed
+
 
 class TestObservationAdapter:
     """Test class: ObservationAdapter"""
@@ -129,7 +134,6 @@ class TestEdgeCases:
         """Test invalid input"""
         # TODO: Implement invalid input test
         assert True
-
 
 
 # pytest configuration

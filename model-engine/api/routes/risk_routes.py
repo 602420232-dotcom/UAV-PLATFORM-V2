@@ -38,38 +38,40 @@ class RiskFieldResponse(BaseModel):
 
 
 @router.post("/compute", response_model=RiskFieldResponse)
+
+
 async def compute_risk_field(request: RiskFieldRequest):
     """
     计算气象风险场
-    
+
     使用高斯过程回归生成不确定性方差场和综合风险评分。
     """
     try:
         from model_engine.gpr_risk.model import GPRiskEstimator
-        
+
         # 计算网格
         n = int(request.grid_size_km / request.resolution_km)
         x = torch.linspace(-request.grid_size_km/2, request.grid_size_km/2, n)
         y = torch.linspace(-request.grid_size_km/2, request.grid_size_km/2, n)
         grid_x, grid_y = torch.meshgrid(x, y, indexing='ij')
         coords = torch.stack([grid_x.reshape(-1), grid_y.reshape(-1)], dim=1)
-        
+
         # 初始化 GPR 估计器
         gpr = GPRiskEstimator()
-        
+
         # 使用模拟残差（TODO: 接入真实 U-Net 输出）
         simulated_residual = torch.randn(1, 1, n, n) * 0.1
         fine_grid = torch.randn(1, 1, n, n)
-        
+
         # 拟合 GPR
         gpr.fit(simulated_residual, coords)
-        
+
         # 预测风险场
         risk = gpr.risk_field(fine_grid, wind_threshold=request.wind_threshold)
-        
+
         # 预测均值和方差
         mean, variance = gpr.predict(coords)
-        
+
         response = RiskFieldResponse(
             success=True,
             shape=[n, n],
@@ -83,7 +85,7 @@ async def compute_risk_field(request: RiskFieldRequest):
             )
         )
         return response
-        
+
     except ImportError as e:
         raise HTTPException(
             status_code=503,
@@ -97,6 +99,8 @@ async def compute_risk_field(request: RiskFieldRequest):
 
 
 @router.get("/status")
+
+
 async def risk_service_status():
     """检查 GPR 风险场服务状态"""
     try:

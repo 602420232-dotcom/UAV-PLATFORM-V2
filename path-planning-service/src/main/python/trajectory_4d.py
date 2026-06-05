@@ -1,6 +1,6 @@
 """
 4D轨迹可视化引擎
-三维空间(x,y,z) + 时间轴(t) 四维轨迹生成与分析
+三维空间(x, y, z) + 时间轴(t) 四维轨迹生成与分析
 """
 import numpy as np
 import json

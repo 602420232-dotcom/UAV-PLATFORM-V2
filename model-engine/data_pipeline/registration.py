@@ -1,9 +1,11 @@
 """
 时空配准算法
 
+
 问题:
   天资 (0.25° ≈ 25km) 和 风雷 (3km) 分辨率不同,
   而且发布时间不同步。
+
 
 解决:
   空间配准: 重采样到统一网格 + DEM 地形校正
@@ -20,7 +22,7 @@ from datetime import datetime, timedelta
 class SpatiotemporalConfig:
     """配准配置"""
     target_resolution_km: float = 3.0       # 统一到 3km 网格
-    target_grid: Tuple[int, int] = (50, 50) # 成都平原粗网格
+    target_grid: Tuple[int, int] = (50, 50)  # 成都平原粗网格
     max_time_diff_min: int = 60             # 最大时间差 (超过此值不配准)
     interpolation_order: int = 1            # 插值阶数 (1=线性)
     terrain_correction: bool = True         # 是否做地形校正

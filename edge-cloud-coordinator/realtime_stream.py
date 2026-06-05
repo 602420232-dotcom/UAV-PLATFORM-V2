@@ -150,15 +150,26 @@ class RealtimeRiskAssessor:
     def _evaluate_risk(self, event: WeatherEvent):
         risk_score = 0.0
         reasons = []
-        if event.wind_speed > 12: risk_score += 40; reasons.append(f"风速{event.wind_speed}m/s超过安全阈值")
-        if event.wind_gust > 18: risk_score += 30; reasons.append(f"阵风{event.wind_gust}m/s")
-        if event.turbulence > 0.8: risk_score += 20; reasons.append(f"湍流强度{event.turbulence}")
-        if event.visibility < 2.0: risk_score += 10; reasons.append(f"能见度{event.visibility}km低于安全值")
+        if event.wind_speed > 12:
+            risk_score += 40
+        reasons.append(f"风速{event.wind_speed}m/s超过安全阈值")
+        if event.wind_gust > 18:
+            risk_score += 30
+        reasons.append(f"阵风{event.wind_gust}m/s")
+        if event.turbulence > 0.8:
+            risk_score += 20
+        reasons.append(f"湍流强度{event.turbulence}")
+        if event.visibility < 2.0:
+            risk_score += 10
+        reasons.append(f"能见度{event.visibility}km低于安全值")
 
         level = "LOW"
-        if risk_score >= 70: level = "SEVERE"
-        elif risk_score >= 40: level = "HIGH"
-        elif risk_score >= 20: level = "MEDIUM"
+        if risk_score >= 70:
+            level = "SEVERE"
+        elif risk_score >= 40:
+            level = "HIGH"
+        elif risk_score >= 20:
+            level = "MEDIUM"
 
         if risk_score >= 20:
             alert = RiskAlert(

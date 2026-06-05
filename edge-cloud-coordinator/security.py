@@ -13,9 +13,12 @@ from typing import Dict, Optional
 from dataclasses import dataclass
 from enum import Enum
 
+
 try:
     from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
     from cryptography.hazmat.backends import default_backend
+
+
 except ImportError as e:
     raise ImportError(
         "cryptography library is required for security features. "

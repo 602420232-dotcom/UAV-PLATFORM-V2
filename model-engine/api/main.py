@@ -29,6 +29,7 @@ from integration.adapter import LegacyModelAdapter
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("model-engine")
 
+
 app = FastAPI(title="Model-Engine", version="1.0.0",
               description="多模型气象预报引擎 — CNN订正 → U-Net降尺度 → GPR风险场")
 
@@ -42,8 +43,10 @@ path_planner = GPRPathPlanner()
 
 # 原项目模型适配器 (可选，缺依赖时自动降级)
 legacy_adapter = LegacyModelAdapter()
+
+
 if legacy_adapter.available:
-    logger.info(f"原项目模型已桥接 (LSTM + XGBoost + ConvLSTM + GPR + MLOps)")
+    logger.info("原项目模型已桥接 (LSTM + XGBoost + ConvLSTM + GPR + MLOps)")
 unet_downscaler = UNetDownscaler().to(device).eval()
 gpr_estimator = GPRiskEstimator()
 fusion_engine = DynamicWeightFusion()
@@ -57,12 +60,14 @@ MODEL_DIR.mkdir(parents=True, exist_ok=True)
 
 # ── 数据模型 ────────────────────────────────────
 
+
 class ForecastRequest(BaseModel):
     lat_center: Optional[float] = None
     lon_center: Optional[float] = None
     fcst_hours: list = [0, 1, 3, 6, 12]
     include_risk: bool = True
     return_raw: bool = False
+
 
 class ForecastResponse(BaseModel):
     status: str
@@ -73,6 +78,7 @@ class ForecastResponse(BaseModel):
 
 
 # ── 核心管线 ────────────────────────────────────
+
 
 def run_pipeline(request: ForecastRequest) -> Dict:
     """
@@ -174,9 +180,11 @@ def _mock_observations() -> torch.Tensor:
 
 # ── API 路由 ────────────────────────────────────
 
+
 @app.get("/health")
 def health():
     return {"status": "healthy", "device": str(device)}
+
 
 @app.get("/api/v1/model/info")
 def model_info():
@@ -187,6 +195,7 @@ def model_info():
         "fusion": fusion_engine.weights,
         "device": str(device),
     }
+
 
 @app.post("/api/v1/forecast", response_model=ForecastResponse)
 def forecast(request: ForecastRequest = None):
@@ -201,11 +210,13 @@ def forecast(request: ForecastRequest = None):
         logger.exception("预测失败")
         raise HTTPException(500, detail=str(e))
 
+
 @app.post("/api/v1/train/cnn")
 def train_cnn(epochs: int = 10, lr: float = 1e-3):
     """训练 CNN 订正器（模拟）"""
     logger.info(f"CNN 训练 {epochs} epochs, lr={lr}")
     return {"status": "training_started", "epochs": epochs}
+
 
 @app.post("/api/v1/path/plan", response_model=ForecastResponse)
 def plan_path(start_x: float, start_y: float, end_x: float, end_y: float):

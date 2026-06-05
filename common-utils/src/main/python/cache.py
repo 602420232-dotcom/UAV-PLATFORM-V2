@@ -6,6 +6,7 @@ Entries automatically expire after a configurable TTL (time-to-live).
 Eviction uses dict insertion order (Python 3.7+) to remove the oldest entry
 when the cache reaches its maximum size.
 
+
 Usage:
     from common_utils.cache import Cache
 

@@ -31,6 +31,7 @@ class TestTimeSeriesAnimator:
         # Args: self, variance_fields, times, slice_axis, title, cmap, interval, figsize
         assert result is not None  # Assertion completed
 
+
 class TestTimeSeriesAnimator:
     """Test class: TimeSeriesAnimator"""
 
@@ -45,6 +46,7 @@ class TestTimeSeriesAnimator:
         # Test logic: Verify basic functionality
         # Args: self, u_fields, v_fields, times, slice_index, skip, title, interval, figsize
         assert result is not None  # Assertion completed
+
 
 class TestTimeSeriesAnimator:
     """Test class: TimeSeriesAnimator"""
@@ -61,6 +63,7 @@ class TestTimeSeriesAnimator:
         # Args: self, backgrounds, analyses, observations, times, slice_index, title, interval, figsize
         assert result is not None  # Assertion completed
 
+
 class TestVarianceHeatmapAnimator:
     """Test class: VarianceHeatmapAnimator"""
 
@@ -75,6 +78,7 @@ class TestVarianceHeatmapAnimator:
         # Test logic: Verify basic functionality
         # Args: self, data, title, cmap, interval, figsize
         assert result is not None  # Assertion completed
+
 
 class TestAssimilationCycleAnimator:
     """Test class: AssimilationCycleAnimator"""
@@ -114,7 +118,6 @@ class TestEdgeCases:
         """Test invalid input"""
         # TODO: Implement invalid input test
         assert True
-
 
 
 # pytest configuration

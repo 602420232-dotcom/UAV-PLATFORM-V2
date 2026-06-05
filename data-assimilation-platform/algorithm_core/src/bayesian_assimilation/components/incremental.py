@@ -1,29 +1,35 @@
 import logging
 
+import numpy as np
+
+from ..core.assimilator import BayesianAssimilator
+from ..utils.config import AssimilationConfig
+
 logger = logging.getLogger(__name__)
+
 
 class IncrementalDetector:
     def __init__(self, config=None):
         self.config = config
         self.previous_analysis = None
         self.previous_variance = None
+
     def has_state(self):
         return self.previous_analysis is not None
+
     def detect_changes(self, background):
         return (background != 0)
+
     def get_update_region(self, change_mask):
         return (slice(None), slice(None), slice(None)), (0, 0, 0), change_mask.shape
+
     def update_state(self, analysis, variance, background):
         self.previous_analysis = analysis
         self.previous_variance = variance
+
     def reset(self):
         self.previous_analysis = None
         self.previous_variance = None
-
-import numpy as np
-
-from ..core.assimilator import BayesianAssimilator
-from ..utils.config import AssimilationConfig
 
 
 def main():
@@ -40,8 +46,8 @@ def main():
 
     assimilator = BayesianAssimilator(config)
 
-    grid_shape = assimilator.initialize_grid((1000, 1000, 100))
-    nx, ny, nz = grid_shape
+    assimilator.initialize_grid((1000, 1000, 100))
+    nx, ny, nz = assimilator.nx, assimilator.ny, assimilator.nz
     logger.info(f"\n网格: {nx}×{ny}×{nz} = {nx*ny*nz:,} 点")
 
     x, y, z = np.meshgrid(
@@ -71,7 +77,7 @@ def main():
     logger.info(f"方差场范围: [{variance.min():.4f}, {variance.max():.4f}]")
 
     logger.info("\n降尺度到10米分辨率...")
-    variance_fine = assimilator.interpolate_to_fine_grid(target_resolution=10.0)
+    variance_fine = assimilator.interpolate_to_path_grid(target_resolution=10.0)
     logger.info(f"降尺度后形状: {variance_fine.shape}")
 
     logger.info("\n" + "=" * 60)

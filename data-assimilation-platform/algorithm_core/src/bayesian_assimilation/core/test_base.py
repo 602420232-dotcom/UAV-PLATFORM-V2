@@ -31,6 +31,7 @@ class TestAssimilationBase:
         # Args: self, domain_size, resolution
         assert result is not None  # Assertion completed
 
+
 class TestAssimilationBase:
     """Test class: AssimilationBase"""
 
@@ -45,6 +46,7 @@ class TestAssimilationBase:
         # Test logic: Verify basic functionality
         # Args: self, background, observations, obs_locations, obs_errors
         assert result is not None  # Assertion completed
+
 
 class TestAssimilationBase:
     """Test class: AssimilationBase"""
@@ -61,6 +63,7 @@ class TestAssimilationBase:
         # Args: self
         assert result is not None  # Assertion completed
 
+
 class TestAssimilationBase:
     """Test class: AssimilationBase"""
 
@@ -76,6 +79,7 @@ class TestAssimilationBase:
         # Args: self
         assert result is not None  # Assertion completed
 
+
 class TestAssimilationBase:
     """Test class: AssimilationBase"""
 
@@ -90,6 +94,7 @@ class TestAssimilationBase:
         # Test logic: Verify basic functionality
         # Args: self
         assert result is not None  # Assertion completed
+
 
 class TestAssimilationBase:
     """Test class: AssimilationBase"""
@@ -129,7 +134,6 @@ class TestEdgeCases:
         """Test invalid input"""
         # TODO: Implement invalid input test
         assert True
-
 
 
 # pytest configuration

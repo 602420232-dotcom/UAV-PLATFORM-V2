@@ -4,6 +4,7 @@ JWT 认证模块
 提供 JWT 验证、黑名单检查和用户信息提取功能。
 与 Java 后端的 JWT 格式兼容，支持 HS512 算法。
 
+
 使用示例:
     from common_utils.jwt_auth import JwtAuth, TokenType
 

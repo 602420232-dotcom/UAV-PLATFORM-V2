@@ -145,6 +145,8 @@ def fetch_latest() -> Dict[str, xr.Dataset]:
     data = {}
     tz = fetcher.fetch_tianzi(0)
     fl = fetcher.fetch_fenglei(0)
-    if tz is not None: data["tianzi"] = tz
-    if fl is not None: data["fenglei"] = fl
+    if tz is not None:
+        data["tianzi"] = tz
+    if fl is not None:
+        data["fenglei"] = fl
     return data

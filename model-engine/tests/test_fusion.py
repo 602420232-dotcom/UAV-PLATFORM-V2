@@ -2,6 +2,7 @@
 import torch
 from fusion.ensemble import DynamicWeightFusion, PhysicsConstraint
 
+
 def test_fusion():
     fusion = DynamicWeightFusion()
     fields = {
@@ -11,12 +12,14 @@ def test_fusion():
     fused = fusion.fuse(fields)
     assert fused.shape == (1, 6, 50, 50)
 
+
 def test_fusion_single_model():
     """单模型不应该炸"""
     fusion = DynamicWeightFusion()
     fields = {"only_model": torch.randn(1, 6, 50, 50)}
     fused = fusion.fuse(fields)
     assert fused is not None
+
 
 def test_physics_constraint():
     pc = PhysicsConstraint()

@@ -4,6 +4,7 @@
 传统方法: WRF + EnKF/3D-Var (原项目)
 新方法:   CNN订正 + U-Net降尺度 + GPR风险场 (model-engine)
 
+
 对比维度:
   - 预报精度 (RMSE, MAE)
   - 计算耗时
@@ -113,7 +114,8 @@ class MethodBenchmark:
         if len(self.results) >= 2:
             names = list(self.results.keys())
             base = self.results[names[0]]
-            for name in names[1:]:
+            for name in names[1:
+                ]:
                 m = self.results[name]
                 improvement = (base.rmse - m.rmse) / base.rmse * 100
                 speedup = base.inference_time_ms / m.inference_time_ms
@@ -127,6 +129,7 @@ class MethodBenchmark:
 
 
 # ── 合成对比数据 ─────────────────────────────────
+
 
 def make_comparison_data(n_samples: int = 10) -> list:
     """生成用于对比的测试数据"""
@@ -146,6 +149,7 @@ def make_comparison_data(n_samples: int = 10) -> list:
 
 
 # ── 简易 pytest 集成 ───────────────────────────
+
 
 def test_comparison_output():
     """集成测试: 确认对比脚本可运行 (不要求精度)"""

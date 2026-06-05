@@ -1,6 +1,7 @@
 """
 M1-M5 对比实验 — 论文实验核心
 
+
 实验设计:
   M1: 持久性预报 (用当前值当预报) — 最烂 baseline
   M2: 确定性 U-Net (MSE 训练) — 深度学习 baseline
@@ -8,10 +9,12 @@ M1-M5 对比实验 — 论文实验核心
   M4: 概率 U-Net + 随机同化 — 控制组
   M5: 概率 U-Net + 主动同化 — 完整框架
 
+
 评估指标:
   - RMSE: 精度
   - CRPS: 概率预报质量
   - 决策效能曲线: 同化轮次 vs RMSE
+
 
 输出:
   - 指标表格 (结果用)
@@ -113,7 +116,8 @@ class M1to5Experiment:
         results = {f"{lt}h": {"rmse": [], "mae": [], "crps": [], "nll": []}
                    for lt in self.config.forecast_lead_hours}
 
-        for idx, (coarse, truth) in enumerate(test_data[:self.config.n_test_samples]):
+        for idx, (coarse, truth) in enumerate(test_data[:
+            self.config.n_test_samples]):
             # 根据模型名称调用不同方法
             if "M1" in model_fn.__name__:
                 pred = self._m1_persistence(coarse)

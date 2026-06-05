@@ -31,6 +31,7 @@ class TestCovarianceOperator:
         # Args: data
         assert result is not None  # Assertion completed
 
+
 class TestCovarianceOperator:
     """Test class: CovarianceOperator"""
 
@@ -45,6 +46,7 @@ class TestCovarianceOperator:
         # Test logic: Verify basic functionality
         # Args: data
         assert result is not None  # Assertion completed
+
 
 class TestCovarianceOperator:
     """Test class: CovarianceOperator"""
@@ -61,6 +63,7 @@ class TestCovarianceOperator:
         # Args: length_scale, grid_shape
         assert result is not None  # Assertion completed
 
+
 class TestCovarianceOperator:
     """Test class: CovarianceOperator"""
 
@@ -75,6 +78,7 @@ class TestCovarianceOperator:
         # Test logic: Verify basic functionality
         # Args: covariance, localization_radius, grid_shape
         assert result is not None  # Assertion completed
+
 
 class TestStatisticalMetrics:
     """Test class: StatisticalMetrics"""
@@ -91,6 +95,7 @@ class TestStatisticalMetrics:
         # Args: data, axis
         assert result is not None  # Assertion completed
 
+
 class TestStatisticalMetrics:
     """Test class: StatisticalMetrics"""
 
@@ -105,6 +110,7 @@ class TestStatisticalMetrics:
         # Test logic: Verify basic functionality
         # Args: data, axis
         assert result is not None  # Assertion completed
+
 
 class TestStatisticalMetrics:
     """Test class: StatisticalMetrics"""
@@ -121,6 +127,7 @@ class TestStatisticalMetrics:
         # Args: data, axis
         assert result is not None  # Assertion completed
 
+
 class TestStatisticalMetrics:
     """Test class: StatisticalMetrics"""
 
@@ -135,6 +142,7 @@ class TestStatisticalMetrics:
         # Test logic: Verify basic functionality
         # Args: data
         assert result is not None  # Assertion completed
+
 
 class TestStatisticalMetrics:
     """Test class: StatisticalMetrics"""
@@ -151,6 +159,7 @@ class TestStatisticalMetrics:
         # Args: data
         assert result is not None  # Assertion completed
 
+
 class TestStatisticalMetrics:
     """Test class: StatisticalMetrics"""
 
@@ -165,6 +174,7 @@ class TestStatisticalMetrics:
         # Test logic: Verify basic functionality
         # Args: data, q
         assert result is not None  # Assertion completed
+
 
 class TestStatisticalMetrics:
     """Test class: StatisticalMetrics"""
@@ -181,6 +191,7 @@ class TestStatisticalMetrics:
         # Args: data
         assert result is not None  # Assertion completed
 
+
 class TestStatisticalMetrics:
     """Test class: StatisticalMetrics"""
 
@@ -195,6 +206,7 @@ class TestStatisticalMetrics:
         # Test logic: Verify basic functionality
         # Args: data
         assert result is not None  # Assertion completed
+
 
 class TestEnsembleStatistics:
     """Test class: EnsembleStatistics"""
@@ -211,6 +223,7 @@ class TestEnsembleStatistics:
         # Args: ensemble
         assert result is not None  # Assertion completed
 
+
 class TestEnsembleStatistics:
     """Test class: EnsembleStatistics"""
 
@@ -225,6 +238,7 @@ class TestEnsembleStatistics:
         # Test logic: Verify basic functionality
         # Args: ensemble
         assert result is not None  # Assertion completed
+
 
 class TestEnsembleStatistics:
     """Test class: EnsembleStatistics"""
@@ -241,6 +255,7 @@ class TestEnsembleStatistics:
         # Args: ensemble
         assert result is not None  # Assertion completed
 
+
 class TestEnsembleStatistics:
     """Test class: EnsembleStatistics"""
 
@@ -255,6 +270,7 @@ class TestEnsembleStatistics:
         # Test logic: Verify basic functionality
         # Args: ensemble
         assert result is not None  # Assertion completed
+
 
 class TestEnsembleStatistics:
     """Test class: EnsembleStatistics"""
@@ -294,7 +310,6 @@ class TestEdgeCases:
         """Test invalid input"""
         # TODO: Implement invalid input test
         assert True
-
 
 
 # pytest configuration

@@ -31,6 +31,7 @@ class TestLinearSolver:
         # Args: self, A, b, x0
         assert result is not None  # Assertion completed
 
+
 class TestCGSolver:
     """Test class: CGSolver"""
 
@@ -45,6 +46,7 @@ class TestCGSolver:
         # Test logic: Verify basic functionality
         # Args: self, A, b, x0
         assert result is not None  # Assertion completed
+
 
 class TestGMRESSolver:
     """Test class: GMRESSolver"""
@@ -61,6 +63,7 @@ class TestGMRESSolver:
         # Args: self, A, b, x0
         assert result is not None  # Assertion completed
 
+
 class TestBicgstabSolver:
     """Test class: BicgstabSolver"""
 
@@ -75,6 +78,7 @@ class TestBicgstabSolver:
         # Test logic: Verify basic functionality
         # Args: self, A, b, x0
         assert result is not None  # Assertion completed
+
 
 class TestDirectSolver:
     """Test class: DirectSolver"""
@@ -91,6 +95,7 @@ class TestDirectSolver:
         # Args: self, A, b, x0
         assert result is not None  # Assertion completed
 
+
 class TestSolverFactory:
     """Test class: SolverFactory"""
 
@@ -105,6 +110,7 @@ class TestSolverFactory:
         # Test logic: Verify basic functionality
         # Args: solver_type, max_iter, tol
         assert result is not None  # Assertion completed
+
 
 class TestPreconditioner:
     """Test class: Preconditioner"""
@@ -121,6 +127,7 @@ class TestPreconditioner:
         # Args: self, x
         assert result is not None  # Assertion completed
 
+
 class TestJacobiPreconditioner:
     """Test class: JacobiPreconditioner"""
 
@@ -135,6 +142,7 @@ class TestJacobiPreconditioner:
         # Test logic: Verify basic functionality
         # Args: self, x
         assert result is not None  # Assertion completed
+
 
 class TestIdentityPreconditioner:
     """Test class: IdentityPreconditioner"""
@@ -174,7 +182,6 @@ class TestEdgeCases:
         """Test invalid input"""
         # TODO: Implement invalid input test
         assert True
-
 
 
 # pytest configuration

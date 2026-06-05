@@ -31,6 +31,7 @@ class TestBayesianAssimilator:
         # Args: self, domain_size, resolution
         assert result is not None  # Assertion completed
 
+
 class TestBayesianAssimilator:
     """Test class: BayesianAssimilator"""
 
@@ -45,6 +46,7 @@ class TestBayesianAssimilator:
         # Test logic: Verify basic functionality
         # Args: self, background, observations, obs_locations, obs_errors
         assert result is not None  # Assertion completed
+
 
 class TestBlockParallelAssimilator:
     """Test class: BlockParallelAssimilator"""
@@ -61,6 +63,7 @@ class TestBlockParallelAssimilator:
         # Args: self, domain_size, resolution
         assert result is not None  # Assertion completed
 
+
 class TestBlockParallelAssimilator:
     """Test class: BlockParallelAssimilator"""
 
@@ -75,6 +78,7 @@ class TestBlockParallelAssimilator:
         # Test logic: Verify basic functionality
         # Args: self, background, observations, obs_locations, n_blocks, obs_errors
         assert result is not None  # Assertion completed
+
 
 class TestBlockParallelAssimilator:
     """Test class: BlockParallelAssimilator"""
@@ -114,7 +118,6 @@ class TestEdgeCases:
         """Test invalid input"""
         # TODO: Implement invalid input test
         assert True
-
 
 
 # pytest configuration

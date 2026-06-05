@@ -31,6 +31,7 @@ class TestVarianceFieldPlotter:
         # Args: self, variance_field, slice_axis, slice_index, title, cmap, figsize
         assert result is not None  # Assertion completed
 
+
 class TestVarianceFieldPlotter:
     """Test class: VarianceFieldPlotter"""
 
@@ -45,6 +46,7 @@ class TestVarianceFieldPlotter:
         # Test logic: Verify basic functionality
         # Args: self, variance_field, threshold, title, figsize
         assert result is not None  # Assertion completed
+
 
 class TestVarianceFieldPlotter:
     """Test class: VarianceFieldPlotter"""
@@ -61,6 +63,7 @@ class TestVarianceFieldPlotter:
         # Args: self, variance_field, slice_index, levels, title, figsize
         assert result is not None  # Assertion completed
 
+
 class TestVarianceFieldPlotter:
     """Test class: VarianceFieldPlotter"""
 
@@ -75,6 +78,7 @@ class TestVarianceFieldPlotter:
         # Test logic: Verify basic functionality
         # Args: self, variance_field, bins, title, figsize
         assert result is not None  # Assertion completed
+
 
 class TestWindFieldPlotter:
     """Test class: WindFieldPlotter"""
@@ -91,6 +95,7 @@ class TestWindFieldPlotter:
         # Args: self, u, v, slice_index, skip, title, figsize
         assert result is not None  # Assertion completed
 
+
 class TestWindFieldPlotter:
     """Test class: WindFieldPlotter"""
 
@@ -105,6 +110,7 @@ class TestWindFieldPlotter:
         # Test logic: Verify basic functionality
         # Args: self, u, v, slice_index, density, title, figsize
         assert result is not None  # Assertion completed
+
 
 class TestWindFieldPlotter:
     """Test class: WindFieldPlotter"""
@@ -121,6 +127,7 @@ class TestWindFieldPlotter:
         # Args: self, u, v, slice_index, levels, title, figsize
         assert result is not None  # Assertion completed
 
+
 class TestComparisonPlotter:
     """Test class: ComparisonPlotter"""
 
@@ -135,6 +142,7 @@ class TestComparisonPlotter:
         # Test logic: Verify basic functionality
         # Args: self, background, analysis, observations, obs_locations, slice_index, title, figsize
         assert result is not None  # Assertion completed
+
 
 class TestComparisonPlotter:
     """Test class: ComparisonPlotter"""
@@ -174,7 +182,6 @@ class TestEdgeCases:
         """Test invalid input"""
         # TODO: Implement invalid input test
         assert True
-
 
 
 # pytest configuration

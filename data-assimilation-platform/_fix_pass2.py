@@ -1,10 +1,12 @@
-import os, re
+import os
+import re
 
 base = r'd:\Developer\workplace\py\iteam\trae\data-assimilation-platform'
 
 # Second pass - handle remaining ? characters per file
 # Use regex-based approach where needed
 fixes = {}
+
 
 def fix_file(rel_path, replacements):
     file_path = os.path.join(base, rel_path)
@@ -21,6 +23,8 @@ def fix_file(rel_path, replacements):
         print(f'NO CHANGES: {rel_path}')
 
 # File 3: algorithm_core/examples/TESTING.md
+
+
 fix_file('algorithm_core/examples/TESTING.md', [
     ('在 ?`algorithm_core', '在 `algorithm_core'),
     ('在 ?`test_performance', '在 `test_performance'),
@@ -31,6 +35,8 @@ fix_file('algorithm_core/examples/TESTING.md', [
 ])
 
 # File 5: algorithm_core/examples/结果分析.md
+
+
 fix_file('algorithm_core/examples/结果分析.md', [
     ('生成?\n', '生成\n'),
     ('分辨率?\n', '分辨率\n'),
@@ -38,6 +44,8 @@ fix_file('algorithm_core/examples/结果分析.md', [
 ])
 
 # File 6: algorithm_core/README.md - tree structure
+
+
 fix_file('algorithm_core/README.md', [
     ('    # 数据适配?\n', '    # 数据适配器\n'),
     ('    # 可视化模?\n', '    # 可视化模块\n'),
@@ -45,28 +53,38 @@ fix_file('algorithm_core/README.md', [
 ])
 
 # File 8: docs/index.md
+
+
 fix_file('docs/index.md', [
     ('支?DaskMPIRa', '支持 Dask、MPI、Ra'),
 ])
 
 # File 9: docs/development.md
+
+
 fix_file('docs/development.md', [
     ('执?`pip', '执行 `pip'),
 ])
 
 # File 10: docs/uav_integration.md - ASCII diagram and other issues
+
+
 fix_file('docs/uav_integration.md', [
     ('集成?\n', '集成\n'),
     ('接口?\n', '接口\n'),
 ])
 
 # File 18: service_spring/README.md
+
+
 fix_file('service_spring/README.md', [
     ('接口?\n', '接口\n'),
     ('# 配置?\n', '# 配置类\n'),
 ])
 
 # File 20: shared/protos/common/README.md
+
+
 fix_file('shared/protos/common/README.md', [
     ('定义?\n', '定义\n'),
 ])
@@ -74,6 +92,8 @@ fix_file('shared/protos/common/README.md', [
 # Now handle docs/uav_integration.md ASCII diagram separately
 # The ? in the diagram are box-drawing characters that got corrupted
 path = os.path.join(base, 'docs/uav_integration.md')
+
+
 with open(path, 'r', encoding='utf-8') as f:
     content = f.read()
 
@@ -83,11 +103,15 @@ old_diagram = """```
 ?        ?
 ? WRF 处理层  数据适配器          ?
 ? (Java)          ? HTTP   ? (WRF Adapter)       ?
+
+
 ?        ?
                                       ?
 ?        ?
 ? 气象预测服务     ? ? 贝叶斯同化核?      ?
 ? (Java)          ? gRPC   ? (3D-VAR/EnKF)      ?
+
+
 ?        ?
                                       ?
 ?        ?
@@ -102,12 +126,16 @@ new_diagram = """```
 │  WRF 处理层     │  数据适配器  │                      │
 │  (Java)         │  ←─HTTP──→  │  (WRF Adapter)       │
 │                 │             │                      │
+
+
 └─────────────────┘             └──────────────────────┘
                                           │
 ┌─────────────────┐             ┌──────────────────────┐
 │  气象预测服务   │             │  贝叶斯同化核心      │
 │  (Java)         │  ←─gRPC──→  │  (3D-VAR/EnKF)      │
 │                 │             │                      │
+
+
 └─────────────────┘             └──────────────────────┘
                                           │
 ┌─────────────────┐             ┌──────────────────────┐
@@ -117,11 +145,14 @@ new_diagram = """```
 └─────────────────┘             └──────────────────────┘
 ```"""
 
+
 if old_diagram in content:
     content = content.replace(old_diagram, new_diagram)
     with open(path, 'w', encoding='utf-8') as f:
         f.write(content)
     print('FIXED diagram: docs/uav_integration.md')
+
+
 else:
     print('Diagram not found in docs/uav_integration.md - checking manually')
     # Try to find the diagram

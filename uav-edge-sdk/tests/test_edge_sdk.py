@@ -102,11 +102,11 @@ def test_sdk_config():
 def test_offline_cache():
     """测试离线缓存"""
     from edge_sdk.config import SDKConfig
-    
+
     # 模拟离线缓存保存与加载
     config = SDKConfig()
-    config.set('cached_paths', json.dumps([(0,0),(5,5),(10,10)]))
-    
+    config.set('cached_paths', json.dumps([(0, 0), (5, 5), (10, 10)]))
+
     with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
         fpath = f.name
     try:
@@ -123,11 +123,11 @@ def test_path_smoothing():
     """测试路径平滑功能（使用几何方法验证）"""
     # 验证 Bezier 路径比原始路径更平滑（点间距更均匀）
     from edge_sdk._core import HAS_CPP_MODULE
-    
+
     if not HAS_CPP_MODULE:
         # 纯 Python 验证平滑概念
-        raw_path = [(0,0), (2,3), (5,5), (8,7), (10,10)]
-        
+        raw_path = [(0, 0), (2, 3), (5, 5), (8, 7), (10, 10)]
+
         # 简单平滑: 三点滑动平均
         smoothed = [raw_path[0]]
         for i in range(1, len(raw_path)-1):
@@ -135,7 +135,7 @@ def test_path_smoothing():
             avg_y = (raw_path[i-1][1] + raw_path[i][1] + raw_path[i+1][1]) / 3
             smoothed.append((avg_x, avg_y))
         smoothed.append(raw_path[-1])
-        
+
         assert len(smoothed) == len(raw_path), "Smooth should keep same count"
         print("✅ Path Smoothing tests passed! (Python fallback)")
     else:
@@ -149,7 +149,7 @@ def test_dwa_concept():
     w_min, w_max = -1.0, 1.0
     v_res = 0.1
     w_res = 0.2
-    
+
     # 采样速度空间
     velocities = []
     v = v_min
@@ -159,7 +159,7 @@ def test_dwa_concept():
             velocities.append((v, w))
             w = round(w + w_res, 2)
         v = round(v + v_res, 2)
-    
+
     assert len(velocities) > 0, "Should generate velocity samples"
     print(f"✅ DWA concept test passed! ({len(velocities)} velocity samples generated)")
 
@@ -169,7 +169,7 @@ def test_mavlink_protocol():
     # 验证MAVLink帧结构
     magic = 0xFD  # MAVLink v2 起始字节
     assert magic == 253, "MAVLink v2 magic byte should be 0xFD"
-    
+
     # 验证重要消息ID
     heartbeat_id = 0
     command_id = 76
@@ -199,7 +199,7 @@ def test_performance():
     """测试性能基准"""
     import time
     from edge_sdk._core import HAS_CPP_MODULE
-    
+
     # 路径规划性能
     sdk = create_sdk()
     start_time = time.time()
@@ -211,7 +211,7 @@ def test_performance():
     # Performance threshold higher in Python fallback mode
     max_allowed_ms = 1000 if not HAS_CPP_MODULE else 100
     assert avg_ms < max_allowed_ms, f"Path planning too slow: {avg_ms:.1f}ms"
-    
+
     # 风险评估性能
     weather = {'wind_speed': 8.0, 'temperature': 20.0, 'visibility': 10.0,
                'humidity': 65.0, 'precipitation': 0.0, 'has_thunderstorm': False}
@@ -222,7 +222,7 @@ def test_performance():
     avg_us = elapsed / 1000 * 1_000_000
     print(f"  Risk assessment: {avg_us:.0f}µs avg")
     assert avg_us < 10000, f"Risk assessment too slow: {avg_us:.0f}µs"
-    
+
     print("✅ Performance tests passed!")
 
 
@@ -234,7 +234,7 @@ def main():
     from edge_sdk._core import HAS_CPP_MODULE
     print(f"C++ Module: {'Available' if HAS_CPP_MODULE else 'Not found (using Python fallback)'}")
     print()
-    
+
     test_modules = [
         ("Path Planning", test_path_planner),
         ("Risk Assessment", test_risk_assessor),
@@ -249,10 +249,10 @@ def main():
         ("Data Serialization", test_serialization),
         ("Performance", test_performance),
     ]
-    
+
     passed = 0
     failed = 0
-    
+
     for name, test_func in test_modules:
         try:
             print(f"\n[{name}]")
@@ -263,7 +263,7 @@ def main():
             import traceback
             traceback.print_exc()
             failed += 1
-    
+
     print("\n" + "=" * 60)
     print(f"Results: {passed} passed, {failed} failed, {passed+failed} total")
     print("=" * 60)

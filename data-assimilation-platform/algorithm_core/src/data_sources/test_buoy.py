@@ -31,6 +31,7 @@ class TestBuoyDataSource:
         # Args: self, params
         assert result is not None  # Assertion completed
 
+
 class TestBuoyDataSource:
     """Test class: BuoyDataSource"""
 
@@ -69,7 +70,6 @@ class TestEdgeCases:
         """Test invalid input"""
         # TODO: Implement invalid input test
         assert True
-
 
 
 # pytest configuration

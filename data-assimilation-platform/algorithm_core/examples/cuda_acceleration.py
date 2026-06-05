@@ -15,6 +15,8 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 src_path = os.path.join(project_root, 'src')
+
+
 if src_path not in sys.path:
     sys.path.insert(0, src_path)
 
@@ -26,9 +28,10 @@ if src_path not in sys.path:
 # pip install pycuda
 # pip install numba cuda-python
 
-from bayesian_assimilation.core.assimilator import BayesianAssimilator # type: ignore
-from bayesian_assimilation.utils.config import AssimilationConfig # type: ignore
-from bayesian_assimilation.accelerators import CUDAAccelerator, CuPyAccelerator, PyCUDAccelerator # type: ignore
+from bayesian_assimilation.core.assimilator import BayesianAssimilator  # type: ignore
+from bayesian_assimilation.utils.config import AssimilationConfig  # type: ignore
+from bayesian_assimilation.accelerators import CUDAAccelerator, CuPyAccelerator, PyCUDAccelerator  # type: ignore
+
 
 logging.basicConfig(
     level=logging.INFO,
@@ -52,7 +55,7 @@ def check_cuda_available():
         return False
 
 
-def create_synthetic_data(domain_size: int, resolution: Any, n_obs=20: Any):
+def create_synthetic_data(domain_size: int, resolution: Any, n_obs: Any = 20):
     """创建合成数据"""
     nx = int(domain_size[0] / resolution) + 1
     ny = int(domain_size[1] / resolution) + 1
@@ -204,7 +207,7 @@ def demo_cuda_accelerated():
         # 使用GPU版本的3DVAR同化
         if device_info.get('backend') == 'cupy':
             import cupy as cp
-            
+
             def cuda_assimilate_3dvar(bg, obs, obs_loc):
                 """CuPy版本的3DVAR同化"""
                 nx, ny, nz = bg.shape
@@ -217,10 +220,10 @@ def demo_cuda_accelerated():
                 ix = cp.clip((obs_loc[:, 0] / 5.0).astype(cp.int32), 0, nx - 1)
                 iy = cp.clip((obs_loc[:, 1] / 5.0).astype(cp.int32), 0, ny - 1)
                 iz = cp.clip((obs_loc[:, 2] / 5.0).astype(cp.int32), 0, nz - 1)
-                
+
                 # 计算扁平化索引
                 idx = ix * ny * nz + iy * nz + iz
-                
+
                 # 观测误差和背景误差
                 obs_err = cp.ones(n_obs) * 0.8
                 R_diag = obs_err ** 2 + 1e-6
@@ -230,15 +233,15 @@ def demo_cuda_accelerated():
                 B_inv_diag = 1.0 / (B_diag + 1e-6)
 
                 y = obs
-                
+
                 # 计算H^T @ (R_inv * y) - 使用向量化操作
                 H_T_R_inv_y = cp.zeros(n_total)
                 H_T_R_inv_y[idx] += R_inv * y
-                
+
                 # 计算H^T @ R_inv @ H的对角线 - 使用向量化操作
                 H_T_R_inv_H_diag = cp.zeros(n_total)
                 H_T_R_inv_H_diag[idx] += R_inv
-                
+
                 # 计算右侧和矩阵A的对角线
                 rhs = B_inv_diag * xb + H_T_R_inv_y
                 A_diag = B_inv_diag + H_T_R_inv_H_diag
@@ -247,12 +250,12 @@ def demo_cuda_accelerated():
                 variance = 1.0 / (A_diag + 1e-6)
 
                 return xa.reshape((nx, ny, nz)), variance.reshape((nx, ny, nz))
-            
+
             # 执行GPU计算
             analysis_gpu, variance_gpu = cuda_assimilate_3dvar(
                 background_gpu, observations_gpu, obs_locations_gpu
             )
-            
+
             # 转移结果回CPU
             analysis = cuda_acc.to_host(analysis_gpu)
             variance = cuda_acc.to_host(variance_gpu)

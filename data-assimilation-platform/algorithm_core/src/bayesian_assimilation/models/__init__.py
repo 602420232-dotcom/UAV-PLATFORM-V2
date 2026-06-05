@@ -5,6 +5,8 @@ import os
 import sys
 
 SRC_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+
 if SRC_DIR not in sys.path:
     sys.path.insert(0, SRC_DIR)
 
@@ -15,6 +17,7 @@ from bayesian_assimilation.models.enkf import EnKF
 from bayesian_assimilation.models.hybrid import HybridAssimilation, AdaptiveHybridAssimilation
 from bayesian_assimilation.models.enhanced_bayesian import EnhancedBayesianAssimilation
 from bayesian_assimilation.models.variance_field_optimizer import VarianceFieldOptimizer, AdaptiveVarianceField
+
 
 __all__ = [
     "AssimilationBase",

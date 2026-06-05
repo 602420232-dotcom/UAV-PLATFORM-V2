@@ -3,6 +3,8 @@ import os
 base = r'd:\Developer\workplace\py\iteam\trae\data-assimilation-platform'
 
 # Define all replacements per file. Each entry: (file_path, list_of_(old, new))
+
+
 files_fixes = {
     'algorithm_core/docker/README.md': [
         ('系?Docker', '系统 Docker'),
@@ -469,17 +471,19 @@ files_fixes = {
 }
 
 count = 0
+
+
 for rel_path, replacements in files_fixes.items():
     file_path = os.path.join(base, rel_path)
     with open(file_path, 'r', encoding='utf-8') as f:
         content = f.read()
-    
+
     original = content
     for old, new in replacements:
         if old in content:
             content = content.replace(old, new)
             count += 1
-    
+
     if content != original:
         with open(file_path, 'w', encoding='utf-8') as f:
             f.write(content)

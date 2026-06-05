@@ -112,7 +112,8 @@ class DigitalTwinEngine:
         self.initialize(waypoints[0])
         predicted_trajectory = []
 
-        for i, wpt in enumerate(waypoints[1:], 1):
+        for i, wpt in enumerate(waypoints[1:
+            ], 1):
             if i - 1 < len(weather_forecast):
                 self.update_environment(weather_forecast[i - 1])
 
@@ -138,7 +139,8 @@ class DigitalTwinEngine:
         return {
             'trajectory': predicted_trajectory,
             'total_distance': sum(np.linalg.norm(np.array(w2) - np.array(w1))
-                                  for w1, w2 in zip(waypoints[:-1], waypoints[1:])),
+                                  for w1, w2 in zip(waypoints[:
+                                      -1], waypoints[1:])),
             'estimated_duration': self.drone_state.timestamp,
             'final_battery': remaining_battery,
             'feasible': feasibility,

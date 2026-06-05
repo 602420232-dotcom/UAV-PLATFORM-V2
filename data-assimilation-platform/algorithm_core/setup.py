@@ -4,14 +4,17 @@ import importlib.util
 
 here = os.path.abspath(os.path.dirname(__file__))
 
+
 spec = importlib.util.spec_from_file_location(
     '__version__', os.path.join(here, 'src/bayesian_assimilation/__version__.py'))
 mod = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(mod)
 __version__ = getattr(mod, '__version__', '1.0.0')
 
+
 with open(os.path.join(here, 'README.md'), 'r', encoding='utf-8') as f:
     long_description = f.read()
+
 
 setup(
     name='bayesian_assimilation',

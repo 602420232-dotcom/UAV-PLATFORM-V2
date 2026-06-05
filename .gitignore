@@ -336,3 +336,7 @@ Dockerfile.*.quick
 
 # Pyright cache
 .pyright/
+
+# Maven effective-pom (generated)
+effective-pom
+**/effective-pom

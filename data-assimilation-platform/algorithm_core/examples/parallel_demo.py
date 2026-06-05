@@ -24,11 +24,14 @@ from typing import Dict, Tuple, Any
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 src_path = os.path.join(project_root, 'src')
+
+
 if src_path not in sys.path:
     sys.path.insert(0, src_path)
 
-from bayesian_assimilation.core.assimilator import BayesianAssimilator # type: ignore
-from bayesian_assimilation.utils.config import AssimilationConfig # type: ignore
+from bayesian_assimilation.core.assimilator import BayesianAssimilator  # type: ignore
+from bayesian_assimilation.utils.config import AssimilationConfig  # type: ignore
+
 
 logging.basicConfig(
     level=logging.INFO,
@@ -36,12 +39,14 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+
 DATA_CONFIG = {
     'domain': (5000, 5000, 500),
     'resolution': 5.0,
     'n_obs': 500,
     'n_blocks': 2
 }
+
 
 PARALLEL_THRESHOLDS = {
     'small_to_medium': 100_000_000,
@@ -67,7 +72,7 @@ def get_parallel_strategy(total_points):
         return 'process', min(mp.cpu_count(), 16)
 
 
-def create_data(domain_size: int, resolution: Any, n_obs=30: Any):
+def create_data(domain_size: int, resolution: Any, n_obs: Any = 30):
     """创建合成数据"""
     nx = int(domain_size[0] / resolution) + 1
     ny = int(domain_size[1] / resolution) + 1
@@ -250,7 +255,7 @@ def demo_sequential():
         )
         elapsed = time.time() - start_time
 
-        logger.info(f"串行计算完成")
+        logger.info("串行计算完成")
         logger.info(f"   耗时: {elapsed:.2f}秒")
         logger.info(f"   分析场形状: {analysis.shape}")
         logger.info(f"   平均方差: {np.mean(variance):.4f}")
@@ -272,7 +277,7 @@ def demo_sequential():
 def demo_thread_parallel():
     """线程并行计算测试"""
     logger.info("\n" + "="*60)
-    logger.info(f"线程并行计算测试 ( Thread Parallel )")
+    logger.info("线程并行计算测试 ( Thread Parallel )")
     logger.info("="*60)
     logger.info(f"数据规模: {DATA_CONFIG['domain']}, 分辨率: {DATA_CONFIG['resolution']}m")
 
@@ -311,7 +316,7 @@ def demo_thread_parallel():
         )
         elapsed = time.time() - start_time
 
-        logger.info(f"线程并行计算完成")
+        logger.info("线程并行计算完成")
         logger.info(f"   耗时: {elapsed:.2f}秒")
         logger.info(f"   分析场形状: {analysis.shape}")
         logger.info(f"   平均方差: {np.mean(variance):.4f}")
@@ -366,25 +371,25 @@ def main():
 
     if results['sequential']['success']:
         seq_time = results['sequential']['elapsed']
-        logger.info(f"\n串行计算:")
+        logger.info("\n串行计算:")
         logger.info(f"   耗时: {seq_time:.2f}秒")
-        logger.info(f"   基准时间")
+        logger.info("   基准时间")
 
         if results.get('thread_parallel', {}).get('success'):
             thread_time = results['thread_parallel']['elapsed']
             thread_speedup = seq_time / thread_time if thread_time > 0 else 0
             thread_efficiency = thread_speedup / results['thread_parallel'].get('n_blocks', 1) * 100
 
-            logger.info(f"\n线程并行计算:")
+            logger.info("\n线程并行计算:")
             logger.info(f"   耗时: {thread_time:.2f}秒")
             logger.info(f"   加速比: {thread_speedup:.2f}x")
             logger.info(f"   并行效率: {thread_efficiency:.1f}%")
             logger.info(f"   (使用 {results['thread_parallel'].get('n_blocks', 1)} 个块)")
 
             if thread_speedup > 1:
-                logger.info(f"   并行加速成功!")
+                logger.info("   并行加速成功!")
             else:
-                logger.info(f"   并行未达到加速效果")
+                logger.info("   并行未达到加速效果")
 
     logger.info(f"\n成功测试数: {success_count}/{len(results)}")
 

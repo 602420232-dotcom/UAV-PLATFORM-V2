@@ -8,11 +8,15 @@ import numpy as np
 from typing import Optional, Any, List, Callable
 
 # 处理相对导入问题
+
+
 if __name__ == '__main__':
     import sys
     import os
     sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..')))
     from bayesian_assimilation.accelerators.base import BaseAccelerator, AcceleratorType
+
+
 else:
     from .base import BaseAccelerator, AcceleratorType
 
@@ -59,7 +63,7 @@ class JAXAccelerator(BaseAccelerator):
                 # 旧版本兼容
                 try:
                     self._backend = jax.lib.xla_bridge.get_backend().platform  # type: ignore
-                except:
+                except Exception:
                     self._backend = 'cpu'
 
             self._platform = self._backend
@@ -303,7 +307,7 @@ class JAXAccelerator(BaseAccelerator):
                     return True
 
             return False
-        except:
+        except Exception:
             return False
 
     def check_gpu_available(self) -> bool:

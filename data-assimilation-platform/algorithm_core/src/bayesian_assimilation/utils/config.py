@@ -151,22 +151,22 @@ class AdaptiveConfig(OptimizedConfig):
     use_gpu: bool = True
     use_incremental: bool = True
     use_block_parallel: bool = True
-    
+
     # 自适应参数
     auto_resolution: bool = True
     min_resolution: float = 1.0
     max_resolution: float = 50.0
     resolution_decay: float = 0.9
-    
+
     # 块分解参数
     block_size: int = 100
     block_overlap: int = 20
     n_workers: int = 4
-    
+
     # 增量同化参数
     incremental_threshold: float = 0.1
     incremental_radius: int = 5
-    
+
     # GPU参数
     gpu_memory_limit_gb: float = 8.0
     gpu_batch_size: int = 1000
@@ -195,9 +195,11 @@ class CompatibleConfig(BaseConfig):
 
 
 # 配置工厂
+
+
 class ConfigFactory:
     """配置工厂，创建不同类型的配置"""
-    
+
     @staticmethod
     def create(config_type: str = "adaptive", **kwargs) -> BaseConfig:
         """创建配置实例"""
@@ -207,36 +209,38 @@ class ConfigFactory:
             "adaptive": AdaptiveConfig,
             "compatible": CompatibleConfig
         }
-        
+
         if config_type not in config_classes:
             raise ValueError(f"未知的配置类型: {config_type}")
-        
+
         return config_classes[config_type](**kwargs)
-    
+
     @staticmethod
     def from_dict(config_dict: Dict[str, Any]) -> BaseConfig:
         """从字典创建配置"""
         config_type = config_dict.get("config_type", "adaptive")
-        
+
         # 移除config_type字段
         if "config_type" in config_dict:
             config_dict = config_dict.copy()
             del config_dict["config_type"]
-        
+
         return ConfigFactory.create(config_type, **config_dict)
 
 
 # 环境变量配置
+
+
 def get_config_from_env() -> BaseConfig:
     """从环境变量获取配置"""
-    
+
     config_type = os.getenv("ASSIMILATION_CONFIG_TYPE", "adaptive")
-    
+
     # 基础配置
     config_data = {
         "method": os.getenv("ASSIMILATION_METHOD", "3DVAR"),
         "grid_resolution": float(os.getenv("GRID_RESOLUTION", "50.0")),
         "use_gpu": os.getenv("USE_GPU", "True").lower() == "true"
     }
-    
+
     return ConfigFactory.create(config_type, **config_data)

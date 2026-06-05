@@ -2,6 +2,8 @@ import os
 import sys
 
 SRC_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+
 if SRC_DIR not in sys.path:
     sys.path.insert(0, SRC_DIR)
 
@@ -19,12 +21,13 @@ from bayesian_assimilation.utils.config import BaseConfig
 
 logger = logging.getLogger(__name__)
 
+
 class FourDimensionalVar(AssimilationBase):
     """
     4D-VAR 同化算法实现
     支持时间维度的同化，提高预报精度
     """
-    
+
     def __init__(self, config: Optional[Any] = None):
         super().__init__(config)
         self.name = "four_dimensional_var"
@@ -39,7 +42,7 @@ class FourDimensionalVar(AssimilationBase):
         self.observation_operator = None
         self.parallel_manager = None
         self._ensure_defaults()
-    
+
     def _ensure_defaults(self):
         """确保默认值已设置"""
         if self.grid_shape is None:
@@ -48,7 +51,7 @@ class FourDimensionalVar(AssimilationBase):
             self.resolution = 50.0
         if not hasattr(self, 'nx'):
             self.nx, self.ny, self.nz = self.grid_shape
-    
+
     def _get_config_value(self, config, attr_name, default_value):
         """
         安全地获取配置值
@@ -56,7 +59,7 @@ class FourDimensionalVar(AssimilationBase):
         if config is not None and hasattr(config, attr_name):
             return getattr(config, attr_name)
         return default_value
-    
+
     def run_wrf_model(self, x0: Dict[str, np.ndarray]) -> List[Dict[str, np.ndarray]]:
         """
         对接真实 WRF 积分
@@ -64,7 +67,7 @@ class FourDimensionalVar(AssimilationBase):
         """
         # 1. 写入 wrfinput_d01
         nc_file = os.path.join(self.config["wrf_input_dir"], "wrfinput_d01")
-        
+
         if os.path.exists(nc_file):
             with nc.Dataset(nc_file, 'r+') as ds:
                 if 'T' in x0 and 'T' in ds.variables:
@@ -80,8 +83,8 @@ class FourDimensionalVar(AssimilationBase):
         os.chdir(self.config["wrf_input_dir"])
         if os.path.exists(self.config["wrf_exe_path"]):
             subprocess.run(
-                [self.config["wrf_exe_path"]], 
-                stdout=subprocess.DEVNULL, 
+                [self.config["wrf_exe_path"]],
+                stdout=subprocess.DEVNULL,
                 stderr=subprocess.PIPE
             )
 
@@ -103,20 +106,20 @@ class FourDimensionalVar(AssimilationBase):
             except Exception as e:
                 logger.warning(f"读取WRF输出文件失败: {e}")
                 continue
-        
+
         # 如果没有WRF输出，使用简化模型
         if not history:
             history = self._simplified_model_run(x0)
-        
+
         return history
-    
+
     def _simplified_model_run(self, x0: Dict[str, np.ndarray]) -> List[Dict[str, np.ndarray]]:
         """
         简化的模型运行，用于没有WRF的情况
         """
         history = []
         shape = x0['T'].shape
-        
+
         # 模拟4个时间步的运行
         for i in range(4):
             # 简单的平流和扩散
@@ -126,11 +129,11 @@ class FourDimensionalVar(AssimilationBase):
                 'V': x0['V'] * (1 - 0.05 * i) + np.random.normal(0, 0.05, shape)
             }
             history.append(model_state)
-        
+
         return history
-    
-    def cost_function(self, x0_flat: np.ndarray, xb: Dict[str, np.ndarray], 
-                     B_inv: np.ndarray, R_inv: np.ndarray, 
+
+    def cost_function(self, x0_flat: np.ndarray, xb: Dict[str, np.ndarray],
+                     B_inv: np.ndarray, R_inv: np.ndarray,
                      observations: List[Dict], H) -> float:
         """
         4D-Var 代价函数
@@ -139,7 +142,7 @@ class FourDimensionalVar(AssimilationBase):
         # 恢复场结构
         shape_2d = xb['T'].shape
         n_points = shape_2d[0] * shape_2d[1]
-        
+
         x0 = {
             'T': x0_flat[:n_points].reshape(shape_2d),
             'U': x0_flat[n_points:2*n_points].reshape(shape_2d),
@@ -172,9 +175,9 @@ class FourDimensionalVar(AssimilationBase):
                 Jo += 0.5 * diff.T @ R_inv @ diff
 
         return Jb + Jo
-    
-    def adjoint_gradient(self, x0_flat: np.ndarray, xb: Dict[str, np.ndarray], 
-                        B_inv: np.ndarray, R_inv: np.ndarray, 
+
+    def adjoint_gradient(self, x0_flat: np.ndarray, xb: Dict[str, np.ndarray],
+                        B_inv: np.ndarray, R_inv: np.ndarray,
                         observations: List[Dict], H) -> np.ndarray:
         """
         伴随模式 → 输出代价函数梯度
@@ -182,7 +185,7 @@ class FourDimensionalVar(AssimilationBase):
         """
         shape_2d = xb['T'].shape
         n_points = shape_2d[0] * shape_2d[1]
-        
+
         x0 = {
             'T': x0_flat[:n_points].reshape(shape_2d),
             'U': x0_flat[n_points:2*n_points].reshape(shape_2d),
@@ -210,11 +213,10 @@ class FourDimensionalVar(AssimilationBase):
                     # 观测算子H的伴随 - 只对对应位置添加贡献
                     lat_idx = int(obs.get('lat_idx', 0))
                     lon_idx = int(obs.get('lon_idx', 0))
-                    if lambda_T.ndim >= 2 and 0 <= lat_idx < lambda_T.shape[0] and 0 <= lon_idx < lambda_T.shape[1]: # type: ignore
+                    if lambda_T.ndim >= 2 and 0 <= lat_idx < lambda_T.shape[0] and 0 <= lon_idx < lambda_T.shape[1]:  # type: ignore
                         lambda_T[lat_idx, lon_idx] += adj_obs[obs_idx] * 1.0
                         lambda_U[lat_idx, lon_idx] += adj_obs[obs_idx] * 0.2
                         lambda_V[lat_idx, lon_idx] += adj_obs[obs_idx] * 0.2
-
 
             # WRF 线性伴随（简化版，可对接真实 WRF 伴随）
             lambda_T = lambda_T * 0.98
@@ -232,8 +234,7 @@ class FourDimensionalVar(AssimilationBase):
                                grad_U.ravel(),
                                grad_V.ravel(),
                                grad_Ps.ravel()])
-    
-    
+
     def _apply_B_inv(self, x: np.ndarray, B_inv: np.ndarray) -> np.ndarray:
         """
         应用背景误差协方差逆矩阵
@@ -243,14 +244,14 @@ class FourDimensionalVar(AssimilationBase):
             return result.reshape(x.shape)
         else:
             return x * B_inv
-    
+
     def assimilate(self, background: Dict, observations: List[Dict]) -> Tuple[Dict, Dict]:
         """
         执行4D-VAR同化
         """
         logger.info("开始4D-VAR同化...")
         start_time = datetime.now()
-        
+
         # 准备背景场
         xb = {
             'T': background.get('variables', {}).get('temperature', np.zeros((10, 10))),
@@ -258,12 +259,12 @@ class FourDimensionalVar(AssimilationBase):
             'V': background.get('variables', {}).get('v_wind', np.zeros((10, 10))),
             'Ps': background.get('variables', {}).get('pressure', np.zeros((10, 10)))
         }
-        
+
         # 确保背景场是二维的
         assert xb['T'].ndim == 2, f"温度场必须是二维，实际维度: {xb['T'].ndim}"
         n_rows, n_cols = xb['T'].shape
         n = n_rows * n_cols
-        
+
         # 准备观测算子
         def observation_operator(model_state):
             obs_values = []
@@ -271,7 +272,7 @@ class FourDimensionalVar(AssimilationBase):
                 lat_idx = int(obs.get('lat_idx', 0))
                 lon_idx = int(obs.get('lon_idx', 0))
                 var = obs.get('variable', 'temperature')
-                
+
                 if var == 'temperature' and 'T' in model_state:
                     obs_values.append(model_state['T'][lat_idx, lon_idx])
                 elif var == 'u_wind' and 'U' in model_state:
@@ -279,11 +280,11 @@ class FourDimensionalVar(AssimilationBase):
                 elif var == 'v_wind' and 'V' in model_state:
                     obs_values.append(model_state['V'][lat_idx, lon_idx])
             return np.array(obs_values)
-        
+
         # 准备协方差矩阵
         B_inv = np.eye(n) * 0.1
         R_inv = np.eye(len(observations)) * 1.0
-        
+
         # 展平初始场
         x0_flat = np.concatenate([
             xb['T'].ravel(),
@@ -329,16 +330,16 @@ class FourDimensionalVar(AssimilationBase):
             # 基于观测密度估算方差
             obs_density = len(observations) / (n_rows * n_cols)
             variance_scale = 1.0 / (1.0 + obs_density * 10)
-            
+
             variance_field = {
                 'temperature': np.ones((n_rows, n_cols)) * 0.5 * variance_scale,
                 'u_wind': np.ones((n_rows, n_cols)) * 0.3 * variance_scale,
                 'v_wind': np.ones((n_rows, n_cols)) * 0.3 * variance_scale,
                 'pressure': np.ones((n_rows, n_cols)) * 0.4 * variance_scale
             }
-            
+
             logger.info(f"方差场计算完成，观测密度: {obs_density:.3f}")
-            
+
         except Exception as e:
             logger.warning(f"方差场计算失败: {e}")
             # 生成默认方差场
@@ -348,12 +349,12 @@ class FourDimensionalVar(AssimilationBase):
                 'v_wind': np.ones((n_rows, n_cols)) * 0.3,
                 'pressure': np.ones((n_rows, n_cols)) * 0.4
             }
-        
+
         end_time = datetime.now()
         logger.info(f"4D-VAR同化完成，耗时: {end_time - start_time}")
-        
+
         return analysis, variance_field
-    
+
     def set_parallel_manager(self, parallel_manager):
         """
         设置并行管理器
@@ -365,7 +366,7 @@ class FourDimensionalVar(AssimilationBase):
 
 if __name__ == "__main__":
     model = FourDimensionalVar()
-    
+
     # 准备测试数据
     background = {
         'grid': {'shape': (10, 10)},
@@ -376,13 +377,13 @@ if __name__ == "__main__":
             'pressure': np.random.rand(10, 10) * 100 + 1000
         }
     }
-    
+
     observations = [
         {'time_idx': 0, 'lat_idx': 2, 'lon_idx': 3, 'variable': 'temperature', 'value': 25.0},
         {'time_idx': 1, 'lat_idx': 5, 'lon_idx': 5, 'variable': 'u_wind', 'value': 3.0},
         {'time_idx': 2, 'lat_idx': 7, 'lon_idx': 2, 'variable': 'v_wind', 'value': -2.0}
     ]
-    
+
     analysis, variance = model.assimilate(background, observations)
     logger.info(f"分析场温度范围: [{analysis['variables']['temperature'].min():.2f}, {analysis['variables']['temperature'].max():.2f}]")
     logger.info(f"分析场风场范围: [{analysis['variables']['u_wind'].min():.2f}, {analysis['variables']['u_wind'].max():.2f}]")
@@ -390,4 +391,3 @@ if __name__ == "__main__":
 
 # 便捷函数
 four_dimensional_var = FourDimensionalVar().assimilate
-

@@ -4,6 +4,7 @@
 提供 JWT 认证 + Demo 模式支持，与 Java 后端共享 JWT Secret。
 统一使用 HS512 算法。
 
+
 使用示例:
     from security_middleware import SecurityMiddleware
 
@@ -263,4 +264,3 @@ class SecurityMiddleware:
             return result
 
         return check
-

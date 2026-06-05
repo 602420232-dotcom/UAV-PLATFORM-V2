@@ -31,6 +31,7 @@ class TestGridAdapter:
         # Args: self, data, new_shape, method
         assert result is not None  # Assertion completed
 
+
 class TestGridAdapter:
     """Test class: GridAdapter"""
 
@@ -69,7 +70,6 @@ class TestEdgeCases:
         """Test invalid input"""
         # TODO: Implement invalid input test
         assert True
-
 
 
 # pytest configuration

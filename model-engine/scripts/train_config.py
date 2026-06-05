@@ -19,23 +19,23 @@ class TrainConfig:
     seed: int = 42
     device: str = "cuda"  # 自动降级为 cpu
     num_workers: int = 4
-    
+
     # CNN 订正器
     cnn_epochs: int = 100
     cnn_batch_size: int = 16
     cnn_lr: float = 1e-3
     cnn_weight_decay: float = 1e-4
-    
+
     # U-Net 降尺度
     unet_epochs: int = 100
     unet_batch_size: int = 16
     unet_lr: float = 1e-3
-    
+
     # XGBoost
     xgboost_n_estimators: int = 200
     xgboost_max_depth: int = 6
     xgboost_lr: float = 0.1
-    
+
     # 数据
     n_train: int = 3000
     n_val: int = 500

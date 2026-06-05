@@ -93,7 +93,7 @@ class LLMAssistedDecision:
 
     def _suggest_path_planning(self, task: NLPTask, ctx: dict) -> dict:
         return {
-            "response": f"已理解路径规划请求: 正在计算最优航线...",
+            "response": "已理解路径规划请求: 正在计算最优航线...",
             "action": "path_planning",
             "params": {"drone_id": task.entities.get("drone_ids", ["UAV-001"])[0],
                        "optimization": "multi_objective",
@@ -102,7 +102,7 @@ class LLMAssistedDecision:
 
     def _suggest_weather_query(self, task: NLPTask, ctx: dict) -> dict:
         return {
-            "response": f"正在查询气象数据...",
+            "response": "正在查询气象数据...",
             "action": "weather_query",
             "params": {"location": task.entities.get("location", ["北京"]),
                        "include_forecast": True}

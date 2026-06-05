@@ -17,21 +17,21 @@ logger = logging.getLogger(__name__)
 
 class CircuitBreakerConfig:
     """熔断器配置"""
-    
+
     # HTTP 服务熔断器配置
     HTTP_SERVICE_CB = {
-        'fail_max': 5,              # 失败5次后打开熔断器
-        'reset_timeout': 60,        # 60秒后尝试半开
-        'exclude': [Exception],     # 排除的异常类型
+        'fail_max': 5,  # 失败5次后打开熔断器
+        'reset_timeout': 60,  # 60秒后尝试半开
+        'exclude': [Exception],  # 排除的异常类型
     }
-    
+
     # WebSocket 连接熔断器配置
     WEBSOCKET_CB = {
-        'fail_max': 3,              # WebSocket更敏感，失败3次
-        'reset_timeout': 30,        # 30秒后尝试恢复
-        'exclude': [],              # 不过滤任何异常
+        'fail_max': 3,  # WebSocket更敏感，失败3次
+        'reset_timeout': 30,  # 30秒后尝试恢复
+        'exclude': [],  # 不过滤任何异常
     }
-    
+
     # 联邦学习熔断器配置
     FEDERATED_LEARNING_CB = {
         'fail_max': 4,
@@ -41,17 +41,21 @@ class CircuitBreakerConfig:
 
 
 # 创建熔断器实例
+
+
 http_circuit_breaker = pybreaker.CircuitBreaker(
     fail_max=CircuitBreakerConfig.HTTP_SERVICE_CB['fail_max'],
     reset_timeout=CircuitBreakerConfig.HTTP_SERVICE_CB['reset_timeout'],
     exclude=CircuitBreakerConfig.HTTP_SERVICE_CB['exclude']
 )
 
+
 websocket_circuit_breaker = pybreaker.CircuitBreaker(
     fail_max=CircuitBreakerConfig.WEBSOCKET_CB['fail_max'],
     reset_timeout=CircuitBreakerConfig.WEBSOCKET_CB['reset_timeout'],
     exclude=CircuitBreakerConfig.WEBSOCKET_CB['exclude']
 )
+
 
 federated_learning_circuit_breaker = pybreaker.CircuitBreaker(
     fail_max=CircuitBreakerConfig.FEDERATED_LEARNING_CB['fail_max'],
@@ -67,27 +71,27 @@ class CircuitBreakerOpenError(Exception):
 
 class CircuitBreakerService:
     """熔断器服务封装"""
-    
+
     def __init__(self):
         self.http_breaker = http_circuit_breaker
         self.websocket_breaker = websocket_circuit_breaker
         self.federated_breaker = federated_learning_circuit_breaker
-        
+
         # 状态回调
         self._setup_callbacks()
-    
+
     def _setup_callbacks(self):
         """设置熔断器状态回调"""
-        
+
         def on_circuit_open(breaker):
             logger.warning(f"Circuit breaker OPENED: {breaker.name}")
-        
+
         def on_circuit_half_open(breaker):
             logger.info(f"Circuit breaker HALF-OPEN: {breaker.name}")
-        
+
         def on_circuit_closed(breaker):
             logger.info(f"Circuit breaker CLOSED: {breaker.name}")
-        
+
         # 为所有熔断器添加回调
         for breaker in [self.http_breaker, self.websocket_breaker, self.federated_breaker]:
             breaker.add_eventListener(
@@ -102,85 +106,85 @@ class CircuitBreakerService:
                 pybreaker.CircuitBreakerListener.EVENT_HALF_OPEN,
                 lambda e, b=breaker: on_circuit_half_open(b)
             )
-    
+
     def call_http_service(
-        self, 
-        func: Callable, 
+        self,
+        func: Callable,
         fallback: Optional[Callable] = None,
-        *args, 
+        *args,
         **kwargs
     ) -> Any:
         """
         使用熔断器调用HTTP服务
-        
+
         Args:
             func: 要调用的函数
             fallback: 降级函数
             *args, **kwargs: 函数参数
-        
+
         Returns:
             函数返回值或降级函数返回值
         """
         try:
             return self.http_breaker.call(func, *args, **kwargs)
         except pybreaker.CircuitBreakerError:
-            logger.warning(f"HTTP Circuit breaker is OPEN, using fallback")
+            logger.warning("HTTP Circuit breaker is OPEN, using fallback")
             if fallback:
                 return fallback(*args, **kwargs)
             raise CircuitBreakerOpenError("HTTP service circuit breaker is open")
-    
+
     def call_websocket(
-        self, 
-        func: Callable, 
+        self,
+        func: Callable,
         fallback: Optional[Callable] = None,
-        *args, 
+        *args,
         **kwargs
     ) -> Any:
         """
         使用熔断器调用WebSocket
-        
+
         Args:
             func: 要调用的函数
             fallback: 降级函数
             *args, **kwargs: 函数参数
-        
+
         Returns:
             函数返回值或降级函数返回值
         """
         try:
             return self.websocket_breaker.call(func, *args, **kwargs)
         except pybreaker.CircuitBreakerError:
-            logger.warning(f"WebSocket Circuit breaker is OPEN, using fallback")
+            logger.warning("WebSocket Circuit breaker is OPEN, using fallback")
             if fallback:
                 return fallback(*args, **kwargs)
             raise CircuitBreakerOpenError("WebSocket circuit breaker is open")
-    
+
     def call_federated_learning(
-        self, 
-        func: Callable, 
+        self,
+        func: Callable,
         fallback: Optional[Callable] = None,
-        *args, 
+        *args,
         **kwargs
     ) -> Any:
         """
         使用熔断器调用联邦学习
-        
+
         Args:
             func: 要调用的函数
             fallback: 降级函数
             *args, **kwargs: 函数参数
-        
+
         Returns:
             函数返回值或降级函数返回值
         """
         try:
             return self.federated_breaker.call(func, *args, **kwargs)
         except pybreaker.CircuitBreakerError:
-            logger.warning(f"Federated Learning Circuit breaker is OPEN, using fallback")
+            logger.warning("Federated Learning Circuit breaker is OPEN, using fallback")
             if fallback:
                 return fallback(*args, **kwargs)
             raise CircuitBreakerOpenError("Federated learning circuit breaker is open")
-    
+
     def get_status(self) -> dict:
         """获取熔断器状态"""
         return {
@@ -209,7 +213,7 @@ cb_service = CircuitBreakerService()
 def circuit_breaker(breaker_type: str = 'http'):
     """
     熔断器装饰器
-    
+
     Args:
         breaker_type: 熔断器类型 ('http', 'websocket', 'federated')
     """
@@ -225,13 +229,13 @@ def circuit_breaker(breaker_type: str = 'http'):
                 breaker = federated_learning_circuit_breaker
             else:
                 raise ValueError(f"Unknown breaker type: {breaker_type}")
-            
+
             try:
                 return breaker.call(func, *args, **kwargs)
             except pybreaker.CircuitBreakerError:
                 logger.warning(f"Circuit breaker {breaker_type} is OPEN for {func.__name__}")
                 raise
-        
+
         return wrapper
     return decorator
 
@@ -239,7 +243,7 @@ def circuit_breaker(breaker_type: str = 'http'):
 def with_circuit_breaker(breaker_name: str, fallback: Optional[Callable] = None):
     """
     使用指定名称的熔断器
-    
+
     Args:
         breaker_name: 熔断器名称
         fallback: 降级函数
@@ -256,7 +260,7 @@ def with_circuit_breaker(breaker_name: str, fallback: Optional[Callable] = None)
                 breaker = federated_learning_circuit_breaker
             else:
                 breaker = http_circuit_breaker
-            
+
             try:
                 return breaker.call(func, *args, **kwargs)
             except pybreaker.CircuitBreakerError:
@@ -264,7 +268,7 @@ def with_circuit_breaker(breaker_name: str, fallback: Optional[Callable] = None)
                 if fallback:
                     return fallback(*args, **kwargs)
                 raise
-        
+
         return wrapper
     return decorator
 
@@ -272,6 +276,8 @@ def with_circuit_breaker(breaker_name: str, fallback: Optional[Callable] = None)
 # 示例使用
 
 # 示例1: 使用装饰器
+
+
 @circuit_breaker(breaker_type='http')
 def call_external_api(url: str) -> dict:
     """调用外部API"""
@@ -281,6 +287,8 @@ def call_external_api(url: str) -> dict:
 
 
 # 示例2: 使用服务类
+
+
 def call_websocket_endpoint(endpoint: str, message: dict) -> dict:
     """调用WebSocket端点"""
     # WebSocket调用逻辑
@@ -294,10 +302,12 @@ def websocket_fallback(endpoint: str, message: dict) -> dict:
 
 
 # 示例3: 使用服务类
+
+
 def demo_service_usage():
     """演示服务使用"""
     service = CircuitBreakerService()
-    
+
     # 调用HTTP服务
     try:
         result = service.call_http_service(
@@ -308,7 +318,7 @@ def demo_service_usage():
         print(f"Result: {result}")
     except CircuitBreakerOpenError as e:
         print(f"Circuit breaker is open: {e}")
-    
+
     # 调用WebSocket
     try:
         result = service.call_websocket(
@@ -320,7 +330,7 @@ def demo_service_usage():
         print(f"WebSocket result: {result}")
     except CircuitBreakerOpenError as e:
         print(f"WebSocket circuit breaker is open: {e}")
-    
+
     # 获取状态
     status = service.get_status()
     print(f"Circuit breaker status: {status}")

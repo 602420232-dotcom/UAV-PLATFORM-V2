@@ -12,6 +12,8 @@ from flask import Flask, request, jsonify
 app = Flask(__name__)
 
 # Configure logging
+
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"

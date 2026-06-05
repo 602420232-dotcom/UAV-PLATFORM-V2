@@ -10,8 +10,10 @@ import sys
 BASE_URL = os.environ.get("BASE_URL", "http://localhost:8088")
 TIMEOUT = 10
 
+
 def log(msg):
     print(f"[CHAOS] {msg}")
+
 
 def test_1_instantiate_services():
     """验证无响应后服务仍可恢复"""
@@ -27,6 +29,7 @@ def test_1_instantiate_services():
             log(f"  {ep} → {r.status_code}")
         except Exception as e:
             log(f"  {ep} → FAIL: {e}")
+
 
 def test_2_high_concurrent_requests():
     """并发流量激增测试"""
@@ -63,6 +66,7 @@ def test_2_high_concurrent_requests():
 
     results.clear()
 
+
 def test_3_rapid_restart():
     """快速重启应用检查资源泄漏"""
     log("3/6: 快速启动/关闭检查")
@@ -72,7 +76,7 @@ def test_3_rapid_restart():
         try:
             r = requests.get(f"{BASE_URL}/actuator/health", timeout=3)
             return r.status_code
-        except:
+        except Exception:
             return -1
 
     with ThreadPoolExecutor(max_workers=20) as ex:
@@ -80,6 +84,7 @@ def test_3_rapid_restart():
         codes = [f.result() for f in futures]
         ok = sum(1 for c in codes if c == 200)
         log(f"  30轮并行健康检查: {ok}/30 成功 ({sum(1 for c in codes if c == -1)} 超时)")
+
 
 def test_4_resilience_recovery():
     """熔断后自动恢复检查"""
@@ -89,7 +94,7 @@ def test_4_resilience_recovery():
     for i in range(10):
         try:
             requests.get(f"{BASE_URL}/api/nonexistent", timeout=2)
-        except:
+        except Exception:
             pass
 
     time.sleep(1)
@@ -99,6 +104,7 @@ def test_4_resilience_recovery():
         log(f"  熔断后服务状态: {r.status_code}")
     except Exception as e:
         log(f"  服务不可用: {e}")
+
 
 def test_5_memory_leak_detection():
     """简单内存泄漏检查"""
@@ -112,10 +118,11 @@ def test_5_memory_leak_detection():
                 json={"weatherData": big_payload, "drones": [], "tasks": []},
                 timeout=5
             )
-        except:
+        except Exception:
             pass
 
     log("  ✓ 20轮大数据量请求完成")
+
 
 def test_6_cascade_failure():
     """级联故障测试 — 依赖服务不可用时行为"""

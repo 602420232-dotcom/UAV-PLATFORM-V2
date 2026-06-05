@@ -13,6 +13,8 @@ import logging
 logger = logging.getLogger(__name__)
 
 SRC_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+
 if SRC_DIR not in sys.path:
     sys.path.insert(0, SRC_DIR)
 
@@ -116,7 +118,7 @@ class MultiResolutionAssimilator:
         return result
 
 
-def interpolate_to_grid(data: Dict[str, Any], target_resolution: Any, current_resolution=50.0: Any):
+def interpolate_to_grid(data: Dict[str, Any], target_resolution: Any, current_resolution: Any = 50.0):
     """
     将数据插值到目标分辨率
 
@@ -204,4 +206,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

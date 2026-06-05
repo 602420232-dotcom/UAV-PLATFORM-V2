@@ -27,7 +27,7 @@ class WeatherDataset(Dataset):
     """
 
     def __init__(self, data_dir: Optional[Path] = None,
-                 mode: str = "file",            # "file" | "generator"
+                 mode: str = "file",  # "file" | "generator"
                  n_samples: int = 1000,
                  transform: Optional[Callable] = None):
         """
@@ -149,6 +149,7 @@ class WeatherDataModule:
 
 
 # ── 气象数据增强 ─────────────────────────────────
+
 
 class weather_augmentation:
     """

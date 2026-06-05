@@ -12,6 +12,7 @@ import sys
 from dataclasses import dataclass
 from typing import List
 
+
 @dataclass
 class BenchmarkResult:
     endpoint: str
@@ -22,6 +23,7 @@ class BenchmarkResult:
     throughput: float
     error_rate: float
     total_requests: int
+
 
 class BenchRunner:
     def __init__(self, base_url: str = "http://localhost:8088"):
@@ -60,6 +62,7 @@ class BenchRunner:
             total_requests=len(results)
         )
 
+
 async def main():
     base_url = sys.argv[1] if len(sys.argv) > 1 else "http://localhost:8088"
     runner = BenchRunner(base_url)
@@ -73,9 +76,9 @@ async def main():
     ]
 
     print("=" * 70)
-    print(f"  UAV Platform Performance Benchmark")
+    print("  UAV Platform Performance Benchmark")
     print(f"  Target: {base_url}")
-    print(f"  Concurrency: 20, Requests per endpoint: 100")
+    print("  Concurrency: 20, Requests per endpoint: 100")
     print("=" * 70)
 
     results = []

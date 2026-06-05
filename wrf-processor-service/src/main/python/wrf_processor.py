@@ -26,14 +26,19 @@ VISIBILITY_THRESHOLDS = {'EXCELLENT': 20000, 'GOOD': 10000, 'MODERATE': 5000, 'P
 LIGHTNING_RISK_LEVELS = ['LOW', 'MODERATE', 'HIGH', 'EXTREME']
 
 # ─── NetCDF 格式检测 ─────────────────────────────────────────────────────
+
+
 def detect_netcdf_format(filepath: str) -> str:
     """检测 NetCDF 文件格式版本"""
     try:
         with open(filepath, 'rb') as f:
             magic = f.read(4)
-        if magic == b'\x89HDF': return 'NETCDF4'
-        if magic == b'CDF\x01': return 'NETCDF3_CLASSIC'
-        if magic == b'CDF\x02': return 'NETCDF3_64BIT'
+        if magic == b'\x89HDF':
+            return 'NETCDF4'
+        if magic == b'CDF\x01':
+            return 'NETCDF3_CLASSIC'
+        if magic == b'CDF\x02':
+            return 'NETCDF3_64BIT'
         return 'UNKNOWN'
     except Exception as e:
         logger.warning(f"Cannot detect format for {filepath}: {e}")
@@ -43,6 +48,8 @@ def detect_netcdf_format(filepath: str) -> str:
 # ═══════════════════════════════════════════════════════════════════════════
 #  WRF 气象数据处理器
 # ═══════════════════════════════════════════════════════════════════════════
+
+
 class WrfProcessor:
     """WRF气象数据处理器 - 支持所有微尺度气象参数"""
 
@@ -148,9 +155,9 @@ class WrfProcessor:
 
         使用WRF的TKE变量（如'QKE', 'TKE'），或从风场波动计算。
         返回: {
-            'tke': [...],          # 湍流动能 (m²/s²)
+            'tke': [...],  # 湍流动能 (m²/s²)
             'turbulence_intensity': str,  # LOW/MODERATE/SEVERE
-            'dissipation_rate': float,   # 耗散率
+            'dissipation_rate': float,  # 耗散率
             'eddy_diffusivity': [...]    # 湍流扩散系数
         }
         """
@@ -228,9 +235,9 @@ class WrfProcessor:
         其中β为消光系数，基于湿度和温度估算。
 
         返回: {
-            'visibility_m': float,          # 能见度(米)
-            'visibility_category': str,     # EXCELLENT/GOOD/MODERATE/POOR/HAZARDOUS
-            'extinction_coefficient': float # 消光系数
+            'visibility_m': float,  # 能见度(米)
+            'visibility_category': str,  # EXCELLENT/GOOD/MODERATE/POOR/HAZARDOUS
+            'extinction_coefficient': float  # 消光系数
         }
         """
         if not self.dataset:
@@ -330,10 +337,10 @@ class WrfProcessor:
         - LCL (抬升凝结高度): 越低→风险越高
 
         返回: {
-            'risk_level': str,          # LOW/MODERATE/HIGH/EXTREME
-            'cape': float,              # 对流有效位能 (J/kg)
-            'cin': float,               # 对流抑制 (J/kg)
-            'lcl': float,               # 抬升凝结高度 (m)
+            'risk_level': str,  # LOW/MODERATE/HIGH/EXTREME
+            'cape': float,  # 对流有效位能 (J/kg)
+            'cin': float,  # 对流抑制 (J/kg)
+            'lcl': float,  # 抬升凝结高度 (m)
             'risk_score': float         # 综合风险评分 0-100
         }
         """
@@ -381,23 +388,36 @@ class WrfProcessor:
             risk_score = 0.0
 
             # CAPE贡献 (权重0.4)
-            if cape < 500: risk_score += 5
-            elif cape < 1000: risk_score += 15
-            elif cape < 2000: risk_score += 25
-            elif cape < 3000: risk_score += 32
-            else: risk_score += 40
+            if cape < 500:
+                risk_score += 5
+            elif cape < 1000:
+                risk_score += 15
+            elif cape < 2000:
+                risk_score += 25
+            elif cape < 3000:
+                risk_score += 32
+            else:
+                risk_score += 40
 
             # CIN贡献 (权重0.2)
-            if cin > -20: risk_score += 2
-            elif cin > -50: risk_score += 8
-            elif cin > -100: risk_score += 14
-            else: risk_score += 20
+            if cin > -20:
+                risk_score += 2
+            elif cin > -50:
+                risk_score += 8
+            elif cin > -100:
+                risk_score += 14
+            else:
+                risk_score += 20
 
             # LCL贡献 (权重0.2)
-            if lcl > 2000: risk_score += 5
-            elif lcl > 1000: risk_score += 10
-            elif lcl > 500: risk_score += 15
-            else: risk_score += 20
+            if lcl > 2000:
+                risk_score += 5
+            elif lcl > 1000:
+                risk_score += 10
+            elif lcl > 500:
+                risk_score += 15
+            else:
+                risk_score += 20
 
             # 基本风险 (权重0.2, 所有区域都有一定基础风险)
             risk_score += 20
@@ -646,6 +666,8 @@ class WrfProcessor:
 # ═══════════════════════════════════════════════════════════════════════════
 #  主处理函数
 # ═══════════════════════════════════════════════════════════════════════════
+
+
 def process_wrf_file(file_path: str, height: int = 100) -> Dict:
     """处理WRF文件的主函数 - 完整参数提取"""
     processor = WrfProcessor(file_path)

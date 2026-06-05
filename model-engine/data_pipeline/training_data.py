@@ -2,8 +2,10 @@
 训练数据生成器
 为 CNN 订正器和 U-Net 降尺度器生成配对训练数据
 
+
 数据配对:
   coarse_input (50×50, 3km) → ground_truth (150×150, 1km)
+
 
 数据来源:
   1. 模拟: WRF 物理约束合成 (开发和调参用)
@@ -31,6 +33,7 @@ VAL_DIR = DATA_DIR / "validation"
 TEST_DIR = DATA_DIR / "test"
 
 # ── 物理约束的合成数据生成 ──────────────────────
+
 
 class PhysicsConstrainedGenerator:
     """
@@ -251,6 +254,7 @@ class PhysicsConstrainedGenerator:
 
 # ── 真实数据加载 (WRF 历史输出) ─────────────────
 
+
 def load_wrf_output(file_path: Path) -> Tuple[np.ndarray, np.ndarray]:
     """
     从 WRF NetCDF 输出加载配对数据
@@ -307,6 +311,7 @@ def _load_dem(H: int, W: int) -> np.ndarray:
 
 
 # ── 批量数据生成入口 ────────────────────────────
+
 
 def generate_all_training_data(n_train: int = 3000,
                                n_val: int = 500,

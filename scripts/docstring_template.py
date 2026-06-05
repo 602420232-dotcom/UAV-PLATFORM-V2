@@ -73,6 +73,8 @@ def generate_class_docstring(
     attributes: list = None,
     example: str = "",
     see_also: list = None
+
+
 ) -> str:
     """生成类Docstring
 
@@ -111,6 +113,8 @@ def generate_function_docstring(
     returns: str = "None",
     raises: list = None,
     example: str = ""
+
+
 ) -> str:
     """生成函数Docstring
 
@@ -153,6 +157,8 @@ def generate_module_docstring(
     submodules: list = None,
     usage: str = "",
     usage_example: str = ""
+
+
 ) -> str:
     """生成模块Docstring
 
@@ -190,6 +196,8 @@ def generate_module_docstring(
 # ==================== Google风格Docstring示例 ====================
 
 GOOGLE_STYLE_CLASS_EXAMPLE = '''
+
+
 class DataAssimilator:
     """贝叶斯数据同化核心类。
 
@@ -236,18 +244,22 @@ class DataAssimilator:
 '''
 
 GOOGLE_STYLE_FUNCTION_EXAMPLE = '''
+
+
 def plan_vrptw(
     waypoints: List[Dict[str, float]],
     time_windows: Dict[int, Tuple[float, float]],
     vehicle_count: int = 1,
     max_distance: float = 1000.0
+
+
 ) -> Dict[str, Any]:
     """求解带时间窗的车辆路径问题(VRPTW)。
 
     根据给定的航点、时间窗约束和车辆数量，计算最优路径。
 
     Args:
-        waypoints: 航点列表，每个航点包含lat,lng坐标
+        waypoints: 航点列表，每个航点包含lat, lng坐标
         time_windows: 时间窗字典，格式为{航点ID: (开始时间, 结束时间)}
         vehicle_count: 可用车辆数量，默认为1
         max_distance: 单车最大行驶距离(km)，默认为1000

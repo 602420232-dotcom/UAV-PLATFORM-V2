@@ -58,9 +58,12 @@ class EdgeAIInference:
         return quantized
 
     def _detect_backend(self, path: str) -> InferenceBackend:
-        if path.endswith('.engine'): return InferenceBackend.TENSORRT
-        if path.endswith('.onnx'): return InferenceBackend.ONNX
-        if path.endswith('.tflite'): return InferenceBackend.TFLITE
+        if path.endswith('.engine'):
+            return InferenceBackend.TENSORRT
+        if path.endswith('.onnx'):
+            return InferenceBackend.ONNX
+        if path.endswith('.tflite'):
+            return InferenceBackend.TFLITE
         return InferenceBackend.PYTORCH
 
     def quantize_to_int8(self, model_name: str, model: Any, calibration_data: np.ndarray) -> QuantizedModel:

@@ -16,6 +16,7 @@ PLANNING_URL = "http://localhost:8083/api/planning"
 # 测试结果
 results = []
 
+
 def test_service(name, url, endpoint, method="GET", data=None):
     """测试服务是否正常运行"""
     try:
@@ -24,7 +25,7 @@ def test_service(name, url, endpoint, method="GET", data=None):
             response = requests.get(full_url, timeout=10)
         else:
             response = requests.post(full_url, json=data, timeout=10)
-        
+
         status = "成功" if response.status_code == 200 else "失败"
         results.append({
             "service": name,
@@ -43,30 +44,36 @@ def test_service(name, url, endpoint, method="GET", data=None):
         })
         print(f"✗ {name} {endpoint}: 失败 - {str(e)}")
 
+
 def test_wrf_service():
     """测试WRF处理服务"""
     print("\n=== 测试WRF处理服务 ===")
     test_service("WRF处理服务", WRF_URL, "/data")
+
 
 def test_assimilation_service():
     """测试贝叶斯同化服务"""
     print("\n=== 测试贝叶斯同化服务 ===")
     test_service("贝叶斯同化服务", ASSIMILATION_URL, "/health")
 
+
 def test_forecast_service():
     """测试气象预测服务"""
     print("\n=== 测试气象预测服务 ===")
     test_service("气象预测服务", FORECAST_URL, "/models")
+
 
 def test_planning_service():
     """测试路径规划服务"""
     print("\n=== 测试路径规划服务 ===")
     test_service("路径规划服务", PLANNING_URL, "/health")
 
+
 def test_main_platform():
     """测试主平台服务"""
     print("\n=== 测试主平台服务 ===")
     test_service("主平台服务", BASE_URL, "/platform/health")
+
 
 def test_integration():
     """测试服务集成"""
@@ -84,19 +91,20 @@ def test_integration():
     }
     test_service("主平台服务", BASE_URL, "/platform/plan", "POST", test_data)
 
+
 def generate_report():
     """生成测试报告"""
     print("\n=== 测试报告 ===")
     print(f"测试时间: {time.strftime('%Y-%m-%d %H:%M:%S')}")
     print(f"测试服务数量: {len(results)}")
-    
+
     success_count = sum(1 for r in results if r.get("status") == "成功")
     failure_count = len(results) - success_count
-    
+
     print(f"成功: {success_count}")
     print(f"失败: {failure_count}")
     print(f"成功率: {success_count / len(results) * 100:.1f}%")
-    
+
     if failure_count > 0:
         print("\n失败详情:")
         for r in results:
@@ -105,18 +113,18 @@ def generate_report():
 
 if __name__ == "__main__":
     print("开始测试无人机路径规划系统...")
-    
+
     # 测试各个服务
     test_wrf_service()
     test_assimilation_service()
     test_forecast_service()
     test_planning_service()
     test_main_platform()
-    
+
     # 测试服务集成
     test_integration()
-    
+
     # 生成测试报告
     generate_report()
-    
+
     print("\n测试完成!")

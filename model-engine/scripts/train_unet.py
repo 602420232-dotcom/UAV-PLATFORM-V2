@@ -6,6 +6,7 @@ U-Net 降尺度器 — 训练脚本
 输入: CNN 订正后场 (6ch, 50×50)
 输出: 精细场 (6ch, 150×150)
 
+
 策略:
   1. 预训练: 纯降尺度 (MSE)
   2. 微调: 加入观测同化 (注意力门)
@@ -23,6 +24,7 @@ from torch.utils.tensorboard import SummaryWriter
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from unet_downscaler.model import UNetDownscaler, UNetConfig
 from data_pipeline.dataset import WeatherDataModule
+
 
 logging.basicConfig(level=logging.INFO,
                     format="%(asctime)s [%(levelname)s] %(message)s")

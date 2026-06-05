@@ -31,6 +31,7 @@ class TestParallelManager:
         # Args: self
         assert result is not None  # Assertion completed
 
+
 class TestParallelManager:
     """Test class: ParallelManager"""
 
@@ -45,6 +46,7 @@ class TestParallelManager:
         # Test logic: Verify basic functionality
         # Args: self
         assert result is not None  # Assertion completed
+
 
 class TestParallelManager:
     """Test class: ParallelManager"""
@@ -61,6 +63,7 @@ class TestParallelManager:
         # Args: self
         assert result is not None  # Assertion completed
 
+
 class TestParallelManager:
     """Test class: ParallelManager"""
 
@@ -75,6 +78,7 @@ class TestParallelManager:
         # Test logic: Verify basic functionality
         # Args: self, func, data
         assert result is not None  # Assertion completed
+
 
 class TestMPIParallelManager:
     """Test class: MPIParallelManager"""
@@ -91,6 +95,7 @@ class TestMPIParallelManager:
         # Args: self
         assert result is not None  # Assertion completed
 
+
 class TestMPIParallelManager:
     """Test class: MPIParallelManager"""
 
@@ -105,6 +110,7 @@ class TestMPIParallelManager:
         # Test logic: Verify basic functionality
         # Args: self
         assert result is not None  # Assertion completed
+
 
 class TestMPIParallelManager:
     """Test class: MPIParallelManager"""
@@ -121,6 +127,7 @@ class TestMPIParallelManager:
         # Args: self
         assert result is not None  # Assertion completed
 
+
 class TestMPIParallelManager:
     """Test class: MPIParallelManager"""
 
@@ -135,6 +142,7 @@ class TestMPIParallelManager:
         # Test logic: Verify basic functionality
         # Args: self, func, data
         assert result is not None  # Assertion completed
+
 
 class TestMPIParallelManager:
     """Test class: MPIParallelManager"""
@@ -151,6 +159,7 @@ class TestMPIParallelManager:
         # Args: self, data
         assert result is not None  # Assertion completed
 
+
 class TestMPIParallelManager:
     """Test class: MPIParallelManager"""
 
@@ -165,6 +174,7 @@ class TestMPIParallelManager:
         # Test logic: Verify basic functionality
         # Args: self, data
         assert result is not None  # Assertion completed
+
 
 class TestMPIParallelManager:
     """Test class: MPIParallelManager"""
@@ -181,6 +191,7 @@ class TestMPIParallelManager:
         # Args: self, data
         assert result is not None  # Assertion completed
 
+
 class TestMPIParallelManager:
     """Test class: MPIParallelManager"""
 
@@ -196,6 +207,7 @@ class TestMPIParallelManager:
         # Args: self
         assert result is not None  # Assertion completed
 
+
 class TestBayesianAssimilator:
     """Test class: BayesianAssimilator"""
 
@@ -210,6 +222,7 @@ class TestBayesianAssimilator:
         # Test logic: Verify basic functionality
         # Args: self, domain_size, resolution
         assert result is not None  # Assertion completed
+
 
 class TestBayesianAssimilator:
     """Test class: BayesianAssimilator"""
@@ -226,6 +239,7 @@ class TestBayesianAssimilator:
         # Args: self, background, observations, obs_locations, obs_errors
         assert result is not None  # Assertion completed
 
+
 class TestMPIParallelAssimilator:
     """Test class: MPIParallelAssimilator"""
 
@@ -240,6 +254,7 @@ class TestMPIParallelAssimilator:
         # Test logic: Verify basic functionality
         # Args: self, domain_size, resolution
         assert result is not None  # Assertion completed
+
 
 class TestMPIParallelAssimilator:
     """Test class: MPIParallelAssimilator"""
@@ -279,7 +294,6 @@ class TestEdgeCases:
         """Test invalid input"""
         # TODO: Implement invalid input test
         assert True
-
 
 
 # pytest configuration

@@ -31,6 +31,7 @@ class TestIOAdapter:
         # Args: self, file_path
         assert result is not None  # Assertion completed
 
+
 class TestIOAdapter:
     """Test class: IOAdapter"""
 
@@ -46,6 +47,7 @@ class TestIOAdapter:
         # Args: self, file_path, data
         assert result is not None  # Assertion completed
 
+
 class TestNetCDFReader:
     """Test class: NetCDFReader"""
 
@@ -60,6 +62,7 @@ class TestNetCDFReader:
         # Test logic: Verify basic functionality
         # Args: self, file_path
         assert result is not None  # Assertion completed
+
 
 class TestNetCDFReader:
     """Test class: NetCDFReader"""
@@ -76,6 +79,7 @@ class TestNetCDFReader:
         # Args: self, file_path, data
         assert result is not None  # Assertion completed
 
+
 class TestHDF5Reader:
     """Test class: HDF5Reader"""
 
@@ -90,6 +94,7 @@ class TestHDF5Reader:
         # Test logic: Verify basic functionality
         # Args: self, file_path
         assert result is not None  # Assertion completed
+
 
 class TestHDF5Reader:
     """Test class: HDF5Reader"""
@@ -129,7 +134,6 @@ class TestEdgeCases:
         """Test invalid input"""
         # TODO: Implement invalid input test
         assert True
-
 
 
 # pytest configuration

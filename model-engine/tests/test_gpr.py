@@ -2,6 +2,7 @@
 import torch
 from gpr_risk.model import GPRiskEstimator, compute_risk_score
 
+
 def test_gpr_fit_predict():
     est = GPRiskEstimator()
     residual = torch.randn(1, 6, 50, 50) * 0.1
@@ -9,6 +10,7 @@ def test_gpr_fit_predict():
     risk = est.risk_field((150, 150), device="cpu")
     assert risk.shape == (1, 150, 150)
     assert not torch.isnan(risk).any()
+
 
 def test_risk_score():
     mean = torch.randn(1, 6, 10, 10)

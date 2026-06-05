@@ -31,6 +31,7 @@ class TestDataSourceBase:
         # Args: self
         assert result is not None  # Assertion completed
 
+
 class TestDataSourceBase:
     """Test class: DataSourceBase"""
 
@@ -45,6 +46,7 @@ class TestDataSourceBase:
         # Test logic: Verify basic functionality
         # Args: self
         assert result is not None  # Assertion completed
+
 
 class TestDataSourceBase:
     """Test class: DataSourceBase"""
@@ -61,6 +63,7 @@ class TestDataSourceBase:
         # Args: self
         assert result is not None  # Assertion completed
 
+
 class TestDataSourceBase:
     """Test class: DataSourceBase"""
 
@@ -75,6 +78,7 @@ class TestDataSourceBase:
         # Test logic: Verify basic functionality
         # Args: self
         assert result is not None  # Assertion completed
+
 
 class TestDataSourceBase:
     """Test class: DataSourceBase"""
@@ -114,7 +118,6 @@ class TestEdgeCases:
         """Test invalid input"""
         # TODO: Implement invalid input test
         assert True
-
 
 
 # pytest configuration

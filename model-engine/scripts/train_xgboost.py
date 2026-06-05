@@ -5,6 +5,7 @@ XGBoost 残差订正器 — 训练脚本
 训练: 轻量级梯度提升树，对 CNN 订正后的结果进一步订正
 输入: 粗网格特征 → 输出: 残差场
 
+
 用法:
   python scripts/train_xgboost.py
 """
@@ -19,6 +20,7 @@ from sklearn.model_selection import train_test_split
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from scripts.train_config import TrainConfig, CONFIG
+
 
 logging.basicConfig(level=logging.INFO,
                     format="%(asctime)s [%(levelname)s] %(message)s")

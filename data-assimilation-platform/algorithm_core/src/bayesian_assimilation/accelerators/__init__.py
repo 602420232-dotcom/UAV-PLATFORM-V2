@@ -7,6 +7,7 @@ from .cpu import CPUAccelerator, OpenMPAccelerator, BLASAccelerator
 from .jax import JAXAccelerator, TPUAccelerator, GPUAccelerator, CUDAAccelerator as JAXCUDAAccelerator
 from .cuda import CUDAAccelerator, CuPyAccelerator, PyCUDAccelerator
 
+
 __all__ = [
     'BaseAccelerator',
     'AcceleratorType',

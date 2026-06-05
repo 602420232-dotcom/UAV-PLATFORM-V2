@@ -31,6 +31,7 @@ class TestAPIResponse:
         # Args: self
         assert result is not None  # Assertion completed
 
+
 class TestAssimilationAPI:
     """Test class: AssimilationAPI"""
 
@@ -45,6 +46,7 @@ class TestAssimilationAPI:
         # Test logic: Verify basic functionality
         # Args: self, background_data, observations, config
         assert result is not None  # Assertion completed
+
 
 class TestAssimilationAPI:
     """Test class: AssimilationAPI"""
@@ -61,6 +63,7 @@ class TestAssimilationAPI:
         # Args: self, data, data_type
         assert result is not None  # Assertion completed
 
+
 class TestAssimilationAPI:
     """Test class: AssimilationAPI"""
 
@@ -75,6 +78,7 @@ class TestAssimilationAPI:
         # Test logic: Verify basic functionality
         # Args: self, wind_speed, variance
         assert result is not None  # Assertion completed
+
 
 class TestAssimilationAPI:
     """Test class: AssimilationAPI"""
@@ -91,6 +95,7 @@ class TestAssimilationAPI:
         # Args: self, time_series_data, predict_steps
         assert result is not None  # Assertion completed
 
+
 class TestAssimilationAPI:
     """Test class: AssimilationAPI"""
 
@@ -105,6 +110,7 @@ class TestAssimilationAPI:
         # Test logic: Verify basic functionality
         # Args: self, data
         assert result is not None  # Assertion completed
+
 
 class TestAssimilationAPI:
     """Test class: AssimilationAPI"""
@@ -144,7 +150,6 @@ class TestEdgeCases:
         """Test invalid input"""
         # TODO: Implement invalid input test
         assert True
-
 
 
 # pytest configuration

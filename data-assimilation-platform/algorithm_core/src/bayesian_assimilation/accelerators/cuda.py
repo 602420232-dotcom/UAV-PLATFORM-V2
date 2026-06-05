@@ -10,9 +10,13 @@ import numpy as np
 from typing import Optional, Any, Callable
 
 # 处理相对导入和绝对导入
+
+
 if __name__ == '__main__':
     # 直接运行时使用绝对导入
     from bayesian_assimilation.accelerators.base import BaseAccelerator, AcceleratorType
+
+
 else:
     # 作为模块导入时使用相对导入
     from .base import BaseAccelerator, AcceleratorType
@@ -138,11 +142,11 @@ class CUDAAccelerator(BaseAccelerator):
                 # PyCUDA预热
                 import pycuda.driver as cuda
                 import pycuda.compiler as compiler
-                
+
                 mod = compiler.SourceModule("""
                 __global__ void add(float *a, float *b, float *c) {
-                    int i = threadIdx.x + blockIdx.x * blockDim.x;
-                    c[i] = a[i] + b[i];
+                    int i = threadIdx.x + blockIdx.x * blockDim.x
+                    c[i] = a[i] + b[i]
                 }
                 """)
                 add = mod.get_function("add")
@@ -155,13 +159,13 @@ class CUDAAccelerator(BaseAccelerator):
             elif self._numba:
                 # Numba CUDA预热
                 from numba import cuda  # type: ignore
-                
+
                 @cuda.jit  # type: ignore
                 def add_kernel(a, b, c):  # type: ignore
                     i = cuda.grid(1)  # type: ignore
                     if i < len(a):  # type: ignore
                         c[i] = a[i] + b[i]  # type: ignore
-                
+
                 a = np.ones(100, dtype=np.float32)
                 b = np.ones(100, dtype=np.float32)
                 c = np.zeros(100, dtype=np.float32)
@@ -183,7 +187,7 @@ class CUDAAccelerator(BaseAccelerator):
                 import pycuda.autoinit
                 # PyCUDA会自动清理
                 pass
-            except:
+            except Exception:
                 pass
         logger.info("CUDA加速器已释放")
 
@@ -246,7 +250,7 @@ class CUDAAccelerator(BaseAccelerator):
         elif self._numba:
             # 使用简化的 numba CUDA 实现
             from numba import cuda  # type: ignore
-            
+
             @cuda.jit  # type: ignore
             def matmul_kernel(A, B, C):  # type: ignore
                 i, j = cuda.grid(2)  # type: ignore
@@ -255,19 +259,19 @@ class CUDAAccelerator(BaseAccelerator):
                     for k in range(A.shape[1]):  # type: ignore
                         tmp += A[i, k] * B[k, j]  # type: ignore
                     C[i, j] = tmp  # type: ignore
-            
+
             C = np.zeros((A.shape[0], B.shape[1]), dtype=A.dtype)
             threads_per_block = (16, 16)
             blocks_per_grid_x = (A.shape[0] + threads_per_block[0] - 1) // threads_per_block[0]
             blocks_per_grid_y = (B.shape[1] + threads_per_block[1] - 1) // threads_per_block[1]
             blocks_per_grid = (blocks_per_grid_x, blocks_per_grid_y)
-            
+
             d_A = cuda.to_device(A)
             d_B = cuda.to_device(B)
             d_C = cuda.to_device(C)
-            
+
             matmul_kernel[blocks_per_grid, threads_per_block](d_A, d_B, d_C)  # type: ignore
-            
+
             return d_C.copy_to_host()
         else:
             return np.dot(A, B)
@@ -379,7 +383,7 @@ class PyCUDAccelerator(CUDAAccelerator):
             import pycuda.autoinit
             self._pycuda = cuda
             self._cuda_available = True
-            self._device_count = cuda.Device.count() # type: ignore
+            self._device_count = cuda.Device.count()  # type: ignore
             self.initialized = True
             logger.info("✅ PyCUDA加速器初始化成功")
             return True

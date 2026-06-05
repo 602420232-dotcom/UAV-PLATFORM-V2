@@ -97,7 +97,7 @@ class MultiRegionDeployer:
             self.regions[new_active].status = RegionStatus.ACTIVE
             logger.info(f"故障转移完成: {failed_region} → {new_active} (优先级={self.regions[new_active].priority})")
         else:
-            logger.error(f"故障转移失败: 没有可用的 STANDBY 区域可提升为 ACTIVE")
+            logger.error("故障转移失败: 没有可用的 STANDBY 区域可提升为 ACTIVE")
 
     def sync_data(self, data: dict, sync_type: str = "incremental"):
         """跨区域数据同步"""

@@ -2,6 +2,7 @@
 异常值检测算法 (Outlier Detection)
 数据管道的第一道过滤器。
 
+
 检测策略:
   1. 物理范围检查 (温度不能>50°C, 风速不能>50m/s等)
   2. 3σ 统计离群值 (基于滑动窗口)
@@ -148,12 +149,12 @@ class OutlierDetector:
 
         # 按索引检查 (默认变量顺序: u10, v10, t2m, rh2m, ps, blh, ...)
         checks = [
-            (0, -self.config.wind_max, self.config.wind_max),   # u10
-            (1, -self.config.wind_max, self.config.wind_max),   # v10
-            (2, self.config.t2m_min, self.config.t2m_max),      # t2m
-            (3, *self.config.rh_range),                          # rh2m
-            (4, self.config.ps_min, self.config.ps_max),         # ps
-            (5, self.config.blh_min, self.config.blh_max),       # blh
+            (0, -self.config.wind_max, self.config.wind_max),  # u10
+            (1, -self.config.wind_max, self.config.wind_max),  # v10
+            (2, self.config.t2m_min, self.config.t2m_max),  # t2m
+            (3, *self.config.rh_range),  # rh2m
+            (4, self.config.ps_min, self.config.ps_max),  # ps
+            (5, self.config.blh_min, self.config.blh_max),  # blh
         ]
         for idx, lo, hi in checks:
             if idx < C:
@@ -210,6 +211,7 @@ class OutlierDetector:
 
 
 # ── 便捷函数 ────────────────────────────────────
+
 
 def clean_forecast_field(field: np.ndarray) -> np.ndarray:
     """快速清洗单帧预报场"""

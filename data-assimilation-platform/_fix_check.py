@@ -2,6 +2,7 @@ import os
 
 base = r'd:\Developer\workplace\py\iteam\trae\data-assimilation-platform'
 
+
 files = [
     'algorithm_core/docker/README.md',
     'benchmarks/README.md',
@@ -25,6 +26,7 @@ files = [
     'shared/protos/common/README.md',
     'service_python/README.md',
 ]
+
 
 for f in files:
     path = os.path.join(base, f)

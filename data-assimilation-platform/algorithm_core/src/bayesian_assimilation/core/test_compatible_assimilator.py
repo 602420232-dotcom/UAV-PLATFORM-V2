@@ -31,6 +31,7 @@ class TestCompatibleAssimilator:
         # Args: self, domain_size
         assert result is not None  # Assertion completed
 
+
 class TestCompatibleAssimilator:
     """Test class: CompatibleAssimilator"""
 
@@ -45,6 +46,7 @@ class TestCompatibleAssimilator:
         # Test logic: Verify basic functionality
         # Args: self, bg, obs, obs_loc, obs_err
         assert result is not None  # Assertion completed
+
 
 class TestCompatibleAssimilator:
     """Test class: CompatibleAssimilator"""
@@ -61,6 +63,7 @@ class TestCompatibleAssimilator:
         # Args: self, background, observations, obs_locations, obs_errors
         assert result is not None  # Assertion completed
 
+
 class TestCompatibleAssimilator:
     """Test class: CompatibleAssimilator"""
 
@@ -76,6 +79,7 @@ class TestCompatibleAssimilator:
         # Args: self, background, observations, obs_locations, obs_errors
         assert result is not None  # Assertion completed
 
+
 class TestFastSparseBackgroundCovariance:
     """Test class: FastSparseBackgroundCovariance"""
 
@@ -90,6 +94,7 @@ class TestFastSparseBackgroundCovariance:
         # Test logic: Verify basic functionality
         # Args: self, x
         assert result is not None  # Assertion completed
+
 
 class TestFastSparseBackgroundCovariance:
     """Test class: FastSparseBackgroundCovariance"""
@@ -129,7 +134,6 @@ class TestEdgeCases:
         """Test invalid input"""
         # TODO: Implement invalid input test
         assert True
-
 
 
 # pytest configuration

@@ -31,6 +31,7 @@ class TestTimeSeriesAnalyzer:
         # Args: domain_size, n_time_steps
         assert result is not None  # Assertion completed
 
+
 class TestTimeSeriesAnalyzer:
     """Test class: TimeSeriesAnalyzer"""
 
@@ -45,6 +46,7 @@ class TestTimeSeriesAnalyzer:
         # Test logic: Verify basic functionality
         # Args: risk_time_series
         assert result is not None  # Assertion completed
+
 
 class TestTimeSeriesAnalyzer:
     """Test class: TimeSeriesAnalyzer"""
@@ -61,6 +63,7 @@ class TestTimeSeriesAnalyzer:
         # Args: trend_data, threshold
         assert result is not None  # Assertion completed
 
+
 class TestTimeSeriesAnalyzer:
     """Test class: TimeSeriesAnalyzer"""
 
@@ -76,6 +79,7 @@ class TestTimeSeriesAnalyzer:
         # Args: trend_data, n_steps
         assert result is not None  # Assertion completed
 
+
 class TestTimeSeriesAnalyzer:
     """Test class: TimeSeriesAnalyzer"""
 
@@ -90,6 +94,7 @@ class TestTimeSeriesAnalyzer:
         # Test logic: Verify basic functionality
         # Args: trend_data, n_steps
         assert result is not None  # Assertion completed
+
 
 class TestTimeSeriesAnalyzer:
     """Test class: TimeSeriesAnalyzer"""
@@ -129,7 +134,6 @@ class TestEdgeCases:
         """Test invalid input"""
         # TODO: Implement invalid input test
         assert True
-
 
 
 # pytest configuration

@@ -8,12 +8,16 @@ from typing import Dict, List, Optional
 from fastapi import Query
 
 # 第三方库
+
+
 try:
     from fastapi import FastAPI, HTTPException, BackgroundTasks, WebSocket, WebSocketDisconnect
     from fastapi.middleware.cors import CORSMiddleware
     from fastapi.responses import Response
     from pydantic import BaseModel, Field
     HAS_FASTAPI = True
+
+
 except ImportError:
     HAS_FASTAPI = False
     logging.warning("FastAPI not installed. Running in demo mode.")
@@ -27,6 +31,7 @@ logger = logging.getLogger(__name__)
 
 
 # ==================== FastAPI App ====================
+
 
 if HAS_FASTAPI:
     app = FastAPI(
@@ -74,6 +79,7 @@ if HAS_FASTAPI:
 
 
 # ==================== Pydantic Models ====================
+
 
 class TaskSubmitRequest(BaseModel):
     """任务提交请求"""
@@ -403,7 +409,6 @@ if HAS_FASTAPI:
             "aggregated": aggregated,
         }
 
-
     # ==================== WebSocket 实时通信 ====================
 
     @app.websocket("/ws/{drone_id}")
@@ -455,6 +460,7 @@ if HAS_FASTAPI:
 
 
 # ==================== Main Entry ====================
+
 
 def run_server(host: str = "0.0.0.0", port: int = 8000):
     """启动 API 服务"""

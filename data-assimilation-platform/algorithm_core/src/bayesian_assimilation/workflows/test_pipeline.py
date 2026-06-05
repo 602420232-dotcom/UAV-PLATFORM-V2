@@ -31,6 +31,7 @@ class TestBayesianAssimilator:
         # Args: self, domain_size, resolution
         assert result is not None  # Assertion completed
 
+
 class TestBayesianAssimilator:
     """Test class: BayesianAssimilator"""
 
@@ -46,6 +47,7 @@ class TestBayesianAssimilator:
         # Args: self, background, observations, obs_locations, obs_errors
         assert result is not None  # Assertion completed
 
+
 class TestPipelineStep:
     """Test class: PipelineStep"""
 
@@ -60,6 +62,7 @@ class TestPipelineStep:
         # Test logic: Verify basic functionality
         # Args: self, input_data
         assert result is not None  # Assertion completed
+
 
 class TestPipelineStep:
     """Test class: PipelineStep"""
@@ -76,6 +79,7 @@ class TestPipelineStep:
         # Args: self
         assert result is not None  # Assertion completed
 
+
 class TestPipelineStep:
     """Test class: PipelineStep"""
 
@@ -90,6 +94,7 @@ class TestPipelineStep:
         # Test logic: Verify basic functionality
         # Args: self
         assert result is not None  # Assertion completed
+
 
 class TestDataLoadingStep:
     """Test class: DataLoadingStep"""
@@ -106,6 +111,7 @@ class TestDataLoadingStep:
         # Args: self, input_data
         assert result is not None  # Assertion completed
 
+
 class TestPreprocessingStep:
     """Test class: PreprocessingStep"""
 
@@ -120,6 +126,7 @@ class TestPreprocessingStep:
         # Test logic: Verify basic functionality
         # Args: self, input_data
         assert result is not None  # Assertion completed
+
 
 class TestAssimilationStep:
     """Test class: AssimilationStep"""
@@ -136,6 +143,7 @@ class TestAssimilationStep:
         # Args: self, input_data
         assert result is not None  # Assertion completed
 
+
 class TestPostprocessingStep:
     """Test class: PostprocessingStep"""
 
@@ -150,6 +158,7 @@ class TestPostprocessingStep:
         # Test logic: Verify basic functionality
         # Args: self, input_data
         assert result is not None  # Assertion completed
+
 
 class TestAssimilationPipeline:
     """Test class: AssimilationPipeline"""
@@ -166,6 +175,7 @@ class TestAssimilationPipeline:
         # Args: self, step
         assert result is not None  # Assertion completed
 
+
 class TestAssimilationPipeline:
     """Test class: AssimilationPipeline"""
 
@@ -180,6 +190,7 @@ class TestAssimilationPipeline:
         # Test logic: Verify basic functionality
         # Args: self, index
         assert result is not None  # Assertion completed
+
 
 class TestAssimilationPipeline:
     """Test class: AssimilationPipeline"""
@@ -196,6 +207,7 @@ class TestAssimilationPipeline:
         # Args: self, input_data
         assert result is not None  # Assertion completed
 
+
 class TestAssimilationPipeline:
     """Test class: AssimilationPipeline"""
 
@@ -210,6 +222,7 @@ class TestAssimilationPipeline:
         # Test logic: Verify basic functionality
         # Args: self
         assert result is not None  # Assertion completed
+
 
 class TestAssimilationPipeline:
     """Test class: AssimilationPipeline"""
@@ -249,7 +262,6 @@ class TestEdgeCases:
         """Test invalid input"""
         # TODO: Implement invalid input test
         assert True
-
 
 
 # pytest configuration

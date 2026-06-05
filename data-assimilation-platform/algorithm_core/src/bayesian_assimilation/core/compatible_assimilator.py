@@ -7,6 +7,8 @@ import os
 import sys
 
 SRC_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+
 if SRC_DIR not in sys.path:
     sys.path.insert(0, SRC_DIR)
 
@@ -38,8 +40,8 @@ class CompatibleAssimilator(AssimilationBase):
     def initialize_grid_safe(self, domain_size: Optional[Tuple[float, float, float]] = None):
         """安全初始化网格"""
         if domain_size is None:
-            if hasattr(self.config, 'domain_size') and self.config.domain_size is not None: # type: ignore
-                domain_size = self.config.domain_size # type: ignore
+            if hasattr(self.config, 'domain_size') and self.config.domain_size is not None:  # type: ignore
+                domain_size = self.config.domain_size  # type: ignore
             else:
                 domain_size = (1000.0, 1000.0, 100.0)
 
@@ -54,10 +56,10 @@ class CompatibleAssimilator(AssimilationBase):
 
         min_res = 1.0
         max_res = 100.0
-        if hasattr(self.config, 'min_resolution') and self.config.min_resolution is not None: # type: ignore
-            min_res = float(self.config.min_resolution) # type: ignore
-        if hasattr(self.config, 'max_resolution') and self.config.max_resolution is not None: # type: ignore
-            max_res = float(self.config.max_resolution) # type: ignore
+        if hasattr(self.config, 'min_resolution') and self.config.min_resolution is not None:  # type: ignore
+            min_res = float(self.config.min_resolution)  # type: ignore
+        if hasattr(self.config, 'max_resolution') and self.config.max_resolution is not None:  # type: ignore
+            max_res = float(self.config.max_resolution)  # type: ignore
 
         self.resolution = float(np.clip(self.resolution, min_res, max_res))
 
@@ -74,7 +76,7 @@ class CompatibleAssimilator(AssimilationBase):
         if self.grid_shape is None:
             self.initialize_grid_safe()
 
-        logger.info(f"开始安全同化 ...")
+        logger.info("开始安全同化 ...")
         return self._assimilate_cpu_safe(bg, obs, obs_loc, obs_err)
 
     def _assimilate_cpu_safe(self, bg, obs, obs_loc, obs_err):
@@ -174,15 +176,15 @@ class CompatibleAssimilator(AssimilationBase):
 
             w = [
                 (1-dx)*(1-dy)*(1-dz), dx*(1-dy)*(1-dz),
-                (1-dx)*dy*(1-dz),     dx*dy*(1-dz),
-                (1-dx)*(1-dy)*dz,     dx*(1-dy)*dz,
-                (1-dx)*dy*dz,         dx*dy*dz
+                (1-dx)*dy*(1-dz), dx*dy*(1-dz),
+                (1-dx)*(1-dy)*dz, dx*(1-dy)*dz,
+                (1-dx)*dy*dz, dx*dy*dz
             ]
 
-            for (di, dj, dk, ww) in [(0,0,0,w[0]),(1,0,0,w[1]),
-                                  (0,1,0,w[2]),(1,1,0,w[3]),
-                                  (0,0,1,w[4]),(1,0,1,w[5]),
-                                  (0,1,1,w[6]),(1,1,1,w[7])]:
+            for (di, dj, dk, ww) in [(0, 0, 0, w[0]), (1, 0, 0, w[1]),
+                                  (0, 1, 0, w[2]), (1, 1, 0, w[3]),
+                                  (0, 0, 1, w[4]), (1, 0, 1, w[5]),
+                                  (0, 1, 1, w[6]), (1, 1, 1, w[7])]:
                 if ww > 1e-6:
                     idx = (ix+di)*(ny*nz)+(iy+dj)*nz+(iz+dk)
                     rows.append(i)
@@ -222,12 +224,18 @@ class FastSparseBackgroundCovariance:
                 for k in range(self.nz):
                     val = x_3d[i, j, k] * (1 - alpha)**3
 
-                    if i > 0: val += x_3d[i-1, j, k] * alpha * (1 - alpha)**2
-                    if i < self.nx-1: val += x_3d[i+1, j, k] * alpha * (1 - alpha)**2
-                    if j > 0: val += x_3d[i, j-1, k] * alpha * (1 - alpha)**2
-                    if j < self.ny-1: val += x_3d[i, j+1, k] * alpha * (1 - alpha)**2
-                    if k > 0: val += x_3d[i, j, k-1] * alpha * (1 - alpha)**2
-                    if k < self.nz-1: val += x_3d[i, j, k+1] * alpha * (1 - alpha)**2
+                    if i > 0:
+                        val += x_3d[i-1, j, k] * alpha * (1 - alpha)**2
+                    if i < self.nx-1:
+                        val += x_3d[i+1, j, k] * alpha * (1 - alpha)**2
+                    if j > 0:
+                        val += x_3d[i, j-1, k] * alpha * (1 - alpha)**2
+                    if j < self.ny-1:
+                        val += x_3d[i, j+1, k] * alpha * (1 - alpha)**2
+                    if k > 0:
+                        val += x_3d[i, j, k-1] * alpha * (1 - alpha)**2
+                    if k < self.nz-1:
+                        val += x_3d[i, j, k+1] * alpha * (1 - alpha)**2
 
                     y_3d[i, j, k] = val
 

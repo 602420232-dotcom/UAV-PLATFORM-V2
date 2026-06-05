@@ -1,7 +1,7 @@
 # Type annotations added: 2026-05-08 13:22:43
 from typing import Dict, List, Any, Optional, Callable, Tuple
 
-﻿"""
+"""
 性能基准测试脚本
 用法: python benchmark.py [--grid small|medium|large]
 """
@@ -47,4 +47,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

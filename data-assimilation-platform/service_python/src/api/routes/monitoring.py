@@ -6,6 +6,8 @@ job_service = JobService()
 
 
 @router.get("/health")
+
+
 async def health_check():
     return {
         "status": "healthy",
@@ -15,10 +17,14 @@ async def health_check():
 
 
 @router.get("/jobs")
+
+
 async def list_jobs(limit: int = 10):
     return {"jobs": job_service.list_jobs(limit=limit)}
 
 
 @router.get("/stats")
+
+
 async def get_stats():
     return job_service.get_stats()

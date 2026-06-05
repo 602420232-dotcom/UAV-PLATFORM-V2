@@ -81,6 +81,8 @@ jobs:
   deploy:
     needs: build-and-push
     runs-on: ubuntu-22.04
+    env:
+      ARGOCD_TOKEN: ${{ secrets.ARGOCD_TOKEN }}
     steps:
       - uses: actions/checkout@v4
 
@@ -102,7 +104,7 @@ jobs:
       - name: Sync ArgoCD
         run: |
           curl -X POST "https://argocd.uav-platform.com/api/v1/applications/uav-platform/sync" \
-            -H "Authorization: Bearer ${{ secrets.ARGOCD_TOKEN }}"
+            -H "Authorization: Bearer ${{ env.ARGOCD_TOKEN }}"
 
   regression-test:
     needs: deploy

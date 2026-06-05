@@ -7,6 +7,8 @@ import os
 import sys
 
 SRC_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+
 if SRC_DIR not in sys.path:
     sys.path.insert(0, SRC_DIR)
 
@@ -289,11 +291,15 @@ class OperatorFactory:
 
 
 # 便捷函数
+
+
 def build_observation_operator(
     obs_locations: np.ndarray,
     grid_shape: Tuple[int, int, int],
     resolution: float,
     method: str = 'bilinear'
+
+
 ) -> csr_matrix:
     """
     构建观测算子矩阵
@@ -317,6 +323,8 @@ def apply_observation_operator(
     grid_shape: Tuple[int, int, int],
     resolution: float,
     method: str = 'bilinear'
+
+
 ) -> np.ndarray:
     """
     应用观测算子

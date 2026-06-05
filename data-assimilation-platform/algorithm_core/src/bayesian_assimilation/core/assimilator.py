@@ -5,6 +5,8 @@ import os
 import sys
 
 SRC_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+
 if SRC_DIR not in sys.path:
     sys.path.insert(0, SRC_DIR)
 
@@ -39,19 +41,19 @@ class BayesianAssimilator(AssimilationBase):
         self.variance_field = None
         self.resolution: float = getattr(self.config, 'target_resolution', 50.0)  # type: ignore
 
-    def assimilate(self, 
-                   background: np.ndarray, 
-                   observations: np.ndarray, 
-                   obs_locations: np.ndarray, 
+    def assimilate(self,
+                   background: np.ndarray,
+                   observations: np.ndarray,
+                   obs_locations: np.ndarray,
                    obs_errors: Optional[np.ndarray] = None) -> Tuple[np.ndarray, np.ndarray]:
         """
         执行贝叶斯同化
 
         Args:
             background: 背景场 (nx, ny, nz)
-            observations: 观测数据 (n_obs,)
+            observations: 观测数据 (n_obs, )
             obs_locations: 观测位置 (n_obs, 3)
-            obs_errors: 观测误差 (n_obs,)
+            obs_errors: 观测误差 (n_obs, )
 
         Returns:
             analysis: 分析场 (nx, ny, nz)
@@ -59,19 +61,19 @@ class BayesianAssimilator(AssimilationBase):
         """
         return self.assimilate_3dvar(background, observations, obs_locations, obs_errors)
 
-    def assimilate_3dvar(self, 
-                         background: np.ndarray, 
-                         observations: np.ndarray, 
-                         obs_locations: np.ndarray, 
+    def assimilate_3dvar(self,
+                         background: np.ndarray,
+                         observations: np.ndarray,
+                         obs_locations: np.ndarray,
                          obs_errors: Optional[np.ndarray] = None) -> Tuple[np.ndarray, np.ndarray]:
         """
         3DVAR同化（从文档3）- 优化版本
 
         Args:
             background: 背景场 (nx, ny, nz)
-            observations: 观测值 (n_obs,)
+            observations: 观测值 (n_obs, )
             obs_locations: 观测位置 (n_obs, 3)
-            obs_errors: 观测误差 (n_obs,)
+            obs_errors: 观测误差 (n_obs, )
 
         Returns:
             analysis: 分析场 (nx, ny, nz)
@@ -102,7 +104,7 @@ class BayesianAssimilator(AssimilationBase):
         A_diag = B_inv_diag.copy()
         if hasattr(H, 'getrow'):
             for i in range(len(R_inv_diag)):
-                row = H.getrow(i) # type: ignore
+                row = H.getrow(i)  # type: ignore
                 if row.nnz > 0:
                     col_idx = row.indices[0]
                     A_diag[col_idx] += R_inv_diag[i]
@@ -140,7 +142,7 @@ class BayesianAssimilator(AssimilationBase):
 
         return H
 
-    def _build_observation_operator_sparse(self, obs_locations, nx, ny, nz): # type: ignore
+    def _build_observation_operator_sparse(self, obs_locations, nx, ny, nz):  # type: ignore
         """稀疏观测算子(优化版本)"""
         n_obs = len(obs_locations)
         n_total = nx * ny * nz

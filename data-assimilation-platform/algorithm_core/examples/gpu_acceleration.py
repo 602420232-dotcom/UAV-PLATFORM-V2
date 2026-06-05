@@ -15,11 +15,14 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 src_path = os.path.join(project_root, 'src')
+
+
 if src_path not in sys.path:
     sys.path.insert(0, src_path)
 
-from bayesian_assimilation.core.assimilator import BayesianAssimilator # type: ignore
-from bayesian_assimilation.utils.config import AssimilationConfig # type: ignore
+from bayesian_assimilation.core.assimilator import BayesianAssimilator  # type: ignore
+from bayesian_assimilation.utils.config import AssimilationConfig  # type: ignore
+
 
 logging.basicConfig(
     level=logging.INFO,
@@ -42,7 +45,7 @@ def check_jax_available():
 def check_cuda_available():
     """检查CUDA是否可用"""
     try:
-        from bayesian_assimilation.accelerators.cuda import CUDAAccelerator # type: ignore
+        from bayesian_assimilation.accelerators.cuda import CUDAAccelerator  # type: ignore
         cuda_accel = CUDAAccelerator()
         if cuda_accel.initialize():
             info = cuda_accel.get_device_info()
@@ -59,7 +62,7 @@ def check_cuda_available():
         return None
 
 
-def create_synthetic_data(domain_size: int, resolution: Any, n_obs=50: Any):
+def create_synthetic_data(domain_size: int, resolution: Any, n_obs: Any = 50):
     """创建合成数据（规模适中，在5000-20000点之间）"""
     nx = int(domain_size[0] / resolution) + 1
     ny = int(domain_size[1] / resolution) + 1
@@ -125,11 +128,11 @@ def demo_cpu_baseline():
     # 执行多次迭代来分摊开销
     n_iterations = 5
     logger.info(f"执行 {n_iterations} 次迭代来分摊开销")
-    
+
     # 预热
     logger.info("预热中...")
     assimilator.assimilate_3dvar(background, observations, obs_locations)
-    
+
     # 正式计时
     start_time = time.perf_counter()  # 使用更精确的计时器
 
@@ -173,7 +176,7 @@ def demo_jax_accelerated():
         import jax
         import jax.numpy as jnp
         from jax import jit
-        from bayesian_assimilation.accelerators.jax import JAXAccelerator # type: ignore
+        from bayesian_assimilation.accelerators.jax import JAXAccelerator  # type: ignore
 
         accelerator = JAXAccelerator()
         if not accelerator.initialize():
@@ -219,10 +222,10 @@ def demo_jax_accelerated():
             ix = jnp.clip(jnp.int32(obs_loc[:, 0] / 10.0), 0, nx - 1)
             iy = jnp.clip(jnp.int32(obs_loc[:, 1] / 10.0), 0, ny - 1)
             iz = jnp.clip(jnp.int32(obs_loc[:, 2] / 10.0), 0, nz - 1)
-            
+
             # 计算扁平化索引
             idx = ix * ny * nz + iy * nz + iz
-            
+
             # 观测误差和背景误差
             obs_err = jnp.ones(n_obs) * 0.8
             R_diag = obs_err ** 2 + 1e-6
@@ -232,15 +235,15 @@ def demo_jax_accelerated():
             B_inv_diag = 1.0 / (B_diag + 1e-6)
 
             y = obs
-            
+
             # 计算H^T @ (R_inv * y) - 使用向量化操作
             H_T_R_inv_y = jnp.zeros(n_total)
             H_T_R_inv_y = H_T_R_inv_y.at[idx].add(R_inv * y)
-            
+
             # 计算H^T @ R_inv @ H的对角线 - 使用向量化操作
             H_T_R_inv_H_diag = jnp.zeros(n_total)
             H_T_R_inv_H_diag = H_T_R_inv_H_diag.at[idx].add(R_inv)
-            
+
             # 计算右侧和矩阵A的对角线
             rhs = B_inv_diag * xb + H_T_R_inv_y
             A_diag = B_inv_diag + H_T_R_inv_H_diag
@@ -255,12 +258,12 @@ def demo_jax_accelerated():
         # 执行多次迭代来分摊开销
         n_iterations = 5
         logger.info(f"执行 {n_iterations} 次迭代来分摊开销")
-        
+
         # JIT 预热
         logger.info("JIT 编译预热中...")
         for _ in range(2):
             jax_assimilate_3dvar(background_jax, observations_jax, obs_locations_jax)
-        
+
         # 正式计时
         start_time = time.perf_counter()  # 使用更精确的计时器
 
@@ -362,10 +365,10 @@ def demo_cuda_accelerated(cuda_accel=None):
                 ix = cp.clip((obs_loc[:, 0] / 10.0).astype(cp.int32), 0, nx - 1)
                 iy = cp.clip((obs_loc[:, 1] / 10.0).astype(cp.int32), 0, ny - 1)
                 iz = cp.clip((obs_loc[:, 2] / 10.0).astype(cp.int32), 0, nz - 1)
-                
+
                 # 计算扁平化索引
                 idx = ix * ny * nz + iy * nz + iz
-                
+
                 # 观测误差和背景误差
                 obs_err = cp.ones(n_obs) * 0.8
                 R_diag = obs_err ** 2 + 1e-6
@@ -375,15 +378,15 @@ def demo_cuda_accelerated(cuda_accel=None):
                 B_inv_diag = 1.0 / (B_diag + 1e-6)
 
                 y = obs
-                
+
                 # 计算H^T @ (R_inv * y) - 使用向量化操作
                 H_T_R_inv_y = cp.zeros(n_total)
                 H_T_R_inv_y[idx] += R_inv * y
-                
+
                 # 计算H^T @ R_inv @ H的对角线 - 使用向量化操作
                 H_T_R_inv_H_diag = cp.zeros(n_total)
                 H_T_R_inv_H_diag[idx] += R_inv
-                
+
                 # 计算右侧和矩阵A的对角线
                 rhs = B_inv_diag * xb + H_T_R_inv_y
                 A_diag = B_inv_diag + H_T_R_inv_H_diag
@@ -398,12 +401,12 @@ def demo_cuda_accelerated(cuda_accel=None):
             # 执行多次迭代来分摊开销
             n_iterations = 5
             logger.info(f"执行 {n_iterations} 次迭代来分摊开销")
-            
+
             # 预热
             logger.info("CUDA 预热中...")
             for _ in range(2):
                 cuda_assimilate_3dvar(background_dev, observations_dev, obs_locations_dev)
-            
+
             # 正式计时
             start_time = time.perf_counter()  # 使用更精确的计时器
 

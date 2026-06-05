@@ -31,10 +31,12 @@ class CircuitBreakerResponse(BaseModel):
 
 
 @router.get("/status", response_model=CircuitBreakerResponse)
+
+
 async def get_status():
     """
     获取所有熔断器状态
-    
+
     Returns:
         所有熔断器的当前状态
     """
@@ -51,25 +53,27 @@ async def get_status():
 
 
 @router.get("/status/{breaker_name}", response_model=CircuitBreakerResponse)
+
+
 async def get_breaker_status(breaker_name: str):
     """
     获取指定熔断器状态
-    
+
     Args:
         breaker_name: 熔断器名称 (http, websocket, federated)
-    
+
     Returns:
         熔断器状态
     """
     try:
         status = cb_service.get_status()
-        
+
         if breaker_name not in status:
             raise HTTPException(
-                status_code=404, 
+                status_code=404,
                 detail=f"Circuit breaker '{breaker_name}' not found"
             )
-        
+
         return CircuitBreakerResponse(
             success=True,
             status=status[breaker_name],
@@ -83,13 +87,15 @@ async def get_breaker_status(breaker_name: str):
 
 
 @router.post("/trip/{breaker_name}", response_model=CircuitBreakerResponse)
+
+
 async def trip_breaker(breaker_name: str):
     """
     手动触发熔断
-    
+
     Args:
         breaker_name: 熔断器名称
-    
+
     Returns:
         操作结果
     """
@@ -106,12 +112,12 @@ async def trip_breaker(breaker_name: str):
                 status_code=404,
                 detail=f"Unknown circuit breaker: {breaker_name}"
             )
-        
+
         # 手动打开熔断器
         breaker.open()
-        
+
         logger.warning(f"Circuit breaker '{breaker_name}' manually tripped")
-        
+
         return CircuitBreakerResponse(
             success=True,
             message=f"Circuit breaker '{breaker_name}' has been tripped"
@@ -124,13 +130,15 @@ async def trip_breaker(breaker_name: str):
 
 
 @router.post("/reset/{breaker_name}", response_model=CircuitBreakerResponse)
+
+
 async def reset_breaker(breaker_name: str):
     """
     手动重置熔断器
-    
+
     Args:
         breaker_name: 熔断器名称
-    
+
     Returns:
         操作结果
     """
@@ -147,12 +155,12 @@ async def reset_breaker(breaker_name: str):
                 status_code=404,
                 detail=f"Unknown circuit breaker: {breaker_name}"
             )
-        
+
         # 手动重置熔断器
         breaker.close()
-        
+
         logger.info(f"Circuit breaker '{breaker_name}' has been reset")
-        
+
         return CircuitBreakerResponse(
             success=True,
             message=f"Circuit breaker '{breaker_name}' has been reset"
@@ -165,22 +173,24 @@ async def reset_breaker(breaker_name: str):
 
 
 @router.get("/health", response_model=CircuitBreakerResponse)
+
+
 async def health_check():
     """
     健康检查
-    
+
     Returns:
         健康状态
     """
     try:
         status = cb_service.get_status()
-        
+
         # 检查所有熔断器
         all_healthy = all(
-            s['state'] == 'CLOSED' 
+            s['state'] == 'CLOSED'
             for s in status.values()
         )
-        
+
         return CircuitBreakerResponse(
             success=True,
             status=status,
@@ -196,14 +206,17 @@ async def health_check():
 
 # 示例: 使用熔断器的端点
 
+
 @router.post("/call-with-fallback")
+
+
 async def call_with_fallback(request: FallbackRequest):
     """
     使用熔断器调用服务
-    
+
     Args:
         request: 请求参数
-    
+
     Returns:
         调用结果或降级结果
     """
@@ -218,7 +231,7 @@ async def call_with_fallback(request: FallbackRequest):
                 lambda: {"status": "called", "endpoint": request.endpoint},
                 fallback=lambda: {"status": "fallback", "message": "Service unavailable"}
             )
-        
+
         return {
             "success": True,
             "result": result,
@@ -237,15 +250,16 @@ async def call_with_fallback(request: FallbackRequest):
 
 # 使用示例
 
+
 if __name__ == "__main__":
     import uvicorn
-    
+
     # 创建FastAPI应用
     from fastapi import FastAPI
     app = FastAPI(title="Circuit Breaker API")
-    
+
     # 注册路由
     app.include_router(router)
-    
+
     # 启动服务器
     uvicorn.run(app, host="0.0.0.0", port=8000)

@@ -31,6 +31,7 @@ class TestAssimilationModel:
         # Args: self, background, observations, obs_locations, obs_errors
         assert result is not None  # Assertion completed
 
+
 class TestAssimilationModel:
     """Test class: AssimilationModel"""
 
@@ -69,7 +70,6 @@ class TestEdgeCases:
         """Test invalid input"""
         # TODO: Implement invalid input test
         assert True
-
 
 
 # pytest configuration

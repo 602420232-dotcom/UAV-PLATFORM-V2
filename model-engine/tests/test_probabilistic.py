@@ -2,12 +2,14 @@
 import torch
 from unet_downscaler.probabilistic import ProbabilisticUNet, negative_log_likelihood, crps_score
 
+
 def test_probabilistic_output_shape():
     model = ProbabilisticUNet()
     x = torch.randn(2, 6, 50, 50)
     mean, log_var = model(x)
     assert mean.shape == (2, 6, 150, 150)
     assert log_var.shape == (2, 6, 150, 150)
+
 
 def test_log_var_constrained():
     model = ProbabilisticUNet()
@@ -16,6 +18,7 @@ def test_log_var_constrained():
     # log_var 被约束在 [-5, 5]
     assert log_var.min() >= -5.1
     assert log_var.max() <= 5.1
+
 
 def test_nll_loss():
     model = ProbabilisticUNet()
@@ -26,6 +29,7 @@ def test_nll_loss():
     assert loss > 0
     assert torch.isfinite(loss)
 
+
 def test_crps_score():
     model = ProbabilisticUNet()
     x = torch.randn(2, 6, 50, 50)
@@ -34,6 +38,7 @@ def test_crps_score():
     crps = crps_score(mean, log_var, target)
     assert crps > 0
     assert torch.isfinite(crps)
+
 
 def test_perfect_prediction():
     """完美预测应该给出很小的 NLL"""

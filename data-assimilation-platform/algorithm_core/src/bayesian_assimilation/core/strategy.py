@@ -7,6 +7,8 @@ import os
 import sys
 
 SRC_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+
 if SRC_DIR not in sys.path:
     sys.path.insert(0, SRC_DIR)
 
@@ -27,7 +29,7 @@ class AssimilationStrategy:
         self.name = name
         self.stats: Dict[str, Any] = {}
 
-    def execute(self, background: np.ndarray, observations: np.ndarray, 
+    def execute(self, background: np.ndarray, observations: np.ndarray,
                obs_locations: np.ndarray, **kwargs) -> Tuple[np.ndarray, np.ndarray]:
         """
         执行同化策略
@@ -59,7 +61,7 @@ class ThreeDVARStrategy(AssimilationStrategy):
         super().__init__('3dvar')
         self.assimilator = None
 
-    def execute(self, background: np.ndarray, observations: np.ndarray, 
+    def execute(self, background: np.ndarray, observations: np.ndarray,
                obs_locations: np.ndarray, **kwargs) -> Tuple[np.ndarray, np.ndarray]:
         """执行3DVAR同化"""
         from bayesian_assimilation.core.assimilator import BayesianAssimilator
@@ -68,13 +70,13 @@ class ThreeDVARStrategy(AssimilationStrategy):
             self.assimilator = BayesianAssimilator()
 
         start_time = datetime.now()
-        
+
         analysis, variance = self.assimilator.assimilate_3dvar(
             background, observations, obs_locations
         )
-        
+
         elapsed = (datetime.now() - start_time).total_seconds()
-        
+
         self.stats = {
             'method': '3dvar',
             'elapsed_time': elapsed,
@@ -95,7 +97,7 @@ class EnsembleStrategy(AssimilationStrategy):
         super().__init__('ensemble')
         self.ensemble_size = ensemble_size
 
-    def execute(self, background: np.ndarray, observations: np.ndarray, 
+    def execute(self, background: np.ndarray, observations: np.ndarray,
                obs_locations: np.ndarray, **kwargs) -> Tuple[np.ndarray, np.ndarray]:
         """执行集合同化"""
         start_time = datetime.now()
@@ -134,7 +136,7 @@ class IncrementalStrategy(AssimilationStrategy):
         self.previous_analysis: Optional[np.ndarray] = None
         self.previous_variance: Optional[np.ndarray] = None
 
-    def execute(self, background: np.ndarray, observations: np.ndarray, 
+    def execute(self, background: np.ndarray, observations: np.ndarray,
                obs_locations: np.ndarray, **kwargs) -> Tuple[np.ndarray, np.ndarray]:
         """执行增量同化"""
         from bayesian_assimilation.core.assimilator import BayesianAssimilator
@@ -149,7 +151,7 @@ class IncrementalStrategy(AssimilationStrategy):
         else:
             prev_analysis = self.previous_analysis
             prev_variance = self.previous_variance
-            
+
             change_mask = np.abs(background - prev_analysis) > self.threshold
 
             if np.any(change_mask):
@@ -221,7 +223,7 @@ class HybridStrategy(AssimilationStrategy):
             'incremental': IncrementalStrategy()
         }
 
-    def execute(self, background: np.ndarray, observations: np.ndarray, 
+    def execute(self, background: np.ndarray, observations: np.ndarray,
                obs_locations: np.ndarray, **kwargs) -> Tuple[np.ndarray, np.ndarray]:
         """执行混合同化策略"""
         n_obs = len(observations)
@@ -290,6 +292,8 @@ def run_assimilation(
     obs_locations: np.ndarray,
     strategy: Union[str, AssimilationStrategy] = '3dvar',
     **kwargs
+
+
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
     执行同化的便捷函数
@@ -332,7 +336,7 @@ class StrategyManager:
             self.strategies[name] = StrategyFactory.create(name)
         self.current_strategy = name
 
-    def execute(self, background: np.ndarray, observations: np.ndarray, 
+    def execute(self, background: np.ndarray, observations: np.ndarray,
                obs_locations: np.ndarray, **kwargs) -> Tuple[np.ndarray, np.ndarray]:
         """执行当前策略"""
         if self.current_strategy is None:
@@ -341,7 +345,7 @@ class StrategyManager:
         current = self.current_strategy
         if current is None:
             raise ValueError("No strategy selected")
-            
+
         return self.strategies[current].execute(
             background, observations, obs_locations, **kwargs
         )

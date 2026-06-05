@@ -9,9 +9,13 @@ from typing import Dict, List, Optional, Any, Callable
 import logging
 
 # 尝试导入mpi4py
+
+
 try:
     from mpi4py import MPI
     MPI4PY_AVAILABLE = True
+
+
 except ImportError:
     MPI4PY_AVAILABLE = False
     # 创建一个模拟的MPI类，用于在没有安装mpi4py时的运行
@@ -20,8 +24,12 @@ except ImportError:
     MPI = DummyMPI()
 
 # 尝试导入ParallelManager
+
+
 try:
     from .base import ParallelManager, ParallelType
+
+
 except ImportError:
     # 如果无法导入，创建一个基类
     class ParallelManager:
@@ -29,19 +37,19 @@ except ImportError:
             self.config = config or {}
             self.initialized = False
             self.logger = logging.getLogger(__name__)
-        
+
         def start(self):
             return True
-        
+
         def stop(self):
             return True
-        
+
         def is_running(self):
             return False
-        
+
         def parallelize(self: Any, func: Any, data: Dict[str, Any], **kwargs: Any):
             return [func(item, **kwargs) for item in data]
-    
+
     class ParallelType:
         MPI = 'mpi'
         SEQUENTIAL = 'sequential'
@@ -82,15 +90,15 @@ class MPIParallelManager(ParallelManager):
         try:
             if not MPI.Is_initialized():
                 MPI.Init()
-            
+
             self.comm = MPI.COMM_WORLD
             self.rank = self.comm.Get_rank()
             self.size = self.comm.Get_size()
             self.is_root = (self.rank == self.config["root_rank"])
-            
+
             if self.is_root:
                 self.logger.info(f"MPI环境初始化成功，总进程数: {self.size}")
-            
+
         except Exception as e:
             self.logger.error(f"MPI初始化失败: {e}")
             self._use_dummy_mode()
@@ -106,12 +114,12 @@ class MPIParallelManager(ParallelManager):
         try:
             if self.comm is None:
                 self._initialize_mpi()
-            
+
             self.initialized = True
-            
+
             if self.is_root:
                 self.logger.info(f"MPI并行环境启动，进程数: {self.size}")
-            
+
             return True
         except Exception as e:
             self.logger.error(f"MPI启动失败: {e}")
@@ -126,12 +134,12 @@ class MPIParallelManager(ParallelManager):
                 # 只在最后一个进程或根进程调用Finalize
                 if self.is_root and MPI.Is_initialized():
                     MPI.Finalize()
-            
+
             self.initialized = False
-            
+
             if self.is_root:
                 self.logger.info("MPI并行环境已停止")
-            
+
             return True
         except Exception as e:
             self.logger.error(f"MPI停止失败: {e}")
@@ -220,11 +228,11 @@ class MPIParallelManager(ParallelManager):
         results = []
         for proc_results in all_results:
             results.extend(proc_results)
-        
+
         # 确保结果数量正确
         while len(results) < n_total:
             results.append(None)
-        
+
         return results[:n_total]
 
     def broadcast(self, data: Any) -> Any:
@@ -269,19 +277,23 @@ class MPIParallelManager(ParallelManager):
 
 
 # 尝试导入必要的类
+
+
 try:
     from bayesian_assimilation.core.assimilator import BayesianAssimilator
+
+
 except ImportError:
     # 如果无法导入，创建一个基类
     class BayesianAssimilator:
         def __init__(self, config=None):
             self.config = config
             self.logger = logging.getLogger(__name__)
-        
+
         def initialize_grid(self: Any, domain_size: int, resolution: Any = None):
             self.domain_size = domain_size
             self.resolution = resolution
-        
+
         def assimilate_3dvar(self, background, observations, obs_locations, obs_errors=None):
             return background.copy(), np.zeros_like(background)
 
@@ -398,6 +410,8 @@ class MPIParallelAssimilator(BayesianAssimilator):
 
 
 # 便捷函数
+
+
 def create_mpi_manager(config: Optional[Dict] = None) -> MPIParallelManager:
     """
     创建MPI管理器

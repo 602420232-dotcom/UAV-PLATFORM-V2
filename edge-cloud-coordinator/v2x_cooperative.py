@@ -112,7 +112,8 @@ class CooperativePerception:
         """融合多源观测"""
         all_obstacles = {}
         for did, obs_list in self.observations.items():
-            for obs in obs_list[-5:]:
+            for obs in obs_list[-5:
+                ]:
                 for ob in obs.get("obstacles", []):
                     key = (round(ob.get("lon", 0), 4), round(ob.get("lat", 0), 4))
                     if key in all_obstacles:

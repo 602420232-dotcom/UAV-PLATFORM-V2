@@ -7,6 +7,7 @@ from .cli import AssimilationCLI
 from .rest import AssimilationAPI
 from .web import create_app
 
+
 __all__ = [
     'AssimilationCLI',
     'AssimilationAPI',

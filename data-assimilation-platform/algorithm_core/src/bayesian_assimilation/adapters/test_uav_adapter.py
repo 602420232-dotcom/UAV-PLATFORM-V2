@@ -31,6 +31,7 @@ class TestUAVDataAdapter:
         # Args: self, uav_data
         assert result is not None  # Assertion completed
 
+
 class TestUAVDataAdapter:
     """Test class: UAVDataAdapter"""
 
@@ -69,7 +70,6 @@ class TestEdgeCases:
         """Test invalid input"""
         # TODO: Implement invalid input test
         assert True
-
 
 
 # pytest configuration

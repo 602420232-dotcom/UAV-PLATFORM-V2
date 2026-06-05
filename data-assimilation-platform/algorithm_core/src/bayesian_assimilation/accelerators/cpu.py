@@ -10,9 +10,13 @@ import numpy as np
 from typing import Optional, Any
 
 # 处理相对导入和绝对导入
+
+
 if __name__ == '__main__':
     # 直接运行时使用绝对导入
     from bayesian_assimilation.accelerators.base import BaseAccelerator, AcceleratorType
+
+
 else:
     # 作为模块导入时使用相对导入
     from .base import BaseAccelerator, AcceleratorType
@@ -116,7 +120,7 @@ class CPUAccelerator(BaseAccelerator):
                 import threadpoolctl
                 with threadpoolctl.threadpool_limits(limits=1):
                     pass
-            except:
+            except Exception:
                 pass
         logger.info("CPU加速器已释放")
 
@@ -195,7 +199,7 @@ class CPUAccelerator(BaseAccelerator):
             try:
                 from scipy.linalg import cho_factor
                 self._chol_cache = cho_factor(A, overwrite_a=True, check_finite=False)
-                return self._chol_cache # type: ignore
+                return self._chol_cache  # type: ignore
             except Exception:
                 return np.linalg.cholesky(A)
         else:
@@ -234,8 +238,8 @@ class CPUAccelerator(BaseAccelerator):
             插值后的数据
         """
         from scipy.ndimage import zoom
-        zoom_factor = (factor,) * data.ndim
-        return zoom(data, zoom_factor, order=1) # type: ignore
+        zoom_factor = (factor, ) * data.ndim
+        return zoom(data, zoom_factor, order=1)  # type: ignore
 
 
 class OpenMPAccelerator(CPUAccelerator):
@@ -281,7 +285,7 @@ class BLASAccelerator(CPUAccelerator):
 
             self.initialized = True
             logger.info("✅ BLAS加速器初始化成功")
-            logger.info(f"   BLAS后端: scipy.linalg")
+            logger.info("   BLAS后端: scipy.linalg")
             return True
         except ImportError:
             logger.error("❌ SciPy未安装，无法使用BLAS加速")
