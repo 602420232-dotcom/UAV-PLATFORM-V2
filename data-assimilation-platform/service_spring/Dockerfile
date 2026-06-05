@@ -1,4 +1,4 @@
-FROM openjdk:17-jre-slim
+FROM eclipse-temurin:17-jre
 RUN groupadd -r appuser && useradd -r -g appuser -m -s /sbin/nologin appuser
 WORKDIR /app
 COPY target/*.jar app.jar

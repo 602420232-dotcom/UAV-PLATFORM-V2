@@ -1,11 +1,11 @@
-FROM openjdk:17-jdk-slim AS builder
+FROM eclipse-temurin:17-jdk AS builder
 WORKDIR /build
 COPY pom.xml .
 RUN mvn dependency:go-offline -B
 COPY src ./src
 RUN mvn clean package -DskipTests -B
 
-FROM openjdk:17-jre-slim
+FROM eclipse-temurin:17-jre
 RUN groupadd -r appuser && useradd -r -g appuser -m -s /sbin/nologin appuser
 WORKDIR /app
 COPY --from=builder /build/target/*.jar app.jar

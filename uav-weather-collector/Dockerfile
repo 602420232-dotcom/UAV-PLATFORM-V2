@@ -17,7 +17,7 @@ RUN mvn dependency:go-offline -B
 COPY uav-weather-collector/src ./src
 RUN mvn clean package -DskipTests -B
 
-FROM openjdk:17-jre-slim
+FROM eclipse-temurin:17-jre
 RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/* \
     && groupadd -r appuser && useradd -r -g appuser -m -s /sbin/nologin appuser
 COPY --from=builder /build/target/*.jar app.jar
