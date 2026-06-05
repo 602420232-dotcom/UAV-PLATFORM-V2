@@ -40,7 +40,6 @@ class WrfControllerTest {
         assertNotNull(wrfController);
         ReflectionTestUtils.setField(wrfController, "pythonScriptPath", "wrf_processor.py");
         ReflectionTestUtils.setField(wrfController, "dataPath", "./data");
-        ReflectionTestUtils.setField(wrfController, "timeout", 30000);
 
         mockFile = mock(MultipartFile.class);
     }
