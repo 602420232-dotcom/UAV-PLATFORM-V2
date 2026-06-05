@@ -78,6 +78,11 @@ trae/
 │   └── src/main/java/com/uav/weather/
 ├── wrf-processor-service/         # WRF 气象数据处理服务（Java，端口 8081）
 │   └── src/main/java/com/uav/wrf/
+├── buoy-weather-service/          # 浮标气象数据服务
+├── ground-station-weather-service/ # 地面站气象数据服务
+├── satellite-weather-service/     # 卫星气象数据服务
+├── radiosonde-weather-service/    # 探空气象数据服务
+├── detection-drone-service/       # 检测无人机服务
 ├── uav-edge-sdk/                  # 端侧 SDK（C++/Python/pybind11）
 ├── uav-mobile-app/                # 跨平台移动应用（Flutter）
 │   └── lib/
@@ -418,9 +423,15 @@ docker image prune -f
 | **data-assimilation-service** | [README](data-assimilation-service/README.md) |
 | **meteor-forecast-service** | [README](meteor-forecast-service/README.md) |
 | **path-planning-service** | [README](path-planning-service/README.md) |
-| **uav-weather-collector** | [README](uav-weather-collector/README.md) |
-| **edge-cloud-coordinator** | [README](edge-cloud-coordinator/README.md) |
 | **fengwu-service** | [README](fengwu-service/README.md) |
+| **uav-weather-collector** | [README](uav-weather-collector/README.md) |
+| **buoy-weather-service** | [README](buoy-weather-service/README.md) |
+| **ground-station-weather-service** | [README](ground-station-weather-service/README.md) |
+| **satellite-weather-service** | [README](satellite-weather-service/README.md) |
+| **radiosonde-weather-service** | [README](radiosonde-weather-service/README.md) |
+| **detection-drone-service** | [README](detection-drone-service/README.md) |
+| **edge-cloud-coordinator** | [README](edge-cloud-coordinator/README.md) |
+| **model-engine** | [README](model-engine/README.md) |
 | **api-gateway** | [README](api-gateway/README.md) |
 | **common-utils** | [README](common-utils/README.md) |
 | **data-assimilation-platform** | [README](data-assimilation-platform/README.md) |
@@ -436,6 +447,6 @@ docker image prune -f
 
 ---
 
-> **最后更新**: 2026-06-04  
+> **最后更新**: 2026-06-05  
 > **版本**: 3.1.0  
 > **维护者**: UAV DevOps Team

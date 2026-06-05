@@ -12,7 +12,13 @@ trae/
 │   ├── meteor-forecast-service/  # 气象预测服务 (端口 8082)
 │   ├── path-planning-service/   # 路径规划服务 (端口 8083)
 │   ├── data-assimilation-service/  # 数据同化服务 (端口 8084)
+│   ├── fengwu-service/          # 风乌气象模型服务 (端口 8085)
 │   ├── uav-weather-collector/  # 气象数据采集 (端口 8086)
+│   ├── buoy-weather-service/   # 浮标气象数据服务
+│   ├── ground-station-weather-service/  # 地面站气象数据服务
+│   ├── satellite-weather-service/  # 卫星气象数据服务
+│   ├── radiosonde-weather-service/  # 探空气象数据服务
+│   ├── detection-drone-service/  # 检测无人机服务
 │   ├── common-utils/            # 公共工具模块 ⭐
 │   └── common-dependencies/    # 公共依赖管理
 │
@@ -22,7 +28,8 @@ trae/
 │   │   ├── examples/           # 使用示例
 │   │   ├── tests/              # 测试
 │   │   └── shared/protos/       # Protocol Buffers
-│   ├── edge-cloud-coordinator/ # 边云协同
+│   ├── edge-cloud-coordinator/ # 边云协同 (端口 8000/8765)
+│   ├── model-engine/           # 模型引擎
 │   └── wrf-processor/          # WRF数据处理
 │
 ├── 🌐 前端 (Vue3)
@@ -30,6 +37,9 @@ trae/
 │
 ├── 🖥️ 边缘计算 (C++/Python)
 │   └── uav-edge-sdk/           # 端侧SDK
+│
+├── 📱 移动端 (Flutter)
+│   └── uav-mobile-app/         # Flutter移动应用
 │
 ├── 📋 部署配置
 │   ├── kubernetes/             # K8s部署
@@ -46,7 +56,8 @@ trae/
 │
 └── 🛠️ 工具
     ├── scripts/                # 构建脚本
-    └── tests/                  # 集成测试
+    ├── tests/                  # 集成测试
+    └── tools/                  # 工具集合
 ```
 
 ---
@@ -107,11 +118,13 @@ common-utils/
 **路由配置**:
 ```yaml
 routes:
-  - /api/v1/**              → uav-platform-service:8080
+  - /api/platform/**         → uav-platform-service:8080
   - /api/wrf/**             → wrf-processor-service:8081
   - /api/forecast/**        → meteor-forecast-service:8082
   - /api/planning/**        → path-planning-service:8083
   - /api/assimilation/**    → data-assimilation-service:8084
+  - /api/fengwu/**          → fengwu-service:8085
+  - /api/weather/**         → uav-weather-collector:8086
 ```
 
 **熔断器保护**: ✅ 通过 common-utils Resilience4j
@@ -126,7 +139,13 @@ routes:
 | meteor-forecast-service | 8082 | MySQL, Redis |
 | path-planning-service | 8083 | MySQL, Redis |
 | data-assimilation-service | 8084 | MySQL |
+| fengwu-service | 8085 | - |
 | uav-weather-collector | 8086 | MySQL, Redis |
+| buoy-weather-service | 待分配 | - |
+| ground-station-weather-service | 待分配 | - |
+| satellite-weather-service | 待分配 | - |
+| radiosonde-weather-service | 待分配 | - |
+| detection-drone-service | 待分配 | - |
 
 ---
 
@@ -177,6 +196,57 @@ data-assimilation-platform/
 - Kafka消息队列
 - 联邦学习支持
 - 边缘AI推理
+
+### model-engine ⭐
+
+**路径**: `model-engine/`
+**说明**: 模型引擎，包含多种AI模型和算法
+
+**核心组件**:
+- **CNN修正器**: 基于CNN的气象数据修正
+- **XGBoost修正器**: 基于XGBoost的气象数据修正
+- **UNet降尺度**: UNet模型用于气象数据降尺度
+- **GPR风险评估**: 高斯过程回归风险评估
+- **EnKF**: 集合卡尔曼滤波
+- **多无人机协同**: 多无人机冲突解决
+- **MPC控制**: 模型预测控制
+- **主动观测**: 贝叶斯主动观测
+
+**目录结构**:
+```
+model-engine/
+├── active_obs/           # 主动观测
+├── cnn_corrector/       # CNN修正器
+├── control/             # 控制算法
+├── data_pipeline/       # 数据管道
+├── fusion/              # 数据融合
+├── gpr_risk/           # GPR风险评估
+├── integration/         # 集成模块
+├── multi_uav/          # 多无人机
+├── path_planning/       # 路径规划
+├── unet_downscaler/    # UNet降尺度
+└── scripts/            # 脚本
+```
+
+---
+
+## 📱 移动端结构
+
+### Flutter移动应用
+
+**路径**: `uav-mobile-app/`
+**说明**: 基于Flutter的跨平台移动应用
+
+**技术栈**:
+- Flutter 3.x
+- Dart
+- 支持iOS和Android
+
+**核心功能**:
+- 离线路径规划
+- 实时追踪
+- 任务同步
+- 气象数据展示
 
 ---
 
@@ -463,6 +533,6 @@ docker-compose up -d
 
 ---
 
-> **最后更新**: 2026-05-08  
-> **版本**: 2.1  
+> **最后更新**: 2026-06-05  
+> **版本**: 3.0  
 > **维护者**: DITHIOTHREITOL

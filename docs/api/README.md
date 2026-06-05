@@ -12,6 +12,7 @@
 | **meteor-forecast-service** | 8082 | 气象预测服务 |
 | **path-planning-service** | 8083 | 路径规划服务 |
 | **data-assimilation-service** | 8084 | 贝叶斯同化服务 |
+| **fengwu-service** | 8085 | 风乌气象模型服务 |
 | **uav-weather-collector** | 8086 | 气象信息收集服务 |
 | **edge-cloud-coordinator** | 8000 | 边云协同框架（联邦学习/WebSocket） |
 
@@ -74,17 +75,28 @@ Authorization: Bearer <JWT令牌>
 - `404`: 资源不存在
 - `500`: 服务器内部错误
 
-## 版本控制
+## 网关路由说明
 
-API 版本通过 URL 路径进行控制，例如：
+各服务通过 API 网关访问，路由规则如下：
 
+| 服务 | 网关路由前缀 |
+|------|-------------|
+| uav-platform-service | `/api/platform/` |
+| wrf-processor-service | `/api/wrf/` |
+| meteor-forecast-service | `/api/forecast/` |
+| path-planning-service | `/api/planning/` |
+| data-assimilation-service | `/api/assimilation/` |
+| fengwu-service | `/api/fengwu/` |
+| uav-weather-collector | `/api/weather/` |
+
+示例：访问 uav-platform-service 的认证接口
 ```
-/api/v1/auth/login
+/api/platform/auth/login
 ```
 
 
 ---
 
-> **最后更新**: 2026-05-08  
-> **版本**: 2.1  
+> **最后更新**: 2026-06-05  
+> **版本**: 3.0  
 > **维护者**: DITHIOTHREITOL

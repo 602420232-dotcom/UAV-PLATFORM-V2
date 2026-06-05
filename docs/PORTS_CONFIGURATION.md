@@ -20,6 +20,12 @@
 | **Bayes Assimilator** | 8084 | HTTP | 贝叶斯同化计算（3D-VAR/4D-VAR/EnKF） | ✅ | ✅ |
 | **FengWu Service** | 8085 | HTTP | 风乌气象模型推理服务（ONNX Runtime） | - | ✅ |
 | **Weather Collector** | 8086 | HTTP | 多源气象数据采集与融合 | - | ✅ |
+| **Buoy Weather** | 8087 | HTTP | 浮标气象数据服务 | - | 📝 |
+| **Ground Station** | 8093 | HTTP | 地面站气象数据服务 | - | 📝 |
+| **Satellite Weather** | 8094 | HTTP | 卫星气象数据服务 | - | 📝 |
+| **Radiosonde Weather** | 8095 | HTTP | 探空气象数据服务 | - | 📝 |
+| **Detection Drone** | 8096 | HTTP | 检测无人机服务 | - | 📝 |
+| **Model Engine** | 8097 | HTTP | AI模型引擎（CNN/UNet/GPR/EnKF） | - | 📝 |
 | **Edge-Cloud Coordinator** | 8000 | HTTP | 边云协同（联邦学习/WebSocket） | - | ✅ |
 | **Edge-Cloud Coordinator** | 8765 | WebSocket | WebSocket 实时通信 | - | ✅ |
 
@@ -78,13 +84,19 @@ export default defineConfig({
 
 | 外部路由 | 内部服务 | 目标端口 | 说明 |
 |---------|---------|:--------:|------|
-| `/api/v1/**` | uav-platform-service | 8080 | 主平台 API |
+| `/api/platform/**` | uav-platform-service | 8080 | 主平台 API |
 | `/api/wrf/**` | wrf-processor-service | 8081 | WRF 数据 API |
 | `/api/forecast/**` | meteor-forecast-service | 8082 | 气象预报 API |
 | `/api/planning/**` | path-planning-service | 8083 | 路径规划 API |
 | `/api/assimilation/**` | data-assimilation-service | 8084 | 数据同化 API |
 | `/api/fengwu/**` | fengwu-service | 8085 | 风乌模型 API |
 | `/api/weather/**` | uav-weather-collector | 8086 | 气象采集 API |
+| `/api/buoy/**` | buoy-weather-service | 8087 | 浮标气象 API |
+| `/api/ground/**` | ground-station-weather-service | 8093 | 地面站气象 API |
+| `/api/satellite/**` | satellite-weather-service | 8094 | 卫星气象 API |
+| `/api/radiosonde/**` | radiosonde-weather-service | 8095 | 探空气象 API |
+| `/api/detection/**` | detection-drone-service | 8096 | 检测无人机 API |
+| `/api/model/**` | model-engine | 8097 | AI模型引擎 API |
 
 ### 前端 API 调用
 
@@ -129,6 +141,12 @@ Platform Service (localhost:8080)
 | Data Assimilator | 8084 | `/actuator/health` |
 | FengWu Service | 8085 | `/api/fengwu/health` |
 | Weather Collector | 8086 | `/actuator/health` |
+| Buoy Weather | 8087 | `/actuator/health` |
+| Ground Station | 8093 | `/actuator/health` |
+| Satellite Weather | 8094 | `/actuator/health` |
+| Radiosonde Weather | 8095 | `/actuator/health` |
+| Detection Drone | 8096 | `/actuator/health` |
+| Model Engine | 8097 | `/health` |
 | Edge-Cloud Coordinator | 8000 | `/health` |
 | Frontend | 3000 | `/` |
 
@@ -342,6 +360,6 @@ grafana:
 
 ---
 
-> **最后更新**: 2026-06-03  
-> **版本**: 2.2  
+> **最后更新**: 2026-06-05  
+> **版本**: 3.0  
 > **维护者**: DITHIOTHREITOL

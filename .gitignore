@@ -199,17 +199,11 @@ $RECYCLE.BIN/
 .env.development
 .env.preproduction
 
-# .env 模板文件
-.env.template
-.env.example
+# .env 模板文件（允许提交）
 !.env.example
-.env.*.template
-.env.*.example
-
-# 前端 .env 文件
-**/frontend-vue/.env
-**/frontend-vue/.env.*
-**/frontend-vue/.env.local
+!.env.template
+!.env.*.example
+!.env.*.template
 
 # 密钥管理工具生成的备份文件
 *.bak

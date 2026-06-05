@@ -5,7 +5,7 @@
 ### 请求
 
 ```
-POST /api/v1/auth/login
+POST /api/platform/auth/login
 Content-Type: application/json
 ```
 
@@ -54,7 +54,7 @@ Content-Type: application/json
 ### 请求
 
 ```
-POST /api/v1/auth/register
+POST /api/platform/auth/register
 Content-Type: application/json
 ```
 
@@ -101,7 +101,7 @@ Content-Type: application/json
 ### 请求
 
 ```
-POST /api/v1/auth/refresh
+POST /api/platform/auth/refresh
 Content-Type: application/json
 Authorization: Bearer <当前令牌>
 ```
@@ -139,6 +139,6 @@ Authorization: Bearer <当前令牌>
 ```
 ---
 
-> **最后更新**: 2026-05-08  
-> **版本**: 2.1  
+> **最后更新**: 2026-06-05  
+> **版本**: 3.0  
 > **维护者**: DITHIOTHREITOL

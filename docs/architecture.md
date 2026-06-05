@@ -20,7 +20,13 @@
 │  meteor-forecast-service 领域层 (端口8082)        │
 │  path-planning-service   领域层 (端口8083)        │
 │  data-assimilation-service 领域层 (端口8084)      │
+│  fengwu-service        领域层 (端口8085)          │
 │  uav-weather-collector   领域层 (端口8086)        │
+│  buoy-weather-service  领域层 (端口待分配)        │
+│  ground-station-weather-service 领域层 (端口待分配)│
+│  satellite-weather-service 领域层 (端口待分配)     │
+│  radiosonde-weather-service 领域层 (端口待分配)    │
+│  detection-drone-service 领域层 (端口待分配)      │
 ├─────────────────────────────────────────────────┤
 │  backend-spring        独立服务 (端口8089)        │
 │  职责：路径规划系统后端（含认证/授权/历史管理）      │
@@ -36,7 +42,17 @@
 | **api-gateway** | 8088 | API网关：路由转发、限流、熔断 |
 | **uav-platform-service** | 8080 | 平台编排：服务间编排调用链、数据源CRUD、实时数据获取。**不含**独立认证/路径规划逻辑 |
 | **backend-spring** | 8089 | 独立路径规划系统：用户认证授权、独立路径规划算法调用、路径历史管理。依赖common模块但不参与微服务编排 |
-| **领域服务** | 8081-8086 | 各领域微服务：处理各自领域的核心算法和业务逻辑 |
+| **wrf-processor-service** | 8081 | WRF气象数据处理：NetCDF解析、数据预处理、质量检查 |
+| **meteor-forecast-service** | 8082 | 气象预测服务：ConvLSTM预测、XGBoost订正、气象约束计算 |
+| **path-planning-service** | 8083 | 路径规划服务：VRPTW求解、NSGA-II优化、DE-RRT*规划、DWA避障 |
+| **data-assimilation-service** | 8084 | 数据同化服务：3D-VAR/4D-VAR/EnKF同化、贝叶斯优化、不确定性量化 |
+| **fengwu-service** | 8085 | 风乌气象模型服务：基于ONNX Runtime的全球气象预测 |
+| **uav-weather-collector** | 8086 | 气象数据采集：多源数据采集与融合 |
+| **buoy-weather-service** | 待分配 | 浮标气象数据服务 |
+| **ground-station-weather-service** | 待分配 | 地面站气象数据服务 |
+| **satellite-weather-service** | 待分配 | 卫星气象数据服务 |
+| **radiosonde-weather-service** | 待分配 | 探空气象数据服务 |
+| **detection-drone-service** | 待分配 | 检测无人机服务 |
 
 ### backend-spring vs uav-platform-service 职责区分
 
@@ -59,6 +75,6 @@
 **ADR-003**: common-dependencies 为BOM型POM，集中管理所有通用依赖版本。子模块引入 common-dependencies 即可获得全部标准化依赖，无需在各自pom中重复声明。
 ---
 
-> **最后更新**: 2026-05-08  
-> **版本**: 2.1  
+> **最后更新**: 2026-06-05  
+> **版本**: 3.0  
 > **维护者**: DITHIOTHREITOL
