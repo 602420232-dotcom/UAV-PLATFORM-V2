@@ -416,9 +416,8 @@ class MeteorForecast:
                 logger.info(f"LSTM模型已保存: {versioned_path}")
 
             elif model_type == 'xgb' and self.xgb_model is not None:
-                versioned_path = os.path.join(
-                    self.model_path, f'xgb_model_{
-                        self.model_version}.json')
+                xgb_filename = f'xgb_model_{self.model_version}.json'
+                versioned_path = os.path.join(self.model_path, xgb_filename)
                 self.xgb_model.save_model(versioned_path)
 
                 latest_path = os.path.join(self.model_path, 'xgb_model.json')
