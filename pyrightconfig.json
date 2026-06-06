@@ -36,7 +36,8 @@
     "fengwu-service"
   ],
   "extraPaths": [
-    "data-assimilation-platform/algorithm_core/src"
+    "data-assimilation-platform/algorithm_core/src",
+    "model-engine"
   ],
   "reportMissingImports": true,
   "typeCheckingMode": "basic"

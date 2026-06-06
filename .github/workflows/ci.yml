@@ -42,7 +42,6 @@ jobs:
 
       - name: Run tests
         run: mvn test -B
-        continue-on-error: true
 
   # ===== Job 2: Python 语法检查 =====
   python-lint:
@@ -62,9 +61,7 @@ jobs:
           pip install ruff
 
       - name: Check Python scripts
-        run: |
-          find . -name "*.py" -not -path "./.git/*" -not -path "./node_modules/*" \
-            -not -path "./*/.venv/*" -exec ruff check {} \; || true
+        run: ruff check .
 
   # ===== Job 3: 前端构建 =====
   frontend-build:
