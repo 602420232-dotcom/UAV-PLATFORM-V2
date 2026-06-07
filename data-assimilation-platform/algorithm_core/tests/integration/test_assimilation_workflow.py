@@ -2,14 +2,15 @@
 同化工作流集成测试
 测试完整的数据同化流程
 """
-
 import logging
-logger = logging.getLogger(__name__)
+import os
+import sys
 
 import pytest
 import numpy as np
-import os
-import sys
+
+logger = logging.getLogger(__name__)
+
 
 SRC_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 SRC_PATH = os.path.join(SRC_DIR, 'src')
@@ -18,10 +19,10 @@ SRC_PATH = os.path.join(SRC_DIR, 'src')
 if SRC_PATH not in sys.path:
     sys.path.insert(0, SRC_PATH)
 
-from bayesian_assimilation.core.assimilator import BayesianAssimilator
-from bayesian_assimilation.utils.config import AssimilationConfig, ConfigFactory
-from bayesian_assimilation.utils.validation import validate_assimilation_inputs
-from bayesian_assimilation.utils.metrics import DataQualityMetrics, AssimilationMetrics
+from bayesian_assimilation.core.assimilator import BayesianAssimilator  # noqa: E402
+from bayesian_assimilation.utils.config import ConfigFactory  # noqa: E402
+from bayesian_assimilation.utils.validation import validate_assimilation_inputs  # noqa: E402
+from bayesian_assimilation.utils.metrics import DataQualityMetrics, AssimilationMetrics  # noqa: E402
 
 
 @pytest.mark.integration
@@ -321,7 +322,7 @@ class TestAssimilationPerformance:
 
     def test_assimilation_execution_time(self, background_field, observation_data):
         """测试同化执行时间"""
-        import time
+        import time  # noqa: E402
 
         observations, obs_locations, obs_errors = observation_data
 
@@ -356,7 +357,6 @@ class TestAssimilationPerformance:
 
     def test_memory_usage(self, background_field, observation_data):
         """测试内存使用"""
-        import sys
 
         observations, obs_locations, obs_errors = observation_data
 

@@ -3,12 +3,14 @@ Performance Tests for Data Assimilation Platform
 Test system performance and scalability
 """
 
-import pytest
-import time
-import psutil
+import logging
 import statistics
-from datetime import datetime
-from typing import List, Dict
+import time
+
+import psutil
+import pytest
+
+logger = logging.getLogger(__name__)
 
 # Test configuration
 
@@ -39,7 +41,7 @@ class TestResponseTime:
         start_time = time.time()
 
         # Simple operation
-        result = sum(data)
+        sum(data)
 
         end_time = time.time()
         response_time = (end_time - start_time) * 1000  # Convert to ms
@@ -54,7 +56,7 @@ class TestResponseTime:
         start_time = time.time()
 
         # Data processing
-        result = [[x * 2 for x in row] for row in data]
+        [[x * 2 for x in row] for row in data]
 
         end_time = time.time()
         response_time = (end_time - start_time) * 1000
@@ -71,7 +73,7 @@ class TestResponseTime:
         matrix_a = [[i + j for j in range(size)] for i in range(size)]
         matrix_b = [[i * j for j in range(size)] for i in range(size)]
 
-        result = [[sum(a * b for a, b in zip(row_a, col_b))
+        [[sum(a * b for a, b in zip(row_a, col_b))
                   for col_b in zip(*matrix_b)]
                   for row_a in matrix_a]
 
@@ -93,7 +95,7 @@ class TestMemoryUsage:
 
         # Create some data
         data = list(range(100000))
-        result = sum(data)
+        sum(data)
 
         current_memory = process.memory_info().rss / 1024 / 1024
         memory_used = current_memory - initial_memory
@@ -109,7 +111,7 @@ class TestMemoryUsage:
         initial_memory = process.memory_info().rss / 1024 / 1024
 
         # Create large data structure
-        large_data = {
+        {
             'array': [i for i in range(1000000)],
             'matrix': [[i for i in range(1000)] for _ in range(1000)],
             'nested': {f'key_{i}': {'data': [i] * 100} for i in range(1000)}
@@ -155,7 +157,7 @@ class TestThroughput:
         # Simulate requests
         for _ in range(num_requests):
             data = {'id': 1, 'value': 100}
-            result = sum(data.values())
+            sum(data.values())
 
         end_time = time.time()
         total_time = end_time - start_time
@@ -179,7 +181,7 @@ class TestThroughput:
 
         # Process concurrently
         with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
-            results = list(executor.map(process_request, range(num_requests)))
+            list(executor.map(process_request, range(num_requests)))
 
         end_time = time.time()
         total_time = end_time - start_time
@@ -198,10 +200,10 @@ class TestCPUUsage:
         process = psutil.Process()
 
         # Start monitoring
-        cpu_percent_start = process.cpu_percent()
+        process.cpu_percent()
 
         # Perform calculation
-        result = sum(i * i for i in range(1000000))
+        sum(i * i for i in range(1000000))
 
         # Measure CPU usage
         cpu_percent = process.cpu_percent()
@@ -220,14 +222,14 @@ class TestCPUUsage:
             return sum(i * i for i in range(n))
 
         num_tasks = 10
-        start_time = time.time()
+        time.time()
 
         # Start monitoring
-        cpu_percent_start = process.cpu_percent()
+        process.cpu_percent()
 
         # Process in parallel
         with concurrent.futures.ProcessPoolExecutor(max_workers=4) as executor:
-            results = list(executor.map(cpu_intensive_task, [100000] * num_tasks))
+            list(executor.map(cpu_intensive_task, [100000] * num_tasks))
 
         # Measure CPU usage
         cpu_percent = process.cpu_percent()
@@ -248,7 +250,7 @@ class TestScalability:
             start_time = time.time()
 
             data = list(range(size))
-            result = sum(data)
+            sum(data)
 
             end_time = time.time()
             times.append(end_time - start_time)
@@ -279,7 +281,7 @@ class TestScalability:
             start_time = time.time()
 
             with concurrent.futures.ThreadPoolExecutor(max_workers=num_threads) as executor:
-                results = list(executor.map(lambda _: task(), range(100)))
+                list(executor.map(lambda _: task(), range(100)))
 
             end_time = time.time()
             rps = 100 / (end_time - start_time)
@@ -302,7 +304,7 @@ class TestDatabasePerformance:
         start_time = time.time()
 
         # Simulated query
-        results = [i for i in range(1000) if i % 2 == 0]
+        [i for i in range(1000) if i % 2 == 0]
 
         end_time = time.time()
         query_time = (end_time - start_time) * 1000
@@ -317,7 +319,7 @@ class TestDatabasePerformance:
         start_time = time.time()
 
         # Simulate batch insert
-        records = [{'id': i, 'data': f'record_{i}'} for i in range(num_records)]
+        [{'id': i, 'data': f'record_{i}'} for i in range(num_records)]
 
         end_time = time.time()
         insert_time = (end_time - start_time)
@@ -360,7 +362,7 @@ class TestCachePerformance:
         for _ in range(1000):
             key = 500  # Fixed key
             start = time.time()
-            value = cache.get(key)
+            cache.get(key)
             end = time.time()
             latencies.append((end - start) * 1000)
 
@@ -389,7 +391,7 @@ class TestStress:
 
             # Simulate request processing
             data = list(range(1000))
-            result = sum(data)
+            sum(data)
 
             request_end = time.time()
             requests.append(request_end - request_start)

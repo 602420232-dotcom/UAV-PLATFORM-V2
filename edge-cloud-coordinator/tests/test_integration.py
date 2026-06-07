@@ -6,7 +6,7 @@ Edge-Cloud-Coordinator 集成测试
 import sys
 import os
 import pytest
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import patch, MagicMock
 import json
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
@@ -116,7 +116,7 @@ class TestEdgeAIInferenceIntegration:
 
         # 模拟输入数据
         import numpy as np
-        input_data = np.random.rand(1, 3, 224, 224).astype(np.float32)
+        np.random.rand(1, 3, 224, 224).astype(np.float32)
 
         # 验证推理可以执行
         assert session is not None

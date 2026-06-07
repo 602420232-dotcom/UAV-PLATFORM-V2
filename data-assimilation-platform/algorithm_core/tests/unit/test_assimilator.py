@@ -1,14 +1,15 @@
 """
 核心同化器单元测试
 """
-
 import logging
-logger = logging.getLogger(__name__)
+import os
+import sys
 
 import pytest
 import numpy as np
-import os
-import sys
+
+logger = logging.getLogger(__name__)
+
 
 SRC_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 SRC_PATH = os.path.join(SRC_DIR, 'src')
@@ -17,8 +18,7 @@ SRC_PATH = os.path.join(SRC_DIR, 'src')
 if SRC_PATH not in sys.path:
     sys.path.insert(0, SRC_PATH)
 
-from bayesian_assimilation.core.assimilator import BayesianAssimilator
-from bayesian_assimilation.utils.config import AssimilationConfig
+from bayesian_assimilation.core.assimilator import BayesianAssimilator  # noqa: E402
 
 
 @pytest.mark.unit

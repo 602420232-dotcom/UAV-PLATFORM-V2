@@ -7,7 +7,6 @@ import sys
 import os
 import pytest
 import numpy as np
-from unittest.mock import Mock, patch, MagicMock
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
@@ -17,8 +16,8 @@ class TestGPRPathPlanningIntegration:
 
     def test_gpr_to_planner_data_flow(self):
         """测试GPR风险场输出到路径规划器的数据流"""
-        from gpr_risk.model import GPRRiskModel, GPRConfig
-        from path_planning.cost_function import RiskCostFunction, CostConfig
+        from gpr_risk.model import GPRConfig
+        from path_planning.cost_function import CostConfig
 
         # 创建GPR模型配置
         gpr_config = GPRConfig(
@@ -43,7 +42,7 @@ class TestGPRPathPlanningIntegration:
         from path_planning.cost_function import RiskCostFunction, CostConfig
 
         config = CostConfig()
-        cost_function = RiskCostFunction(config)
+        RiskCostFunction(config)
 
         # 模拟风险场数据
         risk_field = np.random.rand(150, 150)
@@ -62,7 +61,7 @@ class TestEnKFGPRIntegration:
         from gpr_risk.enkf import EnKFConfig
 
         # 创建EnKF配置
-        enkf_config = EnKFConfig(
+        EnKFConfig(
             ensemble_size=20,
             inflation_factor=1.05,
             observation_noise=0.1
@@ -101,7 +100,7 @@ class TestMultiUAVPathPlanningIntegration:
             safety_distance=50.0,
             priority_strategy='distance'
         )
-        resolver = ConflictResolver(config)
+        ConflictResolver(config)
 
         # 模拟多条路径
         paths = [
@@ -139,9 +138,9 @@ class TestFusionIntegration:
 
     def test_ensemble_fusion_with_uncertainty(self):
         """测试集合融合与不确定性量化"""
-        from fusion.ensemble import EnsembleFuser, FusionConfig
+        from fusion.ensemble import FusionConfig
 
-        config = FusionConfig(
+        FusionConfig(
             method='weighted_average',
             uncertainty_quantification=True
         )
@@ -162,7 +161,7 @@ class TestActiveObservationIntegration:
 
     def test_bayesian_observer_with_risk_field(self):
         """测试贝叶斯观测器与风险场的协作"""
-        from active_obs.bayesian_observer import BayesianObserver, ObserverConfig
+        from active_obs.bayesian_observer import ObserverConfig
 
         config = ObserverConfig(
             exploration_rate=0.1,
@@ -170,8 +169,8 @@ class TestActiveObservationIntegration:
         )
 
         # 模拟风险场和不确定性
-        risk_field = np.random.rand(100, 100)
-        uncertainty = np.random.rand(100, 100)
+        np.random.rand(100, 100)
+        np.random.rand(100, 100)
 
         # 验证配置
         assert config.exploration_rate + config.exploitation_rate == 1.0
@@ -182,7 +181,7 @@ class TestMPCIntegration:
 
     def test_mpc_with_path_planner(self):
         """测试MPC与路径规划器的协作"""
-        from control.mpc import MPCController, MPCConfig
+        from control.mpc import MPCConfig
 
         config = MPCConfig(
             horizon=10,

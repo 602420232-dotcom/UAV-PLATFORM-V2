@@ -1,15 +1,16 @@
 # Type annotations added: 2026-05-08 13:22:43
-from typing import Dict, List, Any, Optional, Callable, Tuple
+from typing import Any, Tuple
+
 
 """
 CUDA加速示例
 演示如何使用NVIDIA CUDA进行GPU加速计算
 """
 
-import numpy as np
-import logging
-import sys
-import os
+import numpy as np  # noqa: E402
+import logging  # noqa: E402
+import sys  # noqa: E402
+import os  # noqa: E402
 
 # 添加模块路径
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
@@ -28,9 +29,9 @@ if src_path not in sys.path:
 # pip install pycuda
 # pip install numba cuda-python
 
-from bayesian_assimilation.core.assimilator import BayesianAssimilator  # type: ignore
-from bayesian_assimilation.utils.config import AssimilationConfig  # type: ignore
-from bayesian_assimilation.accelerators import CUDAAccelerator, CuPyAccelerator, PyCUDAccelerator  # type: ignore
+from bayesian_assimilation.core.assimilator import BayesianAssimilator  # type: ignore  # noqa: E402
+from bayesian_assimilation.utils.config import AssimilationConfig  # type: ignore  # noqa: E402
+from bayesian_assimilation.accelerators import CUDAAccelerator  # type: ignore  # noqa: E402
 
 
 logging.basicConfig(
@@ -116,7 +117,7 @@ def demo_cpu_baseline():
         (2500, 2500, 250), 5.0, n_obs=500  # 从200增加到500
     )
 
-    import time
+    import time  # noqa: E402
     start_time = time.time()
 
     try:
@@ -136,7 +137,7 @@ def demo_cpu_baseline():
         }
     except Exception as e:
         logger.error(f"❌ CPU计算失败: {e}")
-        import traceback
+        import traceback  # noqa: E402
         traceback.print_exc()
         return {'success': False, 'elapsed': 0}
 
@@ -189,14 +190,14 @@ def demo_cuda_accelerated():
         test_matrix = np.random.rand(1000, 1000)
         test_matrix_gpu = cuda_acc.to_device(test_matrix)
 
-        import time
+        import time  # noqa: E402
         start_time = time.time()
-        result_gpu = cuda_acc.matmul(test_matrix_gpu, test_matrix_gpu)
+        cuda_acc.matmul(test_matrix_gpu, test_matrix_gpu)
         cuda_time = time.time() - start_time
         logger.info(f"CUDA矩阵乘法: {cuda_time:.4f}秒")
 
         start_time = time.time()
-        result_cpu = np.dot(test_matrix, test_matrix)
+        np.dot(test_matrix, test_matrix)
         cpu_time = time.time() - start_time
         logger.info(f"CPU矩阵乘法: {cpu_time:.4f}秒")
         logger.info(f"矩阵乘法加速比: {cpu_time/cuda_time:.2f}x")
@@ -206,7 +207,7 @@ def demo_cuda_accelerated():
 
         # 使用GPU版本的3DVAR同化
         if device_info.get('backend') == 'cupy':
-            import cupy as cp
+            import cupy as cp  # noqa: E402
 
             def cuda_assimilate_3dvar(bg, obs, obs_loc):
                 """CuPy版本的3DVAR同化"""
@@ -286,7 +287,7 @@ def demo_cuda_accelerated():
         return {'success': False, 'elapsed': 0}
     except Exception as e:
         logger.error(f"❌ CUDA计算失败: {e}")
-        import traceback
+        import traceback  # noqa: E402
         traceback.print_exc()
         return {'success': False, 'elapsed': 0}
 

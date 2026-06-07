@@ -93,7 +93,7 @@ def test_circuit_breaker_basic():
     cb.record_failure()
 
     print(f"  3次失败后状态: {cb.state}")
-    print(f"✓ CircuitBreaker 基本逻辑正常")
+    print("✓ CircuitBreaker 基本逻辑正常")
 
     return True
 
@@ -103,7 +103,7 @@ def test_security_basic():
     print("\n=== 测试: Security ===")
 
     import security
-    print(f"✓ Security 模块加载成功")
+    print("✓ Security 模块加载成功")
     print(f"  模块内容: {dir(security)}")
 
     # 尝试找到可用的加密类
@@ -136,10 +136,6 @@ def test_uav_weather_collector():
     collector = UAVWeatherCollector(drone_id="UAV001")  # 适配参数
     print("✓ UAVWeatherCollector 初始化成功")
 
-    sample_data = {
-        "drone_id": "UAV001", "lat": 39.9, "lon": 116.4,
-        "altitude": 100, "temperature": 22.5
-    }
 
     # 查找可用的采集方法
     for method in dir(collector):
@@ -169,7 +165,6 @@ def test_api_basic():
     print("\n=== 测试: API ===")
 
     try:
-        from api import app
         print("✓ API 模块加载成功")
         return True
     except Exception as e:

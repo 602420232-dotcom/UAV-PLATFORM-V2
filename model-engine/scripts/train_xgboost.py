@@ -9,11 +9,10 @@ XGBoost 残差订正器 — 训练脚本
 用法:
   python scripts/train_xgboost.py
 """
-from scripts.train_config import TrainConfig, CONFIG
+from scripts.train_config import CONFIG
 import sys
 import logging
 from pathlib import Path
-import pickle
 
 import numpy as np
 import xgboost as xgb
@@ -45,7 +44,7 @@ def load_training_data(data_dir: Path, limit: int = 2000):
         fine = np.load(fine_file)
 
         # 展平为特征向量 (每个像素点一个样本)
-        H, W = coarse.shape[1], coarse.shape[2]
+        _H, _W = coarse.shape[1], coarse.shape[2]
         X = coarse[:6].reshape(6, -1).T
 
         y_u = fine[0].reshape(-1)

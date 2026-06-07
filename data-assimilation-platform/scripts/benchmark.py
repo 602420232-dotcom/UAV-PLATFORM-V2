@@ -1,5 +1,4 @@
 # Type annotations added: 2026-05-08 13:22:43
-from typing import Dict, List, Any, Optional, Callable, Tuple
 
 """
 性能基准测试脚本

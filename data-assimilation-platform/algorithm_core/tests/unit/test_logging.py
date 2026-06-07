@@ -1,13 +1,14 @@
 """
 日志模块单元测试
 """
-
-import pytest
 import logging
-logger = logging.getLogger(__name__)
 import os
 import sys
-from unittest.mock import patch, MagicMock
+
+import pytest
+
+logger = logging.getLogger(__name__)
+
 
 SRC_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 SRC_PATH = os.path.join(SRC_DIR, 'src')
@@ -17,7 +18,7 @@ if SRC_PATH not in sys.path:
     sys.path.insert(0, SRC_PATH)
 
 
-from bayesian_assimilation.utils.log_utils import (
+from bayesian_assimilation.utils.log_utils import (  # noqa: E402
     setup_logging,
     get_logger,
     log_function_call
@@ -58,7 +59,7 @@ class TestSetupLogging:
 
         # 验证格式已应用
         root_logger = logging.getLogger()
-        formatter = root_logger.handlers[0].formatter if root_logger.handlers else None
+        root_logger.handlers[0].formatter if root_logger.handlers else None
         # 格式设置应该成功
 
     def test_setup_logging_multiple_calls(self):
@@ -66,7 +67,7 @@ class TestSetupLogging:
         setup_logging(level=logging.DEBUG)
         setup_logging(level=logging.INFO)
 
-        root_logger = logging.getLogger()
+        logging.getLogger()
         # 多次调用应该正常工作
 
 
@@ -90,7 +91,7 @@ class TestGetLogger:
 
     def test_get_logger_child(self):
         """测试获取子日志器"""
-        parent = get_logger('parent')
+        get_logger('parent')
         child = get_logger('parent.child')
 
         assert child.parent is not None
@@ -216,7 +217,7 @@ class TestLoggerIntegration:
 
     def test_logger_hierarchy(self):
         """测试日志器层级"""
-        parent = get_logger('hierarchy.parent')
+        get_logger('hierarchy.parent')
         child = get_logger('hierarchy.parent.child')
         sibling = get_logger('hierarchy.parent.sibling')
 

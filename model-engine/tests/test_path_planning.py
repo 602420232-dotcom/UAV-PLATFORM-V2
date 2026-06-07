@@ -1,6 +1,6 @@
 """路径规划测试"""
 import numpy as np
-from path_planning.planner import GPRPathPlanner, PlanningConfig
+from path_planning.planner import GPRPathPlanner
 
 
 def test_planner_basic():

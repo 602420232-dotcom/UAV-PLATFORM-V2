@@ -1,5 +1,6 @@
 # Type annotations added: 2026-05-08 13:22:43
-from typing import Dict, List, Any, Optional, Callable, Tuple
+from typing import Dict, Any, Tuple
+
 
 """
 公平并行计算演示
@@ -7,14 +8,14 @@ from typing import Dict, List, Any, Optional, Callable, Tuple
 优化版本：使用numpy向量化、减少内存复制、优化并行效率
 """
 
-import os
+import os  # noqa: E402
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 # 抑制dask和distributed日志
-import warnings
+import warnings  # noqa: E402
 warnings.filterwarnings('ignore')
-import logging
+import logging  # noqa: E402
 logging.getLogger('distributed').setLevel(logging.ERROR)
 logging.getLogger('distributed.comm').setLevel(logging.ERROR)
 logging.getLogger('distributed.client').setLevel(logging.ERROR)
@@ -35,8 +36,8 @@ logging.getLogger('loky').setLevel(logging.ERROR)
 
 
 try:
-    import tensorflow as tf
-    import os
+    import tensorflow as tf  # noqa: E402
+    import os  # noqa: E402
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
     tf.get_logger().setLevel('ERROR')
 
@@ -44,12 +45,12 @@ try:
 except Exception:
     pass
 
-import numpy as np
-import sys
-import argparse
-import time
-import psutil
-from datetime import datetime
+import numpy as np  # noqa: E402
+import sys  # noqa: E402
+import argparse  # noqa: E402
+import time  # noqa: E402
+import psutil  # noqa: E402
+from datetime import datetime  # noqa: E402
 
 # 添加模块路径
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
@@ -60,8 +61,8 @@ src_path = os.path.join(project_root, 'src')
 if src_path not in sys.path:
     sys.path.insert(0, src_path)
 
-from bayesian_assimilation.core.assimilator import BayesianAssimilator  # type: ignore
-from bayesian_assimilation.utils.config import AssimilationConfig  # type: ignore
+from bayesian_assimilation.core.assimilator import BayesianAssimilator  # type: ignore  # noqa: E402
+from bayesian_assimilation.utils.config import AssimilationConfig  # type: ignore  # noqa: E402
 
 # 创建日志目录
 log_dir = os.path.join(os.path.dirname(__file__), '..', 'logs')
@@ -177,7 +178,7 @@ def create_synthetic_data(domain_size: Tuple[int, int, int], resolution: Any, n_
     # 使用numpy向量化操作
     x = np.linspace(0, domain_size[0], nx)
     y = np.linspace(0, domain_size[1], ny)
-    z = np.linspace(0, domain_size[2], nz)
+    np.linspace(0, domain_size[2], nz)
 
     # 向量化生成背景场
     X, Y = np.meshgrid(x, y, indexing='ij')
@@ -224,7 +225,7 @@ def run_sequential(background: Any, observations: Any, obs_locations: Any, confi
         }
     except Exception as e:
         logger.error(f"串行计算失败: {e}")
-        import traceback
+        import traceback  # noqa: E402
         traceback.print_exc()
         return {'success': False, 'elapsed': 0}
 
@@ -240,7 +241,7 @@ def run_block_parallel_optimized(background, observations, obs_locations, config
 
     # 中等数据：使用分块并行
     try:
-        from bayesian_assimilation.parallel.block import BlockParallelAssimilator  # type: ignore
+        from bayesian_assimilation.parallel.block import BlockParallelAssimilator  # type: ignore  # noqa: E402
 
         assimilator = BlockParallelAssimilator(config)
         assimilator.initialize_grid(config.domain_size)
@@ -266,7 +267,7 @@ def run_block_parallel_optimized(background, observations, obs_locations, config
         }
     except Exception as e:
         logger.error(f"分块并行计算失败: {e}")
-        import traceback
+        import traceback  # noqa: E402
         traceback.print_exc()
         return {'success': False, 'elapsed': 0}
 
@@ -292,9 +293,8 @@ def run_dask_parallel(background, observations, obs_locations, config, dask_clie
     logger.info(f"数据规模足够大 ({data_points:,}点)，使用Dask并行")
 
     try:
-        import dask
-        from dask.distributed import Client, LocalCluster
-        from bayesian_assimilation.parallel.dask import DaskParallelAssimilator  # type: ignore
+        from dask.distributed import Client, LocalCluster  # noqa: E402
+        from bayesian_assimilation.parallel.dask import DaskParallelAssimilator  # type: ignore  # noqa: E402
 
         assimilator = DaskParallelAssimilator(config)
         assimilator.initialize_grid(config.domain_size)
@@ -363,7 +363,7 @@ def run_dask_parallel(background, observations, obs_locations, config, dask_clie
 
     except Exception as e:
         logger.error(f"Dask并行计算失败: {e}")
-        import traceback
+        import traceback  # noqa: E402
         traceback.print_exc()
         return {'success': False, 'elapsed': 0, 'method': 'failed'}
 
@@ -378,8 +378,8 @@ def run_multiprocessing_parallel(background, observations, obs_locations, config
         return run_sequential(background, observations, obs_locations, config, iterations)
 
     try:
-        from multiprocessing import Pool, cpu_count
-        from bayesian_assimilation.parallel.block import BlockParallelAssimilator  # type: ignore
+        from multiprocessing import cpu_count  # noqa: E402
+        from bayesian_assimilation.parallel.block import BlockParallelAssimilator  # type: ignore  # noqa: E402
 
         # 自动设置进程数
         if n_processes is None:
@@ -412,7 +412,7 @@ def run_multiprocessing_parallel(background, observations, obs_locations, config
 
     except Exception as e:
         logger.error(f"Multiprocessing并行计算失败: {e}")
-        import traceback
+        import traceback  # noqa: E402
         traceback.print_exc()
         return {'success': False, 'elapsed': 0, 'method': 'failed'}
 
@@ -747,7 +747,7 @@ def main():
     dask_cluster = None
     if not args.no_dask and should_use_dask:
         try:
-            from dask.distributed import Client, LocalCluster
+            from dask.distributed import Client, LocalCluster  # noqa: E402
             dask_logger = logging.getLogger('distributed')
             dask_logger.setLevel(logging.WARNING)
 

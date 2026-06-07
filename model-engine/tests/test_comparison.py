@@ -14,8 +14,8 @@
 import time
 import numpy as np
 import torch
-from dataclasses import dataclass, field
-from typing import Callable, Dict, List
+from dataclasses import dataclass
+from typing import Callable, Dict
 
 
 @dataclass

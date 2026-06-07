@@ -192,12 +192,12 @@ def test_end_to_end_pipeline():
 
     total_time = time_phase1 + time_phase2 + time_phase3
 
-    print(f"\n阶段统计:")
+    print("\n阶段统计:")
     print(f"  数据准备: {time_phase1:.3f}s")
     print(f"  风险映射: {time_phase2:.3f}s")
     print(f"  障碍物生成: {time_phase3:.3f}s")
     print(f"  总时间: {total_time:.3f}s")
-    print(f"\n风险统计:")
+    print("\n风险统计:")
     print(f"  平均风险: {risk_result['summary']['avg_risk']:.3f}")
     print(f"  高风险占比: {risk_result['summary']['high_risk_ratio']:.1%}")
     print(f"  风险障碍物: {len(risk_obstacles)}")

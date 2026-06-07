@@ -1,5 +1,6 @@
 # Type annotations added: 2026-05-08 13:22:43
-from typing import Dict, List, Any, Optional, Callable, Tuple
+from typing import Any, Tuple
+
 
 """
 GPU/JAX/CUDA加速示例
@@ -7,10 +8,10 @@ GPU/JAX/CUDA加速示例
 优先使用JAX（支持CPU/GPU/TPU），如果JAX不可用则回退到CUDA+GPU
 """
 
-import numpy as np
-import logging
-import sys
-import os
+import numpy as np  # noqa: E402
+import logging  # noqa: E402
+import sys  # noqa: E402
+import os  # noqa: E402
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -20,8 +21,8 @@ src_path = os.path.join(project_root, 'src')
 if src_path not in sys.path:
     sys.path.insert(0, src_path)
 
-from bayesian_assimilation.core.assimilator import BayesianAssimilator  # type: ignore
-from bayesian_assimilation.utils.config import AssimilationConfig  # type: ignore
+from bayesian_assimilation.core.assimilator import BayesianAssimilator  # type: ignore  # noqa: E402
+from bayesian_assimilation.utils.config import AssimilationConfig  # type: ignore  # noqa: E402
 
 
 logging.basicConfig(
@@ -34,8 +35,8 @@ logger = logging.getLogger(__name__)
 def check_jax_available():
     """检查JAX是否可用"""
     try:
-        import jax
-        import jax.numpy as jnp
+        import jax  # noqa: E402, F401
+        import jax.numpy as jnp  # noqa: E402, F401
         return True
     except ImportError:
         logger.info("⚠️ JAX未安装")
@@ -45,7 +46,7 @@ def check_jax_available():
 def check_cuda_available():
     """检查CUDA是否可用"""
     try:
-        from bayesian_assimilation.accelerators.cuda import CUDAAccelerator  # type: ignore
+        from bayesian_assimilation.accelerators.cuda import CUDAAccelerator  # type: ignore  # noqa: E402
         cuda_accel = CUDAAccelerator()
         if cuda_accel.initialize():
             info = cuda_accel.get_device_info()
@@ -124,7 +125,7 @@ def demo_cpu_baseline():
         (2500, 2500, 250), 10.0, n_obs=500  # 从200增加到500
     )
 
-    import time
+    import time  # noqa: E402
     # 执行多次迭代来分摊开销
     n_iterations = 5
     logger.info(f"执行 {n_iterations} 次迭代来分摊开销")
@@ -157,7 +158,7 @@ def demo_cpu_baseline():
         }
     except Exception as e:
         logger.error(f"❌ CPU计算失败: {e}")
-        import traceback
+        import traceback  # noqa: E402
         traceback.print_exc()
         return {'success': False, 'elapsed': 0}
 
@@ -173,10 +174,10 @@ def demo_jax_accelerated():
         return {'success': False, 'elapsed': 0, 'platform': 'none'}
 
     try:
-        import jax
-        import jax.numpy as jnp
-        from jax import jit
-        from bayesian_assimilation.accelerators.jax import JAXAccelerator  # type: ignore
+        import jax  # noqa: E402, F401
+        import jax.numpy as jnp  # noqa: E402, F401
+        from jax import jit  # noqa: E402
+        from bayesian_assimilation.accelerators.jax import JAXAccelerator  # type: ignore  # noqa: E402
 
         accelerator = JAXAccelerator()
         if not accelerator.initialize():
@@ -254,7 +255,7 @@ def demo_jax_accelerated():
 
             return xa.reshape((nx, ny, nz)), variance.reshape((nx, ny, nz))
 
-        import time
+        import time  # noqa: E402
         # 执行多次迭代来分摊开销
         n_iterations = 5
         logger.info(f"执行 {n_iterations} 次迭代来分摊开销")
@@ -300,7 +301,7 @@ def demo_jax_accelerated():
         return {'success': False, 'elapsed': 0, 'platform': 'none'}
     except Exception as e:
         logger.error(f"❌ JAX计算失败: {e}")
-        import traceback
+        import traceback  # noqa: E402
         traceback.print_exc()
         return {'success': False, 'elapsed': 0, 'platform': 'none'}
 
@@ -348,7 +349,7 @@ def demo_cuda_accelerated(cuda_accel=None):
         obs_locations_dev = cuda_accel.to_device(obs_locations)
 
         if backend == 'cupy':
-            import cupy as cp
+            import cupy as cp  # noqa: E402
 
             def cuda_assimilate_3dvar(bg, obs, obs_loc):
                 """CuPy版本的3DVAR同化（使用向量化操作）"""
@@ -397,7 +398,7 @@ def demo_cuda_accelerated(cuda_accel=None):
 
                 return xa.reshape((nx, ny, nz)), variance.reshape((nx, ny, nz))
 
-            import time
+            import time  # noqa: E402
             # 执行多次迭代来分摊开销
             n_iterations = 5
             logger.info(f"执行 {n_iterations} 次迭代来分摊开销")
@@ -442,7 +443,7 @@ def demo_cuda_accelerated(cuda_accel=None):
 
     except Exception as e:
         logger.error(f"❌ CUDA计算失败: {e}")
-        import traceback
+        import traceback  # noqa: E402
         traceback.print_exc()
         if cuda_accel:
             cuda_accel.finalize()

@@ -2,10 +2,7 @@
 edge-cloud-coordinator 单元测试 - 修复版
 集成兼容性补丁后运行
 """
-from unittest.mock import MagicMock, patch, AsyncMock
 import pytest
-import time
-import json
 import sys
 import os
 import logging

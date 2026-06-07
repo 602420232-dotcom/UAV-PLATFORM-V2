@@ -2,16 +2,17 @@
 工作流集成测试
 测试批处理、流水线和流式处理工作流
 """
-
+from datetime import datetime
+from unittest.mock import MagicMock
 import logging
-logger = logging.getLogger(__name__)
+import os
+import sys
 
 import pytest
 import numpy as np
-import os
-import sys
-from datetime import datetime, timedelta
-from unittest.mock import MagicMock, patch
+
+logger = logging.getLogger(__name__)
+
 
 SRC_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 SRC_PATH = os.path.join(SRC_DIR, 'src')
@@ -20,23 +21,19 @@ SRC_PATH = os.path.join(SRC_DIR, 'src')
 if SRC_PATH not in sys.path:
     sys.path.insert(0, SRC_PATH)
 
-from bayesian_assimilation.workflows.batch import BatchAssimilator, batch_assimilate
+from bayesian_assimilation.workflows.batch import BatchAssimilator  # noqa: E402
 
 
-from bayesian_assimilation.workflows.pipeline import (
+from bayesian_assimilation.workflows.pipeline import (  # noqa: E402
     AssimilationPipeline,
     PipelineStage,
     DataLoadingStep,
-    PreprocessingStep,
-    AssimilationStep,
-    PostprocessingStep,
-    create_standard_pipeline
+    PreprocessingStep
 )
 
 
-from bayesian_assimilation.workflows.streaming import (
+from bayesian_assimilation.workflows.streaming import (  # noqa: E402
     StreamingAssimilator,
-    ContinuousAssimilator,
     StreamBuffer,
     create_stream_processor
 )
@@ -56,7 +53,7 @@ class TestBatchWorkflow:
 
     def test_batch_result_structure(self, background_field, observation_data):
         """测试批处理结果结构"""
-        batch = BatchAssimilator()
+        BatchAssimilator()
 
         # 模拟一个简单的任务结果
         result = {
@@ -166,7 +163,7 @@ class TestPipelineWorkflow:
                 self.config.enabled = True
 
             def execute(self, input_data):
-                from bayesian_assimilation.workflows.pipeline import PipelineResult
+                from bayesian_assimilation.workflows.pipeline import PipelineResult  # noqa: E402
                 return PipelineResult(
                     stage=self.stage,
                     success=True,
@@ -209,7 +206,7 @@ class TestPipelineWorkflow:
                 self._result.stage = PipelineStage.ASSIMILATION
 
             def execute(self, input_data):
-                from bayesian_assimilation.workflows.pipeline import PipelineResult
+                from bayesian_assimilation.workflows.pipeline import PipelineResult  # noqa: E402
                 return PipelineResult(
                     stage=self.stage,
                     success=True,
@@ -242,7 +239,7 @@ class TestStreamingWorkflow:
 
     def test_stream_buffer_add(self):
         """测试添加数据到缓冲区"""
-        from bayesian_assimilation.workflows.streaming import StreamData
+        from bayesian_assimilation.workflows.streaming import StreamData  # noqa: E402
 
         buffer = StreamBuffer()
 
@@ -257,7 +254,7 @@ class TestStreamingWorkflow:
 
     def test_stream_buffer_get_batch(self):
         """测试获取批次数据"""
-        from bayesian_assimilation.workflows.streaming import StreamData
+        from bayesian_assimilation.workflows.streaming import StreamData  # noqa: E402
 
         buffer = StreamBuffer(batch_size=3)
 
@@ -275,7 +272,7 @@ class TestStreamingWorkflow:
 
     def test_stream_buffer_clear(self):
         """测试清空缓冲区"""
-        from bayesian_assimilation.workflows.streaming import StreamData
+        from bayesian_assimilation.workflows.streaming import StreamData  # noqa: E402
 
         buffer = StreamBuffer()
 
@@ -377,7 +374,7 @@ class TestWorkflowPerformance:
 
     def test_pipeline_execution_performance(self, background_field, observation_data):
         """测试流水线执行性能"""
-        import time
+        import time  # noqa: E402
 
         observations, obs_locations, obs_errors = observation_data
 
@@ -395,7 +392,7 @@ class TestWorkflowPerformance:
 
             def execute(self, input_data):
                 time.sleep(0.01)  # 模拟处理
-                from bayesian_assimilation.workflows.pipeline import PipelineResult
+                from bayesian_assimilation.workflows.pipeline import PipelineResult  # noqa: E402
                 return PipelineResult(
                     stage=self.stage,
                     success=True,
@@ -415,21 +412,21 @@ class TestWorkflowPerformance:
 
     def test_stream_buffer_performance(self):
         """测试流缓冲区性能"""
-        import time
+        import time  # noqa: E402
 
         buffer = StreamBuffer(max_size=1000, batch_size=100)
 
         start_time = time.time()
 
         for i in range(500):
-            from bayesian_assimilation.workflows.streaming import StreamData
+            from bayesian_assimilation.workflows.streaming import StreamData  # noqa: E402
             buffer.add(StreamData(
                 timestamp=datetime.now(),
                 data=np.random.randn(100)
             ))
 
         for _ in range(5):
-            batch = buffer.get_batch()
+            buffer.get_batch()
 
         elapsed = time.time() - start_time
 

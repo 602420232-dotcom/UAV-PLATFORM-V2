@@ -15,9 +15,6 @@ from bayesian_assimilation.adapters import (  # type: ignore
     WRFDataAdapter,
     ObservationAdapter,
     UAVDataAdapter,
-    GridAdapter,
-    NetCDFReader,
-    HDF5Reader,
     convert_to_assimilation_format,
     validate_data_format,
     interpolate_data,
@@ -492,7 +489,7 @@ def generate_junit_xml_report(report, output_path):
                 'status': test['status']
             })
             if test['status'] == 'failed':
-                failure = ET.SubElement(testcase, 'failure', {
+                ET.SubElement(testcase, 'failure', {
                     'type': 'AssertionError',
                     'message': f"测试 {test['name']} 失败"
                 })
@@ -843,7 +840,6 @@ def main():
     """
     主测试函数 - 增强版
     """
-    import time
     import argparse
 
     # 解析命令行参数

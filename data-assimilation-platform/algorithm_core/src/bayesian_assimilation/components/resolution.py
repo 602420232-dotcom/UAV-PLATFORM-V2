@@ -1,14 +1,15 @@
 # Type annotations added: 2026-05-08 13:22:43
 from typing import Any
 
+
 """
 分辨率管理组件
 提供自适应分辨率选择和网格插值功能
 """
 
-import os
-import sys
-import logging
+import os  # noqa: E402
+import sys  # noqa: E402
+import logging  # noqa: E402
 
 logger = logging.getLogger(__name__)
 
@@ -141,7 +142,7 @@ def interpolate_to_grid(data: Any, target_resolution: Any, current_resolution: A
 
     new_shape = tuple(int(s * scale_factor) for s in data.shape)
 
-    from bayesian_assimilation.adapters.grid import GridAdapter
+    from bayesian_assimilation.adapters.grid import GridAdapter  # noqa: E402
     adapter = GridAdapter()
     return adapter.interpolate(data, new_shape)
 

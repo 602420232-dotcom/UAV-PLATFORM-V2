@@ -8,20 +8,22 @@
 2. 使用线程并行减少开销
 3. 使用共享内存减少数据传输
 """
-
+from concurrent.futures import ThreadPoolExecutor
+from typing import Dict, Tuple, Any
+import logging
+import multiprocessing as mp
 import os
+import sys
+import time
+
+import numpy as np
+
+
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 
-import numpy as np
-import logging
-import sys
-import time
-from concurrent.futures import ThreadPoolExecutor
-import multiprocessing as mp
-from typing import Dict, Tuple, Any
-
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 src_path = os.path.join(project_root, 'src')
 
@@ -29,8 +31,8 @@ src_path = os.path.join(project_root, 'src')
 if src_path not in sys.path:
     sys.path.insert(0, src_path)
 
-from bayesian_assimilation.core.assimilator import BayesianAssimilator  # type: ignore
-from bayesian_assimilation.utils.config import AssimilationConfig  # type: ignore
+from bayesian_assimilation.core.assimilator import BayesianAssimilator  # type: ignore  # noqa: E402
+from bayesian_assimilation.utils.config import AssimilationConfig  # type: ignore  # noqa: E402
 
 
 logging.basicConfig(
@@ -269,7 +271,7 @@ def demo_sequential():
         }
     except Exception as e:
         logger.error(f"串行计算失败: {e}")
-        import traceback
+        import traceback  # noqa: E402
         traceback.print_exc()
         return {'success': False, 'elapsed': 0}
 
@@ -331,7 +333,7 @@ def demo_thread_parallel():
         }
     except Exception as e:
         logger.error(f"线程并行计算失败: {e}")
-        import traceback
+        import traceback  # noqa: E402
         traceback.print_exc()
         return {'success': False, 'elapsed': 0}
 

@@ -8,10 +8,9 @@ import numpy as np
 from scipy.interpolate import RegularGridInterpolator
 from scipy.sparse import diags, csr_matrix
 from scipy.sparse.linalg import LinearOperator, cg
-from scipy.special import erf
 from scipy import ndimage
 from dataclasses import dataclass
-from typing import Optional, Tuple, List, Dict, Any
+from typing import Optional, Tuple, List
 import logging
 from datetime import datetime
 import os
@@ -397,7 +396,7 @@ class OptimizedBayesianAssimilation:
         if obs_errors is None:
             obs_errors = np.ones(n_obs) * self.config.observation_error_scale
 
-        R = diags(obs_errors ** 2, format='csr')
+        diags(obs_errors ** 2, format='csr')
         R_inv = diags(1.0 / (obs_errors ** 2 + 1e-6), format='csr')
 
         # 构建背景误差协方差逆的线性算子

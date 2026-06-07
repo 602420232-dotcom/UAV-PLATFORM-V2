@@ -4,12 +4,14 @@
 
 测试完整的风险映射 → 路径规划流程
 """
+import os
+import sys
 
 import numpy as np
-import sys
-import os
+
 
 # 添加路径
+
 TEST_DIR = os.path.dirname(os.path.abspath(__file__))
 MAIN_PYTHON_DIR = os.path.join(TEST_DIR, '..', '..', 'main', 'python')
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(TEST_DIR))))
@@ -23,7 +25,7 @@ if DATA_ASSIMILATION_PATH not in sys.path:
 
 # 导入风险映射模块
 try:
-    from bayesian_assimilation.utils.risk_mapper import (
+    from bayesian_assimilation.utils.risk_mapper import (  # noqa: E402
         WeatherToRiskMapper,  # type: ignore[assignment]
         RiskAwarePathCostCalculator,  # type: ignore[assignment]
         RiskLevel  # type: ignore[assignment]
@@ -67,10 +69,10 @@ except ImportError as e:
 if MAIN_PYTHON_DIR not in sys.path:
     sys.path.insert(0, MAIN_PYTHON_DIR)
 
-from three_layer_planner import ThreeLayerPlanner, Drone, Task, Obstacle  # type: ignore[import-not-found]
+from three_layer_planner import ThreeLayerPlanner, Drone, Task  # type: ignore[import-not-found]  # noqa: E402
 print("✓ 路径规划模块加载成功")
 
-import logging
+import logging  # noqa: E402
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -146,7 +148,7 @@ def test_risk_mapping():
 
     # 打印统计信息
     summary = risk_result['summary']
-    print(f"\n风险统计:")
+    print("\n风险统计:")
     print(f"  - 平均风险: {summary['avg_risk']:.3f}")
     print(f"  - 最大风险: {summary['max_risk']:.3f}")
     print(f"  - 最小风险: {summary['min_risk']:.3f}")
@@ -155,7 +157,7 @@ def test_risk_mapping():
 
     # 风险等级分布
     risk_grid = risk_result['risk_grid']
-    print(f"\n风险等级分布:")
+    print("\n风险等级分布:")
     print(f"  - 低风险 (0-0.3): {np.sum(risk_grid < 0.3) / risk_grid.size:.1%}")
     print(f"  - 中风险 (0.3-0.6): {np.sum((risk_grid >= 0.3) & (risk_grid < 0.6)) / risk_grid.size:.1%}")
     print(f"  - 高风险 (0.6-0.85): {np.sum((risk_grid >= 0.6) & (risk_grid < 0.85)) / risk_grid.size:.1%}")
@@ -191,7 +193,7 @@ def test_risk_aware_planning():
 
     # 检查风险映射是否初始化
     if planner.risk_result:
-        print(f"\n风险映射已初始化:")
+        print("\n风险映射已初始化:")
         print(f"  - 平均风险: {planner.risk_result['summary']['avg_risk']:.3f}")
         print(f"  - 安全区域: {planner.risk_result['summary']['safe_area_ratio']:.1%}")
     else:
@@ -202,7 +204,7 @@ def test_risk_aware_planning():
     result = planner.plan()
 
     if result['success']:
-        print(f"\n规划成功!")
+        print("\n规划成功!")
         print(f"生成路由数: {len(result['routes'])}")
 
         # 打印每个路由的详细信息
@@ -220,7 +222,7 @@ def test_risk_aware_planning():
 
         # 打印风险摘要
         if 'risk_summary' in result:
-            print(f"\n全局风险摘要:")
+            print("\n全局风险摘要:")
             summary = result['risk_summary']
             print(f"  - 平均风险: {summary['avg_risk']:.3f}")
             print(f"  - 最大风险: {summary['max_risk']:.3f}")
@@ -267,7 +269,7 @@ def test_comparison():
         route_normal = result_normal['routes'][0]
         route_risk = result_risk['routes'][0]
 
-        print(f"\n对比结果:")
+        print("\n对比结果:")
         print(f"{'指标':<20} {'普通规划':<15} {'风险感知规划':<15}")
         print("-" * 50)
         print(f"{'总距离':<20} {route_normal['total_distance']:<15.1f} {route_risk['total_distance']:<15.1f}")
@@ -301,10 +303,10 @@ def main():
 
     try:
         # 测试1: 风险映射
-        risk_result = test_risk_mapping()
+        test_risk_mapping()
 
         # 测试2: 风险感知路径规划
-        plan_result = test_risk_aware_planning()
+        test_risk_aware_planning()
 
         # 测试3: 对比测试
         test_comparison()
@@ -315,7 +317,7 @@ def main():
 
     except Exception as e:
         logger.error(f"测试失败: {e}")
-        import traceback
+        import traceback  # noqa: E402
         traceback.print_exc()
         return 1
 

@@ -2,31 +2,31 @@
 WRF数据真实案例贝叶斯同化演示（重构版）
 展示如何使用贝叶斯同化系统的各个模块
 """
-
+from datetime import datetime
+import logging
 import os
 import sys
-import logging
+
 import numpy as np
-from datetime import datetime
+
 
 # 设置环境变量
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 
 # 导入核心库模块
+
 src_path = os.path.join(os.path.dirname(__file__), '..', 'src')
 sys.path.insert(0, src_path)
 
 
-from bayesian_assimilation import (  # type: ignore
+from bayesian_assimilation import (  # type: ignore  # noqa: E402
     BayesianAssimilator,
     AssimilationConfig,
     MeteorologicalQualityControl,
     MeteorologicalRiskAssessment,
     TimeSeriesAnalyzer,
-    PerformanceMetrics,
-    WRFDataAdapter,
-    ObservationAdapter
+    PerformanceMetrics
 )
 
 # 配置日志
@@ -222,7 +222,7 @@ def run_assimilation(background_data, observation_data):
 
     except Exception as e:
         logger.error(f"同化失败: {e}")
-        import traceback
+        import traceback  # noqa: E402
         traceback.print_exc()
         return {'success': False}
 
@@ -309,7 +309,7 @@ def save_results(background_data, observation_data, assimilation_result, risk_re
 
     # 保存JSON摘要
     summary_path = os.path.join(output_dir, f'assimilation_summary_{timestamp}.json')
-    import json
+    import json  # noqa: E402
     with open(summary_path, 'w', encoding='utf-8') as f:
         json.dump(summary_data, f, indent=2, ensure_ascii=False)
     logger.info(f"摘要已保存: {summary_path}")

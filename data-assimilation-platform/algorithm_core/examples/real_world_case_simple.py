@@ -1,35 +1,36 @@
 # Type annotations added: 2026-05-08 13:22:43
-from typing import Dict, List, Any, Optional, Callable, Tuple
+from typing import Any, Tuple
+
 
 """Real-world case example (simplified version)
 Demonstrates how to process WRF meteorological data and perform Bayesian assimilation
 """
 
-import os
+import os  # noqa: E402
 
 # 去除 TensorFlow/oneDNN 的输出日志
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 
-import numpy as np
-import logging
-import sys
-import json
-from datetime import datetime
+import numpy as np  # noqa: E402
+import logging  # noqa: E402
+import sys  # noqa: E402
+import json  # noqa: E402
+from datetime import datetime  # noqa: E402
 
 # 添加 src 目录到路径
 src_path = os.path.join(os.path.dirname(__file__), '..', 'src')
 sys.path.insert(0, src_path)
 
 # 直接导入所需模块，避免触发包的 __init__.py
-from bayesian_assimilation.core.assimilator import BayesianAssimilator  # type: ignore
-from bayesian_assimilation.utils.config import AssimilationConfig  # type: ignore
+from bayesian_assimilation.core.assimilator import BayesianAssimilator  # type: ignore  # noqa: E402
+from bayesian_assimilation.utils.config import AssimilationConfig  # type: ignore  # noqa: E402
 
 
 try:
-    import matplotlib
+    import matplotlib  # noqa: E402
     matplotlib.use('Agg')
-    import matplotlib.pyplot as plt
+    import matplotlib.pyplot as plt  # noqa: E402
     HAS_MATPLOTLIB = True
 
 
@@ -124,7 +125,7 @@ class MeteorologicalQualityControl:
             logger.warning(f"风速梯度超过阈值: x={max_gradient_x:.2f}, y={max_gradient_y:.2f}, z={max_gradient_z:.2f} m/s")
 
             # 平滑处理
-            from scipy.ndimage import gaussian_filter
+            from scipy.ndimage import gaussian_filter  # noqa: E402
             wind_speed = gaussian_filter(wind_speed, sigma=1.0)
             wind_speed = MeteorologicalQualityControl.validate_wind_speed(wind_speed)
 
@@ -435,7 +436,7 @@ class TimeSeriesAnalyzer:
 def check_netcdf_available():
     """检查NetCDF是否可用"""
     try:
-        from netCDF4 import Dataset
+        from netCDF4 import Dataset  # noqa: E402, F401
         logger.info("NetCDF4可用，可以读取WRF数据")
         return True
     except ImportError:
@@ -452,7 +453,7 @@ def load_wrf_data_mock(file_path=None):
 
     if file_path and os.path.exists(file_path):
         try:
-            from netCDF4 import Dataset
+            from netCDF4 import Dataset  # noqa: E402
             nc_data = Dataset(file_path, 'r')
             logger.info(f"成功读取WRF文件: {file_path}")
             logger.info(f"维度: {nc_data.dimensions.keys()}")
@@ -516,7 +517,7 @@ def process_observation_data(obs_file=None):
 
     if obs_file and os.path.exists(obs_file):
         try:
-            import pandas as pd
+            import pandas as pd  # noqa: E402
             obs_data = pd.read_csv(obs_file)
             logger.info(f"成功读取观测文件: {obs_file}")
             logger.info(f"观测数据形状: {obs_data.shape}")
@@ -664,7 +665,7 @@ def run_assimilation(background_data, observation_data):
 
     except Exception as e:
         logger.error(f"同化失败: {e}")
-        import traceback
+        import traceback  # noqa: E402
         traceback.print_exc()
         return {'success': False}
 

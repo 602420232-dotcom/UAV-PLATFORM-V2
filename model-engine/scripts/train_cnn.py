@@ -10,12 +10,11 @@ CNN 空间订正器 — 训练脚本
   python scripts/train_cnn.py                    # 模拟数据训练
   python scripts/train_cnn.py --real-data ./data  # 真实数据
 """
-from data_pipeline.dataset import WeatherDataset, WeatherDataModule
+from data_pipeline.dataset import WeatherDataModule
 from cnn_corrector.model import CNNCorrector, CNNConfig
 import sys
 import logging
 from pathlib import Path
-from datetime import datetime
 from typing import Optional
 
 import torch

@@ -1,15 +1,16 @@
 """
 性能指标模块单元测试
 """
-
 import logging
-logger = logging.getLogger(__name__)
-
-import pytest
-import numpy as np
 import os
 import sys
 import time
+
+import pytest
+import numpy as np
+
+logger = logging.getLogger(__name__)
+
 
 SRC_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 SRC_PATH = os.path.join(SRC_DIR, 'src')
@@ -19,7 +20,7 @@ if SRC_PATH not in sys.path:
     sys.path.insert(0, SRC_PATH)
 
 
-from bayesian_assimilation.utils.metrics import (
+from bayesian_assimilation.utils.metrics import (  # noqa: E402
     PerformanceMetrics,
     DataQualityMetrics,
     AssimilationMetrics,

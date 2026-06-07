@@ -1,17 +1,18 @@
 # Type annotations added: 2026-05-08 13:22:43
-from typing import Dict, List, Any, Optional, Callable, Tuple
+from typing import Dict, Any, Optional, Tuple
+
 
 """
 贝叶斯同化基础使用示例
 源自: bayesian_assimilation(small).py 和 compatibility.py
 """
 
-import numpy as np
-import sys
-import os
-import logging
-import json
-from concurrent.futures import ThreadPoolExecutor
+import numpy as np  # noqa: E402
+import sys  # noqa: E402
+import os  # noqa: E402
+import logging  # noqa: E402
+import json  # noqa: E402
+from concurrent.futures import ThreadPoolExecutor  # noqa: E402
 
 # 配置日志
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -33,22 +34,22 @@ setup_path()
 
 
 try:
-    from bayesian_assimilation.core.assimilator import BayesianAssimilator  # type: ignore
-    from bayesian_assimilation.utils.config import AssimilationConfig  # type: ignore
-    from bayesian_assimilation.core.ensemble import EnsembleKalmanFilter  # type: ignore
-    from bayesian_assimilation.models.four_dimensional_var import FourDimensionalVar  # type: ignore
+    from bayesian_assimilation.core.assimilator import BayesianAssimilator  # type: ignore  # noqa: E402
+    from bayesian_assimilation.utils.config import AssimilationConfig  # type: ignore  # noqa: E402
+    from bayesian_assimilation.core.ensemble import EnsembleKalmanFilter  # type: ignore  # noqa: E402, F401
+    from bayesian_assimilation.models.four_dimensional_var import FourDimensionalVar  # type: ignore  # noqa: E402, F401
     HAS_ADVANCED_ALGORITHMS = True
 
 
 except ImportError as e:
     logger.warning(f"高级同化算法模块不可用: {e}")
-    from bayesian_assimilation.core.assimilator import BayesianAssimilator  # type: ignore
-    from bayesian_assimilation.utils.config import AssimilationConfig  # type: ignore
+    from bayesian_assimilation.core.assimilator import BayesianAssimilator  # type: ignore  # noqa: E402
+    from bayesian_assimilation.utils.config import AssimilationConfig  # type: ignore  # noqa: E402
     HAS_ADVANCED_ALGORITHMS = False
 
 
 try:
-    import matplotlib.pyplot as plt
+    import matplotlib.pyplot as plt  # noqa: E402
     HAS_MATPLOTLIB = True
 
 
@@ -207,7 +208,7 @@ def generate_multi_variable_background(grid_shape: Tuple[int, int, int], domain_
 def assimilate_with_progress(assimilator: Any, background: np.ndarray, observations: np.ndarray, locations: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
     """带进度显示的同化计算"""
     try:
-        from tqdm import tqdm
+        from tqdm import tqdm  # noqa: E402
         has_tqdm = True
     except ImportError:
         has_tqdm = False

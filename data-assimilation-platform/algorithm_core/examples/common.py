@@ -7,7 +7,7 @@ to reduce code duplication and prevent naming conflicts.
 
 import numpy as np
 import logging
-from typing import Any, Tuple
+from typing import Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -77,7 +77,7 @@ def check_jax_available() -> bool:
         True if JAX is available, False otherwise.
     """
     try:
-        import jax
+        import jax  # noqa: F401
         logger.info("JAX available")
         return True
     except ImportError:

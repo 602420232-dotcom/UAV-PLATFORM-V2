@@ -1,16 +1,18 @@
 """
 配置模块单元测试
 """
-
+from unittest.mock import patch
 import logging
-logger = logging.getLogger(__name__)
-
-import pytest
 import os
 import sys
-from unittest.mock import patch
+
+import pytest
+
+logger = logging.getLogger(__name__)
+
 
 # 添加src目录到路径
+
 SRC_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 SRC_PATH = os.path.join(SRC_DIR, 'src')
 
@@ -19,7 +21,7 @@ if SRC_PATH not in sys.path:
     sys.path.insert(0, SRC_PATH)
 
 
-from bayesian_assimilation.utils.config import (
+from bayesian_assimilation.utils.config import (  # noqa: E402
     BaseConfig,
     OptimizedConfig,
     AdaptiveConfig,

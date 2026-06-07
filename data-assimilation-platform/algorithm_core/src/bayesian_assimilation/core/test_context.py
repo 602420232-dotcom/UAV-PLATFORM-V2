@@ -3,12 +3,12 @@ Auto-generated unit test
 Source: d:/Developer/workplace/py/iteam/trae/data-assimilation-platform/algorithm_core/src/bayesian_assimilation/core/context.py
 Generated: 2026-05-08 12:35:50
 """
-
 import logging
-logger = logging.getLogger(__name__)
 
 import pytest
 from context import *
+
+logger = logging.getLogger(__name__)
 
 
 class TestBasic:

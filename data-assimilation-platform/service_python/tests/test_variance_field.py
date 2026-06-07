@@ -206,7 +206,7 @@ class TestVarianceFieldOptimizer:
         background, observations, obs_locations = sample_data
         optimizer = VarianceFieldOptimizer()
 
-        result = optimizer.optimize(
+        optimizer.optimize(
             background=background,
             observations=observations,
             obs_locations=obs_locations,
