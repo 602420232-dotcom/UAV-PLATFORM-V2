@@ -9,6 +9,7 @@ import com.uav.repository.RoleRepository;
 import com.uav.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -24,6 +25,7 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Profile("!test")
 public class DemoModeService {
 
     private static final String DEMO_SESSION_KEY_PREFIX = "demo:session:";
