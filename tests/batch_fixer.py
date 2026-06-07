@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """Automated fixer: wildcard imports, catch(Exception), docstrings"""
 # flake8: noqa: E741
-import logging
-logger = logging.getLogger(__name__)
-
-import re
-import os
 import json
+import logging
+import os
+import re
+
+logger = logging.getLogger(__name__)
 
 ROOT = r'd:\Developer\workplace\py\iteam\trae'
 SKIP_DIRS = {'.git', 'node_modules', 'target', '__pycache__', '.idea', '.pytest_cache', '.trae'}

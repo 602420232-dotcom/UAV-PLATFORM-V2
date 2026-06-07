@@ -14,33 +14,37 @@
   python tests/test_detection_drone_e2e.py [--base-url http://localhost] [--verbose]
 """
 
-import logging
-logger = logging.getLogger(__name__)
-
-import sys
-import os
-import json
-import time
-import random
-import math
 import argparse
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional
-
-# 添加项目根目录到路径
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+import json
+import logging
+import math
+import os
+import random
+import sys
+import time
+from datetime import datetime
 
 try:
     import requests
 except ImportError:
-    logger.info("[ERROR] requests 库未安装: pip install requests")
-    sys.exit(1)
+    requests = None  # type: ignore[assignment]
 
 try:
     import numpy as np
 except ImportError:
     np = None
+
+logger = logging.getLogger(__name__)
+
+if requests is None:
+    logger.info("[ERROR] requests 库未安装: pip install requests")
+    sys.exit(1)
+
+if np is None:
     logger.info("[WARN] numpy 未安装，部分统计功能将降级")
+
+# 添加项目根目录到路径
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 
 class Colors:
@@ -321,7 +325,7 @@ def step4_trigger_assimilation(mission_id, samples):
         if resp.status_code == 200:
             wrf_data = resp.json()
             bg_grid = _wrf_to_background(wrf_data)
-            ok(f"WRF 背景场已获取")
+            ok("WRF 背景场已获取")
         else:
             info("WRF 背景场不可用，使用模拟数据")
     except (requests.exceptions.ConnectionError, Exception):
@@ -358,7 +362,7 @@ def _samples_to_grid(samples):
         return {}
     lons = [s["longitude"] for s in samples]
     lats = [s["latitude"] for s in samples]
-    alts = [s["altitude"] for s in samples]
+    [s["altitude"] for s in samples]
 
     grid_size = 10
     lon_min, lon_max = min(lons), max(lons)
@@ -376,7 +380,7 @@ def _samples_to_grid(samples):
                 for s in samples:
                     d = math.sqrt((s["longitude"] - tgt_lon) ** 2 + (s["latitude"] - tgt_lat) ** 2)
                     w = max(1.0 / (d + 0.001), 0.001)
-                    v = float(values[0]) if isinstance(values, list) else values
+                    float(values[0]) if isinstance(values, list) else values
                     total_w += w
                     total_v += w * (float(s.get(_field_name(values), 0)) if isinstance(values, str) else values)  # type: ignore[operator]
                 if np:
@@ -458,7 +462,7 @@ def step5_check_wrf_initializer(analysis_field):
     )
 
     if os.path.exists(init_path):
-        ok(f"WRF 初始化器已就绪: wrf_initializer.py")
+        ok("WRF 初始化器已就绪: wrf_initializer.py")
         info("实际 WRF 循环需在部署环境执行: bash deployments/wrf_cycling.sh 3 8")
         return True
     else:
@@ -561,7 +565,7 @@ def main():
     print(f"  测试时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print(f"  服务地址: {config.BASE_URL}")
     print(f"  飞行时长: {config.FLIGHT_DURATION}s")
-    print(f"  离线模式: 是 (仅连接 detection-drone-service)")
+    print("  离线模式: 是 (仅连接 detection-drone-service)")
 
     results = {"passed": [], "failed": [], "skipped": []}
 
@@ -624,12 +628,12 @@ def main():
             fail(f)
 
     print(f"\n{Colors.BOLD}数据流验证总结:{Colors.RESET}")
-    print(f"  探测无人机离线采集 → ✓")
-    print(f"  着陆后网络恢复自动上传 → ✓")
-    print(f"  数据同化 (观测 + 背景场) → ✓")
-    print(f"  分析场 → WRF 初始化器 (wrf_initializer.py) → ✓")
-    print(f"  WRF 循环管道 (deployments/wrf_cycling.sh) → 待部署环境执行")
-    print(f"  探空气球数据源 (radiosonde-weather-service:8091) → 待集成")
+    print("  探测无人机离线采集 → ✓")
+    print("  着陆后网络恢复自动上传 → ✓")
+    print("  数据同化 (观测 + 背景场) → ✓")
+    print("  分析场 → WRF 初始化器 (wrf_initializer.py) → ✓")
+    print("  WRF 循环管道 (deployments/wrf_cycling.sh) → 待部署环境执行")
+    print("  探空气球数据源 (radiosonde-weather-service:8091) → 待集成")
     print()
 
     if results["failed"]:

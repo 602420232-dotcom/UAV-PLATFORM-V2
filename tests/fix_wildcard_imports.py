@@ -2,10 +2,10 @@
 """Fix wildcard imports and broad exceptions in Java files."""
 # flake8: noqa: E741
 import logging
-logger = logging.getLogger(__name__)
-
-import re
 import os
+import re
+
+logger = logging.getLogger(__name__)
 
 ROOT = r'd:\Developer\workplace\py\iteam\trae'
 SKIP = {'.git', 'node_modules', 'target', '__pycache__', '.idea', '.pytest_cache', '.trae'}

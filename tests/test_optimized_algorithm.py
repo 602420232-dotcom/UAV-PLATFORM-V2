@@ -5,12 +5,12 @@
 """
 
 import logging
-logger = logging.getLogger(__name__)
-
-import unittest
-import sys
 import os
+import sys
 import time
+import unittest
+
+logger = logging.getLogger(__name__)
 
 # 添加项目路径
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
@@ -18,7 +18,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 # 添加path-planning-service到Python路径
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'path-planning-service', 'src', 'main', 'python'))
 
-from three_layer_planner import VRPTWPlanner, AStarPlanner, DWAPlanner, ThreeLayerPlanner, Drone, Task, Obstacle, NoFlyZone  # type: ignore[import-not-found]
+from three_layer_planner import VRPTWPlanner, AStarPlanner, DWAPlanner, ThreeLayerPlanner, Drone, Task, Obstacle, NoFlyZone  # type: ignore[import-not-found]  # noqa: E402
 
 
 class TestOptimizedAlgorithm(unittest.TestCase):

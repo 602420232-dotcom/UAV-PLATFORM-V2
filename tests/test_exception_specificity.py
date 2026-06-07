@@ -5,13 +5,12 @@
 中的 except Exception 已被替换为具体的异常类型组合。
 """
 
-import logging
-logger = logging.getLogger(__name__)
-
 import ast
+import logging
 import os
-import sys
 import unittest
+
+logger = logging.getLogger(__name__)
 
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

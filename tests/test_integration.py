@@ -4,12 +4,11 @@ Test end-to-end workflows and system integration
 """
 
 import logging
-logger = logging.getLogger(__name__)
+import time
 
 import pytest
-import time
-from datetime import datetime, timedelta
-from typing import Dict, List, Any
+
+logger = logging.getLogger(__name__)
 
 # Mock data for testing
 
@@ -314,7 +313,6 @@ class TestPathPlanning:
     def test_path_recalculation(self):
         """Test path recalculation based on weather"""
         original_path = [[39.9, 116.4], [40.0, 116.5]]
-        weather_constraint = {'avoid_area': [[39.95, 116.45], 0.1]}  # center, radius
 
         # Simple recalculation: add intermediate point
         recalculated_path = [
@@ -336,7 +334,7 @@ class TestPerformance:
         # Simulate data processing
         for _ in range(1000):
             data = [[i + j for j in range(100)] for i in range(100)]
-            result = sum(sum(row) for row in data) / len(data)
+            sum(sum(row) for row in data) / len(data)
 
         end_time = time.time()
         processing_time = end_time - start_time
@@ -346,7 +344,7 @@ class TestPerformance:
     def test_memory_usage(self):
         """Test memory usage during processing"""
         # Create test data
-        large_array = [[i for i in range(1000)] for _ in range(1000)]
+        [[i for i in range(1000)] for _ in range(1000)]
 
         # Calculate memory (rough estimate)
         memory_mb = (1000 * 1000 * 8) / (1024 * 1024)  # 8 bytes per int

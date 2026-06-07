@@ -5,11 +5,11 @@
 """
 
 import logging
-logger = logging.getLogger(__name__)
-
-import unittest
-import sys
 import os
+import sys
+import unittest
+
+logger = logging.getLogger(__name__)
 
 # 添加项目路径
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))

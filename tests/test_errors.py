@@ -3,15 +3,15 @@
 """
 
 import logging
-logger = logging.getLogger(__name__)
-
-import unittest
-import sys
 import os
+import sys
+import unittest
+
+logger = logging.getLogger(__name__)
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'common-utils', 'src', 'main', 'python'))
 
-from errors import AppError, ErrorCode, Result, handle_errors  # type: ignore[import-not-found]
+from errors import AppError, ErrorCode, Result, handle_errors  # type: ignore[import-not-found]  # noqa: E402
 
 
 class TestErrorCode(unittest.TestCase):

@@ -16,13 +16,13 @@
 """
 
 import logging
-logger = logging.getLogger(__name__)
+import os
+import time
 
 import pytest
 import requests
-import json
-import os
-import time
+
+logger = logging.getLogger(__name__)
 
 BASE_URL = os.environ.get("BASE_URL", "http://localhost:8088")
 API_GATEWAY = BASE_URL
@@ -192,7 +192,7 @@ class TestResilienceEndToEnd:
     def test_01_retry_on_timeout(self):
         """验证重试机制"""
         start = time.time()
-        resp = requests.post(
+        requests.post(
             f"{API_GATEWAY}/api/platform/plan",
             json={"weatherData": {}, "drones": [], "tasks": []},
             timeout=30

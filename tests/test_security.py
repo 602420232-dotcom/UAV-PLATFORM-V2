@@ -2,16 +2,15 @@
 安全模块单元测试 - mTLS + JWT + 数据加密
 """
 import logging
-import sys
 import os
+import sys
 import unittest
-
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'edge-cloud-coordinator'))
 
 logger = logging.getLogger(__name__)
 
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'edge-cloud-coordinator'))
 
-from security import (  # type: ignore[import-not-found]
+from security import (  # type: ignore[import-not-found]  # noqa: E402
     JWTProvider, MtlsManager, DataEncryptor,
     SecureMessage, SecurityConfig, SecurityLevel
 )

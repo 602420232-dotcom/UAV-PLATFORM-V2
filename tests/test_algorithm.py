@@ -3,11 +3,11 @@
 算法单元测试
 """
 import logging
-logger = logging.getLogger(__name__)
-
-import unittest
-import sys
 import os
+import sys
+import unittest
+
+logger = logging.getLogger(__name__)
 
 # 添加项目路径
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
@@ -16,12 +16,12 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'data-assimilation-platform', 'algorithm_core'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'path-planning-service', 'src', 'main', 'python'))
 
-from src.bayesian_assimilation.models.three_dimensional_var import ThreeDimensionalVAR  # type: ignore[import-not-found]
-from src.bayesian_assimilation.models.four_dimensional_var import FourDimensionalVar  # type: ignore[import-not-found]
-from src.bayesian_assimilation.models.enkf import EnKF  # type: ignore[import-not-found]
-from src.bayesian_assimilation.models.hybrid import HybridAssimilation  # type: ignore[import-not-found]
-from three_layer_planner import VRPTWPlanner, AStarPlanner, DWAPlanner, Drone, Task, Obstacle, NoFlyZone  # type: ignore[import-not-found]
-from advanced_planners import RRTStarPlanner, DijkstraPlanner, GeneticAlgorithmPlanner, ParticleSwarmOptimizationPlanner  # type: ignore[import-not-found]
+from src.bayesian_assimilation.models.three_dimensional_var import ThreeDimensionalVAR  # type: ignore[import-not-found]  # noqa: E402
+from src.bayesian_assimilation.models.four_dimensional_var import FourDimensionalVar  # type: ignore[import-not-found]  # noqa: E402
+from src.bayesian_assimilation.models.enkf import EnKF  # type: ignore[import-not-found]  # noqa: E402
+from src.bayesian_assimilation.models.hybrid import HybridAssimilation  # type: ignore[import-not-found]  # noqa: E402
+from three_layer_planner import VRPTWPlanner, AStarPlanner, DWAPlanner, Drone, Task, Obstacle, NoFlyZone  # type: ignore[import-not-found]  # noqa: E402
+from advanced_planners import RRTStarPlanner, DijkstraPlanner, GeneticAlgorithmPlanner, ParticleSwarmOptimizationPlanner  # type: ignore[import-not-found]  # noqa: E402
 
 
 class TestAlgorithm(unittest.TestCase):

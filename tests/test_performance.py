@@ -5,8 +5,8 @@ Test system performance and scalability
 
 import logging
 import pytest
-import time
 import statistics
+import time
 
 import psutil  # type: ignore[import-untyped]
 

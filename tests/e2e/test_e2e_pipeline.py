@@ -7,9 +7,6 @@ import sys
 import os
 import pytest
 import numpy as np
-from unittest.mock import Mock, patch, MagicMock
-import json
-import time
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
@@ -77,11 +74,11 @@ class TestDataAssimilationE2E:
         from gpr_risk.enkf import EnKFConfig
 
         # 1. 模拟背景场
-        background = np.random.rand(50, 50)
+        np.random.rand(50, 50)
 
         # 2. 模拟观测数据
-        observations = np.random.rand(20, 2)  # 20个观测点
-        obs_values = np.random.rand(20)
+        np.random.rand(20, 2)  # 20个观测点
+        np.random.rand(20)
 
         # 3. 创建同化配置
         config = EnKFConfig(
@@ -123,19 +120,12 @@ class TestPathPlanningE2E:
         from path_planning.planner import GRID_EXTENT_KM, GRID_RESOLUTION_KM, GRID_OFFSET_KM
 
         # 1. 定义起点和终点
-        start = (0.0, 0.0)  # km
-        goal = (50.0, 50.0)  # km
 
         # 2. 模拟风险场
         grid_size = int(GRID_EXTENT_KM / GRID_RESOLUTION_KM)
-        risk_field = np.random.rand(grid_size, grid_size) * 0.5
+        np.random.rand(grid_size, grid_size) * 0.5
 
         # 3. 模拟障碍物
-        obstacles = [
-            (20, 20, 5),  # (x, y, radius)
-            (30, 40, 3),
-            (40, 30, 4)
-        ]
 
         # 4. 验证坐标系配置
         assert GRID_EXTENT_KM == 150.0
@@ -171,8 +161,8 @@ class TestGPRRiskFieldE2E:
 
         # 1. 模拟训练数据
         n_samples = 100
-        train_x = np.random.rand(n_samples, 2) * 100  # 坐标
-        train_y = np.random.rand(n_samples) * 0.5     # 风险值
+        np.random.rand(n_samples, 2) * 100  # 坐标
+        np.random.rand(n_samples) * 0.5     # 风险值
 
         # 2. 创建GPR配置
         config = GPRConfig(
@@ -186,7 +176,7 @@ class TestGPRRiskFieldE2E:
         assert config.n_iter == 50
 
         # 4. 模拟预测
-        test_x = np.random.rand(10, 2) * 100
+        np.random.rand(10, 2) * 100
         predicted_mean = np.random.rand(10) * 0.5
         predicted_std = np.random.rand(10) * 0.1
 
@@ -217,7 +207,7 @@ class TestCNNUNetE2E:
         height, width = 50, 50
         channels = 3
 
-        time_series = np.random.rand(1, sequence_length, channels, height, width).astype(np.float32)
+        np.random.rand(1, sequence_length, channels, height, width).astype(np.float32)
 
         # 2. 模拟订正输出
         corrected = np.random.rand(1, channels, height, width).astype(np.float32)
@@ -266,7 +256,7 @@ class TestMPCE2E:
         from control.mpc import MPCConfig
 
         # 1. 定义参考轨迹
-        reference_trajectory = [
+        [
             (i * 2, i * 2) for i in range(50)
         ]
 
@@ -278,12 +268,6 @@ class TestMPCE2E:
         )
 
         # 3. 模拟无人机状态
-        uav_state = {
-            'x': 0.0,
-            'y': 0.0,
-            'vx': 0.0,
-            'vy': 0.0
-        }
 
         # 4. 验证配置
         assert config.horizon == 10

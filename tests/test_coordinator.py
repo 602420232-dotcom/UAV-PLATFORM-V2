@@ -3,18 +3,17 @@
 （在import前mock numpy避免numpy依赖）
 """
 import logging
-logger = logging.getLogger(__name__)
-
+import os
 import sys
 import unittest
 from unittest.mock import MagicMock
 
-sys.modules['numpy'] = MagicMock()
+logger = logging.getLogger(__name__)
 
-import os
+sys.modules['numpy'] = MagicMock()
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'edge-cloud-coordinator'))
 
-from coordinator import EdgeCloudCoordinator, EdgeTask, TaskType  # type: ignore[import-not-found]
+from coordinator import EdgeCloudCoordinator, EdgeTask, TaskType  # type: ignore[import-not-found]  # noqa: E402
 
 
 class TestEdgeTask(unittest.TestCase):

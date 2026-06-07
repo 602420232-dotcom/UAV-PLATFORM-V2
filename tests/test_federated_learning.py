@@ -2,15 +2,17 @@
 联邦学习框架单元测试
 """
 import logging
+import os
+import sys
+
+import numpy as np
+import pytest
+
 logger = logging.getLogger(__name__)
 
-import sys
-import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'edge-cloud-coordinator'))
 
-import pytest
-import numpy as np
-from federated_learning import FederatedLearning, ClientUpdate, DroneClient  # type: ignore[import-not-found]
+from federated_learning import FederatedLearning, ClientUpdate, DroneClient  # type: ignore[import-not-found]  # noqa: E402
 
 
 class TestFederatedLearning:
