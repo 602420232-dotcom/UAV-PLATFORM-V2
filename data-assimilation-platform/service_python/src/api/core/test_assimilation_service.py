@@ -5,7 +5,7 @@ Generated: 2026-05-08 12:35:50
 """
 
 import pytest
-from assimilation_service import *
+from assimilation_service import *  # noqa: F403
 
 
 class TestBasic:

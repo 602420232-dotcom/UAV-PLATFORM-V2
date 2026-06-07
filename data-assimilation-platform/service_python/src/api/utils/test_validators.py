@@ -4,7 +4,7 @@ Source: d:\Developer\workplace\py\iteam\trae\data-assimilation-platform\service_
 Generated: 2026-05-08 12:35:50
 """
 
-from validators import *
+from validators import *  # noqa: F403
 
 
 class TestBasic:

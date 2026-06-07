@@ -7,7 +7,7 @@ Generated: 2026-05-08 12:35:50
 import logging  # noqa: E402
 logger = logging.getLogger(__name__)
 
-from web import *  # noqa: E402
+from web import *  # noqa: E402, F403
 
 
 class TestBasic:

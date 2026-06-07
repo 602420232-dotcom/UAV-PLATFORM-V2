@@ -6,7 +6,7 @@ Generated: 2026-05-08 12:35:50
 import logging
 
 import pytest
-from compatible_assimilator import *
+from compatible_assimilator import *  # noqa: F403
 
 logger = logging.getLogger(__name__)
 
