@@ -1,11 +1,13 @@
 package com.uav.utils;
 
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
 import java.util.concurrent.TimeUnit;
 
 @Component
+@Profile("!test")
 public class RedisUtil {
 
     private final RedisTemplate<String, Object> redisTemplate;
