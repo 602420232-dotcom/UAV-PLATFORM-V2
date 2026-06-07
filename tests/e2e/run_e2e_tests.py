@@ -6,6 +6,7 @@ import subprocess
 import sys
 import os
 
+
 def run_e2e_tests():
     """运行E2E测试"""
     # 设置环境变量

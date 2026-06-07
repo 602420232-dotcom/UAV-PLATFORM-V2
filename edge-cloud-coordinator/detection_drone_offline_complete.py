@@ -537,8 +537,10 @@ def demo():
     # 查看样本信息（包含风险）
     logger.info("\n样本详情:")
     for sample in buffer.buffer:
-        logger.info(f"  #{sample.sequence_num}: 位置=({sample.longitude:.3f}, {sample.latitude:.3f}), "
-                    f"风险={sample.risk_level}({sample.risk_score:.2f})")
+        logger.info(
+            f"  #{sample.sequence_num}: 位置=({sample.longitude:.3f}, {sample.latitude:.3f}), "
+            f"风险={sample.risk_level}({sample.risk_score:.2f})"
+        )
 
     # 结束任务
     uploader.end_mission(mission_id, drone_id)
