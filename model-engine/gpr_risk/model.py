@@ -7,6 +7,7 @@ GPR 贝叶斯风险方差场
 
 实现: GPyTorch (基于 PyTorch 的高斯过程库)
 """
+import logging
 import torch
 from dataclasses import dataclass
 from typing import Optional, Tuple
@@ -14,6 +15,9 @@ import gpytorch  # pyright: ignore[reportMissingImports]
 from gpytorch.means import ConstantMean  # pyright: ignore[reportMissingImports]
 from gpytorch.kernels import RBFKernel, ScaleKernel  # pyright: ignore[reportMissingImports]
 from gpytorch.distributions import MultivariateNormal  # pyright: ignore[reportMissingImports]
+from scipy.stats import norm
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -123,7 +127,7 @@ class GPRiskEstimator:
             optimizer.step()
 
             if i % 50 == 0:
-                print(f"  [GPR] iter {i:4d}/{self.config.n_iter}  loss={loss.item():.4f}")
+                logger.info(f"  [GPR] iter {i:4d}/{self.config.n_iter}  loss={loss.item():.4f}")
 
         self.trained = True
 
@@ -192,7 +196,6 @@ def compute_risk_score(mean: torch.Tensor, variance: torch.Tensor,
     # 风速均值
     wind_speed = torch.sqrt(mean[..., 0]**2 + mean[..., 1]**2)
     # 超阈值概率 (假设高斯分布)
-    from scipy.stats import norm
     exceed_prob = torch.tensor(
         norm.sf(
             wind_speed.cpu().numpy(),

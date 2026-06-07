@@ -11,10 +11,11 @@
 | **wrf-processor-service** | 8081 | WRF 气象数据处理服务 |
 | **meteor-forecast-service** | 8082 | 气象预测服务 |
 | **path-planning-service** | 8083 | 路径规划服务 |
-| **data-assimilation-service** | 8084 | 贝叶斯同化服务 |
-| **fengwu-service** | 8085 | 风乌气象模型服务 |
+| **data-assimilation-service** | 8084 | 贝叶斯同化服务（Java，封装 Python 算法核心） |
+| **fengwu-service** | 8085 | 风乌气象模型服务（Python FastAPI + ONNX Runtime） |
 | **uav-weather-collector** | 8086 | 气象信息收集服务 |
-| **edge-cloud-coordinator** | 8000 | 边云协同框架（联邦学习/WebSocket） |
+| **edge-cloud-coordinator** | 8000/8765 | 边云协同框架（Python FastAPI — 任务管理/联邦学习/WebSocket） |
+| **data-assimilation-platform** | — | 贝叶斯同化算法平台（Python 算法核心库） |
 
 ## 认证与授权
 
@@ -88,6 +89,7 @@ Authorization: Bearer <JWT令牌>
 | data-assimilation-service | `/api/assimilation/` |
 | fengwu-service | `/api/fengwu/` |
 | uav-weather-collector | `/api/weather/` |
+| edge-cloud-coordinator | 直连 `:8000`（不经过网关，独立 REST + WebSocket） |
 
 示例：访问 uav-platform-service 的认证接口
 ```
@@ -97,6 +99,6 @@ Authorization: Bearer <JWT令牌>
 
 ---
 
-> **最后更新**: 2026-06-05  
-> **版本**: 3.0  
+> **最后更新**: 2026-06-06  
+> **版本**: 3.1  
 > **维护者**: DITHIOTHREITOL

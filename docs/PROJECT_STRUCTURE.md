@@ -139,13 +139,13 @@ routes:
 | meteor-forecast-service | 8082 | MySQL, Redis |
 | path-planning-service | 8083 | MySQL, Redis |
 | data-assimilation-service | 8084 | MySQL |
-| fengwu-service | 8085 | - |
+| fengwu-service | 8085 | - (Python FastAPI) |
 | uav-weather-collector | 8086 | MySQL, Redis |
-| buoy-weather-service | 待分配 | - |
-| ground-station-weather-service | 待分配 | - |
-| satellite-weather-service | 待分配 | - |
-| radiosonde-weather-service | 待分配 | - |
-| detection-drone-service | 待分配 | - |
+| buoy-weather-service | 8087 📝 | - |
+| ground-station-weather-service | 8093 📝 | - |
+| satellite-weather-service | 8094 📝 | - |
+| radiosonde-weather-service | 8095 📝 | - |
+| detection-drone-service | 8096 📝 | - |
 
 ---
 
@@ -311,6 +311,9 @@ kubernetes/
 ├── namespace.yml           # 命名空间
 ├── secrets.yml             # 密钥
 ├── configmap.yml           # 配置
+├── persistent-volumes.yml  # 持久卷
+├── database-services.yml   # 数据库服务
+├── uav-kafka.yml           # Kafka + Zookeeper 消息队列
 ├── deployment-*.yml        # 服务部署
 ├── service-*.yml          # 服务暴露
 └── ingress.yml             # 入口配置
@@ -533,6 +536,6 @@ docker-compose up -d
 
 ---
 
-> **最后更新**: 2026-06-05  
-> **版本**: 3.0  
+> **最后更新**: 2026-06-06  
+> **版本**: 3.1  
 > **维护者**: DITHIOTHREITOL

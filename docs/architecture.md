@@ -20,16 +20,20 @@
 │  meteor-forecast-service 领域层 (端口8082)        │
 │  path-planning-service   领域层 (端口8083)        │
 │  data-assimilation-service 领域层 (端口8084)      │
-│  fengwu-service        领域层 (端口8085)          │
+│  fengwu-service (Python) 领域层 (端口8085)        │
 │  uav-weather-collector   领域层 (端口8086)        │
-│  buoy-weather-service  领域层 (端口待分配)        │
-│  ground-station-weather-service 领域层 (端口待分配)│
-│  satellite-weather-service 领域层 (端口待分配)     │
-│  radiosonde-weather-service 领域层 (端口待分配)    │
-│  detection-drone-service 领域层 (端口待分配)      │
+│  buoy-weather-service  领域层 (端口8087) 📝骨架   │
+│  ground-station-weather-service 领域层 (端口8093) 📝骨架 │
+│  satellite-weather-service 领域层 (端口8094) 📝骨架   │
+│  radiosonde-weather-service 领域层 (端口8095) 📝骨架   │
+│  detection-drone-service 领域层 (端口8096) 📝骨架     │
 ├─────────────────────────────────────────────────┤
 │  backend-spring        独立服务 (端口8089)        │
 │  职责：路径规划系统后端（含认证/授权/历史管理）      │
+├─────────────────────────────────────────────────┤
+│  基础设施层                                       │
+│  MySQL :3306  Redis :6379  Nacos :8848           │
+│  Kafka :9092  Zookeeper :2181                    │
 └─────────────────────────────────────────────────┘
 ```
 
@@ -46,13 +50,13 @@
 | **meteor-forecast-service** | 8082 | 气象预测服务：ConvLSTM预测、XGBoost订正、气象约束计算 |
 | **path-planning-service** | 8083 | 路径规划服务：VRPTW求解、NSGA-II优化、DE-RRT*规划、DWA避障 |
 | **data-assimilation-service** | 8084 | 数据同化服务：3D-VAR/4D-VAR/EnKF同化、贝叶斯优化、不确定性量化 |
-| **fengwu-service** | 8085 | 风乌气象模型服务：基于ONNX Runtime的全球气象预测 |
+| **fengwu-service** | 8085 | 风乌气象模型服务：基于 ONNX Runtime 的全球气象预测（Python FastAPI 实现） |
 | **uav-weather-collector** | 8086 | 气象数据采集：多源数据采集与融合 |
-| **buoy-weather-service** | 待分配 | 浮标气象数据服务 |
-| **ground-station-weather-service** | 待分配 | 地面站气象数据服务 |
-| **satellite-weather-service** | 待分配 | 卫星气象数据服务 |
-| **radiosonde-weather-service** | 待分配 | 探空气象数据服务 |
-| **detection-drone-service** | 待分配 | 检测无人机服务 |
+| **buoy-weather-service** | 8087 | 浮标气象数据服务 📝骨架，端口已分配，业务逻辑待实现 |
+| **ground-station-weather-service** | 8093 | 地面站气象数据服务 📝骨架，端口已分配，业务逻辑待实现 |
+| **satellite-weather-service** | 8094 | 卫星气象数据服务 📝骨架，端口已分配，业务逻辑待实现 |
+| **radiosonde-weather-service** | 8095 | 探空气象数据服务 📝骨架，端口已分配，业务逻辑待实现 |
+| **detection-drone-service** | 8096 | 检测无人机服务 📝骨架，端口已分配，业务逻辑待实现 |
 
 ### backend-spring vs uav-platform-service 职责区分
 
@@ -73,8 +77,15 @@
 **ADR-002**: 所有公共工具、安全组件统一收归 common-utils。SecurityAuditor 为唯一审计实现，各模块通过 SecurityAuditConfig 委托调用。
 
 **ADR-003**: common-dependencies 为BOM型POM，集中管理所有通用依赖版本。子模块引入 common-dependencies 即可获得全部标准化依赖，无需在各自pom中重复声明。
+
+**ADR-004**: fengwu-service 为 Python FastAPI 服务（非 Java），独立于 Spring Cloud 体系。通过 API Gateway 路由 `/api/fengwu/**` 接入。ONNX 模型推理使用 CPU 模式（onnxruntime），生产环境建议配置 GPU 加速。
+
+**ADR-005**: buoy/ground-station/satellite/radiosonde/detection-drone 五个服务当前为骨架模块（仅含目录结构和基础 POM），端口已在 PORTS_CONFIGURATION.md 中分配。完整业务逻辑需根据需求逐步实现。
+
+**ADR-006**: Kafka 依赖 Zookeeper 进行集群协调（端口 2181）。启动顺序必须为 Zookeeper → Kafka，docker-compose.yml 已配置 `depends_on` 和 `healthcheck` 保证启动顺序。
+
 ---
 
-> **最后更新**: 2026-06-05  
-> **版本**: 3.0  
+> **最后更新**: 2026-06-06  
+> **版本**: 3.1  
 > **维护者**: DITHIOTHREITOL

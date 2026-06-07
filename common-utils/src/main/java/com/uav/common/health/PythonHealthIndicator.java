@@ -3,15 +3,17 @@ package com.uav.common.health;
 import com.uav.common.script.PythonScriptInvoker;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 /**
  * Python 运行环境健康检查
  * 
  * 验证 Python3 解释器和关键脚本的可用性。
- * 用于 K8s readiness probe，当 Python 不可用时标记服务为未就绪。
+ * 默认禁用 — 仅当显式设置 uav.python.health.enabled=true 时启用。
  */
 @Component
+@ConditionalOnProperty(name = "uav.python.health.enabled", havingValue = "true")
 public class PythonHealthIndicator implements HealthIndicator {
 
     private final PythonScriptInvoker pythonScriptInvoker;

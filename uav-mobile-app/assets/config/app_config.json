@@ -1,15 +1,19 @@
 {
   "app_name": "UAV Path Planning",
   "version": "1.0.0",
-  "api_base_url": "http://localhost:8080",
+  "api_base_url": "${API_BASE_URL:-http://localhost:8088}",
+  "api_base_url_android": "${API_BASE_URL_ANDROID:-http://10.0.2.2:8088}",
+  "api_base_url_ios": "${API_BASE_URL_IOS:-http://localhost:8088}",
   "enable_offline_mode": true,
   "max_cache_size_mb": 100,
   "enable_telemetry": false,
+  "request_timeout_seconds": 30,
   "map_settings": {
     "default_zoom": 10,
     "default_center": {
       "lat": 39.9042,
       "lng": 116.4074
     }
-  }
+  },
+  "environment": "${APP_ENV:-development}"
 }

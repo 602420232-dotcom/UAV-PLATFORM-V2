@@ -21,7 +21,7 @@ public class CommonSecurityConfig {
     @Bean
     public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
         http
-            .securityMatcher("/api/**", "/auth/**", "/actuator/**")
+            .securityMatcher("/auth/**", "/actuator/**")
             // CSRF保护 - 启用并使用Cookie方式（适合前后端分离架构）
             .csrf(csrf -> csrf
                 .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
@@ -29,10 +29,8 @@ public class CommonSecurityConfig {
                 .ignoringRequestMatchers("/api/**", "/auth/**")
             )
             .authorizeHttpRequests(auth -> {
-                if (actuatorPublic) {
-                    auth.requestMatchers("/actuator/health", "/actuator/info").permitAll();
-                } else {
-                    auth.requestMatchers("/actuator/health/readiness", "/actuator/health/liveness").permitAll();
+                auth.requestMatchers("/actuator/health", "/actuator/health/**", "/actuator/info").permitAll();
+                if (!actuatorPublic) {
                     auth.requestMatchers("/actuator/**").authenticated();
                 }
                 auth.requestMatchers("/auth/**").permitAll();

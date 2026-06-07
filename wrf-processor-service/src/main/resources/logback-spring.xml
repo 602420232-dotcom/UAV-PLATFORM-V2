@@ -10,10 +10,8 @@
             <fileNamePattern>${LOG_PATH:-./logs}/app.%d{yyyy-MM-dd}.json.gz</fileNamePattern>
             <maxHistory>7</maxHistory>
         </rollingPolicy>
-        <encoder class="ch.qos.logback.classic.encoder.LogstashEncoder">
-            <includeCallerData>true</includeCallerData>
-            <includeContextName>true</includeContextName>
-            <customFields>{"app_name":"${APP_NAME:-wrf-processor}"}</customFields>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>{"timestamp":"%d{yyyy-MM-dd'T'HH:mm:ss.SSSZ}","level":"%level","thread":"%thread","logger":"%logger","message":"%msg","app_name":"wrf-processor"}%n</pattern>
         </encoder>
     </appender>
 

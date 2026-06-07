@@ -15,8 +15,8 @@ class TestGprRiskModule:
 
     def test_gpr_model_import(self):
         """测试GPR模型导入"""
-        from gpr_risk.model import GPRiskEstimator, GPRConfig
-        assert GPRiskEstimator is not None
+        from gpr_risk.model import GPRRiskModel, GPRConfig
+        assert GPRRiskModel is not None
         assert GPRConfig is not None
 
     def test_gpr_config_init(self):
@@ -24,10 +24,11 @@ class TestGprRiskModule:
         from gpr_risk.model import GPRConfig
         config = GPRConfig(
             kernel_type='rbf',
+            noise_level=1e-4,
             n_iter=100
         )
         assert config.kernel_type == 'rbf'
-        assert config.n_iter == 100
+        assert config.noise_level == 1e-4
 
 
 class TestEnkfModule:
@@ -43,11 +44,11 @@ class TestEnkfModule:
         """测试EnKF配置初始化"""
         from gpr_risk.enkf import EnKFConfig
         config = EnKFConfig(
-            n_ensemble=50,
+            ensemble_size=50,
             inflation_factor=1.05,
             observation_noise=0.1
         )
-        assert config.n_ensemble == 50
+        assert config.ensemble_size == 50
         assert config.inflation_factor == 1.05
 
 
@@ -56,9 +57,9 @@ class TestPathPlanningModule:
 
     def test_planner_import(self):
         """测试路径规划器导入"""
-        from path_planning.planner import GPRPathPlanner, PlanningConfig
+        from path_planning.planner import GPRPathPlanner, PlannerConfig
         assert GPRPathPlanner is not None
-        assert PlanningConfig is not None
+        assert PlannerConfig is not None
 
     def test_cost_function_import(self):
         """测试代价函数导入"""
@@ -88,8 +89,8 @@ class TestCnnCorrectorModule:
 
     def test_cnn_corrector_import(self):
         """测试CNN订正器导入"""
-        from cnn_corrector.model import CNNCorrector
-        assert CNNCorrector is not None
+        from cnn_corrector.model import CNNLSTMCorrector
+        assert CNNLSTMCorrector is not None
 
 
 class TestActiveObsModule:
@@ -97,8 +98,8 @@ class TestActiveObsModule:
 
     def test_bayesian_observer_import(self):
         """测试贝叶斯观测器导入"""
-        from active_obs.bayesian_observer import BayesianActiveObserver
-        assert BayesianActiveObserver is not None
+        from active_obs.bayesian_observer import BayesianObserver
+        assert BayesianObserver is not None
 
 
 class TestMultiUavModule:
@@ -106,8 +107,8 @@ class TestMultiUavModule:
 
     def test_conflict_resolver_import(self):
         """测试冲突消解器导入"""
-        from multi_uav.conflict_resolver import MultiUAVConflictResolver
-        assert MultiUAVConflictResolver is not None
+        from multi_uav.conflict_resolver import ConflictResolver
+        assert ConflictResolver is not None
 
 
 if __name__ == '__main__':

@@ -28,12 +28,18 @@ nav:
     - 端口配置: PORTS_CONFIGURATION.md
     - API聚合: API_AGGREGATION_CONFIG.md
   - 部署:
+    - 部署指南: DEPLOYMENT.md
     - Docker: DOCKER.md
     - 构建示例: EXAMPLE.md
+  - API 文档:
+    - API 总览: api/API_DOCUMENTATION.md
+    - API 索引: api/README.md
+    - 边云协同: api/edge-cloud-coordinator/coordinator.md
+    - 边云 OpenAPI: api/edge-cloud-coordinator/openapi.yaml
   - 开发:
     - Maven修复: MAVEN_FIX.md
     - Feign迁移: FEIGN_MIGRATION_GUIDE.md
   - 报告:
-    - 优化报告: OPTIMIZATION_COMPLETE_REPORT.md
-    - 升级报告: UPGRADE_REPORT.md
-    - 待办: TODO_CHECKLIST.md
+    - 全量审计报告: reports/FULL_PROJECT_AUDIT_REPORT.md
+    - 修复完成报告: reports/FIX_COMPLETION_REPORT.md
+    - 分支价值分析: reports/BRANCH_VALUE_ANALYSIS_REPORT.md

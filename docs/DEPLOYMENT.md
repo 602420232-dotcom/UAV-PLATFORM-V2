@@ -4,6 +4,8 @@
 
 本系统采用微服务架构，由以下核心服务组成：
 
+### 应用服务
+
 1. **API 网关** (`api-gateway`，端口8088)
 2. **WRF气象数据处理服务** (`wrf-processor-service`，端口8081)
 3. **贝叶斯同化服务** (`data-assimilation-service`，端口8084)
@@ -11,12 +13,17 @@
 5. **路径规划服务** (`path-planning-service`，端口8083)
 6. **主平台服务** (`uav-platform-service`，端口8080)
 7. **气象收集服务** (`uav-weather-collector`，端口8086)
-8. **边云协同框架** (`edge-cloud-coordinator`，端口8000/8765)
-9. **Kafka流处理** (端口9092)
-10. **前端应用** (`uav-path-planning-system/frontend-vue`)
-11. **MySQL数据库服务** (端口3306)
-12. **Redis缓存服务** (端口6379)
-13. **Nacos服务发现** (端口8848)
+8. **FengWu 气象大模型** (`fengwu-service`，端口8085)
+9. **边云协同框架** (`edge-cloud-coordinator`，端口8000/8765)
+10. **前端应用** (`uav-path-planning-system/frontend-vue`，端口3000)
+
+### 基础设施服务
+
+11. **MySQL 数据库** (端口3306)
+12. **Redis 缓存** (端口6379)
+13. **Nacos 注册中心** (端口8848)
+14. **Kafka 消息队列** (端口9092)
+15. **Zookeeper 协调服务** (端口2181)
 
 ## 部署方式
 
@@ -54,7 +61,10 @@
    - 气象预测服务：http://localhost:8082/actuator/health
    - 路径规划服务：http://localhost:8083/actuator/health
    - 气象收集服务：http://localhost:8086/actuator/health
+   - FengWu 服务：http://localhost:8085/api/fengwu/health
    - Nacos 控制台：http://localhost:8848/nacos
+   - Kafka 状态：`docker exec uav-kafka kafka-topics --bootstrap-server localhost:9092 --list`
+   - Zookeeper 状态：`docker exec uav-zookeeper bash -c "echo ruok | nc localhost 2181"`
 
 5. **查看日志**
    ```bash
@@ -99,6 +109,7 @@
    kubectl apply -f secrets.yaml
    kubectl apply -f persistent-volumes.yml
    kubectl apply -f database-services.yml
+   kubectl apply -f uav-kafka.yml
    kubectl apply -f api-gateway.yml
    kubectl apply -f wrf-processor-service.yml
    kubectl apply -f meteor-forecast-service.yml
@@ -106,6 +117,7 @@
    kubectl apply -f data-assimilation-service.yml
    kubectl apply -f uav-platform-service.yml
    kubectl apply -f uav-weather-collector.yml
+   kubectl apply -f fengwu-service.yml
    kubectl apply -f frontend-vue.yml
    kubectl apply -f monitoring.yml
    kubectl apply -f nginx-ingress.yml
@@ -187,7 +199,9 @@
 - 主平台服务：`uav-platform:8080`
 - 气象收集服务：`uav-weather-collector:8086`
 - 边云协调器：`edge-cloud-coordinator:8000`
-- Kafka 流处理：`kafka:9092`
+- FengWu 模型服务：`fengwu-service:8085`
+- Kafka 消息队列：`kafka:9092`
+- Zookeeper 协调服务：`zookeeper:2181`
 - Nacos 注册中心：`nacos:8848`
 - 数据库服务：`mysql:3306`
 - 缓存服务：`redis:6379`
@@ -219,6 +233,8 @@
    |------|------|----------|
    | 服务启动失败 | 服务容器启动后立即退出 | 查看服务日志：`docker-compose logs <service-name>` |
    | API调用失败 | 服务间API调用返回错误 | 检查服务间网络连接和配置 |
+   | Kafka 不工作 | 消息无法收发 | 检查 Zookeeper 是否健康：`docker exec uav-zookeeper bash -c "echo ruok \| nc localhost 2181"` |
+   | Zookeeper 异常 | Kafka 无法连接 | 检查端口 2181 是否监听；重启 `docker compose restart zookeeper kafka` |
    | 性能问题 | 系统响应缓慢 | 检查系统资源使用情况，优化算法参数 |
    | 数据一致性问题 | 不同服务间数据不一致 | 确保服务间使用相同的数据格式，实现数据同步机制 |
 
@@ -319,3 +335,47 @@
 通过合理的资源分配、缓存策略和监控机制，我们可以确保系统在生产环境中的稳定运行。同时，扩展方案和故障处理机制为系统的长期发展和可靠性提供了保障。
 
 系统的部署和维护流程已经标准化，确保了系统的可重复性和可靠性，为用户提供了一个稳定、高效的无人机路径规划平台。
+
+### Kafka 与 Zookeeper 运维
+
+**Kafka 常用运维命令**:
+
+```bash
+# 查看所有 Topic
+docker exec uav-kafka kafka-topics --bootstrap-server localhost:9092 --list
+
+# 创建 Topic
+docker exec uav-kafka kafka-topics --create --topic weather-data --bootstrap-server localhost:9092 --partitions 3 --replication-factor 1
+
+# 查看消费者组
+docker exec uav-kafka kafka-consumer-groups --bootstrap-server localhost:9092 --list
+
+# 消费测试消息
+docker exec uav-kafka kafka-console-consumer --topic weather-data --from-beginning --bootstrap-server localhost:9092
+```
+
+**Zookeeper 健康检查**:
+
+```bash
+# 检查 Zookeeper 是否存活
+docker exec uav-zookeeper bash -c "echo ruok | nc localhost 2181"
+# 期望输出：imok
+
+# 查看 Zookeeper 状态
+docker exec uav-zookeeper bash -c "echo stat | nc localhost 2181"
+```
+
+**Kafka 常见问题**:
+
+| 问题 | 症状 | 解决方案 |
+|------|------|----------|
+| Kafka 无法启动 | 容器反复重启 | 确认 Zookeeper 先于 Kafka 启动且健康 |
+| 消息堆积 | 消费者跟不上生产者 | 增加消费者实例；调整 partitions 数量 |
+| 磁盘满 | Kafka 日志占满磁盘 | 配置 log.retention.hours 自动清理 |
+| 内存不足 OOM | 容器被 kill (exit 137) | 增加 Kafka 内存限制至 2G+（docker-compose.yml 已配置） |
+
+---
+
+> **最后更新**: 2026-06-06  
+> **版本**: 2.2  
+> **维护者**: DITHIOTHREITOL

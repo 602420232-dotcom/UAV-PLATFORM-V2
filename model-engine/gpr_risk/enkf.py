@@ -125,7 +125,6 @@ class EnsembleKalmanFilter:
         # P^f = (1/(N-1)) × X' × X'^T
         # 用扰动矩阵近似
         X_prime = perturbations.reshape(N, -1)  # (N, C*H*W)
-        n_state = X_prime.shape[1]  # noqa: F841
 
         if obs_operator is not None:
             # 使用观测算子 H

@@ -63,7 +63,7 @@ trae/
 ├── data-assimilation-platform/    # 贝叶斯同化平台（Python）
 │   ├── algorithm_core/            # 核心算法库
 │   ├── shared/protos/             # Protocol Buffers 共享定义
-│   └── service_python/            # Python API 服务
+│   └── service_spring/            # Spring Boot API 服务
 ├── data-assimilation-service/     # 贝叶斯同化服务（Java，端口 8084）
 │   └── src/main/java/com/uav/assimilation/
 ├── edge-cloud-coordinator/        # 边云协同框架（Python，端口 8000/8765）
@@ -72,12 +72,8 @@ trae/
 │   └── src/main/java/com/uav/meteor/forecast/
 ├── path-planning-service/         # 路径规划服务（Java，端口 8083）
 │   └── src/main/java/com/uav/path/planning/
-├── uav-platform-service/          # 主平台服务（Java，端口 8080）
-│   └── src/main/java/com/uav/platform/
-├── uav-weather-collector/         # 气象收集服务（Java，端口 8086）
-│   └── src/main/java/com/uav/weather/
 ├── wrf-processor-service/         # WRF 气象数据处理服务（Java，端口 8081）
-│   └── src/main/java/com/uav/wrf/
+│   └── src/main/java/com/uav/wrf/processor/
 ├── buoy-weather-service/          # 浮标气象数据服务
 ├── ground-station-weather-service/ # 地面站气象数据服务
 ├── satellite-weather-service/     # 卫星气象数据服务
@@ -86,8 +82,7 @@ trae/
 ├── uav-edge-sdk/                  # 端侧 SDK（C++/Python/pybind11）
 ├── uav-mobile-app/                # 跨平台移动应用（Flutter）
 │   └── lib/
-├── uav-path-planning-system/      # 旧版项目（含 frontend-vue）
-│   ├── backend-spring/            # 旧版后端（端口 8089）
+├── uav-path-planning-system/      # 前端项目（Vue3）
 │   └── frontend-vue/              # 前端 Vue3（端口 3000）
 ├── model-engine/                  # AI 模型训练引擎
 │   ├── scripts/                   # 训练脚本
@@ -187,7 +182,6 @@ docker-compose ps
 # 访问以下服务
 # - 前端应用：http://localhost:3000
 # - API 网关：http://localhost:8088/actuator/health
-# - 主平台服务：http://localhost:8080/actuator/health
 # - Nacos 控制台：http://localhost:8848/nacos
 ```
 
@@ -198,7 +192,7 @@ docker-compose ps
 docker-compose logs -f
 
 # 查看特定服务日志
-docker-compose logs -f uav-platform
+docker-compose logs -f wrf-processor
 ```
 
 ## 📡 服务与端口
@@ -206,14 +200,11 @@ docker-compose logs -f uav-platform
 | 服务名称 | 端口 | 说明 | 模块路径 | 健康检查 |
 |---------|:---:|------|---------|---------|
 | **API Gateway** | 8088 | API 网关（限流/熔断/路由） | `api-gateway/` | `/actuator/health` |
-| **UAV Platform Service** | 8080 | 主平台服务（认证/任务/无人机管理） | `uav-platform-service/` | `/actuator/health` |
 | **WRF Processor** | 8081 | WRF 气象数据处理 | `wrf-processor-service/` | `/actuator/health` |
 | **Meteor Forecast** | 8082 | 气象预测与订正（ConvLSTM+XGBoost） | `meteor-forecast-service/` | `/actuator/health` |
 | **Path Planning** | 8083 | VRPTW+DE-RRT*+DWA 路径规划 | `path-planning-service/` | `/actuator/health` |
 | **Data Assimilation** | 8084 | 贝叶斯同化计算（3D-VAR/4D-VAR/EnKF） | `data-assimilation-service/` | `/actuator/health` |
 | **FengWu Service** | 8085 | 风乌气象模型推理服务 | `fengwu-service/` | `/health` |
-| **Weather Collector** | 8086 | 多源气象数据采集与融合 | `uav-weather-collector/` | `/actuator/health` |
-| **Backend Spring** | 8089 | 旧版独立路径规划系统 | `uav-path-planning-system/backend-spring/` | - |
 | **Edge Cloud Coordinator** | 8000/8765 | 边云协同框架（联邦学习/WebSocket/Kafka） | `edge-cloud-coordinator/` | `/health` |
 | **Frontend Vue** | 3000 | Vue3 Web 应用 | `uav-path-planning-system/frontend-vue/` | - |
 | **MySQL** | 3306 | 关系型数据库 | 容器服务 | - |
@@ -260,7 +251,6 @@ docker-compose logs -f uav-platform
     cd data-assimilation-service && mvn spring-boot:run
     cd meteor-forecast-service && mvn spring-boot:run
     cd path-planning-service && mvn spring-boot:run
-    cd uav-platform-service && mvn spring-boot:run
     ```
 
 4. **代码格式化**
@@ -418,13 +408,11 @@ docker image prune -f
 | 模块 | 文档路径 |
 |------|---------|
 | **uav-mobile-app** | [README](uav-mobile-app/README.md) |
-| **uav-platform-service** | [README](uav-platform-service/README.md) |
 | **wrf-processor-service** | [README](wrf-processor-service/README.md) |
 | **data-assimilation-service** | [README](data-assimilation-service/README.md) |
 | **meteor-forecast-service** | [README](meteor-forecast-service/README.md) |
 | **path-planning-service** | [README](path-planning-service/README.md) |
 | **fengwu-service** | [README](fengwu-service/README.md) |
-| **uav-weather-collector** | [README](uav-weather-collector/README.md) |
 | **buoy-weather-service** | [README](buoy-weather-service/README.md) |
 | **ground-station-weather-service** | [README](ground-station-weather-service/README.md) |
 | **satellite-weather-service** | [README](satellite-weather-service/README.md) |
@@ -447,6 +435,6 @@ docker image prune -f
 
 ---
 
-> **最后更新**: 2026-06-05  
-> **版本**: 3.1.0  
+> **最后更新**: 2026-06-06  
+> **版本**: 3.2.0  
 > **维护者**: UAV DevOps Team

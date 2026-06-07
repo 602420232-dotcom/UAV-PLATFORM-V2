@@ -42,7 +42,7 @@ jobs:
         run: mvn test -Dspring.profiles.active=test -B
 
       - name: Run Checkstyle
-        run: mvn checkstyle:check -B || true
+        run: mvn checkstyle:check -B
 
       - name: Upload Test Results
         if: always()

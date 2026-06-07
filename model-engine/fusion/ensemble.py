@@ -2,12 +2,15 @@
 多模型动态融合
 将 风乌GHR + 天资 + 风雷 按置信度动态加权融合
 """
+import logging
 import torch
 import torch.nn as nn
 from typing import Dict, Optional
 from dataclasses import dataclass, field
 
 import numpy as np
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -99,7 +102,7 @@ class DynamicWeightFusion:
         total_inv = sum(inv_rmse.values())
         self.weights = {k: v / total_inv for k, v in inv_rmse.items()}
 
-        print(f"[Fusion] 权重更新: {self.weights}")
+        logger.info(f"[Fusion] 权重更新: {self.weights}")
 
 
 class PhysicsConstraint(nn.Module):

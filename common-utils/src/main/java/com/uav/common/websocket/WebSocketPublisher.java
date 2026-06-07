@@ -2,11 +2,13 @@ package com.uav.common.websocket;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.lang.NonNull;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 @Service
+@ConditionalOnClass(name = "org.apache.tomcat.websocket.WsWebSocketContainer")
 public class WebSocketPublisher {
 
     private static final Logger log = LoggerFactory.getLogger(WebSocketPublisher.class);

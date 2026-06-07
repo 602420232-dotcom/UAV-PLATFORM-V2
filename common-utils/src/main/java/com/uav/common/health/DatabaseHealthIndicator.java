@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
+import org.springframework.context.annotation.Profile;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
@@ -17,6 +18,7 @@ import javax.sql.DataSource;
  * - 连接池状态（活跃连接数/最大连接数）
  */
 @Component
+@Profile("datasource")
 public class DatabaseHealthIndicator implements HealthIndicator {
 
     private static final Logger log = LoggerFactory.getLogger(DatabaseHealthIndicator.class);

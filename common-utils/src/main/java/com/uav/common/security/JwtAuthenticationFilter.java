@@ -106,7 +106,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     private boolean isPublicPath(String uri) {
-        return uri.equals("/actuator/health") || uri.equals("/actuator/info")
+        return uri.startsWith("/actuator/") || uri.equals("/actuator/info")
                 || uri.startsWith("/api/public/") || uri.startsWith("/api/auth/");
     }
 }

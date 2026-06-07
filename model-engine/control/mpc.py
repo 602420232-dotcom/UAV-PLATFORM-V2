@@ -16,6 +16,7 @@
   - 滚动优化天然支持动态重规划
   - 计算量可控 (时域长度 N)
 """
+import logging
 import time
 import numpy as np
 from dataclasses import dataclass
@@ -24,6 +25,8 @@ from enum import Enum
 
 from path_planning.cost_function import RiskCostFunction, CostConfig
 from path_planning.planner import GPRPathPlanner
+
+logger = logging.getLogger(__name__)
 
 
 class MPCStatus(Enum):
@@ -123,7 +126,7 @@ class ModelPredictiveController:
         self.start_time = time.time()
         self.iteration = 0
         uav.status = MPCStatus.PLANNING
-        print(f"[MPC] 初始化: 起点({uav.x:.1f}, {uav.y:.1f}) → 目标({goal[0]:.1f}, {goal[1]:.1f})")
+        logger.info(f"[MPC] 初始化: 起点({uav.x:.1f}, {uav.y:.1f}) → 目标({goal[0]:.1f}, {goal[1]:.1f})")
 
     def loop(self, risk_map: np.ndarray, wind_u: np.ndarray,
              wind_v: np.ndarray, tke: Optional[np.ndarray] = None,
@@ -167,10 +170,10 @@ class ModelPredictiveController:
         if traj.waypoints:
             self._execute_step(traj.waypoints[0])
 
-        print(f"[MPC] iter={self.iteration}, "
-              f"pos=({self.uav.x:.1f},{self.uav.y:.1f}), "
-              f"cost={traj.total_cost:.3f}, "
-              f"arrival={traj.expected_arrival_s:.0f}s")
+        logger.info(f"[MPC] iter={self.iteration}, "
+                    f"pos=({self.uav.x:.1f},{self.uav.y:.1f}), "
+                    f"cost={traj.total_cost:.3f}, "
+                    f"arrival={traj.expected_arrival_s:.0f}s")
 
         return MPCStatus.EXECUTING
 

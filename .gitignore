@@ -63,8 +63,8 @@ target/
 .mvn/*
 !.mvn/wrapper/maven-wrapper.jar
 !.mvn/wrapper/maven-wrapper.properties
-mvnw
-mvnw.cmd
+!mvnw
+!mvnw.cmd
 
 # Gradle
 .gradle/
@@ -314,6 +314,9 @@ tools/mypanel/node_modules
 # Windows 系统文件
 sl.exe
 *.lnk
+
+# 外部论文软链接目录
+docs_ref/
 
 # coverage 输出
 coverage/

@@ -18,6 +18,7 @@ from collections import deque
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
 
 @dataclass
@@ -498,9 +499,9 @@ class DetectionDroneOfflineUploader:
 
 def demo():
     """演示完整的离线采集 + 风险映射流程"""
-    print("=" * 70)
-    print("探测无人机离线上传集成模块 - 演示")
-    print("=" * 70)
+    logger.info("=" * 70)
+    logger.info("探测无人机离线上传集成模块 - 演示")
+    logger.info("=" * 70)
 
     # 初始化上传管理器
     uploader = DetectionDroneOfflineUploader(db_path="demo_cache.db")
@@ -510,10 +511,10 @@ def demo():
     drone_id = "drone-probe-001"
     buffer = uploader.start_mission(mission_id, drone_id)
 
-    print(f"\n任务开始: mission={mission_id}, drone={drone_id}")
+    logger.info(f"\n任务开始: mission={mission_id}, drone={drone_id}")
 
     # 模拟传感器数据采集
-    print("\n模拟传感器数据采集（带风险计算）...")
+    logger.info("\n模拟传感器数据采集（带风险计算）...")
     for i in range(10):
         sensor_data = {
             "longitude": 116.4 + i * 0.01,
@@ -529,15 +530,15 @@ def demo():
         }
 
         buffer.add_from_sensor(sensor_data)
-        print(f"  已采集样本 {i + 1}: 风速={sensor_data['wind_speed']:.1f}m/s")
+        logger.info(f"  已采集样本 {i + 1}: 风速={sensor_data['wind_speed']:.1f}m/s")
 
-    print(f"\n缓冲区大小: {buffer.get_buffer_size()}")
+    logger.info(f"\n缓冲区大小: {buffer.get_buffer_size()}")
 
     # 查看样本信息（包含风险）
-    print("\n样本详情:")
+    logger.info("\n样本详情:")
     for sample in buffer.buffer:
-        print(f"  #{sample.sequence_num}: 位置=({sample.longitude:.3f}, {sample.latitude:.3f}), "
-              f"风险={sample.risk_level}({sample.risk_score:.2f})")
+        logger.info(f"  #{sample.sequence_num}: 位置=({sample.longitude:.3f}, {sample.latitude:.3f}), "
+                    f"风险={sample.risk_level}({sample.risk_score:.2f})")
 
     # 结束任务
     uploader.end_mission(mission_id, drone_id)
@@ -549,8 +550,8 @@ def demo():
     except OSError:
         pass
 
-    print("\n" + "=" * 70)
-    print("演示完成!")
+    logger.info("\n" + "=" * 70)
+    logger.info("演示完成!")
 
 
 if __name__ == "__main__":

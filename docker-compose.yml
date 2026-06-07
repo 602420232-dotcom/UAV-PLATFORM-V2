@@ -1,12 +1,19 @@
+networks:
+  uav-net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
 services:
   mysql:
     image: mysql:8.0
     container_name: uav-mysql
     environment:
-      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-CHANGE_ME}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?DB_ROOT_PASSWORD must be set}
       MYSQL_DATABASE: uav_platform
       MYSQL_USER: uav
-      MYSQL_PASSWORD: ${DB_PASSWORD:-CHANGE_ME}
+      MYSQL_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD must be set}
     ports:
       - "3306:3306"
     volumes:
@@ -25,6 +32,8 @@ services:
           memory: 512M
         reservations:
           memory: 256M
+    networks:
+      - uav-net
 
   redis:
     image: redis:6.2
@@ -40,6 +49,8 @@ services:
       interval: 10s
       timeout: 3s
       retries: 5
+    networks:
+      - uav-net
 
   nacos:
     image: nacos/nacos-server:v2.3.0
@@ -59,6 +70,8 @@ services:
           memory: 1G
         reservations:
           memory: 512M
+    networks:
+      - uav-net
 
   api-gateway:
     build:
@@ -76,20 +89,23 @@ services:
       - SPRING_MAIN_ALLOW_BEAN_DEFINITION_OVERRIDING=true
       - SPRING_DATASOURCE_HIKARI_INITIALIZATION_FAIL_TIMEOUT=-1
       - NACOS_SERVER=nacos:8848
-      - REDIS_HOST=redis
+      - SPRING_DATA_REDIS_HOST=redis
+      - UAV_JWT_SECRET=${JWT_SECRET}
     restart: always
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8088/actuator/health"]
       interval: 15s
       timeout: 5s
       retries: 3
-      start_period: 40s
+      start_period: 120s
     deploy:
       resources:
         limits:
           memory: 512M
         reservations:
           memory: 256M
+    networks:
+      - uav-net
 
   wrf-processor:
     build:
@@ -108,6 +124,10 @@ services:
       LOG_PATH: /logs
       SPRING_MAIN_ALLOW_BEAN_DEFINITION_OVERRIDING: "true"
       SPRING_DATASOURCE_HIKARI_INITIALIZATION_FAIL_TIMEOUT: "-1"
+      UAV_JWT_SECRET: ${JWT_SECRET}
+      UAV_SECURITY_ACTUATOR_PUBLIC: "true"
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.MySQLDialect
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/wrf_processor?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
       SPRING_DATASOURCE_USERNAME: uav
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
@@ -118,13 +138,15 @@ services:
       interval: 15s
       timeout: 5s
       retries: 3
-      start_period: 40s
+      start_period: 120s
     deploy:
       resources:
         limits:
           memory: 512M
         reservations:
           memory: 256M
+    networks:
+      - uav-net
 
   data-assimilation:
     build:
@@ -143,6 +165,10 @@ services:
       LOG_PATH: /logs
       SPRING_MAIN_ALLOW_BEAN_DEFINITION_OVERRIDING: "true"
       SPRING_DATASOURCE_HIKARI_INITIALIZATION_FAIL_TIMEOUT: "-1"
+      UAV_JWT_SECRET: ${JWT_SECRET}
+      SPRING_DATA_REDIS_HOST: redis
+      UAV_SECURITY_ACTUATOR_PUBLIC: "true"
+      SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.MySQLDialect
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/data_assimilation?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
       SPRING_DATASOURCE_USERNAME: uav
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
@@ -153,13 +179,15 @@ services:
       interval: 15s
       timeout: 5s
       retries: 3
-      start_period: 40s
+      start_period: 120s
     deploy:
       resources:
         limits:
           memory: 512M
         reservations:
           memory: 256M
+    networks:
+      - uav-net
 
   meteor-forecast:
     build:
@@ -178,6 +206,10 @@ services:
       LOG_PATH: /logs
       SPRING_MAIN_ALLOW_BEAN_DEFINITION_OVERRIDING: "true"
       SPRING_DATASOURCE_HIKARI_INITIALIZATION_FAIL_TIMEOUT: "-1"
+      SPRING_DATA_REDIS_HOST: redis
+      UAV_JWT_SECRET: ${JWT_SECRET}
+      UAV_SECURITY_ACTUATOR_PUBLIC: "true"
+      SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.MySQLDialect
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/meteor_forecast?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
       SPRING_DATASOURCE_USERNAME: uav
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
@@ -188,13 +220,15 @@ services:
       interval: 15s
       timeout: 5s
       retries: 3
-      start_period: 40s
+      start_period: 120s
     deploy:
       resources:
         limits:
           memory: 512M
         reservations:
           memory: 256M
+    networks:
+      - uav-net
 
   path-planning:
     build:
@@ -212,7 +246,11 @@ services:
     environment:
       LOG_PATH: /logs
       SPRING_MAIN_ALLOW_BEAN_DEFINITION_OVERRIDING: "true"
+      SPRING_DATA_REDIS_HOST: redis
       SPRING_DATASOURCE_HIKARI_INITIALIZATION_FAIL_TIMEOUT: "-1"
+      UAV_JWT_SECRET: ${JWT_SECRET}
+      UAV_SECURITY_ACTUATOR_PUBLIC: "true"
+      SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.MySQLDialect
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/path_planning?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
       SPRING_DATASOURCE_USERNAME: uav
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
@@ -223,13 +261,15 @@ services:
       interval: 15s
       timeout: 5s
       retries: 3
-      start_period: 40s
+      start_period: 120s
     deploy:
       resources:
         limits:
           memory: 512M
         reservations:
           memory: 256M
+    networks:
+      - uav-net
 
   uav-platform:
     build:
@@ -262,10 +302,13 @@ services:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/uav_platform?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
       SPRING_DATASOURCE_USERNAME: uav
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
-      SPRING_REDIS_HOST: redis
-      SPRING_REDIS_PORT: 6379
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
       NACOS_SERVER: nacos:8848
       SERVICES_WRF_PROCESSOR_URL: http://wrf-processor:8081/api/wrf
+      UAV_JWT_SECRET: ${JWT_SECRET}
+      UAV_SECURITY_ACTUATOR_PUBLIC: "true"
+      SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.MySQLDialect
       SERVICES_DATA_ASSIMILATION_URL: http://data-assimilation:8084/api/assimilation
       SERVICES_METEOR_FORECAST_URL: http://meteor-forecast:8082/api/forecast
       SERVICES_PATH_PLANNING_URL: http://path-planning:8083/api/planning
@@ -275,13 +318,15 @@ services:
       interval: 15s
       timeout: 5s
       retries: 3
-      start_period: 40s
+      start_period: 120s
     deploy:
       resources:
         limits:
           memory: 512M
         reservations:
           memory: 256M
+    networks:
+      - uav-net
 
   uav-weather-collector:
     build:
@@ -305,7 +350,10 @@ services:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/uav_weather?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
       SPRING_DATASOURCE_USERNAME: uav
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
-      SPRING_REDIS_HOST: redis
+      UAV_JWT_SECRET: ${JWT_SECRET}
+      UAV_SECURITY_ACTUATOR_PUBLIC: "true"
+      SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.MySQLDialect
+      SPRING_DATA_REDIS_HOST: redis
       NACOS_SERVER: nacos:8848
     restart: always
     healthcheck:
@@ -313,13 +361,15 @@ services:
       interval: 15s
       timeout: 5s
       retries: 3
-      start_period: 40s
+      start_period: 120s
     deploy:
       resources:
         limits:
           memory: 512M
         reservations:
           memory: 256M
+    networks:
+      - uav-net
 
   edge-cloud-coordinator:
     build: ./edge-cloud-coordinator
@@ -337,7 +387,7 @@ services:
       REDIS_PORT: 6379
     restart: always
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
       interval: 15s
       timeout: 5s
       retries: 3
@@ -348,6 +398,8 @@ services:
           memory: 512M
         reservations:
           memory: 256M
+    networks:
+      - uav-net
 
   fengwu-service:
     build:
@@ -355,30 +407,37 @@ services:
       dockerfile: ./fengwu-service/Dockerfile
     image: ghcr.io/602420232-dotcom/weather/fengwu:latest
     container_name: uav-fengwu
+    entrypoint: ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8085"]
     ports:
       - "8085:8085"
     depends_on:
       nacos:
         condition: service_healthy
+    volumes:
+      - /home/dithiothreitol/fengwu-models/fengwu_v2.onnx:/app/model/fengwu_v2.onnx:ro
     environment:
       LOG_PATH: /logs
       FENGWU_USE_GPU: "false"
       FENGWU_MODEL_PATH: /app/model/fengwu_v2.onnx
+      FENGWU_MEAN_PATH: /app/data_mean.npy
+      FENGWU_STD_PATH: /app/data_std.npy
       FENGWU_NUM_THREADS: 4
       NACOS_SERVER: nacos:8848
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-sf", "http://localhost:8085/health/ready"]
+      test: ["CMD", "curl", "-sf", "http://localhost:8085/health"]
       interval: 30s
       timeout: 10s
-      retries: 3
-      start_period: 90s
+      retries: 5
+      start_period: 180s
     deploy:
       resources:
         limits:
           memory: 4G
         reservations:
           memory: 2G
+    networks:
+      - uav-net
 
   model-engine:
     build:
@@ -411,6 +470,8 @@ services:
           memory: 2G
         reservations:
           memory: 1G
+    networks:
+      - uav-net
 
   kafka:
     image: confluentinc/cp-kafka:7.4.0
@@ -427,10 +488,20 @@ services:
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT_INTERNAL
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    healthcheck:
+      test: ["CMD", "kafka-topics", "--bootstrap-server", "localhost:9092", "--list"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
     deploy:
       resources:
         limits:
+          memory: 2G
+        reservations:
           memory: 1G
+    networks:
+      - uav-net
 
   zookeeper:
     image: confluentinc/cp-zookeeper:7.4.0
@@ -448,6 +519,8 @@ services:
       resources:
         limits:
           memory: 256M
+    networks:
+      - uav-net
 
   frontend:
     build:
@@ -459,19 +532,15 @@ services:
       - "3000:80"
     restart: always
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost/"]
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1/"]
       interval: 30s
       timeout: 5s
       start_period: 10s
       retries: 3
+    networks:
+      - uav-net
 
 volumes:
   mysql-data:
   redis-data:
   model-engine-data:
-
-networks:
-  trae_default:
-    # 生产环境使用 external: true 预先创建网络
-    # docker network create trae_default
-    driver: bridge

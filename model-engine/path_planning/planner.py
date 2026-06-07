@@ -11,10 +11,19 @@ GPR 风险场驱动的路径规划
 
 与原 Java 服务不冲突，可并行运行用于对比
 """
+import logging
 import numpy as np
 from dataclasses import dataclass
 from typing import List, Tuple, Optional
 from enum import Enum
+
+logger = logging.getLogger(__name__)
+
+# ── 坐标系配置常量 ────────────────────────────
+# 网格范围: 150km × 150km, 分辨率: 1km/grid
+GRID_EXTENT_KM = 150.0
+GRID_RESOLUTION_KM = 1.0
+GRID_OFFSET_KM = GRID_EXTENT_KM / 2.0  # 75km, 将原点(-75,-75)映射到网格(0,0)
 
 
 class RiskLevel(Enum):
@@ -233,13 +242,13 @@ class GPRPathPlanner:
     @staticmethod
     def _world_to_grid(x: float, y: float, H: int, W: int) -> Tuple[int, int]:
         """世界坐标 (km) → 网格坐标"""
-        gx = int((x + 75) / 1.0)  # 150km / 150grid
-        gy = int((y + 75) / 1.0)
+        gx = int((x + GRID_OFFSET_KM) / GRID_RESOLUTION_KM)
+        gy = int((y + GRID_OFFSET_KM) / GRID_RESOLUTION_KM)
         return np.clip(gx, 0, H - 1), np.clip(gy, 0, W - 1)
 
     @staticmethod
     def _grid_to_world(gx: float, H: int) -> float:
-        return gx * 1.0 - 75
+        return gx * GRID_RESOLUTION_KM - GRID_OFFSET_KM
 
 
 # ── 新旧路径规划对比 ────────────────────────────
@@ -288,7 +297,7 @@ class PathPlanningComparison:
                 "total_dist_km": round(total_dist, 1),
                 "max_risk": round(max(w.risk for w in path), 4),
             })
-            print(f"  [{name}] {len(path)} waypoints, "
-                  f"avg_risk={total_risk:.4f}, dist={total_dist:.1f}km")
+            logger.info(f"  [{name}] {len(path)} waypoints, "
+                        f"avg_risk={total_risk:.4f}, dist={total_dist:.1f}km")
 
         return results

@@ -78,7 +78,13 @@ spring:
               - PUT
               - DELETE
               - OPTIONS
-            allowedHeaders: "*"
+            allowedHeaders:
+              - "Content-Type"
+              - "Authorization"
+              - "X-Requested-With"
+              - "Accept"
+              - "Origin"
+              - "X-Request-ID"
             allowCredentials: true
             maxAge: 3600
       default-filters:

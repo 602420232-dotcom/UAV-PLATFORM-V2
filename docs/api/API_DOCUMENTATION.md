@@ -171,7 +171,7 @@ DWA局部路径规划
 ### GET /api/weather/alerts/{droneId}
 获取无人机告警
 
-## 十一、FengWu 气象模型 (fengwu-service :8085)
+## 十一、FengWu 气象模型 (fengwu-service :8085) [Python FastAPI]
 
 ### POST /api/fengwu/forecast
 全球气象预测（基于 ONNX 推理引擎）
@@ -205,7 +205,95 @@ DWA局部路径规划
 ### GET /api/fengwu/health
 健康检查 → `200 {"success":true,"status":"UP","model_loaded":true}`
 
-## 十二、错误码
+## 十二、边云协同 (edge-cloud-coordinator :8000 REST / :8765 WebSocket) [Python FastAPI]
+
+> 📘 完整 OpenAPI 文档：[openapi.yaml](edge-cloud-coordinator/openapi.yaml) | 在线 Swagger：启动后访问 http://localhost:8000/docs
+
+### GET /health
+健康检查 → `200 {"status":"healthy"}`
+
+### POST /tasks
+提交边云任务（自动分配到云端或边缘处理）
+```json
+{"task_type":"global_path","priority":5,"data":{},"deadline":60.0}
+```
+
+### GET /tasks/{task_id}
+查询任务状态 → `200 {"task_id":"task_1","status":"completed","result":{}}`
+
+### GET /tasks?status=completed&limit=10
+获取任务列表
+
+### DELETE /tasks/{task_id}
+取消任务
+
+### POST /tasks/batch
+批量提交任务（上限 100 个）
+
+### GET /status
+获取系统状态（节点ID、队列大小、云端/边缘连接状态）
+
+### POST /sync
+同步云端模型到边缘节点 → `200 {"models":["path_planner","weather_model"]}`
+
+### POST /upload
+上传边缘数据到云端（异步后台任务）
+
+### GET /models
+列出可用模型（云端 + 本地）
+
+### 联邦学习接口
+
+| 端点 | 方法 | 说明 |
+|------|:----:|------|
+| `/fl/update` | POST | 接收无人机客户端的模型更新（FedAvg 聚合） |
+| `/fl/status` | GET | 获取联邦学习当前状态（轮次/准确率/策略） |
+| `/fl/history` | GET | 获取联邦学习训练历史 |
+| `/fl/train` | POST | 模拟无人机本地训练 |
+
+### WebSocket 实时同步
+
+```
+ws://localhost:8765/ws
+```
+
+**客户端→服务端**：订阅频道 `{"type":"subscribe","channel":"drone_status"}`  
+**服务端→客户端**：推送更新 `{"type":"drone_update","drone_id":"UAV-001","position":{...}}`
+
+## 十三、数据同化算法平台 (data-assimilation-platform) [Python]
+
+> 路径：`data-assimilation-platform/algorithm_core/` | Java 服务封装：`data-assimilation-service` (端口 8084)
+
+### 核心算法
+
+| 算法 | 说明 |
+|------|------|
+| **3D-VAR** | 三维变分同化，最小化背景场与观测的代价函数 |
+| **4D-VAR** | 四维变分同化，在时间窗口内优化初始条件 |
+| **EnKF** | 集合卡尔曼滤波，蒙特卡洛近似背景误差协方差 |
+| **Hybrid** | 混合方法，结合变分与集合卡尔曼滤波优势 |
+
+### 通过 Java 服务调用 (推荐)
+
+```bash
+# 执行同化
+curl -X POST http://localhost:8088/api/assimilation/execute \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"algorithm":"3dvar","background":{},"observations":{},"config":{}}'
+
+# 计算方差场
+curl -X POST http://localhost:8088/api/assimilation/variance \
+  -H "Authorization: Bearer $TOKEN"
+
+# 批量处理
+curl -X POST http://localhost:8088/api/assimilation/batch \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"items":[...]}'
+```
+
+## 十四、错误码
 
 | 状态码 | 含义 | 处理方式 |
 |:------:|------|----------|
@@ -218,7 +306,7 @@ DWA局部路径规划
 | 500 | 服务器内部错误 | 联系运维 |
 | 503 | 服务不可用（熔断器打开） | 稍后重试 |
 
-## 十三、通用响应格式
+## 十五、通用响应格式
 
 ```json
 // 成功
@@ -228,6 +316,6 @@ DWA局部路径规划
 ```
 ---
 
-> **最后更新**: 2026-06-03  
-> **版本**: 2.2  
+> **最后更新**: 2026-06-06  
+> **版本**: 2.3  
 > **维护者**: DITHIOTHREITOL
