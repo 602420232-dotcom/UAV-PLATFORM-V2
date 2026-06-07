@@ -109,6 +109,18 @@ public class WrfController {
                 file.transferTo(targetFile);
             }
 
+            // Validate script path for security
+            if (pythonScriptPath == null || pythonScriptPath.isBlank()) {
+                return Map.of("success", false, "error", "安全验证失败");
+            }
+            if (pythonScriptPath.contains("..")) {
+                return Map.of("success", false, "error", "安全验证失败");
+            }
+            String scriptName = Paths.get(pythonScriptPath).normalize().getFileName().toString();
+            if (!scriptName.equals("wrf_processor.py")) {
+                return Map.of("success", false, "error", "安全验证失败");
+            }
+
             Map<String, Object> params = new HashMap<>();
             params.put("filePath", tempFile.toString());
             params.put("height", height);
