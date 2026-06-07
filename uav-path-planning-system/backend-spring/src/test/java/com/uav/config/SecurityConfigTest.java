@@ -6,10 +6,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.context.ActiveProfiles;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
+@ActiveProfiles("test")
 @DisplayName("SecurityConfig 测试")
 class SecurityConfigTest {
 
@@ -33,6 +35,7 @@ class SecurityConfigTest {
 }
 
 @SpringBootTest
+@ActiveProfiles("test")
 @DisplayName("SecurityAuditConfig 测试")
 class SecurityAuditConfigTest {
 

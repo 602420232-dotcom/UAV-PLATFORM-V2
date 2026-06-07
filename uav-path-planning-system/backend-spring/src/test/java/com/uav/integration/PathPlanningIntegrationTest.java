@@ -15,6 +15,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -26,6 +27,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * 覆盖系统主要功能模块间的交互逻辑
  */
 @SpringBootTest(classes = UavPathPlanningApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@ActiveProfiles("test")
 class PathPlanningIntegrationTest {
 
     @LocalServerPort
