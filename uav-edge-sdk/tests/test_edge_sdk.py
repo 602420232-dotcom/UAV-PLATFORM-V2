@@ -8,10 +8,9 @@ import sys
 import os
 import json
 import tempfile
-import math
 sys.path.insert(0, os.path.dirname(__file__))
 
-from edge_sdk import EdgeSDK, create_sdk
+from edge_sdk import create_sdk
 from edge_sdk.config import SDKConfig
 
 

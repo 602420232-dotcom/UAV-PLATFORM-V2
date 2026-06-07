@@ -2,13 +2,13 @@
 安全模块单元测试 - mTLS + JWT + 数据加密
 """
 import logging
-logger = logging.getLogger(__name__)
-
 import sys
 import os
+import unittest
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'edge-cloud-coordinator'))
 
-import unittest
+logger = logging.getLogger(__name__)
 
 
 from security import (  # type: ignore[import-not-found]

@@ -3,11 +3,11 @@
 # 系统功能测试脚本
 
 import logging
-logger = logging.getLogger(__name__)
+import time
 
 import requests
-import json
-import time
+
+logger = logging.getLogger(__name__)
 
 # 服务地址
 BASE_URL = "http://localhost:8080/api"

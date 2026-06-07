@@ -10,15 +10,14 @@
 3. 计算RMSE, MAE, 以及≤0.5m/s的百分比
 """
 import logging
-logger = logging.getLogger(__name__)
-
 import sys
 import os
 import math
 import random
-import json
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
+
+logger = logging.getLogger(__name__)
 
 # 风廓线分层高度 (0-1000m)
 HEIGHT_LAYERS = [10, 50, 100, 200, 300, 500, 800, 1000]
@@ -59,7 +58,6 @@ def calculate_metrics(samples):
     """计算精度指标"""
     wrf_errors = [s['wrf_error'] for s in samples]
     ai_errors = [s['ai_error'] for s in samples]
-    true_values = [s['true_wind_speed'] for s in samples]
 
     # RMSE
     wrf_rmse = math.sqrt(sum(e**2 for e in wrf_errors) / len(wrf_errors))
