@@ -7,8 +7,6 @@ spring:
       - org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration
       - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
       - org.springframework.boot.autoconfigure.cache.RedisCacheManager
-      - org.springframework.cloud.circuitbreaker.resilience4j.Resilience4JAutoConfiguration
-      - org.springframework.cloud.circuitbreaker.resilience4j.ReactiveResilience4JAutoConfiguration
 
   cloud:
     circuitbreaker:
@@ -67,5 +65,5 @@ utm:
 
 logging:
   level:
-    root: warn
-    "[com.uav]": info
+    root: info
+    "[com.uav]": debug

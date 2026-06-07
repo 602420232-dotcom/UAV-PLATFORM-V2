@@ -20,8 +20,6 @@ spring:
     exclude:
       - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
       - org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration
-      - org.springframework.cloud.circuitbreaker.resilience4j.Resilience4JAutoConfiguration
-      - org.springframework.cloud.circuitbreaker.resilience4j.ReactiveResilience4JAutoConfiguration
 
   cloud:
     circuitbreaker:
@@ -62,8 +60,8 @@ uav:
 
 logging:
   level:
-    root: warn
-    '[com.uav]': warn
+    root: info
+    '[com.uav]': debug
 
 mybatis-plus:
   mapper-locations: classpath:mapper/**/*.xml
