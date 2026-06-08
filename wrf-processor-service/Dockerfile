@@ -17,12 +17,12 @@ RUN mvn dependency:go-offline -B
 COPY wrf-processor-service/src ./src
 RUN mvn clean package -DskipTests -B
 
-FROM eclipse-temurin:17-jre
+FROM eclipse-temurin:17-jre-jammy
 RUN apt-get update && apt-get install -y --no-install-recommends python3 python3-pip netcdf-bin curl && rm -rf /var/lib/apt/lists/* \
     && groupadd -r appuser && useradd -r -g appuser -m -s /sbin/nologin appuser
 COPY --from=builder /build/target/*.jar app.jar
 COPY wrf-processor-service/src/main/python/ /app/python/
-RUN pip3 install --no-cache-dir -r /app/python/requirements.txt
+RUN pip3 install --no-cache-dir --break-system-packages -r /app/python/requirements.txt
 RUN chown -R appuser:appuser /app
 ENV PYTHONPATH=/app/python
 RUN mkdir -p /logs && chown appuser:appuser /logs

@@ -170,8 +170,11 @@ class TestDataValidation:
 
     def test_invalid_grid_shape(self):
         """测试无效网格形状"""
+        from bayesian_assimilation.utils.validation import DataValidator
+
+        invalid_data = np.ones((3, 4))
         with pytest.raises(ValueError):
-            pass
+            DataValidator.validate_shape(invalid_data, (5, 5), name='test_grid')
 
     def test_observation_out_of_bounds(self):
         """测试观测点超出边界"""

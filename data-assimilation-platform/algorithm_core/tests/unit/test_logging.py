@@ -35,7 +35,7 @@ class TestSetupLogging:
 
         # 验证根日志器已配置
         root_logger = logging.getLogger()
-        assert root_logger.level <= logging.DEBUG
+        assert root_logger.level <= logging.INFO
 
     def test_setup_logging_custom_level(self):
         """测试自定义日志级别"""

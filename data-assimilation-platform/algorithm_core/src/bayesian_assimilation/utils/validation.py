@@ -62,13 +62,17 @@ class DataValidator:
 
         Returns:
             是否有效
+
+        Raises:
+            ValueError: 形状不匹配时抛出
         """
         if not DataValidator.validate_array(data, name):
             return False
 
         if data.shape != expected_shape:
-            logger.error(f"{name} 形状不匹配: 期望 {expected_shape}, 实际 {data.shape}")
-            return False
+            msg = f"{name} 形状不匹配: 期望 {expected_shape}, 实际 {data.shape}"
+            logger.error(msg)
+            raise ValueError(msg)
 
         return True
 

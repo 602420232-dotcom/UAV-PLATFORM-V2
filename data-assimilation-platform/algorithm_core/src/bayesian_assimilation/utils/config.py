@@ -208,7 +208,8 @@ class ConfigFactory:
             "base": BaseConfig,
             "optimized": OptimizedConfig,
             "adaptive": AdaptiveConfig,
-            "compatible": CompatibleConfig
+            "compatible": CompatibleConfig,
+            "assimilation": AssimilationConfig
         }
 
         if config_type not in config_classes:
@@ -240,7 +241,7 @@ def get_config_from_env() -> BaseConfig:
     # 基础配置
     config_data = {
         "method": os.getenv("ASSIMILATION_METHOD", "3DVAR"),
-        "grid_resolution": float(os.getenv("GRID_RESOLUTION", "50.0")),
+        "grid_resolution": float(os.getenv("ASSIMILATION_RESOLUTION", "50.0")),
         "use_gpu": os.getenv("USE_GPU", "True").lower() == "true"
     }
 

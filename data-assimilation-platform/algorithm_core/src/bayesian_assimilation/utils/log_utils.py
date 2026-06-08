@@ -23,22 +23,32 @@ def setup_logging(level: int = logging.INFO,
     return logger
 
 
-def get_logger(name: Optional[str] = None) -> logging.Logger:
-    return logging.getLogger(name)
+def get_logger(name: Optional[str] = None, level: Optional[int] = None) -> logging.Logger:
+    logger_instance = logging.getLogger(name)
+    if level is not None:
+        logger_instance.setLevel(level)
+    return logger_instance
 
 
-def log_function_call(func):
+def log_function_call(func=None, *, logger=None):
+    """装饰器：记录函数调用日志。可作为无参装饰器 @log_function_call 或带参数 @log_function_call(logger=...) 使用。"""
     import functools
 
-    @functools.wraps(func)
-    def wrapper(*args, **kwargs):
-        logger = logging.getLogger(func.__module__)
-        logger.debug(f"调用函数: {func.__name__}, args={args}, kwargs={kwargs}")
-        try:
-            result = func(*args, **kwargs)
-            logger.debug(f"函数返回: {func.__name__} -> {result}")
-            return result
-        except Exception as e:
-            logger.error(f"函数异常: {func.__name__} -> {e}", exc_info=True)
-            raise
-    return wrapper
+    def decorator(f):
+        @functools.wraps(f)
+        def wrapper(*args, **kwargs):
+            _logger = logger if logger is not None else logging.getLogger(f.__module__)
+            _logger.debug(f"调用函数: {f.__name__}, args={args}, kwargs={kwargs}")
+            try:
+                result = f(*args, **kwargs)
+                _logger.debug(f"函数返回: {f.__name__} -> {result}")
+                return result
+            except Exception as e:
+                _logger.error(f"函数异常: {f.__name__} -> {e}", exc_info=True)
+                raise
+        return wrapper
+
+    # 无参调用：@log_function_call 直接装饰函数
+    if func is not None:
+        return decorator(func)
+    return decorator
