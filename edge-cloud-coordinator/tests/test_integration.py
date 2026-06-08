@@ -3,6 +3,9 @@ Edge-Cloud-Coordinator 集成测试
 测试边缘云协调器的各组件协作
 """
 
+import logging
+logger = logging.getLogger(__name__)
+
 import sys
 import os
 import pytest

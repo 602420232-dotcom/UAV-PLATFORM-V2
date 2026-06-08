@@ -2,6 +2,9 @@
 E2E测试配置文件
 """
 
+import logging
+logger = logging.getLogger(__name__)
+
 import pytest
 import sys
 import os

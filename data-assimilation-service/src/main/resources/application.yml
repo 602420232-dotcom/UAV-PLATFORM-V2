@@ -2,29 +2,29 @@ spring:
   application:
     name: data-assimilation-service
   
-  # 閺佺増宓佹惔鎾诲帳缂?
+  # 数据库配置
   datasource:
     url: jdbc:mysql://${DB_HOST:localhost}:3306/data_assimilation?useSSL=false&requireSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
     username: ${DB_USER:root}
-    password: ${DB_PASSWORD}  # 缁夊娅庢妯款吇閸婄》绱濆鍝勫煑鐟曚焦鐪伴柊宥囩枂
+    password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
   
-  # JPA闁板秶鐤?
+  # JPA配置
   jpa:
     hibernate:
       ddl-auto: update
     show-sql: false
 
-# 閺堝秴濮熼崳銊╁帳缂?
+# 服务器配置
 server:
   port: 8084
   ssl:
     enabled: ${SSL_ENABLED:false}
-    key-store: ${SSL_KEY_STORE:}
-    key-store-password: ${SSL_KEY_STORE_PASSWORD:}
-    key-alias: ${SSL_KEY_ALIAS:}
+    key-store: ${SSL_KEY_STORE}
+    key-store-password: ${SSL_KEY_STORE_PASSWORD}
+    key-alias: ${SSL_KEY_ALIAS}
 
-# Actuator 閸嬨儱鎮嶅Λ鈧弻?
+# Actuator 配置
 management:
   endpoints:
     web:
@@ -34,13 +34,13 @@ management:
     health:
       show-details: when-authorized
 
-# 閸氬苯瀵查張宥呭闁板秶鐤?
+# 同化服务配置
 assimilation:
-  # Python閼存碍婀扮捄顖氱窞
+  # Python脚本路径
   python-script: ${user.dir}/src/main/python/bayesian_assimilation.py
-  # 婢跺嫮鎮婄搾鍛閺冨爼妫?
+  # 任务超时时间
   timeout: 60000
-  # 缁犳纭堕崣鍌涙殶
+  # 算法参数
   algorithm:
     background-error: 0.1
     observation-error: 0.05

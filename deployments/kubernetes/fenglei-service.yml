@@ -1,0 +1,88 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fenglei-service
+  namespace: uav-platform
+  labels:
+    app: fenglei-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fenglei-service
+  template:
+    metadata:
+      labels:
+        app: fenglei-service
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        fsGroup: 1001
+      containers:
+        - name: fenglei
+          image: fenglei-service:latest
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: uav-platform-config
+          env:
+            - name: FENGLEI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: uav-secrets
+                  key: fenglei-api-key
+            - name: FENGLEI_CACHE_DIR
+              value: "/app/cache"
+            - name: FENGLEI_UPDATE_INTERVAL
+              value: "30"
+            - name: FENGLEI_ENV
+              value: "production"
+            - name: CORS_ORIGINS
+              value: "*"
+          ports:
+            - containerPort: 8091
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "200m"
+            limits:
+              memory: "1Gi"
+              cpu: "1"
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 8091
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8091
+            initialDelaySeconds: 40
+            periodSeconds: 30
+          volumeMounts:
+            - name: cache-data
+              mountPath: /app/cache
+      volumes:
+        - name: cache-data
+          persistentVolumeClaim:
+            claimName: cache-data-pvc
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fenglei-service
+  namespace: uav-platform
+spec:
+  type: ClusterIP
+  selector:
+    app: fenglei-service
+  ports:
+    - port: 8091
+      targetPort: 8091

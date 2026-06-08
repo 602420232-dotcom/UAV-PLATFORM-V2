@@ -45,9 +45,9 @@ server:
   port: ${SERVER_PORT:8089}
   ssl:
     enabled: ${SSL_ENABLED:false}
-    key-store: ${SSL_KEY_STORE:}
+    key-store: ${SSL_KEY_STORE}
     key-store-password: ${SSL_KEY_STORE_PASSWORD}
-    key-alias: ${SSL_KEY_ALIAS:}
+    key-alias: ${SSL_KEY_ALIAS}
 
 # UAV配置
 uav:

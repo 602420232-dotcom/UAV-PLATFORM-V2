@@ -504,7 +504,7 @@ def create_risk_aware_planner(
 def demo():
     """演示风险感知路径规划"""
     print("=" * 60)
-    print("风险感知路径规划器 - 演示")
+    logger.info("风险感知路径规划器 - 演示")
     print("=" * 60)
 
     # 创建示例风险场
@@ -530,13 +530,13 @@ def demo():
     mapper = WeatherToRiskMapper(grid_resolution=10.0)
     risk_result = mapper.compute_comprehensive_risk(assimilation_result)
 
-    print("\n风险统计:")
+    logger.info("\n风险统计:")
     print(f"  - 平均风险: {risk_result['summary'].get('avg_risk', 0):.3f}")
     safe_ratio = risk_result['summary'].get('safe_area_ratio', 0)
     print(f"  - 安全区域占比: {safe_ratio:.1%}")
 
     # 创建风险感知A*规划器
-    print("\n1. 测试风险感知A*规划器...")
+    logger.info("\n1. 测试风险感知A*规划器...")
     astar = RiskAwareAStarPlanner(risk_result=risk_result, risk_weight=0.5)
 
     start = (10, 10)
@@ -545,7 +545,7 @@ def demo():
     result = astar.plan(start, goal, grid_resolution=10.0)
 
     if result['success']:
-        print("   路径找到!")
+        logger.info("   路径找到!")
         print(f"   - 路径长度: {result['distance']:.1f}")
         print(f"   - 平均风险: {result['avg_risk']:.3f}")
         print(f"   - 迭代次数: {result['iterations']}")
@@ -553,13 +553,13 @@ def demo():
         print(f"   路径规划失败: {result['error']}")
 
     # 创建风险感知RRT*规划器
-    print("\n2. 测试风险感知RRT*规划器...")
+    logger.info("\n2. 测试风险感知RRT*规划器...")
     rrt = RiskAwareRRTStarPlanner(risk_result=risk_result, risk_weight=0.5)
 
     result = rrt.plan(start, goal, bounds=(0, 200, 0, 200))
 
     if result['success']:
-        print("   路径找到!")
+        logger.info("   路径找到!")
         print(f"   - 路径长度: {result['distance']:.1f}")
         print(f"   - 平均风险: {result['avg_risk']:.3f}")
         print(f"   - 迭代次数: {result['iterations']}")
@@ -567,7 +567,7 @@ def demo():
         print(f"   路径规划失败: {result['error']}")
 
     print("\n" + "=" * 60)
-    print("演示完成!")
+    logger.info("演示完成!")
 
 
 if __name__ == "__main__":

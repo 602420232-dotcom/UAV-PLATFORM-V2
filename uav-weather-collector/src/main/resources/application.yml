@@ -12,7 +12,7 @@ spring:
   datasource:
     url: jdbc:mysql://${DB_HOST:mysql}:3306/uav_weather?useSSL=false&serverTimezone=UTC
     username: ${DB_USER:uav}
-    password: ${DB_PASSWORD:uav123}
+    password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
   autoconfigure:
     exclude:
@@ -50,7 +50,7 @@ springdoc:
 
 uav:
   jwt:
-    secret: dThpc3RhbmRvbmx5Zm9ydGVzdGluZzM2MmJ5dGVzbG9uZ3NlY3JldGtleQ==
+    secret: ${JWT_SECRET}
 
 # 天气采集调度配置
 weather:
@@ -60,11 +60,11 @@ weather:
     fusion-interval: 900000    # 多源融合间隔 (15分钟)
     risk-interval: 600000      # 风险评估间隔 (10分钟)
   cma:
-    api-key: ${CMA_API_KEY:}
+    api-key: ${CMA_API_KEY}
     base-url: https://api.weather.cma.cn/api
   owm:
-    api-key: ${OWM_API_KEY:}
+    api-key: ${OWM_API_KEY}
     base-url: https://api.openweathermap.org/data/2.5
   ecmwf:
-    api-key: ${ECMWF_API_KEY:}
+    api-key: ${ECMWF_API_KEY}
     base-url: https://api.ecmwf.int/v1

@@ -23,10 +23,10 @@ def test_coordinator_basic():
     from coordinator import EdgeCloudCoordinator as Coordinator  # 适配类名
     from coordinator import TaskType, EdgeTask
 
-    print("\n=== 测试: Coordinator ===")
+    logger.info("\n=== 测试: Coordinator ===")
 
     coord = Coordinator(node_id="edge_test")
-    print("✓ Coordinator 初始化成功")
+    logger.info("✓ Coordinator 初始化成功")
 
     # 测试任务提交
     task = EdgeTask(
@@ -50,10 +50,10 @@ def test_edge_ai_basic():
     """测试边缘AI推理（适配实际接口）"""
     from edge_ai_inference import EdgeAIInference, ModelPrecision, InferenceBackend
 
-    print("\n=== 测试: EdgeAIInference ===")
+    logger.info("\n=== 测试: EdgeAIInference ===")
 
     ai = EdgeAIInference(backend=InferenceBackend.ONNX)
-    print("✓ EdgeAIInference 初始化成功")
+    logger.info("✓ EdgeAIInference 初始化成功")
 
     # 测试模型加载
     model = ai.load_model(
@@ -77,14 +77,14 @@ def test_circuit_breaker_basic():
     """测试熔断器（避免回调问题）"""
     from circuit_breaker import CircuitBreaker  # pyright: ignore[reportAttributeAccessIssue]
 
-    print("\n=== 测试: CircuitBreaker ===")
+    logger.info("\n=== 测试: CircuitBreaker ===")
 
     cb = CircuitBreaker(
         name="test_cb",
         failure_threshold=3,
         recovery_timeout=10
     )
-    print("✓ CircuitBreaker 初始化成功")
+    logger.info("✓ CircuitBreaker 初始化成功")
     print(f"  初始状态: {cb.state}")
 
     # 测试熔断逻辑
@@ -93,17 +93,17 @@ def test_circuit_breaker_basic():
     cb.record_failure()
 
     print(f"  3次失败后状态: {cb.state}")
-    print("✓ CircuitBreaker 基本逻辑正常")
+    logger.info("✓ CircuitBreaker 基本逻辑正常")
 
     return True
 
 
 def test_security_basic():
     """测试安全模块（查找可用的类）"""
-    print("\n=== 测试: Security ===")
+    logger.info("\n=== 测试: Security ===")
 
     import security
-    print("✓ Security 模块加载成功")
+    logger.info("✓ Security 模块加载成功")
     print(f"  模块内容: {dir(security)}")
 
     # 尝试找到可用的加密类
@@ -118,10 +118,10 @@ def test_federated_learning_basic():
     """测试联邦学习（适配实际接口）"""
     from federated_learning import FederatedLearning
 
-    print("\n=== 测试: FederatedLearning ===")
+    logger.info("\n=== 测试: FederatedLearning ===")
 
     fl = FederatedLearning()
-    print("✓ FederatedLearning 初始化成功")
+    logger.info("✓ FederatedLearning 初始化成功")
     print(f"  可用方法: {[m for m in dir(fl) if not m.startswith('_')]}")
 
     return True
@@ -131,10 +131,10 @@ def test_uav_weather_collector():
     """测试气象采集器（适配构造函数）"""
     from uav_weather_collector import UAVWeatherCollector
 
-    print("\n=== 测试: UAVWeatherCollector ===")
+    logger.info("\n=== 测试: UAVWeatherCollector ===")
 
     collector = UAVWeatherCollector(drone_id="UAV001")  # 适配参数
-    print("✓ UAVWeatherCollector 初始化成功")
+    logger.info("✓ UAVWeatherCollector 初始化成功")
 
 
     # 查找可用的采集方法
@@ -151,10 +151,10 @@ def test_websocket_sync():
     """测试WebSocket同步"""
     from websocket_sync import WebSocketSync
 
-    print("\n=== 测试: WebSocketSync ===")
+    logger.info("\n=== 测试: WebSocketSync ===")
 
     ws = WebSocketSync()
-    print("✓ WebSocketSync 初始化成功")
+    logger.info("✓ WebSocketSync 初始化成功")
     print(f"  可用方法: {[m for m in dir(ws) if not m.startswith('_')]}")
 
     return True
@@ -162,10 +162,10 @@ def test_websocket_sync():
 
 def test_api_basic():
     """测试API模块"""
-    print("\n=== 测试: API ===")
+    logger.info("\n=== 测试: API ===")
 
     try:
-        print("✓ API 模块加载成功")
+        logger.info("✓ API 模块加载成功")
         return True
     except Exception as e:
         print(f"⚠ API 模块加载有问题: {e}")
@@ -179,7 +179,7 @@ def test_api_basic():
 def run_all_tests():
     """运行所有兼容的测试"""
     print("=" * 70)
-    print("edge-cloud-coordinator 兼容性测试")
+    logger.info("edge-cloud-coordinator 兼容性测试")
     print("=" * 70)
 
     tests = [
@@ -203,7 +203,7 @@ def run_all_tests():
             results.append((test_name, False))
 
     print("\n" + "=" * 70)
-    print("测试总结")
+    logger.info("测试总结")
     print("=" * 70)
 
     passed = sum(1 for _, success in results if success)

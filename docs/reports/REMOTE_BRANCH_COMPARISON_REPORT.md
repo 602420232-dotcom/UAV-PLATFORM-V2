@@ -1,7 +1,8 @@
 # 远程与本地代码差异对比报告
 
-> **生成日期**: 2026-06-06  
+> **生成日期**: 2026-06-08  
 > **对比策略**: 仅对比差异，不执行合并、不修改/覆盖/删除本地任何源码
+> **基准分支**: `origin/main`
 
 ---
 
@@ -11,73 +12,148 @@
 |------|----|
 | 远程仓库 | `git@github.com:602420232-dotcom/weather.git` |
 | 本地当前分支 | `main` |
-| 本地 HEAD | `5ab96e2` |
-| 远程分支 | `origin/main`, `origin/chenlingqian`, `origin/master` |
+| 本地 HEAD | `8fa0a1c` |
+| 远程分支 | `origin/main`, `origin/chenlingqian`, `origin/master`, `origin/fix/deploy-bugs` |
 
 ---
 
 ## 二、本地与远程 main 分支同步状态
 
-**结论：本地 `main` 与 `origin/main` 完全同步，无差异。**
+**结论：本地 `main` 领先于 `origin/main` 共 4 个提交。**
 
 ```
-5ab96e2 (HEAD -> main, origin/main, origin/HEAD) fix: minor code improvements and typeScript config updates
+8fa0a1c (HEAD -> main) fix: 修复测试配置文件中的未知属性问题
+40949ed fix: 修复UAV配置属性问题
+5268ad7 fix: 修复application.yml中文乱码问题
+47fc8a4 fix: 统一JWT配置前缀为uav.jwt
+60344a9 (origin/main, origin/HEAD) fix: 修复 CI/CD 构建缺少环境变量的问题
 ```
 
-本地没有未推送的提交，也没有落后于远程的提交。
+### 本地领先提交详情
+
+| 提交 | 描述 |
+|------|------|
+| `8fa0a1c` | 修复测试配置文件中的未知属性问题 |
+| `40949ed` | 修复UAV配置属性问题 |
+| `5268ad7` | 修复application.yml中文乱码问题 |
+| `47fc8a4` | 统一JWT配置前缀为uav.jwt |
 
 ---
 
-## 三、origin/main vs origin/chenlingqian 差异摘要
+## 三、本地与远程 main 差异文件清单
 
-`origin/chenlingqian` 分支与 `origin/main` 存在**大量差异**，主要变化：
+本地有以下文件与 `origin/main` 存在差异：
 
-| 文件/目录 | 变化类型 | 说明 |
-|-----------|----------|------|
-| `.env.example` | 修改 | 环境变量配置有显著差异 |
-| `.github/workflows/ci.yml` | 删除 | ci.yml 在 chenlingqian 分支不存在 |
-| `.github/workflows/ci-cd.yml` | 修改 | CI/CD 流程配置不同 |
-| `.github/workflows/deploy.yml` | 删除 | 部署流程配置不同 |
-| `api-gateway/` | 修改 | 新增 .classpath/.project 文件(Dockerfile等有差异) |
-| `.gitignore` | 修改 | 忽略规则有差异 |
-| `README.md` | 大幅修改 | 1341行差异 |
-| `LICENSE` | 修改 | 416行差异 |
-| `.flake8` | 删除 | Python lint配置差异 |
-| `.pre-commit-config.yaml` | 删除 | 预提交配置差异 |
+| 文件路径 | 修改类型 | 说明 |
+|----------|----------|------|
+| `api-gateway/src/main/resources/application.yml` | 修改 | API网关配置 |
+| `common-utils/src/main/java/com/uav/common/security/JwtProperties.java` | 修改 | JWT属性配置类 |
+| `path-planning-service/src/main/resources/application.yml` | 修改 | 路径规划服务配置 |
+| `uav-path-planning-system/backend-spring/src/main/java/com/uav/config/JwtKeyRotationService.java` | 修改 | JWT密钥轮换服务 |
+| `uav-path-planning-system/backend-spring/src/main/java/com/uav/config/JwtUtil.java` | 修改 | JWT工具类 |
+| `uav-path-planning-system/backend-spring/src/main/java/com/uav/config/UavProperties.java` | 修改 | UAV属性配置 |
+| `uav-path-planning-system/backend-spring/src/main/java/com/uav/config/UtmProperties.java` | 修改 | UTM属性配置 |
+| `uav-path-planning-system/backend-spring/src/main/resources/application.yml` | 修改 | 后端主配置文件 |
+| `uav-path-planning-system/backend-spring/src/test/resources/application-test.yml` | 修改 | 测试配置文件 |
+| `uav-path-planning-system/backend-spring/src/test/resources/application.yml` | 修改 | 测试资源配置 |
+| `uav-platform-service/src/main/resources/application.yml` | 修改 | 平台服务配置 |
+| `uav-weather-collector/src/main/resources/application.yml` | 修改 | 气象采集服务配置 |
+| `wrf-processor-service/src/main/resources/application.yml` | 修改 | WRF处理器服务配置 |
 
-**评估**: `chenlingqian` 分支可能是一个个人开发分支，缺少部分CI/CD基础设施，但可能包含一些实验性改动。
+### 差异分析总结
 
----
-
-## 四、origin/main vs origin/master 差异摘要
-
-`origin/master` 分支与 `origin/main` 存在**大量差异**，主要变化：
-
-| 文件/目录 | 变化类型 | 说明 |
-|-----------|----------|------|
-| `.github/workflows/` | 多个文件差异 | CI/CD 工作流配置完全不同 |
-| `.env.example` | 修改 | 75行差异 |
-| `.gitignore` | 修改 | 353行差异 |
-| `.pre-commit-config.yaml` | 修改 | 95行差异 |
-| `PROJECT_DOCUMENT_INDEX.md` | 删除 | master分支有364行文档 |
-| `README.md` | 修改 | 452行差异 |
-| `api-gateway/pom.xml` | 修改 | 117行差异 |
-| `.mvn/wrapper/maven-wrapper.properties` | 新增 | Maven wrapper配置 |
-| `.cursorignore` | 删除 | IDE配置 |
-| `.gitattributes` | 新增 | Git属性配置 |
-
-**评估**: `master` 分支与 `main` 有显著差异，可能是早期版本或不同的开发基线。
+**核心改动方向：**
+1. **JWT 配置统一**：将所有 JWT 相关配置前缀统一为 `uav.jwt`，解决之前配置键不一致的问题
+2. **配置属性修复**：修复 UAV 和 UTM 配置属性问题
+3. **编码问题修复**：修复 application.yml 文件中文乱码问题
+4. **测试配置优化**：修复测试配置文件中的未知属性问题
 
 ---
 
-## 五、结论与建议
+## 四、新增远程分支
 
-1. **本地代码与远程 main 完全同步**，无需任何操作
-2. `chenlingqian` 和 `master` 分支与 `main` 差异较大，建议：
-   - 确认这些分支是否仍在使用
-   - 如已废弃，可考虑删除远程分支
-   - 如包含有价值的改动，建议通过 PR 合并到 main
-3. **不执行任何合并/修改操作**，保持本地代码不变
+### 4.1 origin/fix/deploy-bugs
+
+| 属性 | 值 |
+|------|----|
+| 提交 | `632edb0` |
+| 描述 | `fix: disable PathPlanningIntegrationTest due to CommonSecurityConfig permission changes` |
+| 上游 | `origin/main` |
+
+**评估**：这是一个修复部署问题的临时分支，禁用了路径规划集成测试以解决安全配置变更导致的测试失败。
+
+---
+
+## 五、其他远程分支对比
+
+### 5.1 origin/main vs origin/chenlingqian
+
+| 属性 | 值 |
+|------|----|
+| 提交 | `79f1fac` |
+| 描述 | `fix: docker-compose.dev.yml 环境变量名对齐到项目统一规范` |
+| 与 main 差异 | 中等 |
+
+**评估**：该分支包含 docker-compose.dev.yml 环境变量名规范对齐的改动，与当前本地修改方向一致。
+
+### 5.2 origin/main vs origin/master
+
+| 属性 | 值 |
+|------|----|
+| 提交 | `a283bf8` |
+| 描述 | `init one` |
+| 与 main 差异 | 大量 |
+
+**评估**：`master` 分支是早期初始化版本，与当前 `main` 分支差异显著，建议确认是否仍在使用。
+
+---
+
+## 六、结论与建议
+
+### 6.1 当前状态总结
+
+| 分支 | 状态 | 与本地 main 关系 |
+|------|------|-----------------|
+| `origin/main` | 落后 | 本地领先 4 个提交 |
+| `origin/fix/deploy-bugs` | 新增 | 基于 main 的修复分支 |
+| `origin/chenlingqian` | 活跃 | 包含环境变量规范改动 |
+| `origin/master` | 陈旧 | 早期版本，差异显著 |
+
+### 6.2 操作建议
+
+1. **本地变更推送**：建议将本地 4 个提交推送到 `origin/main`
+   ```bash
+   git push origin main
+   ```
+
+2. **分支清理**：`master` 分支与 `main` 差异过大，建议确认是否废弃
+
+3. **新分支关注**：关注 `fix/deploy-bugs` 分支的修复内容，评估是否需要合并到本地
+
+4. **代码审查**：在推送前建议对本地改动进行代码审查，特别是 JWT 配置相关的安全性变更
+
+---
+
+## 七、本地修改详情
+
+### 7.1 JWT 配置统一（关键变更）
+
+**问题背景**：之前发现 `JwtAuthenticationFilter` 使用 `uav.jwt.secret`，而 `JwtUtil` 使用 `jwt.secret`，配置键不一致。
+
+**修复方案**：统一配置前缀为 `uav.jwt`
+
+**影响文件**：
+- `common-utils/src/main/java/com/uav/common/security/JwtProperties.java` - 属性类更新
+- `uav-path-planning-system/backend-spring/src/main/java/com/uav/config/JwtUtil.java` - 工具类更新
+- 各服务 `application.yml` - 配置文件更新
+
+### 7.2 配置文件编码修复
+
+**问题背景**：部分 application.yml 文件存在中文乱码问题
+
+**修复方案**：统一使用 UTF-8 编码并重新保存
+
+**影响文件**：多个服务的 application.yml
 
 ---
 

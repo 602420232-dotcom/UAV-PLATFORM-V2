@@ -14,6 +14,7 @@
 | `/api/planning/**` | path-planning-service | 8083 |
 | `/api/weather/**` | uav-weather-collector | 8086 |
 | `/api/fengwu/**` | fengwu-service | 8085 |
+| `/api/tianzi/**` | tianzi-service | 8090 |
 
 ## 二、认证服务 (uav-platform-service :8080)
 
@@ -205,7 +206,75 @@ DWA局部路径规划
 ### GET /api/fengwu/health
 健康检查 → `200 {"success":true,"status":"UP","model_loaded":true}`
 
-## 十二、边云协同 (edge-cloud-coordinator :8000 REST / :8765 WebSocket) [Python FastAPI]
+## 十二、TianZi 高分辨率分析 (tianzi-service :8090) [Python FastAPI]
+
+基于 TianZi 深度学习模型的高分辨率气象分析服务。
+
+### POST /api/tianzi/analysis
+高分辨率气象分析
+```json
+{
+  "observation_data": [[[...]]],
+  "background_data": [[[...]]],
+  "analysis_type": "analysis",
+  "resolution_km": 1.0
+}
+```
+**参数说明:**
+- `observation_data`: 观测数据网格，形状 (variables, lat, lon)
+- `background_data`: 可选背景场数据，用于同化
+- `analysis_type`: 分析类型，可选值: `analysis`, `forecast`, `assimilation`
+- `resolution_km`: 目标分辨率（公里），最高 1km
+
+**响应示例:**
+```json
+{
+  "status": "success",
+  "model": "tianzi.onnx",
+  "analysis_type": "analysis",
+  "resolution_km": 1.0,
+  "computation_time_s": 2.5,
+  "results": [
+    {"variable": "u10", "data": [[...]], "units": "m/s", "description": "10m U wind component"},
+    {"variable": "v10", "data": [[...]], "units": "m/s", "description": "10m V wind component"},
+    {"variable": "t2m", "data": [[...]], "units": "K", "description": "2m temperature"},
+    {"variable": "msl", "data": [[...]], "units": "Pa", "description": "Mean sea level pressure"},
+    {"variable": "rh2m", "data": [[...]], "units": "%", "description": "2m relative humidity"},
+    {"variable": "precip", "data": [[...]], "units": "mm/h", "description": "Precipitation rate"}
+  ]
+}
+```
+
+### POST /api/tianzi/analysis/wind-field
+风场快速查询（轻量级端点，适用于无人机路径规划）
+```json
+{
+  "observation_data": [[[...]]],
+  "resolution_km": 1.0
+}
+```
+
+**响应示例:**
+```json
+{
+  "status": "success",
+  "model": "tianzi.onnx",
+  "resolution_km": 1.0,
+  "u10": [[...]],
+  "v10": [[...]],
+  "wind_speed_avg": 5.2,
+  "wind_speed_max": 15.8,
+  "wind_speed_min": 0.3
+}
+```
+
+### GET /api/tianzi/model/info
+获取模型信息 → `200 {"model":"TianZi","version":"1.0","variables":12,"max_resolution_km":1.0}`
+
+### GET /api/tianzi/health
+健康检查 → `200 {"status":"UP","model_loaded":true,"model_path":"/app/model/tianzi.onnx","uptime_seconds":3600}`
+
+## 十三、边云协同 (edge-cloud-coordinator :8000 REST / :8765 WebSocket) [Python FastAPI]
 
 > 📘 完整 OpenAPI 文档：[openapi.yaml](edge-cloud-coordinator/openapi.yaml) | 在线 Swagger：启动后访问 http://localhost:8000/docs
 
@@ -260,7 +329,7 @@ ws://localhost:8765/ws
 **客户端→服务端**：订阅频道 `{"type":"subscribe","channel":"drone_status"}`  
 **服务端→客户端**：推送更新 `{"type":"drone_update","drone_id":"UAV-001","position":{...}}`
 
-## 十三、数据同化算法平台 (data-assimilation-platform) [Python]
+## 十四、数据同化算法平台 (data-assimilation-platform) [Python]
 
 > 路径：`data-assimilation-platform/algorithm_core/` | Java 服务封装：`data-assimilation-service` (端口 8084)
 
@@ -293,7 +362,7 @@ curl -X POST http://localhost:8088/api/assimilation/batch \
   -d '{"items":[...]}'
 ```
 
-## 十四、错误码
+## 十五、错误码
 
 | 状态码 | 含义 | 处理方式 |
 |:------:|------|----------|
@@ -306,7 +375,7 @@ curl -X POST http://localhost:8088/api/assimilation/batch \
 | 500 | 服务器内部错误 | 联系运维 |
 | 503 | 服务不可用（熔断器打开） | 稍后重试 |
 
-## 十五、通用响应格式
+## 十六、通用响应格式
 
 ```json
 // 成功
@@ -316,6 +385,6 @@ curl -X POST http://localhost:8088/api/assimilation/batch \
 ```
 ---
 
-> **最后更新**: 2026-06-06  
-> **版本**: 2.3  
+> **最后更新**: 2026-06-08  
+> **版本**: 2.4  
 > **维护者**: DITHIOTHREITOL

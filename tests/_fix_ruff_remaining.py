@@ -6,6 +6,9 @@ Strategy (minimal change):
 2. Move logger = logging.getLogger(__name__) to after the last standard import
    (before any sys.path ops or non-import code)
 """
+import logging
+logger = logging.getLogger(__name__)
+
 import os
 import re
 

@@ -452,11 +452,17 @@ services:
         condition: service_healthy
       fengwu-service:
         condition: service_started
+      tianzi-service:
+        condition: service_started
+      fenglei-service:
+        condition: service_started
     environment:
       LOG_PATH: /logs
       MODEL_PYTHON_PATH: /app/python
       NACOS_SERVER: nacos:8848
       FENGWU_SERVICE_URL: http://fengwu-service:8085
+      TIANZI_SERVICE_URL: http://tianzi-service:8090
+      FENGLEI_SERVICE_URL: http://fenglei-service:8091
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-sf", "http://localhost:8087/health"]
@@ -470,6 +476,69 @@ services:
           memory: 2G
         reservations:
           memory: 1G
+    networks:
+      - uav-net
+
+  tianzi-service:
+    build:
+      context: ./tianzi-service
+      dockerfile: Dockerfile
+    image: ghcr.io/602420232-dotcom/weather/tianzi:latest
+    container_name: uav-tianzi
+    ports:
+      - "8090:8090"
+    environment:
+      TIANZI_API_KEY: ${TIANZI_API_KEY}
+      TIANZI_MODEL_PATH: /app/model/tianzi.onnx
+      TIANZI_ENV: ${TIANZI_ENV:-production}
+      CORS_ORIGINS: ${CORS_ORIGINS:-*}
+    volumes:
+      - ./models/tianzi:/app/model
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8090/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+        reservations:
+          memory: 2G
+    networks:
+      - uav-net
+
+  fenglei-service:
+    build:
+      context: ./fenglei-service
+      dockerfile: Dockerfile
+    image: ghcr.io/602420232-dotcom/weather/fenglei:latest
+    container_name: uav-fenglei
+    ports:
+      - "8091:8091"
+    environment:
+      FENGLEI_API_KEY: ${FENGLEI_API_KEY}
+      FENGLEI_CACHE_DIR: /app/cache
+      FENGLEI_UPDATE_INTERVAL: ${FENGLEI_UPDATE_INTERVAL:-30}
+      FENGLEI_ENV: ${FENGLEI_ENV:-production}
+      CORS_ORIGINS: ${CORS_ORIGINS:-*}
+    volumes:
+      - fenglei-cache:/app/cache
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8091/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 256M
     networks:
       - uav-net
 
@@ -544,3 +613,4 @@ volumes:
   mysql-data:
   redis-data:
   model-engine-data:
+  fenglei-cache:

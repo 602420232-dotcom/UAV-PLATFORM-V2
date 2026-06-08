@@ -394,7 +394,7 @@ class RiskAwarePathCostCalculator:
 def demo():
     """演示风险映射功能"""
     print("=" * 60)
-    print("气象风险映射模块 - 演示")
+    logger.info("气象风险映射模块 - 演示")
     print("=" * 60)
 
     # 创建示例同化结果
@@ -425,10 +425,10 @@ def demo():
     cost_calculator = RiskAwarePathCostCalculator(mapper)
 
     # 计算风险
-    print("\n1. 计算综合风险场...")
+    logger.info("\n1. 计算综合风险场...")
     risk_result = mapper.compute_comprehensive_risk(assimilation_result, heading=0.0)
 
-    print("\n2. 风险统计:")
+    logger.info("\n2. 风险统计:")
     summary = risk_result['summary']
     print(f"   - 平均风险: {summary['avg_risk']:.3f}")
     print(f"   - 最大风险: {summary['max_risk']:.3f}")
@@ -436,19 +436,19 @@ def demo():
     print(f"   - 高风险区域占比: {summary['high_risk_ratio']:.1%}")
 
     # 风险等级分布
-    print("\n3. 风险等级分布:")
+    logger.info("\n3. 风险等级分布:")
     risk_grid = risk_result['risk_grid']
     risk_levels, counts = np.unique(risk_result['risk_level'], return_counts=True)
     for level, count in zip(risk_levels, counts):
         print(f"   - {level}: {count} 单元格 ({count/risk_grid.size:.1%})")
 
     # 生成障碍物
-    print("\n4. 生成风险障碍物...")
+    logger.info("\n4. 生成风险障碍物...")
     obstacles = mapper.generate_risk_aware_obstacles(risk_result, risk_threshold=0.6)
     print(f"   - 生成的障碍物数量: {len(obstacles)}")
 
     # 测试位置查询
-    print("\n5. 测试路径代价计算...")
+    logger.info("\n5. 测试路径代价计算...")
     cost_calculator.set_risk_field(risk_result)
     test_positions = [(100, 100), (500, 500), (1500, 1500)]
 
@@ -457,14 +457,14 @@ def demo():
         print(f"   - 位置 {pos}: 风险值 = {risk:.3f}")
 
     # 测试路径段代价
-    print("\n6. 测试路径段代价:")
+    logger.info("\n6. 测试路径段代价:")
     segment_cost = cost_calculator.compute_segment_risk_cost(
         (100, 100), (500, 500), steps=20
     )
     print(f"   - 从 (100,100) 到 (500,500): 累积风险 = {segment_cost:.3f}")
 
     print("\n" + "=" * 60)
-    print("演示完成!")
+    logger.info("演示完成!")
     print("=" * 60)
 
 

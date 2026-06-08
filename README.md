@@ -7,6 +7,7 @@
 - [系统架构](#系统架构)
 - [项目结构](#项目结构)
 - [功能特性](#功能特性)
+- [四大气象模型](#四大气象模型)
 - [技术栈](#技术栈)
 - [快速开始](#快速开始)
 - [服务与端口](#服务与端口)
@@ -118,6 +119,103 @@ trae/
 | **监控告警** | Prometheus+Grafana，ELK日志聚合，SkyWalking链路追踪 |
 | **熔断器保护** | Resilience4j 防止级联故障，完善的监控API |
 
+## 🌤️ 四大气象模型
+
+本项目集成了四个核心气象模型，覆盖不同空间分辨率和时间尺度的气象预测需求：
+
+### SWC-WRF（WRF气象数据处理服务）
+
+- **技术栈**: Spring Boot 3.5.14 + Python 3.8+
+- **端口**: 8081
+- **服务路径**: `wrf-processor-service/`
+- **功能**: 解析和处理 WRF（Weather Research and Forecasting）模型输出的 NetCDF4 格式气象数据，提取低空气象参数供路径规划使用
+- **输入**: NetCDF4 (.nc) 格式文件，包含 temperature、humidity、wind_speed、pressure 等气象变量
+- **部署方式**: Docker Compose / Kubernetes
+- **K8s配置**: 单副本部署，支持持久化存储挂载
+
+### FengWu（风乌气象模型推理服务）
+
+- **技术栈**: Python 3.11 + FastAPI + ONNX Runtime
+- **端口**: 8085
+- **服务路径**: `fengwu-service/`
+- **功能**: 基于 ONNX 推理引擎运行深度学习全球天气预报模型，接收 ERA5 大气数据并输出 0~14 天的全球气象预报
+- **输入**: T+0h 和 T+6h 时刻的 ERA5 大气数据（69个变量，形状 69×721×1440）
+- **部署方式**: Docker Compose / Kubernetes
+- **K8s配置**: 单副本部署，支持 GPU 加速推理
+
+### TianZi（天资高分辨率气象分析服务）
+
+- **技术栈**: Python 3.11 + FastAPI + ONNX Runtime
+- **端口**: 8090
+- **服务路径**: `tianzi-service/`
+- **功能**: 基于 TianZi 深度学习模型的高分辨率气象分析服务，支持最高 1km 分辨率分析
+- **分析模式**: 分析、预报、数据同化
+- **部署方式**: Docker Compose / Kubernetes
+- **安全认证**: API Key + JWT 双重认证
+- **数据源**: CMA GRAPES_GFS 全球谱模式（0.25° ≈ 25km 分辨率）
+
+### FengLei（风雷区域模式数据服务）
+
+- **技术栈**: Python 3.11 + xarray + requests
+- **集成位置**: `model-engine/data_pipeline/`
+- **功能**: 基于 CMA GRAPES_MESO 中尺度区域模式，提供高分辨率区域气象预报数据
+- **分辨率**: 3km（精细网格）
+- **数据源**: CMA API（中国气象局）
+- **更新频率**: 每 30 分钟自动更新
+- **输入参数**: GRIB 格式数据，包含 6 个气压层（1000~300hPa）
+
+### 四模型融合架构
+
+四个气象模型通过 `model-engine` 进行动态加权融合：
+
+| 模型 | 分辨率 | 权重 | 角色定位 |
+|------|--------|:---:|---------|
+| **SWC-WRF** | 3km | 0.20 | 区域气象数据基础 |
+| **FengWu** | 25km | 0.15 | 全球背景场约束 |
+| **TianZi** | 25km | 0.25 | 全球模式参考 |
+| **FengLei** | 3km | 0.60 | 区域高分辨率核心 |
+
+### 数据处理流程
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    四大气象模型输入层                           │
+│  [SWC-WRF]  [FengWu]  [TianZi]  [FengLei]                      │
+│     3km       25km      25km      3km                          │
+└─────────────────────────┬───────────────────────────────────────┘
+                          │ 统一重采样到 3km 网格
+                          ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    时空配准与异常检测                           │
+│  双线性插值 → 地形校正 → 时间偏差加权 → 异常值修复               │
+└─────────────────────────┬───────────────────────────────────────┘
+                          │
+                          ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    动态加权融合                                 │
+│  FengWu(0.15) + TianZi(0.25) + FengLei(0.60) + WRF(0.20)      │
+│  → 物理约束检查 → CNN空间订正                                   │
+└─────────────────────────┬───────────────────────────────────────┘
+                          │
+                          ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    概率 U-Net 降尺度                           │
+│  3km → 1km 分辨率，输出均值+方差                               │
+└─────────────────────────┬───────────────────────────────────────┘
+                          │
+                          ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    EnKF 贝叶斯同化                              │
+│  融合观测数据（无人机回传/气象站）→ GPR风险场计算               │
+└─────────────────────────┬───────────────────────────────────────┘
+                          │
+                          ▼
+              ┌───────────────────────┐
+              │   Path Planning (8083)│
+              │   风险感知路径规划     │
+              └───────────────────────┘
+```
+
 ## 🛠️ 技术栈
 
 | 类别 | 技术 | 版本/说明 |
@@ -205,6 +303,8 @@ docker-compose logs -f wrf-processor
 | **Path Planning** | 8083 | VRPTW+DE-RRT*+DWA 路径规划 | `path-planning-service/` | `/actuator/health` |
 | **Data Assimilation** | 8084 | 贝叶斯同化计算（3D-VAR/4D-VAR/EnKF） | `data-assimilation-service/` | `/actuator/health` |
 | **FengWu Service** | 8085 | 风乌气象模型推理服务 | `fengwu-service/` | `/health` |
+| **TianZi Service** | 8090 | 天资高分辨率气象分析服务 | `tianzi-service/` | `/health` |
+| **FengLei Service** | 8091 | 风雷区域模式数据服务 | `fenglei-service/` | `/health` |
 | **Edge Cloud Coordinator** | 8000/8765 | 边云协同框架（联邦学习/WebSocket/Kafka） | `edge-cloud-coordinator/` | `/health` |
 | **Frontend Vue** | 3000 | Vue3 Web 应用 | `uav-path-planning-system/frontend-vue/` | - |
 | **MySQL** | 3306 | 关系型数据库 | 容器服务 | - |
@@ -413,6 +513,8 @@ docker image prune -f
 | **meteor-forecast-service** | [README](meteor-forecast-service/README.md) |
 | **path-planning-service** | [README](path-planning-service/README.md) |
 | **fengwu-service** | [README](fengwu-service/README.md) |
+| **tianzi-service** | [README](tianzi-service/README.md) |
+| **fenglei-service** | [README](fenglei-service/README.md) |
 | **buoy-weather-service** | [README](buoy-weather-service/README.md) |
 | **ground-station-weather-service** | [README](ground-station-weather-service/README.md) |
 | **satellite-weather-service** | [README](satellite-weather-service/README.md) |
@@ -435,6 +537,6 @@ docker image prune -f
 
 ---
 
-> **最后更新**: 2026-06-06  
-> **版本**: 3.2.0  
+> **最后更新**: 2026-06-08  
+> **版本**: 3.3.0  
 > **维护者**: UAV DevOps Team

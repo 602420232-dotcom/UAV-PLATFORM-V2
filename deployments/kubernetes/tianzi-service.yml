@@ -1,0 +1,86 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tianzi-service
+  namespace: uav-platform
+  labels:
+    app: tianzi-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tianzi-service
+  template:
+    metadata:
+      labels:
+        app: tianzi-service
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        fsGroup: 1001
+      containers:
+        - name: tianzi
+          image: tianzi-service:latest
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: uav-platform-config
+          env:
+            - name: TIANZI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: uav-secrets
+                  key: tianzi-api-key
+            - name: TIANZI_MODEL_PATH
+              value: "/app/model/tianzi.onnx"
+            - name: TIANZI_ENV
+              value: "production"
+            - name: CORS_ORIGINS
+              value: "*"
+          ports:
+            - containerPort: 8090
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "500m"
+            limits:
+              memory: "4Gi"
+              cpu: "2"
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 8090
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8090
+            initialDelaySeconds: 60
+            periodSeconds: 30
+          volumeMounts:
+            - name: model-data
+              mountPath: /app/model
+      volumes:
+        - name: model-data
+          persistentVolumeClaim:
+            claimName: model-data-pvc
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tianzi-service
+  namespace: uav-platform
+spec:
+  type: ClusterIP
+  selector:
+    app: tianzi-service
+  ports:
+    - port: 8090
+      targetPort: 8090

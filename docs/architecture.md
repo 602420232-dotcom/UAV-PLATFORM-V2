@@ -21,6 +21,7 @@
 │  path-planning-service   领域层 (端口8083)        │
 │  data-assimilation-service 领域层 (端口8084)      │
 │  fengwu-service (Python) 领域层 (端口8085)        │
+│  tianzi-service (Python) 领域层 (端口8090)        │
 │  uav-weather-collector   领域层 (端口8086)        │
 │  buoy-weather-service  领域层 (端口8087) 📝骨架   │
 │  ground-station-weather-service 领域层 (端口8093) 📝骨架 │
@@ -51,6 +52,7 @@
 | **path-planning-service** | 8083 | 路径规划服务：VRPTW求解、NSGA-II优化、DE-RRT*规划、DWA避障 |
 | **data-assimilation-service** | 8084 | 数据同化服务：3D-VAR/4D-VAR/EnKF同化、贝叶斯优化、不确定性量化 |
 | **fengwu-service** | 8085 | 风乌气象模型服务：基于 ONNX Runtime 的全球气象预测（Python FastAPI 实现） |
+| **tianzi-service** | 8090 | TianZi 高分辨率分析服务：基于深度学习的高分辨率气象分析（最高1km分辨率） |
 | **uav-weather-collector** | 8086 | 气象数据采集：多源数据采集与融合 |
 | **buoy-weather-service** | 8087 | 浮标气象数据服务 📝骨架，端口已分配，业务逻辑待实现 |
 | **ground-station-weather-service** | 8093 | 地面站气象数据服务 📝骨架，端口已分配，业务逻辑待实现 |
@@ -80,12 +82,14 @@
 
 **ADR-004**: fengwu-service 为 Python FastAPI 服务（非 Java），独立于 Spring Cloud 体系。通过 API Gateway 路由 `/api/fengwu/**` 接入。ONNX 模型推理使用 CPU 模式（onnxruntime），生产环境建议配置 GPU 加速。
 
+**ADR-007**: tianzi-service 为 Python FastAPI 服务（非 Java），提供高分辨率气象分析能力（最高1km分辨率）。支持分析、预报、数据同化三种模式，通过 API Gateway 路由 `/api/tianzi/**` 接入。与 fengwu-service 形成互补，fengwu 提供全球覆盖，tianzi 提供局地高分辨率分析。
+
 **ADR-005**: buoy/ground-station/satellite/radiosonde/detection-drone 五个服务当前为骨架模块（仅含目录结构和基础 POM），端口已在 PORTS_CONFIGURATION.md 中分配。完整业务逻辑需根据需求逐步实现。
 
 **ADR-006**: Kafka 依赖 Zookeeper 进行集群协调（端口 2181）。启动顺序必须为 Zookeeper → Kafka，docker-compose.yml 已配置 `depends_on` 和 `healthcheck` 保证启动顺序。
 
 ---
 
-> **最后更新**: 2026-06-06  
-> **版本**: 3.1  
+> **最后更新**: 2026-06-08  
+> **版本**: 3.2  
 > **维护者**: DITHIOTHREITOL

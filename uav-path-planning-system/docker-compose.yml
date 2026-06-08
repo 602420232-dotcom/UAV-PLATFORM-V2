@@ -6,10 +6,10 @@ services:
     image: mysql:8.0
     container_name: uav-mysql-subsystem
     environment:
-      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-changeroot123}
-      MYSQL_DATABASE: ${DB_NAME:-uav_path_planning}
-      MYSQL_USER: ${DB_USER:-uav}
-      MYSQL_PASSWORD: ${DB_PASSWORD:-changepass123}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
     ports:
       - "3306:3306"
     volumes:
@@ -37,9 +37,9 @@ services:
       - mysql
       - redis
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/${DB_NAME:-uav_path_planning}?useSSL=false&serverTimezone=UTC
-      SPRING_DATASOURCE_USERNAME: ${DB_USER:-uav}
-      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-changepass123}
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/${DB_NAME}?useSSL=false&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: ${DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
       SPRING_REDIS_HOST: redis
       SPRING_REDIS_PORT: 6379
     restart: always

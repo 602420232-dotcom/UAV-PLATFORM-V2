@@ -565,7 +565,7 @@ def main():
     print(f"  测试时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print(f"  服务地址: {config.BASE_URL}")
     print(f"  飞行时长: {config.FLIGHT_DURATION}s")
-    print("  离线模式: 是 (仅连接 detection-drone-service)")
+    logger.info("  离线模式: 是 (仅连接 detection-drone-service)")
 
     results = {"passed": [], "failed": [], "skipped": []}
 
@@ -628,12 +628,12 @@ def main():
             fail(f)
 
     print(f"\n{Colors.BOLD}数据流验证总结:{Colors.RESET}")
-    print("  探测无人机离线采集 → ✓")
-    print("  着陆后网络恢复自动上传 → ✓")
-    print("  数据同化 (观测 + 背景场) → ✓")
-    print("  分析场 → WRF 初始化器 (wrf_initializer.py) → ✓")
-    print("  WRF 循环管道 (deployments/wrf_cycling.sh) → 待部署环境执行")
-    print("  探空气球数据源 (radiosonde-weather-service:8091) → 待集成")
+    logger.info("  探测无人机离线采集 → ✓")
+    logger.info("  着陆后网络恢复自动上传 → ✓")
+    logger.info("  数据同化 (观测 + 背景场) → ✓")
+    logger.info("  分析场 → WRF 初始化器 (wrf_initializer.py) → ✓")
+    logger.info("  WRF 循环管道 (deployments/wrf_cycling.sh) → 待部署环境执行")
+    logger.info("  探空气球数据源 (radiosonde-weather-service:8091) → 待集成")
     print()
 
     if results["failed"]:

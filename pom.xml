@@ -289,6 +289,8 @@
                         <cisaEnabled>false</cisaEnabled>
                         <!-- Don't fail the build if the vulnerability check fails -->
                         <failBuildOnError>false</failBuildOnError>
+                        <!-- Skip during normal builds, run via dedicated CI step -->
+                        <skip>true</skip>
                     </configuration>
                     <executions>
                         <execution>

@@ -1,0 +1,9 @@
+fastapi>=0.100.0
+uvicorn>=0.22.0
+pydantic>=2.0.0
+requests>=2.30.0
+httpx>=0.24.0
+numpy>=1.24.0
+xarray>=2023.0.0
+cfgrib>=0.9.10
+netCDF4>=1.6.0
