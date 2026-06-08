@@ -132,6 +132,7 @@ jobs:
           file: ./api-gateway/Dockerfile
           push: true
           tags: ghcr.io/${{ github.repository }}/api-gateway:${{ github.sha }},ghcr.io/${{ github.repository }}/api-gateway:latest
+          provenance: false
           cache-from: type=gha
 
       - name: Build & Push UAV Platform
@@ -141,6 +142,7 @@ jobs:
           file: ./uav-platform-service/Dockerfile
           push: true
           tags: ghcr.io/${{ github.repository }}/uav-platform:${{ github.sha }},ghcr.io/${{ github.repository }}/uav-platform:latest
+          provenance: false
           cache-from: type=gha
 
       - name: Build & Push WRF Processor
@@ -150,6 +152,7 @@ jobs:
           file: ./wrf-processor-service/Dockerfile
           push: true
           tags: ghcr.io/${{ github.repository }}/wrf-processor:${{ github.sha }},ghcr.io/${{ github.repository }}/wrf-processor:latest
+          provenance: false
           cache-from: type=gha
 
       - name: Build & Push Data Assimilation
@@ -159,6 +162,7 @@ jobs:
           file: ./data-assimilation-service/Dockerfile
           push: true
           tags: ghcr.io/${{ github.repository }}/data-assimilation:${{ github.sha }},ghcr.io/${{ github.repository }}/data-assimilation:latest
+          provenance: false
           cache-from: type=gha
 
       - name: Build & Push Meteor Forecast
@@ -168,6 +172,7 @@ jobs:
           file: ./meteor-forecast-service/Dockerfile
           push: true
           tags: ghcr.io/${{ github.repository }}/meteor-forecast:${{ github.sha }},ghcr.io/${{ github.repository }}/meteor-forecast:latest
+          provenance: false
           cache-from: type=gha
 
       - name: Build & Push Path Planning
@@ -177,6 +182,7 @@ jobs:
           file: ./path-planning-service/Dockerfile
           push: true
           tags: ghcr.io/${{ github.repository }}/path-planning:${{ github.sha }},ghcr.io/${{ github.repository }}/path-planning:latest
+          provenance: false
           cache-from: type=gha
 
       - name: Build & Push Weather Collector
@@ -186,6 +192,7 @@ jobs:
           file: ./uav-weather-collector/Dockerfile
           push: true
           tags: ghcr.io/${{ github.repository }}/weather-collector:${{ github.sha }},ghcr.io/${{ github.repository }}/weather-collector:latest
+          provenance: false
           cache-from: type=gha
 
       - name: Build & Push Frontend
@@ -195,6 +202,7 @@ jobs:
           file: ./uav-path-planning-system/frontend-vue/Dockerfile
           push: true
           tags: ghcr.io/${{ github.repository }}/frontend:${{ github.sha }},ghcr.io/${{ github.repository }}/frontend:latest
+          provenance: false
           cache-from: type=gha
 
       # ----- Python / AI 服务 -----
@@ -205,6 +213,7 @@ jobs:
           file: ./fengwu-service/Dockerfile
           push: true
           tags: ghcr.io/${{ github.repository }}/fengwu:${{ github.sha }},ghcr.io/${{ github.repository }}/fengwu:latest
+          provenance: false
           cache-from: type=gha
 
       - name: Build & Push Edge-Cloud Coordinator
@@ -214,6 +223,7 @@ jobs:
           file: ./edge-cloud-coordinator/Dockerfile
           push: true
           tags: ghcr.io/${{ github.repository }}/edge-cloud:${{ github.sha }},ghcr.io/${{ github.repository }}/edge-cloud:latest
+          provenance: false
           cache-from: type=gha
 
       - name: Build & Push Model Engine
@@ -223,4 +233,5 @@ jobs:
           file: ./model-engine/Dockerfile
           push: true
           tags: ghcr.io/${{ github.repository }}/model-engine:${{ github.sha }},ghcr.io/${{ github.repository }}/model-engine:latest
+          provenance: false
           cache-from: type=gha
