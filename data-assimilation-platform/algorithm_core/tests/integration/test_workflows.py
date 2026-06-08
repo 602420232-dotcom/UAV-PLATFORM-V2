@@ -201,6 +201,8 @@ class TestPipelineWorkflow:
             def __init__(self, elapsed):
                 self.name = "mock"
                 self.stage = PipelineStage.ASSIMILATION
+                self.config = MagicMock()
+                self.config.enabled = True
                 self._result = MagicMock()
                 self._result.elapsed_time = elapsed
                 self._result.stage = PipelineStage.ASSIMILATION

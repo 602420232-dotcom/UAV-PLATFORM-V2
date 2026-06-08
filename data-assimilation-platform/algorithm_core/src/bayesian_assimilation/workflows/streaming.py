@@ -180,7 +180,7 @@ class StreamingAssimilator:
             data=observations,
             metadata={
                 'locations': locations,
-                'errors': errors or np.ones_like(observations) * self.config.observation_error_scale
+                'errors': errors if errors is not None else np.ones_like(observations) * self.config.observation_error_scale
             }
         )
 
@@ -265,7 +265,14 @@ class StreamingAssimilator:
             统计字典
         """
         if not self.results_history:
-            return {}
+            return {
+                'total_results': 0,
+                'buffer_size': self.buffer.size(),
+                'avg_latency': 0,
+                'max_latency': 0,
+                'avg_processing_time': 0,
+                'observation_window_size': len(self.observation_window)
+            }
 
         latencies = [r.latency for r in self.results_history]
         proc_times = [r.processing_time for r in self.results_history]

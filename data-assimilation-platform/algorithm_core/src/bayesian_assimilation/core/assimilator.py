@@ -121,6 +121,7 @@ class BayesianAssimilator(AssimilationBase):
 
         self.analysis_field = analysis
         self.variance_field = variance_field
+        self.grid_shape = (nx, ny, nz)
 
         return analysis, variance_field
 

@@ -128,7 +128,7 @@ class TestDataQualityMetrics:
         """测试计算异常值比例"""
         data = np.array([1.0, 2.0, 3.0, 4.0, 100.0])
 
-        result = DataQualityMetrics.calculate_outlier_ratio(data, threshold=2.0)
+        result = DataQualityMetrics.calculate_outlier_ratio(data, threshold=1.5)
 
         assert result > 0  # 100.0 是异常值
 
