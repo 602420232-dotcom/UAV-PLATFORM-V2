@@ -37,7 +37,7 @@ jobs:
           cache: pip
       - name: Run Python Tests
         run: |
-          pip install pytest numpy scipy scikit-learn
+          pip install pytest numpy scipy scikit-learn pandas psutil netCDF4 h5py matplotlib seaborn
           if [ -d "data-assimilation-platform/algorithm_core/tests/" ]; then
             pytest data-assimilation-platform/algorithm_core/tests/ -v --junitxml=test-report.xml --continue-on-collection-errors
           else
