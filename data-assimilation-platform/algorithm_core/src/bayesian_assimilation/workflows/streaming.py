@@ -180,7 +180,10 @@ class StreamingAssimilator:
             data=observations,
             metadata={
                 'locations': locations,
-                'errors': errors if errors is not None else np.ones_like(observations) * self.config.observation_error_scale
+                'errors': (
+                    errors if errors is not None
+                    else np.ones_like(observations) * self.config.observation_error_scale
+                )
             }
         )
 
