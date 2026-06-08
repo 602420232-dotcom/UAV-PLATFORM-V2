@@ -195,7 +195,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: ./uav-path-planning-system/frontend-vue
-          file: Dockerfile
+          file: ./uav-path-planning-system/frontend-vue/Dockerfile
           push: true
           tags: ghcr.io/${{ github.repository }}/frontend:${{ github.sha }},ghcr.io/${{ github.repository }}/frontend:latest
           cache-from: type=gha
@@ -206,7 +206,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: ./fengwu-service
-          file: Dockerfile
+          file: ./fengwu-service/Dockerfile
           push: true
           tags: ghcr.io/${{ github.repository }}/fengwu:${{ github.sha }},ghcr.io/${{ github.repository }}/fengwu:latest
           cache-from: type=gha
@@ -216,7 +216,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: ./edge-cloud-coordinator
-          file: Dockerfile
+          file: ./edge-cloud-coordinator/Dockerfile
           push: true
           tags: ghcr.io/${{ github.repository }}/edge-cloud:${{ github.sha }},ghcr.io/${{ github.repository }}/edge-cloud:latest
           cache-from: type=gha
@@ -226,7 +226,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: ./model-engine
-          file: Dockerfile
+          file: ./model-engine/Dockerfile
           push: true
           tags: ghcr.io/${{ github.repository }}/model-engine:${{ github.sha }},ghcr.io/${{ github.repository }}/model-engine:latest
           cache-from: type=gha

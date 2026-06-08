@@ -36,7 +36,7 @@ services:
       - uav-net
 
   redis:
-    image: redis:6.2
+    image: redis:7.2
     container_name: uav-redis
     command: redis-server --databases 16 --save 900 1 --save 300 10 --save 60 10000
     ports:
@@ -414,13 +414,13 @@ services:
       nacos:
         condition: service_healthy
     volumes:
-      - /home/dithiothreitol/fengwu-models/fengwu_v2.onnx:/app/model/fengwu_v2.onnx:ro
+      - ${FENGWU_MODEL_DIR:-./models/fengwu}:/app/model:ro
     environment:
       LOG_PATH: /logs
       FENGWU_USE_GPU: "false"
       FENGWU_MODEL_PATH: /app/model/fengwu_v2.onnx
-      FENGWU_MEAN_PATH: /app/data_mean.npy
-      FENGWU_STD_PATH: /app/data_std.npy
+      FENGWU_MEAN_PATH: /app/model/data_mean.npy
+      FENGWU_STD_PATH: /app/model/data_std.npy
       FENGWU_NUM_THREADS: 4
       NACOS_SERVER: nacos:8848
     restart: unless-stopped
@@ -493,7 +493,7 @@ services:
       TIANZI_ENV: ${TIANZI_ENV:-production}
       CORS_ORIGINS: ${CORS_ORIGINS:-*}
     volumes:
-      - ./models/tianzi:/app/model
+      - ${TIANZI_MODEL_DIR:-./models/tianzi}:/app/model
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-sf", "http://localhost:8090/health"]
@@ -543,7 +543,7 @@ services:
       - uav-net
 
   kafka:
-    image: confluentinc/cp-kafka:7.4.0
+    image: confluentinc/cp-kafka:7.5.3
     container_name: uav-kafka
     depends_on:
       zookeeper:
@@ -573,7 +573,7 @@ services:
       - uav-net
 
   zookeeper:
-    image: confluentinc/cp-zookeeper:7.4.0
+    image: confluentinc/cp-zookeeper:7.5.3
     container_name: uav-zookeeper
     ports:
       - "2181:2181"
