@@ -6,11 +6,26 @@ spring:
     exclude:
       - org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration
       - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
-      - org.springframework.boot.autoconfigure.cache.RedisCacheManager
 
   cloud:
+    discovery:
+      enabled: false
+    loadbalancer:
+      enabled: false
     circuitbreaker:
       enabled: false
+    nacos:
+      discovery:
+        enabled: false
+      config:
+        enabled: false
+    openfeign:
+      client:
+        config:
+          default:
+            url: http://localhost:9999
+            connectTimeout: 5000
+            readTimeout: 5000
 
   datasource:
     url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;MODE=MySQL

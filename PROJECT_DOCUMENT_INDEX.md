@@ -1,8 +1,8 @@
 # UAV 气象驱动无人机 VRP 智能路径规划系统 —— 全局文档索引
 
-> **索引版本**：v1.1  
-> **索引日期**：2026-05-14  
-> **收录文档总数**：206 份  
+> **索引版本**：v1.2  
+> **索引日期**：2026-06-08  
+> **收录文档总数**：209 份  
 > **覆盖范围**：项目根目录下全部 `.md` 后缀 Markdown 文档，递归含所有子目录（已排除 `.pytest_cache` 等自动生成目录）  
 
 ---
@@ -91,6 +91,9 @@
 | [data-assimilation-service/README.md](./data-assimilation-service/README.md) | 贝叶斯同化服务（端口8084），整合3D-VAR/4D-VAR/EnKF数据同化算法，通过REST API融合多源气象观测数据，45%失败率阈值触发熔断保护，产出融合分析场供路径规划调用。 | **H1**-贝叶斯同化服务 / **H2**-概述·技术栈·服务信息·接口·熔断器配置·Python依赖·环境变量·构建与运行·配置·依赖服务 | 后端开发者、数据科学家 | 数据同化微服务说明 |
 | [uav-weather-collector/README.md](./uav-weather-collector/README.md) | 无人机气象信息收集服务（端口8086），对接无人机传感器、WRF预报、地面站等多源气象数据，提供实时采集、多源融合、气象告警评估和历史数据查询功能，为路径规划提供实时气象输入。 | **H1**-无人机气象信息收集模块 / **H2**-概述·技术栈·接口·配置·构建与运行 | 后端开发者 | 气象数据采集微服务说明 |
 | [edge-cloud-coordinator/README.md](./edge-cloud-coordinator/README.md) | 边云协同计算框架，实现无人机与云端分布式智能计算，包含任务编排器、实时流处理（Kafka/Flink）、边缘AI推理（TensorRT/ONNX INT8）、联邦学习（FedAvg/FedProx）、WebSocket同步、mTLS安全通信等11个子模块。 | **H1**-边云协同计算框架 / **H2**-概述·模块说明·架构·数据流·快速开始 | 后端开发者、边缘计算工程师 | 边云协同框架说明 |
+| [fengwu-service/README.md](./fengwu-service/README.md) | 风乌气象模型推理服务（端口8085），基于FastAPI构建，集成AI气象预测模型，提供实时气象预报API，包含安全中间件和模型推理引擎，支持Docker/K8s部署。 | **H1**-风乌气象模型服务 / **H2**-概述·技术栈·服务信息·API·部署·安全 | 后端开发者、气象工程师 | 风乌AI气象模型服务说明 |
+| [tianzi-service/README.md](./tianzi-service/README.md) | 天资气象分析服务（端口8090），基于FastAPI构建，提供气象数据处理与分析API，集成安全中间件和推理引擎，支持多源气象数据融合，Docker/K8s部署就绪。 | **H1**-天资气象分析服务 / **H2**-概述·技术栈·服务信息·API·部署·安全 | 后端开发者、气象工程师 | 天资气象分析服务说明 |
+| [fenglei-service/README.md](./fenglei-service/README.md) | 风雷区域模式数据服务（端口8091），基于FastAPI构建，提供区域气象数据处理API，对接CMA GRAPES模式数据，支持自动化数据更新与持久化，Docker/K8s部署配置完整。 | **H1**-风雷区域模式服务 / **H2**-概述·技术栈·服务信息·API·部署·数据源 | 后端开发者、气象工程师 | 风雷区域气象模式服务说明 |
 | [uav-path-planning-system/README.md](./uav-path-planning-system/README.md) | 旧版基于WRF气象驱动的无人机VRP智能路径规划系统总览，含Vue3+Spring Boot 3.2+Python 3.8+技术栈说明、MySQL 8.0+Redis数据层、Docker+K8s部署架构概述。 | **H1**-UAV路径规划系统 / **H2**-项目概述 | 开发者 | 旧版系统总览 |
 | [uav-path-planning-system/backend-spring/README.md](./uav-path-planning-system/backend-spring/README.md) | 旧版系统Spring Boot后端服务（端口8089），独立于微服务体系，提供Spring Security+JWT认证授权、MyBatis-Plus+JPA双ORM数据访问、gRPC通信能力，含用户RBAC四角色权限控制。 | **H1**-backend-spring后端服务 / **H2**-概述·技术栈·构建与运行 | 后端开发者 | 旧版后端服务说明 |
 | [uav-path-planning-system/algorithm-core/README.md](./uav-path-planning-system/algorithm-core/README.md) | Python核心算法库，包含VRP求解器、RRT*/DWA路径规划算法、WPS气象预处理与插值算法，通过pip install -e安装使用，提供Python API和独立脚本两种调用方式。 | **H1**-核心算法库 / **H2**-概述·项目结构·快速开始 | 算法工程师、Python开发者 | 算法核心库入口说明 |

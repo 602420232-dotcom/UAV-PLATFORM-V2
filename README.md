@@ -57,50 +57,235 @@
 
 ```
 trae/
+├── .github/                       # GitHub Actions 工作流
+│   └── workflows/                 # CI/CD 配置
+│       ├── ci.yml                # 持续集成
+│       ├── ci-cd.yml             # 持续集成部署
+│       ├── deploy.yml            # 部署流程
+│       └── gitops.yml            # GitOps 配置
+├── .vscode/                       # VS Code 配置
+│   ├── launch.json               # 调试配置
+│   └── settings.json             # 编辑器设置
 ├── api-gateway/                   # API 网关（Spring Cloud Gateway，端口 8088）
-│   └── src/
+│   ├── src/main/resources/       # 配置文件
+│   ├── Dockerfile                # 镜像构建
+│   ├── Dockerfile.fast           # 快速构建版本
+│   ├── Dockerfile.runtime        # 运行时版本
+│   ├── pom.xml                   # Maven 配置
+│   └── README.md
 ├── common-utils/                  # 公共工具模块（JWT/熔断器/异常处理）
-│   └── src/main/java/com/uav/common/
+│   ├── src/main/java/com/uav/common/ # Java 工具类
+│   ├── src/main/python/          # Python 工具模块
+│   ├── pom.xml
+│   └── README.md
 ├── data-assimilation-platform/    # 贝叶斯同化平台（Python）
-│   ├── algorithm_core/            # 核心算法库
-│   ├── shared/protos/             # Protocol Buffers 共享定义
-│   └── service_spring/            # Spring Boot API 服务
+│   ├── benchmarks/               # 基准测试
+│   ├── deployments/              # 平台部署配置
+│   ├── docs/                     # 平台文档
+│   ├── scripts/                  # 脚本工具
+│   ├── shared/                   # 共享代码
+│   ├── service_spring/           # Spring Boot API 服务
+│   ├── docker-compose.yml        # 本地开发部署
+│   ├── pyproject.toml            # Python 依赖
+│   └── README.md
 ├── data-assimilation-service/     # 贝叶斯同化服务（Java，端口 8084）
-│   └── src/main/java/com/uav/assimilation/
+│   ├── Dockerfile
+│   ├── Dockerfile.runtime
+│   ├── pom.xml
+│   └── README.md
 ├── edge-cloud-coordinator/        # 边云协同框架（Python，端口 8000/8765）
-├── fengwu-service/                # 风乌气象模型推理服务（端口 8085）
+│   ├── tests/                    # 测试用例
+│   ├── Dockerfile
+│   ├── requirements.txt
+│   ├── README.md
+│   └── *.py                      # 核心代码文件
+├── fengwu-service/                # 风乌气象模型推理服务（Python，端口 8085）
+│   ├── app.py                    # FastAPI 主应用
+│   ├── inference_engine.py       # 模型推理引擎
+│   ├── security_middleware.py    # 安全中间件
+│   ├── requirements.txt
+│   ├── Dockerfile
+│   └── README.md
+├── fenglei-service/               # 风雷区域模式数据服务（Python，端口 8091）
+│   ├── app.py                    # FastAPI 主应用
+│   ├── requirements.txt
+│   ├── Dockerfile
+│   └── README.md
+├── tianzi-service/                # 天资气象分析服务（Python，端口 8090）
+│   ├── app.py                    # FastAPI 主应用
+│   ├── inference_engine.py       # 模型推理引擎
+│   ├── security_middleware.py    # 安全中间件
+│   ├── requirements.txt
+│   ├── Dockerfile
+│   └── README.md
 ├── meteor-forecast-service/       # 气象预测服务（Java，端口 8082）
-│   └── src/main/java/com/uav/meteor/forecast/
+│   ├── src/main/java/com/uav/meteor/forecast/
+│   ├── src/main/python/          # Python 算法引擎
+│   ├── Dockerfile
+│   ├── Dockerfile.runtime
+│   ├── pom.xml
+│   └── README.md
 ├── path-planning-service/         # 路径规划服务（Java，端口 8083）
-│   └── src/main/java/com/uav/path/planning/
+│   ├── Dockerfile
+│   ├── Dockerfile.runtime
+│   ├── pom.xml
+│   └── README.md
 ├── wrf-processor-service/         # WRF 气象数据处理服务（Java，端口 8081）
-│   └── src/main/java/com/uav/wrf/processor/
+│   ├── src/main/java/com/uav/wrf/processor/
+│   ├── src/main/python/          # Python 处理脚本
+│   ├── Dockerfile
+│   ├── Dockerfile.local
+│   ├── Dockerfile.runtime
+│   ├── pom.xml
+│   └── README.md
 ├── buoy-weather-service/          # 浮标气象数据服务
+│   ├── pom.xml
+│   └── README.md
 ├── ground-station-weather-service/ # 地面站气象数据服务
+│   ├── pom.xml
+│   └── README.md
 ├── satellite-weather-service/     # 卫星气象数据服务
+│   ├── pom.xml
+│   └── README.md
 ├── radiosonde-weather-service/    # 探空气象数据服务
+│   ├── pom.xml
+│   └── README.md
 ├── detection-drone-service/       # 检测无人机服务
+│   ├── pom.xml
+│   └── README.md
+├── uav-platform-service/          # UAV 平台服务（Java，端口 8080）
+│   └── 注：该服务包含在 docker-compose.yml 中
+├── uav-weather-collector/         # UAV 气象数据采集服务
+│   └── 注：该服务包含在 docker-compose.yml 中
+├── model-engine/                  # AI 模型训练引擎（Python，端口 8087）
+│   ├── api/                      # API 接口
+│   ├── data_pipeline/            # 数据处理管道
+│   ├── cnn_corrector/            # CNN 订正模块
+│   ├── unet_downscaler/          # UNet 降尺度
+│   ├── gpr_risk/                 # GPR 风险评估
+│   ├── fusion/                   # 数据融合
+│   ├── control/                  # 模型预测控制
+│   ├── path_planning/            # 路径规划算法
+│   ├── multi_uav/                # 多无人机协同
+│   ├── active_obs/               # 主动观测
+│   ├── integration/              # 集成适配
+│   ├── scripts/                  # 训练脚本
+│   ├── tests/                    # 测试用例
+│   ├── checkpoints/              # 模型检查点
+│   ├── Dockerfile
+│   ├── PIPELINE.md
+│   ├── PIPELINE_VERIFICATION.md
+│   ├── README.md
+│   ├── pyproject.toml
+│   └── requirements.txt
 ├── uav-edge-sdk/                  # 端侧 SDK（C++/Python/pybind11）
+│   ├── edge_sdk/                 # Python SDK
+│   ├── include/                  # C++ 头文件
+│   ├── src/                      # C++ 源文件
+│   ├── tests/                    # 测试用例
+│   ├── .github/workflows/
+│   ├── CMakeLists.txt
+│   ├── README.md
+│   └── pyproject.toml
 ├── uav-mobile-app/                # 跨平台移动应用（Flutter）
-│   └── lib/
-├── uav-path-planning-system/      # 前端项目（Vue3）
+│   ├── android/                  # Android 项目
+│   ├── ios/                      # iOS 项目
+│   ├── linux/                    # Linux 桌面
+│   ├── macos/                    # macOS 桌面
+│   ├── assets/                   # 资源文件
+│   ├── docs/                     # 文档
+│   ├── lib/                      # Flutter 代码
+│   ├── .env.example
+│   ├── Dockerfile.web
+│   ├── README.md
+│   └── WINDOWS_BUILD_README.md
+├── uav-path-planning-system/      # 前端项目
 │   └── frontend-vue/              # 前端 Vue3（端口 3000）
-├── model-engine/                  # AI 模型训练引擎
-│   ├── scripts/                   # 训练脚本
-│   └── data_pipeline/             # 数据处理管道
+│       ├── .storybook/           # Storybook 组件库
+│       ├── public/               # 静态资源
+│       ├── src/                  # 源代码
+│       │   ├── api/             # API 调用
+│       │   ├── components/      # 组件
+│       │   ├── composables/     # 组合式函数
+│       │   ├── locales/         # 国际化
+│       │   ├── stores/          # 状态管理
+│       │   ├── utils/           # 工具函数
+│       │   ├── views/           # 页面视图
+│       │   └── App.vue
+│       ├── tests/                # 测试
+│       ├── nginx.conf
+│       ├── package.json
+│       └── README.md
 ├── deployments/                   # 部署配置
-│   ├── kubernetes/                # K8s 部署清单
-│   ├── monitoring/                # Prometheus/Grafana 监控
-│   ├── service-mesh/              # Istio 服务网格
-│   └── observability/             # 可观测性配置
+│   ├── argo/                     # Argo CD 配置
+│   ├── backup/                   # 备份配置
+│   ├── database/                 # 数据库脚本
+│   ├── edge/                     # 边缘设备部署
+│   ├── edge-device/              # 边缘设备 Docker
+│   ├── elk/                      # ELK 日志栈
+│   ├── kubernetes/               # K8s 部署清单
+│   │   ├── *.yml                 # 各服务 K8s 配置
+│   │   └── README.md
+│   ├── monitoring/               # Prometheus/Grafana 监控
+│   ├── multi-region/             # 多区域部署
+│   ├── observability/            # 可观测性配置
+│   ├── service-mesh/             # Istio 服务网格
+│   ├── streaming/                # 流处理配置
+│   ├── infrastructure.yml
+│   └── README.md
 ├── docs/                          # 文档中心
-│   ├── api/                       # API 接口文档
-│   ├── guides/                    # 使用指南
-│   ├── reports/                   # 项目报告
-│   └── troubleshooting/           # 故障排除
+│   ├── api/                      # API 接口文档
+│   ├── archive/                  # 归档文档
+│   ├── deployment/               # 部署文档
+│   ├── external/                 # 外部文档
+│   ├── guides/                   # 使用指南
+│   ├── reports/                  # 项目报告
+│   ├── security/                 # 安全文档
+│   ├── tests/                    # 测试文档
+│   ├── troubleshooting/          # 故障排除
+│   ├── *.md                      # 各类文档
+│   └── README.md
 ├── scripts/                       # 构建与管理脚本
-├── docker-compose.yml             # 开发环境 Docker Compose
-├── .env.example                   # 环境变量示例
+│   ├── backup/                   # 备份脚本
+│   ├── *.py, *.sh, *.ps1         # 各类工具脚本
+│   └── README.md
+├── tests/                         # 项目测试
+│   ├── e2e/                      # 端到端测试
+│   ├── performance/              # 性能测试
+│   ├── *.py                      # 测试脚本
+│   └── README.md
+├── docker/                        # Docker 基础镜像
+│   ├── base/                     # 基础镜像
+│   └── README.md
+├── tools/                         # 工具集
+│   └── mypanel/                  # 管理面板工具
+├── .env                          # 环境变量（请勿提交）
+├── .env.example                  # 环境变量示例
+├── .env.dev                      # 开发环境变量
+├── .env.ci                       # CI 环境变量
+├── .gitignore
+├── .gitattributes
+├── .pre-commit-config.yaml      # Git 前置钩子配置
+├── .flake8                       # Python 代码风格
+├── .cursorignore                 # Cursor 索引忽略
+├── LICENSE
+├── PROJECT_DOCUMENT_INDEX.md    # 文档索引
+├── QUICKSTART.md                # 快速开始指南
+├── TEAM_SETUP.md                # 团队设置指南
+├── checkstyle.xml               # Java 代码风格
+├── docker-compose.yml           # 开发环境 Docker Compose
+├── docker-compose.dev.yml       # 开发环境覆盖
+├── docker-compose.dockerhub.yml # Docker Hub 配置
+├── docker-compose.jvm.env       # JVM 环境变量
+├── mkdocs.yml                   # MkDocs 文档配置
+├── mvnw, mvnw.cmd               # Maven Wrapper
+├── package.json                 # Node.js 依赖
+├── pom.xml                      # Maven 主配置
+├── pyproject.toml               # Python 项目配置
+├── pyrightconfig.json           # Pyright 配置
+├── qodana.yaml                  # Qodana 代码质量
+├── sonar-project.properties     # SonarQube 配置
+├── owasp-suppressions.xml       # OWASP 安全扫描配置
 └── README.md
 ```
 

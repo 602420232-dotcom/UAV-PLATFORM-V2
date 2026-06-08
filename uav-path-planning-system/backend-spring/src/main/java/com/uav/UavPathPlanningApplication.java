@@ -13,7 +13,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
     @ComponentScan.Filter(type = FilterType.REGEX, pattern = "com\\.uav\\.common\\.config\\.RedisConfig"),
     @ComponentScan.Filter(type = FilterType.REGEX, pattern = "com\\.uav\\.common\\.config\\.CommonSecurityConfig"),
     @ComponentScan.Filter(type = FilterType.REGEX, pattern = "com\\.uav\\.common\\.security\\.JwtSecurityConfig"),
-    @ComponentScan.Filter(type = FilterType.REGEX, pattern = "com\\.uav\\.common\\.feign\\.FeignClientsConfig"),
     @ComponentScan.Filter(type = FilterType.REGEX, pattern = "com\\.uav\\.common\\.resilience\\..*"),
     @ComponentScan.Filter(type = FilterType.REGEX, pattern = "com\\.uav\\.config\\.Resilience4jConfig")
 })
