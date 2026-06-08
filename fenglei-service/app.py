@@ -118,11 +118,16 @@ async def get_status():
         "status": "healthy",
         "api_key_configured": bool(API_KEY),
         "mode": "production" if API_KEY else "demo",
-        "message": "API key not configured - running in demo mode with limited functionality" 
-                   if not API_KEY else "Service running with full functionality",
+        "message": (
+            "API key not configured - running in demo mode with "
+            "limited functionality" if not API_KEY
+            else "Service running with full functionality"
+        ),
         "action_required": not API_KEY,
-        "action_message": "Please configure FENGLEI_API_KEY environment variable to enable full functionality"
-                          if not API_KEY else None,
+        "action_message": (
+            "Please configure FENGLEI_API_KEY environment variable to enable full functionality"
+            if not API_KEY else None
+        ),
         "timestamp": datetime.now().isoformat(),
     }
 

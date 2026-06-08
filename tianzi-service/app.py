@@ -255,11 +255,16 @@ async def get_status():
         "status": "UP" if (_engine and _engine.is_loaded) else "DEGRADED",
         "api_key_configured": bool(_API_KEY),
         "mode": "production" if _API_KEY else "demo",
-        "message": "API key not configured - running in demo mode with limited functionality" 
-                   if not _API_KEY else "Service running with full functionality",
+        "message": (
+            "API key not configured - running in demo mode with "
+            "limited functionality" if not _API_KEY
+            else "Service running with full functionality"
+        ),
         "action_required": not _API_KEY,
-        "action_message": "Please configure TIANZI_API_KEY environment variable to enable full functionality"
-                          if not _API_KEY else None,
+        "action_message": (
+            "Please configure TIANZI_API_KEY environment variable to enable full functionality"
+            if not _API_KEY else None
+        ),
     }
 
 
