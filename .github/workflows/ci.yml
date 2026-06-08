@@ -201,7 +201,7 @@ jobs:
           context: ./uav-path-planning-system/frontend-vue
           file: ./uav-path-planning-system/frontend-vue/Dockerfile
           push: true
-          tags: ghcr.io/${{ github.repository }}/frontend:${{ github.sha }},ghcr.io/${{ github.repository }}/frontend:latest
+          tags: ghcr.io/${{ github.repository }}/frontend-app:${{ github.sha }},ghcr.io/${{ github.repository }}/frontend-app:latest
           provenance: false
           cache-from: type=gha
 
