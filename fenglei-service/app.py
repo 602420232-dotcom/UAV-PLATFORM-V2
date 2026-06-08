@@ -10,7 +10,6 @@ from typing import Optional, Dict, List
 from pathlib import Path
 
 import numpy as np
-import xarray as xr
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.security import APIKeyHeader
 from fastapi.middleware.cors import CORSMiddleware
@@ -32,6 +31,7 @@ app.add_middleware(
 API_KEY = os.getenv("FENGLEI_API_KEY", "")
 api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
 
+
 async def get_api_key(api_key: str = Depends(api_key_header)):
     if not API_KEY:
         return None
@@ -39,9 +39,11 @@ async def get_api_key(api_key: str = Depends(api_key_header)):
         raise HTTPException(status_code=403, detail="Invalid API Key")
     return api_key
 
+
 class ForecastRequest(BaseModel):
     fcst_hour: int = 0
     variables: Optional[List[str]] = None
+
 
 class ForecastResponse(BaseModel):
     source: str
@@ -50,12 +52,14 @@ class ForecastResponse(BaseModel):
     shape: List[int]
     data: Dict[str, List[List[float]]]
 
+
 def ensure_cache():
     cache_dir = os.getenv("FENGLEI_CACHE_DIR", "/app/cache")
     Path(cache_dir).mkdir(parents=True, exist_ok=True)
     return cache_dir
 
-def generate_mock_data(fcst_hour: int = 0) -> xr.Dataset:
+
+def generate_mock_data(fcst_hour: int = 0) -> dict:
     """生成模拟预报场"""
     ny, nx = 50, 50
     np.random.seed(42 + fcst_hour)
@@ -84,13 +88,24 @@ def generate_mock_data(fcst_hour: int = 0) -> xr.Dataset:
         "blh": blh,
     }
 
+
 @app.get("/health")
 async def health_check():
-    return {"status": "healthy", "service": "fenglei-service", "timestamp": datetime.now().isoformat()}
+    return {
+        "status": "healthy",
+        "service": "fenglei-service",
+        "timestamp": datetime.now().isoformat(),
+    }
+
 
 @app.get("/health/ready")
 async def readiness_check():
-    return {"status": "ready", "service": "fenglei-service", "timestamp": datetime.now().isoformat()}
+    return {
+        "status": "ready",
+        "service": "fenglei-service",
+        "timestamp": datetime.now().isoformat(),
+    }
+
 
 @app.get("/api/v1/model/info")
 async def get_model_info(_: str = Depends(get_api_key)):
@@ -104,15 +119,16 @@ async def get_model_info(_: str = Depends(get_api_key)):
         "levels": ["1000", "925", "850", "700", "500", "300"],
     }
 
+
 @app.post("/api/v1/forecast")
 async def get_forecast(request: ForecastRequest, _: str = Depends(get_api_key)):
     try:
         data = generate_mock_data(request.fcst_hour)
-        
+
         selected_vars = request.variables or ["u10", "v10", "t2m", "rh2m", "ps", "blh"]
-        
+
         filtered_data = {k: v for k, v in data.items() if k in selected_vars}
-        
+
         return {
             "source": "fenglei",
             "forecast_time": datetime.now().isoformat(),
@@ -128,6 +144,7 @@ async def get_forecast(request: ForecastRequest, _: str = Depends(get_api_key)):
         logger.error(f"Forecast error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @app.get("/api/v1/forecast/wind-field")
 async def get_wind_field(fcst_hour: int = 0, _: str = Depends(get_api_key)):
     data = generate_mock_data(fcst_hour)
@@ -140,6 +157,7 @@ async def get_wind_field(fcst_hour: int = 0, _: str = Depends(get_api_key)):
         "latitude": data["latitude"],
         "longitude": data["longitude"],
     }
+
 
 @app.get("/api/v1/analysis")
 async def get_analysis(_: str = Depends(get_api_key)):

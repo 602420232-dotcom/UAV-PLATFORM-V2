@@ -5,7 +5,6 @@ E2E测试运行脚本
 import subprocess
 import sys
 import os
-import logging
 
 
 def run_e2e_tests():
