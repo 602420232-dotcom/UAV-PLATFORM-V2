@@ -49,14 +49,12 @@ server:
     key-store-password: ${SSL_KEY_STORE_PASSWORD}
     key-alias: ${SSL_KEY_ALIAS:}
 
-# JWT闁板秶鐤?
-jwt:
-  secret: ${JWT_SECRET}
-  expiration: ${JWT_EXPIRATION:86400000}
-  enabled: ${JWT_ENABLED:true}
-
 # 閼奉亜鐣炬稊澶愬帳缂?
 uav:
+  jwt:
+    secret: ${JWT_SECRET}
+    expiration: ${JWT_EXPIRATION:86400000}
+    enabled: ${JWT_ENABLED:true}
   python:
     script-path: ${user.dir}/algorithm-core
     timeout: 30000

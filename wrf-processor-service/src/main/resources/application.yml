@@ -37,8 +37,9 @@ springdoc:
   swagger-ui:
     path: /swagger-ui.html
 
-jwt:
-  secret: ${JWT_SECRET}
+uav:
+  jwt:
+    secret: ${JWT_SECRET}
 
 # WRF处理器配置
 wrf:

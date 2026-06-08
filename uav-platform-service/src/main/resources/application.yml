@@ -44,5 +44,6 @@ springdoc:
   swagger-ui:
     path: /swagger-ui.html
 
-jwt:
-  secret: dThpc3RhbmRvbmx5Zm9ydGVzdGluZzM2MmJ5dGVzbG9uZ3NlY3JldGtleQ==
+uav:
+  jwt:
+    secret: dThpc3RhbmRvbmx5Zm9ydGVzdGluZzM2MmJ5dGVzbG9uZ3NlY3JldGtleQ==

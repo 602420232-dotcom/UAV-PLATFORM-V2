@@ -22,10 +22,10 @@ public class JwtUtil {
     private static final Logger log = LoggerFactory.getLogger(JwtUtil.class);
     private static final int MIN_KEY_LENGTH_BYTES = 32;
 
-    @Value("${jwt.secret}")
+    @Value("${uav.jwt.secret}")
     private String secret;
 
-    @Value("${jwt.expiration}")
+    @Value("${uav.jwt.expiration}")
     private long expiration;
 
     private SecretKey signingKey;

@@ -33,24 +33,24 @@ public class JwtKeyRotationService {
     private static final long ROTATION_INTERVAL_MS = 86400000L;
     private static final int MAX_HISTORY_SIZE = 3;
 
-    @Value("${jwt.secret:}")
+    @Value("${uav.jwt.secret:}")
     private String secret;
 
-    @Value("${jwt.expiration:86400000}")
+    @Value("${uav.jwt.expiration:86400000}")
     private long expiration;
 
-    @Value("${jwt.key-rotation.enabled:true}")
+    @Value("${uav.jwt.key-rotation.enabled:true}")
     private boolean keyRotationEnabled;
 
-    @Value("${jwt.key-store.path:}")
+    @Value("${uav.jwt.key-store.path:}")
     private String keyStorePath;
 
-    @Value("${jwt.key-store.password:}")
+    @Value("${uav.jwt.key-store.password:}")
     private String keyStorePasswordRaw;
 
     private volatile char[] keyStorePassword;
 
-    @Value("${jwt.key.alias:jwt-signing-key}")
+    @Value("${uav.jwt.key.alias:jwt-signing-key}")
     private String keyAlias;
 
     private Key signingKey;
