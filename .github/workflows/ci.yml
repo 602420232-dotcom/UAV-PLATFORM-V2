@@ -6,10 +6,12 @@ on:
   pull_request:
     branches: [main]
 
-# GitHub Container Registry 推送需要 packages: write
+# GitHub Container Registry 推送需要 packages: write + attestation 权限
 permissions:
   contents: read
   packages: write
+  id-token: write
+  attestations: write
 
 env:
   JAVA_VERSION: '17'
@@ -97,6 +99,8 @@ jobs:
     permissions:
       contents: read
       packages: write
+      id-token: write
+      attestations: write
     steps:
       - uses: actions/checkout@v4
 
