@@ -42,10 +42,10 @@ public class JwtKeyRotationService {
     @Value("${uav.jwt.key-rotation.enabled:true}")
     private boolean keyRotationEnabled;
 
-    @Value("${uav.jwt.key-store.path}")
+    @Value("${uav.jwt.key-store.path:}")
     private String keyStorePath;
 
-    @Value("${uav.jwt.key-store.password}")
+    @Value("${uav.jwt.key-store.password:}")
     private String keyStorePasswordRaw;
 
     private volatile char[] keyStorePassword;
