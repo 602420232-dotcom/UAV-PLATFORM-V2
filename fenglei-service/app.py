@@ -107,6 +107,26 @@ async def readiness_check():
     }
 
 
+@app.get("/api/v1/status")
+async def get_status():
+    """
+    Get service configuration status.
+    Provides information for frontend to display configuration prompts.
+    """
+    return {
+        "service": "fenglei-service",
+        "status": "healthy",
+        "api_key_configured": bool(API_KEY),
+        "mode": "production" if API_KEY else "demo",
+        "message": "API key not configured - running in demo mode with limited functionality" 
+                   if not API_KEY else "Service running with full functionality",
+        "action_required": not API_KEY,
+        "action_message": "Please configure FENGLEI_API_KEY environment variable to enable full functionality"
+                          if not API_KEY else None,
+        "timestamp": datetime.now().isoformat(),
+    }
+
+
 @app.get("/api/v1/model/info")
 async def get_model_info(_: str = Depends(get_api_key)):
     return {

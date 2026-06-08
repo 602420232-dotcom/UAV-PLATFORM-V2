@@ -130,12 +130,33 @@ server {
 ### 4.3 服务认证配置
 
 **风雷服务 (FengLei)**：
-- 生产环境必须设置 `FENGLEI_API_KEY`
-- 所有请求必须携带 `X-API-Key` 头
+- API密钥可选配置：未设置 `FENGLEI_API_KEY` 时服务以演示模式运行
+- 演示模式下自动使用模拟数据，所有请求不需要认证
+- 配置密钥后启用API认证，所有请求必须携带 `X-API-Key` 头
+- 提供 `/api/v1/status` 接口供前端查询配置状态
 
 **天资服务 (TianZi)**：
-- 设置 `TIANZI_ENV=production` 强制启用认证
-- 未设置 `TIANZI_API_KEY` 时服务启动失败
+- API密钥可选配置：未设置 `TIANZI_API_KEY` 时服务以演示模式运行
+- 演示模式下自动使用模拟数据，所有请求不需要认证
+- 配置密钥后启用API认证，所有请求必须携带 `X-API-Key` 头
+- 提供 `/api/v1/status` 接口供前端查询配置状态
+
+**WRF处理器服务**：
+- 不需要API密钥
+- 通过Java后端调用Python脚本处理WRF文件
+
+**状态接口响应格式**：
+```json
+{
+  "service": "fenglei-service",
+  "status": "healthy",
+  "api_key_configured": false,
+  "mode": "demo",
+  "message": "API key not configured - running in demo mode",
+  "action_required": true,
+  "action_message": "Please configure FENGLEI_API_KEY environment variable"
+}
+```
 
 ---
 

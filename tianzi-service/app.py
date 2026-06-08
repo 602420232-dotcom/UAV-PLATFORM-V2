@@ -50,14 +50,10 @@ _API_KEY = os.getenv("TIANZI_API_KEY", "")
 
 
 if not _API_KEY:
-    if _IS_PRODUCTION:
-        raise RuntimeError(
-            "TIANZI_API_KEY is required in production mode. "
-            "Set TIANZI_API_KEY environment variable before starting the service."
-        )
     logger.warning(
         "⚠  TIANZI_API_KEY not set \u2014 authentication DISABLED. "
-        "Set TIANZI_API_KEY environment variable for production."
+        "Service will run in demo mode with mock data. "
+        "Set TIANZI_API_KEY environment variable for full functionality."
     )
 
 
@@ -211,6 +207,8 @@ class HealthResponse(BaseModel):
     model_loaded: bool
     model_path: str
     uptime_seconds: float
+    api_key_configured: bool
+    mode: str  # 'production' or 'demo'
 
 
 # ─── Startup time ──────────────────────────────────────────────────────────
@@ -227,6 +225,8 @@ async def health():
         model_loaded=_engine.is_loaded if _engine else False,
         model_path=_engine.model_path if _engine else "N/A",
         uptime_seconds=time.time() - _start_time,
+        api_key_configured=bool(_API_KEY),
+        mode="production" if _API_KEY else "demo",
     )
 
 
@@ -242,6 +242,25 @@ async def readiness():
     if _engine and _engine.is_loaded:
         return {"status": "ready"}
     raise HTTPException(status_code=503, detail="Model not loaded")
+
+
+@app.get("/api/v1/status")
+async def get_status():
+    """
+    Get service configuration status.
+    Provides information for frontend to display configuration prompts.
+    """
+    return {
+        "service": "tianzi-service",
+        "status": "UP" if (_engine and _engine.is_loaded) else "DEGRADED",
+        "api_key_configured": bool(_API_KEY),
+        "mode": "production" if _API_KEY else "demo",
+        "message": "API key not configured - running in demo mode with limited functionality" 
+                   if not _API_KEY else "Service running with full functionality",
+        "action_required": not _API_KEY,
+        "action_message": "Please configure TIANZI_API_KEY environment variable to enable full functionality"
+                          if not _API_KEY else None,
+    }
 
 
 @app.post(
