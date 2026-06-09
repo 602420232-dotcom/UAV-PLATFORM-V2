@@ -412,8 +412,8 @@ services:
 
   fengwu-service:
     build:
-      context: .
-      dockerfile: ./fengwu-service/Dockerfile
+      context: ./fengwu-service
+      dockerfile: Dockerfile
     image: ghcr.io/602420232-dotcom/weather/fengwu:latest
     container_name: uav-fengwu
     entrypoint: ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8085"]
@@ -450,8 +450,8 @@ services:
 
   model-engine:
     build:
-      context: .
-      dockerfile: ./model-engine/Dockerfile
+      context: ./model-engine
+      dockerfile: Dockerfile
     image: ghcr.io/602420232-dotcom/weather/model-engine:latest
     container_name: uav-model-engine
     ports:

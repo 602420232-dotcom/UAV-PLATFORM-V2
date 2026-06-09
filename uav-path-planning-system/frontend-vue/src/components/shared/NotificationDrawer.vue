@@ -23,6 +23,13 @@
             <el-icon><Search /></el-icon>
           </template>
         </el-input>
+
+        <!-- 状态筛选标签 -->
+        <el-radio-group v-model="readFilter" size="small" class="filter-radio">
+          <el-radio-button value="all">全部</el-radio-button>
+          <el-radio-button value="unread">未读</el-radio-button>
+        </el-radio-group>
+
         <div class="filter-tabs">
           <el-button
             v-for="tab in sourceTabs"
@@ -34,6 +41,12 @@
             {{ tab.label }}
           </el-button>
         </div>
+
+        <el-select v-model="timeFilter" size="small" clearable placeholder="时间筛选" style="width: 100px; margin-top: 8px;">
+          <el-option label="今天" value="today" />
+          <el-option label="本周" value="week" />
+          <el-option label="更早" value="older" />
+        </el-select>
       </div>
 
       <!-- 通知列表 -->
@@ -75,6 +88,13 @@
             </div>
           </div>
         </div>
+
+        <!-- 加载更多 -->
+        <div class="load-more" v-if="hasMore">
+          <el-button size="small" @click="loadMore" :loading="loading">
+            加载更多
+          </el-button>
+        </div>
       </div>
 
       <!-- 空状态 -->
@@ -92,7 +112,10 @@
         <el-button size="small" type="danger" @click="handleClearAll">
           <el-icon><Delete /></el-icon>&nbsp;清空通知
         </el-button>
-        <el-button size="small" type="primary" @click="prefDialogVisible = true">
+        <el-button size="small" type="primary" @click="handleExport">
+          <el-icon><Download /></el-icon>&nbsp;导出历史
+        </el-button>
+        <el-button size="small" type="default" @click="prefDialogVisible = true">
           <el-icon><Setting /></el-icon>&nbsp;订阅设置
         </el-button>
       </div>
@@ -144,7 +167,7 @@ import { computed, ref, watch, reactive } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   Search, Check, Delete, Setting, Bell, Close,
-  InfoFilled, SuccessFilled, Warning, CircleClose
+  InfoFilled, SuccessFilled, Warning, CircleClose, Download
 } from '@element-plus/icons-vue'
 import { useNotificationStore } from '../../stores/notification'
 
@@ -160,7 +183,13 @@ const emit = defineEmits(['update:visible', 'close'])
 const store = useNotificationStore()
 const keyword = ref('')
 const currentSource = ref('all')
+const readFilter = ref('all') // 全部/未读筛选
+const timeFilter = ref('') // 时间筛选
 const prefDialogVisible = ref(false)
+const loading = ref(false)
+const pageSize = 20
+const currentPage = ref(1)
+const hasMore = ref(false)
 
 const prefs = reactive({
   task: store.subscriptionPrefs.task,
@@ -219,16 +248,50 @@ const tagTypeMap = {
 }
 
 const filteredList = computed(() => {
-  const base = currentSource.value === 'all'
+  let list = currentSource.value === 'all'
     ? store.notifications
     : store.filterBySource(currentSource.value)
-  if (!keyword.value) return base
-  const kw = keyword.value.toLowerCase()
-  return base.filter(
-    (n) =>
-      (n.title || '').toLowerCase().includes(kw) ||
-      (n.message || '').toLowerCase().includes(kw)
-  )
+
+  // 已读/未读筛选
+  if (readFilter.value === 'unread') {
+    list = list.filter(n => !n.read)
+  }
+
+  // 搜索
+  if (keyword.value) {
+    const kw = keyword.value.toLowerCase()
+    list = list.filter(
+      (n) =>
+        (n.title || '').toLowerCase().includes(kw) ||
+        (n.message || '').toLowerCase().includes(kw)
+    )
+  }
+
+  // 时间筛选
+  if (timeFilter.value) {
+    const now = new Date()
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    const weekStart = new Date(today)
+    weekStart.setDate(weekStart.getDate() - weekStart.getDay())
+
+    list = list.filter(n => {
+      const d = new Date(n.createdAt)
+      if (timeFilter.value === 'today') {
+        return d >= today
+      } else if (timeFilter.value === 'week') {
+        return d >= weekStart && d < today
+      } else if (timeFilter.value === 'older') {
+        return d < weekStart
+      }
+      return true
+    })
+  }
+
+  // 更新加载更多状态
+  hasMore.value = list.length > currentPage.value * pageSize
+
+  // 分页
+  return list.slice(0, currentPage.value * pageSize)
 })
 
 const desktopPermissionLabel = computed(() => {
@@ -280,6 +343,27 @@ function handleCardClick(item) {
   if (!item.read) {
     store.markAsRead(item.id)
   }
+
+  // 根据通知类型跳转到相关页面
+  const router = window.__router__
+  if (router) {
+    const pathMap = {
+      task: '/tasks',
+      weather: '/weather-station',
+      uav: '/path-planning',
+      planning: '/path-planning',
+      apiConfig: '/api-config',
+      utm: '/utm-integration',
+      system: '/dashboard'
+    }
+    const path = pathMap[item.source]
+    if (path) {
+      router.push(path)
+    }
+  }
+
+  // 关闭抽屉
+  emit('update:visible', false)
 }
 
 function handleRemove(id) {
@@ -335,6 +419,55 @@ function handleRequestPermission() {
   })
 }
 
+function loadMore() {
+  loading.value = true
+  setTimeout(() => {
+    currentPage.value++
+    loading.value = false
+  }, 300)
+}
+
+function handleExport() {
+  const allNotifications = currentSource.value === 'all'
+    ? store.notifications
+    : store.filterBySource(currentSource.value)
+
+  if (allNotifications.length === 0) {
+    ElMessage.info('没有可导出的通知')
+    return
+  }
+
+  // 转换为 CSV 格式
+  const headers = ['时间', '类型', '来源', '标题', '内容', '状态']
+  const rows = allNotifications.map(n => [
+    formatTime(n.createdAt),
+    n.type,
+    sourceLabelMap[n.source] || n.source,
+    n.title,
+    n.message,
+    n.read ? '已读' : '未读'
+  ])
+
+  const csvContent = [
+    headers.join(','),
+    ...rows.map(row => row.map(cell => `"${(cell || '').toString().replace(/"/g, '""')}"`).join(','))
+  ].join('\n')
+
+  // 创建下载
+  const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8' })
+  const link = document.createElement('a')
+  link.href = URL.createObjectURL(blob)
+  link.download = `通知历史_${new Date().toISOString().slice(0, 10)}.csv`
+  link.click()
+
+  ElMessage.success(`已导出 ${allNotifications.length} 条通知记录`)
+}
+
+// 筛选条件变化时重置分页
+watch([currentSource, readFilter, timeFilter, keyword], () => {
+  currentPage.value = 1
+})
+
 watch(
   () => store.subscriptionPrefs,
   (val) => {
@@ -373,6 +506,21 @@ watch(
   flex: 1;
   overflow-y: auto;
   padding-right: 4px;
+}
+
+.load-more {
+  text-align: center;
+  padding: 16px 0;
+}
+
+.filter-radio {
+  margin-bottom: 10px;
+}
+
+.drawer-toolbar {
+  padding: 8px 4px 12px;
+  border-bottom: 1px solid #ebeef5;
+  margin-bottom: 8px;
 }
 
 .notification-card {

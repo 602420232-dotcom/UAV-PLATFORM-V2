@@ -159,23 +159,23 @@ onMounted(async () => {
 .form-container {
   .content-textarea {
     width: 100%;
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--el-border-color-lighter, #e4e7ed);
     border-radius: 4px;
     padding: 10px;
     font-size: 14px;
     resize: none;
     outline: none;
     transition: border-color 0.2s;
-    background: var(--color-bg-secondary);
-    color: var(--color-text);
+    background: var(--el-fill-color-light, #f5f7fa);
+    color: var(--el-text-color-primary, #303133);
   }
 
   .content-textarea:focus {
-    border-color: var(--color-primary);
+    border-color: var(--el-color-primary, #409eff);
   }
 
   .content-textarea::placeholder {
-    color: var(--color-text-muted);
+    color: var(--el-text-color-secondary, #909399);
   }
 
   .tags-container {
@@ -190,5 +190,24 @@ onMounted(async () => {
     justify-content: flex-end;
     gap: 12px;
   }
+}
+
+/* ===== 暗色模式全局覆盖 ===== */
+:deep(.el-dialog) {
+  background: var(--el-bg-color, #ffffff) !important;
+}
+
+:deep(.el-dialog__header) {
+  background: var(--el-fill-color-lighter, #f5f7fa) !important;
+  border-bottom: 1px solid var(--el-border-color-lighter, #e4e7ed) !important;
+}
+
+:deep(.el-dialog__title) {
+  color: var(--el-text-color-primary, #303133) !important;
+}
+
+:deep(.el-dialog__body) {
+  background: var(--el-bg-color, #ffffff) !important;
+  color: var(--el-text-color-primary, #303133) !important;
 }
 </style>

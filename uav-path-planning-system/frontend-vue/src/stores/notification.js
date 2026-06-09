@@ -11,6 +11,18 @@ export const useNotificationStore = defineStore('notification', () => {
   const showNotificationDialog = ref(false)
   const currentNotification = ref(null)
 
+  // 通知偏好设置
+  const subscriptionPrefs = ref({
+    task: true,
+    weather: true,
+    uav: true,
+    planning: true,
+    apiConfig: true,
+    utm: true,
+    system: true,
+    desktop: true
+  })
+
   // 计算属性
   const unreadNotifications = computed(() => {
     return notifications.value.filter(n => !n.read)
@@ -101,6 +113,19 @@ export const useNotificationStore = defineStore('notification', () => {
     })
   }
 
+  // 推送通知（带桌面通知）
+  function pushWithDesktop(notification) {
+    addNotification({
+      id: notification.id || `n_${Date.now()}`,
+      type: notification.type || 'info',
+      title: notification.title || '',
+      message: notification.message || '',
+      source: notification.source || 'system',
+      read: false,
+      timestamp: new Date().toISOString()
+    })
+  }
+
   function markAsRead(notificationId) {
     const notification = notifications.value.find(n => n.id === notificationId)
     if (notification && !notification.read) {
@@ -166,7 +191,8 @@ export const useNotificationStore = defineStore('notification', () => {
     isConnected,
     showNotificationDialog,
     currentNotification,
-    
+    subscriptionPrefs,
+
     // 计算属性
     unreadNotifications,
     hasUnread,
@@ -181,6 +207,7 @@ export const useNotificationStore = defineStore('notification', () => {
     clearAll,
     openNotificationDialog,
     closeNotificationDialog,
-    triggerTestNotification
+    triggerTestNotification,
+    pushWithDesktop
   }
 })

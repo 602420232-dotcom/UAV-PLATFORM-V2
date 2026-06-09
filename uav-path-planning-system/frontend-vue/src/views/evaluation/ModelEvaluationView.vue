@@ -133,7 +133,7 @@
                 :class="{ 'best-model': m.key === bestModelKey, hidden: !selectedModels.includes(m.key) }"
               >
                 <span class="auc-label" :style="{ color: m.color }">{{ m.name }}</span>
-                <span class="auc-value">AUC {{ (metricsByModel[m.key].auc || 0).toFixed(3) }}</span>
+                <span class="auc-value">AUC {{ (metricsByModel[m.key]?.auc || 0).toFixed(3) }}</span>
               </div>
             </div>
           </el-tab-pane>
@@ -153,7 +153,7 @@
             <div class="section-title">模型选择</div>
             <el-checkbox-group v-model="selectedModels" @change="onModelChange">
               <div class="check-row" v-for="m in models" :key="'cb-' + m.key">
-                <el-checkbox :label="m.key">
+                <el-checkbox :value="m.key">
                   <span class="check-label" :style="{ color: m.color }">{{ m.name }}</span>
                 </el-checkbox>
               </div>

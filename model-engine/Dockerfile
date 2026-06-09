@@ -8,12 +8,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /app
 
 # 安装 Python 依赖
-COPY model-engine/requirements.txt .
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt 2>/dev/null || \
     pip install --no-cache-dir numpy scipy torch --only-binary=:all:
 
 # model-engine 代码
-COPY model-engine/ /app/model-engine/
+COPY . /app/model-engine/
 
 # 原项目桥接: 保留原路径引用，Docker 内用 symlink 映射
 RUN mkdir -p /legacy && \

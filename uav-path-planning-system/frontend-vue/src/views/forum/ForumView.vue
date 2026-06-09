@@ -159,10 +159,13 @@ const total = ref(0);
 const showPostDetail = ref(false);
 const showCreatePostModal = ref(false);
 const selectedPost = ref(null);
+const sectionStats = ref({}); // 存储每个板块的帖子总数
 const canPost = computed(() => {
- if (!activeSection.value)
- return false;
- return forumApi.canPost(authStore.role, activeSection.value);
+  return authStore.hasAction('forum:post');
+});
+
+const canReply = computed(() => {
+  return authStore.hasAction('forum:comment');
 });
 const getSectionIcon = (section) => {
  const icons = {
@@ -175,17 +178,34 @@ const getSectionIcon = (section) => {
 };
 
 const getSectionLabel = (section) => {
- const labels = {
- [SECTIONS.ANNOUNCEMENT]: t('forum.announcement'),
- [SECTIONS.TECH_DISCUSS]: t('forum.techDiscuss'),
- [SECTIONS.TASK_COLLAB]: t('forum.taskCollab'),
- [SECTIONS.KNOWLEDGE]: t('forum.knowledge')
- };
- return labels[section] || section;
+  // 直接使用中文标签，避免翻译键不匹配问题
+  const labels = {
+    'announcement': '公告通知',
+    'announcements': '公告通知',
+    'tech_discuss': '技术讨论',
+    'tech_discussion': '技术讨论',
+    'task_collab': '任务协作',
+    'task_collaboration': '任务协作',
+    'knowledge': '知识库',
+    'knowledge_sharing': '知识库'
+  };
+  // 安全返回：如果section为空或undefined，返回默认文本
+  if (!section) {
+    return '未知板块';
+  }
+  // 返回映射的标签，如果找不到则格式化section key为可读文本
+  return labels[section] || String(section).replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 };
+
 const getSectionCount = (section) => {
- const count = posts.value.filter(p => p.section === section).length;
- return count;
+  // 返回该板块的帖子总数
+  // 如果API返回了sectionStats，使用它；否则使用本地统计
+  if (sectionStats.value && sectionStats.value[section] !== undefined) {
+    return sectionStats.value[section];
+  }
+  // 回退：统计当前加载的帖子
+  const count = posts.value.filter(p => p.section === section).length;
+  return count;
 };
 const selectSection = (section) => {
  activeSection.value = section;
@@ -216,9 +236,20 @@ const viewPost = async (post) => {
  showPostDetail.value = true;
 };
 const handlePostCreated = () => {
- showCreatePostModal.value = false;
- loadPosts();
+  showCreatePostModal.value = false;
+  loadPosts();
+  loadSectionStats(); // 更新板块统计
 };
+
+const loadSectionStats = async () => {
+  try {
+    const stats = await forumApi.getSectionStats();
+    sectionStats.value = stats;
+  } catch (error) {
+    console.error('加载板块统计失败:', error);
+  }
+};
+
 const showMyPosts = () => {
 };
 const showMyFavorites = () => {
@@ -247,12 +278,15 @@ const stripHtml = (html) => {
  return text.length > 100 ? text.substring(0, 100) + '...' : text;
 };
 onMounted(async () => {
- const sectionsData = await forumApi.getSections();
- sections.value = sectionsData;
- if (sectionsData.length > 0) {
- activeSection.value = sectionsData[0].key;
- }
- await loadPosts();
+  const sectionsData = await forumApi.getSections();
+  sections.value = sectionsData;
+  if (sectionsData.length > 0) {
+  activeSection.value = sectionsData[0].key;
+  }
+  await Promise.all([
+    loadPosts(),
+    loadSectionStats()
+  ]);
 });
 </script>
 

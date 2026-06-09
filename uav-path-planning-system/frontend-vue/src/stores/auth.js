@@ -107,7 +107,7 @@ export const PERMISSION_MATRIX = {
     'forum', 'settings', 'docs', 'theme-customizer'
   ],
   [ROLES.ADMIN]: [
-    'dashboard', 'weather', 'weather-station', 'orders', 'cockpit', 'tasks',
+    'dashboard', 'weather', 'weather-station', 'weather-source', 'orders', 'cockpit', 'tasks',
     'path-planning', 'airworthiness', 'model-evaluation', 'parameter-tuning', 'sensitivity-analysis',
     'experiment-compare', 'assimilation', 'monitoring', 'database',
     'docker', 'docker-build', 'api-config', 'permission-templates', 'utm-integration', 'task-report',
@@ -117,38 +117,139 @@ export const PERMISSION_MATRIX = {
 }
 
 // ===== 按钮级权限（页面内的操作权限）=====
-// api-config 页面：deployment 只能查看，admin 可以修改
 export const ACTION_PERMISSIONS = {
-  // API 配置页面
-  'api-config:edit': [ROLES.ADMIN],
-  'api-config:view': [ROLES.DEPLOYMENT, ROLES.ADMIN],
-  
-  // 下单页面高级配置
+  // ===== 通用权限 =====
+  'common:export': [ROLES.ADMIN],
+  'common:delete': [ROLES.ADMIN],
+  'common:edit': [ROLES.ADMIN],
+
+  // ===== 气象数据页面 =====
+  'weather:view': [ROLES.USER, ROLES.PRODUCTION, ROLES.FLIGHT, ROLES.TESTER, ROLES.DEPLOYMENT, ROLES.ADMIN],
+  'weather:download': [ROLES.FLIGHT, ROLES.TESTER, ROLES.ADMIN],
+  'weather:advanced': [ROLES.FLIGHT, ROLES.TESTER, ROLES.ADMIN],
+
+  // ===== 下单页面 =====
+  'orders:view': [ROLES.USER, ROLES.PRODUCTION, ROLES.ADMIN],
+  'orders:create': [ROLES.USER, ROLES.PRODUCTION, ROLES.ADMIN],
   'orders:advanced': [ROLES.FLIGHT, ROLES.ADMIN],
-  
-  // 路径规划执行
+  'orders:cancel': [ROLES.USER, ROLES.PRODUCTION, ROLES.ADMIN],
+
+  // ===== 智能驾驶舱 =====
+  'cockpit:view': [ROLES.PRODUCTION, ROLES.FLIGHT, ROLES.ADMIN],
+  'cockpit:control': [ROLES.FLIGHT, ROLES.ADMIN],
+  'cockpit:emergency': [ROLES.FLIGHT, ROLES.ADMIN],
+
+  // ===== 任务管理 =====
+  'tasks:view': [ROLES.PRODUCTION, ROLES.FLIGHT, ROLES.ADMIN],
+  'tasks:create': [ROLES.PRODUCTION, ROLES.ADMIN],
+  'tasks:edit': [ROLES.PRODUCTION, ROLES.FLIGHT, ROLES.ADMIN],
+  'tasks:delete': [ROLES.ADMIN],
+  'tasks:assign': [ROLES.PRODUCTION, ROLES.ADMIN],
+
+  // ===== API 配置页面 =====
+  'api-config:view': [ROLES.DEPLOYMENT, ROLES.ADMIN],
+  'api-config:edit': [ROLES.ADMIN],
+
+  // ===== 下单页面高级配置 =====
+  'orders:advanced': [ROLES.FLIGHT, ROLES.ADMIN],
+
+  // ===== 路径规划执行 =====
+  'planning:view': [ROLES.FLIGHT, ROLES.TESTER, ROLES.ADMIN],
   'planning:execute': [ROLES.FLIGHT, ROLES.TESTER, ROLES.ADMIN],
-  
-  // 数据同化页面（5 个动作）
+  'planning:save': [ROLES.FLIGHT, ROLES.TESTER, ROLES.ADMIN],
+
+  // ===== 模型评估 =====
+  'evaluation:view': [ROLES.FLIGHT, ROLES.TESTER, ROLES.ADMIN],
+  'evaluation:run': [ROLES.FLIGHT, ROLES.TESTER, ROLES.ADMIN],
+  'evaluation:compare': [ROLES.FLIGHT, ROLES.TESTER, ROLES.ADMIN],
+
+  // ===== 算法参数调优 =====
+  'tuning:view': [ROLES.FLIGHT, ROLES.TESTER, ROLES.ADMIN],
+  'tuning:adjust': [ROLES.FLIGHT, ROLES.TESTER, ROLES.ADMIN],
+  'tuning:save': [ROLES.ADMIN],
+
+  // ===== 数据同化页面 =====
   'assimilation:view': [ROLES.TESTER, ROLES.DEPLOYMENT, ROLES.ADMIN],
   'assimilation:execute': [ROLES.TESTER, ROLES.DEPLOYMENT, ROLES.ADMIN],
   'assimilation:config': [ROLES.DEPLOYMENT, ROLES.ADMIN],
   'assimilation:download': [ROLES.TESTER, ROLES.DEPLOYMENT, ROLES.ADMIN],
   'assimilation:delete': [ROLES.DEPLOYMENT, ROLES.ADMIN],
-  
-  // 数据库管理页面（5 个动作）
+
+  // ===== 数据库管理页面 =====
   'database:view': [ROLES.DEPLOYMENT, ROLES.ADMIN],
   'database:backup': [ROLES.DEPLOYMENT, ROLES.ADMIN],
   'database:restore': [ROLES.DEPLOYMENT, ROLES.ADMIN],
   'database:config': [ROLES.DEPLOYMENT, ROLES.ADMIN],
   'database:cleanup': [ROLES.DEPLOYMENT, ROLES.ADMIN],
-  
-  // Docker 构建/状态页面（5 个动作）
+  'database:edit': [ROLES.ADMIN],
+  'database:execute': [ROLES.ADMIN],
+
+  // ===== Docker 构建/状态页面 =====
   'docker:view': [ROLES.DEPLOYMENT, ROLES.ADMIN],
   'docker:restart': [ROLES.DEPLOYMENT, ROLES.ADMIN],
   'docker:build': [ROLES.DEPLOYMENT, ROLES.ADMIN],
   'docker:logs': [ROLES.DEPLOYMENT, ROLES.ADMIN],
-  'docker:cleanup': [ROLES.DEPLOYMENT, ROLES.ADMIN]
+  'docker:cleanup': [ROLES.DEPLOYMENT, ROLES.ADMIN],
+  'docker:stop': [ROLES.ADMIN],
+
+  // ===== 系统监控页面 =====
+  'monitoring:view': [ROLES.DEPLOYMENT, ROLES.ADMIN],
+  'monitoring:restart': [ROLES.ADMIN],
+  'monitoring:stop': [ROLES.ADMIN],
+  'monitoring:config': [ROLES.ADMIN],
+
+  // ===== 任务报告页面 =====
+  'report:view': [ROLES.PRODUCTION, ROLES.FLIGHT, ROLES.DEPLOYMENT, ROLES.ADMIN],
+  'report:create': [ROLES.PRODUCTION, ROLES.FLIGHT, ROLES.ADMIN],
+  'report:export': [ROLES.ADMIN],
+  'report:delete': [ROLES.ADMIN],
+
+  // ===== 气象站点管理 =====
+  'weather-station:view': [ROLES.TESTER, ROLES.DEPLOYMENT, ROLES.ADMIN],
+  'weather-station:add': [ROLES.ADMIN],
+  'weather-station:edit': [ROLES.ADMIN],
+  'weather-station:delete': [ROLES.ADMIN],
+  'weather-station:toggle': [ROLES.ADMIN],
+
+  // ===== 气象数据源页面 =====
+  'weather-source:view': [ROLES.TESTER, ROLES.DEPLOYMENT, ROLES.ADMIN],
+  'weather-source:add': [ROLES.ADMIN],
+  'weather-source:edit': [ROLES.ADMIN],
+  'weather-source:delete': [ROLES.ADMIN],
+  'weather-source:toggle': [ROLES.ADMIN],
+  'weather-source:config': [ROLES.ADMIN],
+
+  // ===== 适航性评估 =====
+  'airworthiness:view': [ROLES.FLIGHT, ROLES.TESTER, ROLES.ADMIN],
+  'airworthiness:evaluate': [ROLES.FLIGHT, ROLES.TESTER, ROLES.ADMIN],
+  'airworthiness:approve': [ROLES.ADMIN],
+
+  // ===== 参数敏感性分析 =====
+  'sensitivity:view': [ROLES.FLIGHT, ROLES.TESTER, ROLES.ADMIN],
+  'sensitivity:run': [ROLES.FLIGHT, ROLES.TESTER, ROLES.ADMIN],
+  'sensitivity:export': [ROLES.ADMIN],
+
+  // ===== 实验对比工具 =====
+  'experiment:view': [ROLES.FLIGHT, ROLES.TESTER, ROLES.ADMIN],
+  'experiment:run': [ROLES.FLIGHT, ROLES.TESTER, ROLES.ADMIN],
+  'experiment:compare': [ROLES.FLIGHT, ROLES.TESTER, ROLES.ADMIN],
+
+  // ===== 团队论坛 =====
+  'forum:view': [ROLES.USER, ROLES.PRODUCTION, ROLES.FLIGHT, ROLES.TESTER, ROLES.DEPLOYMENT, ROLES.ADMIN],
+  'forum:post': [ROLES.PRODUCTION, ROLES.FLIGHT, ROLES.TESTER, ROLES.DEPLOYMENT, ROLES.ADMIN],
+  'forum:comment': [ROLES.USER, ROLES.PRODUCTION, ROLES.FLIGHT, ROLES.TESTER, ROLES.DEPLOYMENT, ROLES.ADMIN],
+  'forum:delete': [ROLES.ADMIN],
+  'forum:pin': [ROLES.ADMIN],
+  'forum:admin': [ROLES.ADMIN],
+
+  // ===== 用户统计 =====
+  'user-stats:view': [ROLES.ADMIN],
+  'user-stats:export': [ROLES.ADMIN],
+
+  // ===== UTM 对接 =====
+  'utm:view': [ROLES.PRODUCTION, ROLES.FLIGHT, ROLES.ADMIN],
+  'utm:request': [ROLES.FLIGHT, ROLES.ADMIN],
+  'utm:approve': [ROLES.ADMIN]
 }
 
 // ===== 默认账号 =====

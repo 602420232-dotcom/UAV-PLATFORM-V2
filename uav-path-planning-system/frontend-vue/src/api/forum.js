@@ -14,24 +14,8 @@ const SECTION_LABELS = {
   [SECTIONS.KNOWLEDGE]: '知识库'
 }
 
-const SECTION_PERMISSIONS = {
-  [SECTIONS.ANNOUNCEMENT]: {
-    canPost: [ROLES.ADMIN],
-    canReply: [ROLES.ADMIN, ROLES.DEVELOPER, ROLES.TESTER, ROLES.DEPLOYMENT, ROLES.FLIGHT, ROLES.PRODUCTION]
-  },
-  [SECTIONS.TECH_DISCUSS]: {
-    canPost: [ROLES.ADMIN, ROLES.DEVELOPER, ROLES.TESTER, ROLES.DEPLOYMENT],
-    canReply: [ROLES.ADMIN, ROLES.DEVELOPER, ROLES.TESTER, ROLES.DEPLOYMENT, ROLES.FLIGHT, ROLES.PRODUCTION]
-  },
-  [SECTIONS.TASK_COLLAB]: {
-    canPost: [ROLES.ADMIN, ROLES.DEVELOPER, ROLES.TESTER, ROLES.DEPLOYMENT, ROLES.FLIGHT, ROLES.PRODUCTION],
-    canReply: [ROLES.ADMIN, ROLES.DEVELOPER, ROLES.TESTER, ROLES.DEPLOYMENT, ROLES.FLIGHT, ROLES.PRODUCTION]
-  },
-  [SECTIONS.KNOWLEDGE]: {
-    canPost: [ROLES.ADMIN, ROLES.DEVELOPER, ROLES.DEPLOYMENT],
-    canReply: [ROLES.ADMIN, ROLES.DEVELOPER, ROLES.TESTER, ROLES.DEPLOYMENT, ROLES.FLIGHT, ROLES.PRODUCTION]
-  }
-}
+// 注意：权限检查现在由前端 authStore.hasPermission 统一处理
+// 这里保留结构但不再使用硬编码的角色列表
 
 const MOCK_USERS = [
   { id: 'admin', username: 'admin01', displayName: '系统管理员', role: ROLES.ADMIN, avatar: 'https://neeko-copilot.bytedance.net/api/text_to_image?prompt=professional%20system%20administrator%20avatar%20portrait&image_size=square' },
@@ -213,13 +197,20 @@ const MOCK_NOTIFICATIONS = [
 const forumApi = {
   SECTIONS,
   SECTION_LABELS,
-  SECTION_PERMISSIONS,
+
+  // 获取每个板块的帖子统计
+  getSectionStats() {
+    const stats = {};
+    Object.values(SECTIONS).forEach(section => {
+      stats[section] = MOCK_POSTS.filter(p => p.section === section).length;
+    });
+    return Promise.resolve(stats);
+  },
 
   getSections() {
     return Promise.resolve(Object.entries(SECTION_LABELS).map(([key, label]) => ({
       key,
-      label,
-      permissions: SECTION_PERMISSIONS[key]
+      label
     })))
   },
 
@@ -371,18 +362,11 @@ const forumApi = {
 
   getUsers() {
     return Promise.resolve(MOCK_USERS)
-  },
-
-  canPost(role, section) {
-    const permissions = SECTION_PERMISSIONS[section]
-    return permissions && permissions.canPost.includes(role)
-  },
-
-  canReply(role, section) {
-    const permissions = SECTION_PERMISSIONS[section]
-    return permissions && permissions.canReply.includes(role)
   }
 }
+
+// 注意：canPost 和 canReply 权限检查现在由前端 authStore.hasPermission 统一处理
+// 查看 ForumView.vue 中的 canPost 和 canReply computed 属性
 
 // 辅助函数：生成模拟地理位置
 function generateMockLocation() {
@@ -394,5 +378,5 @@ function generateMockLocation() {
   return locations[Math.floor(Math.random() * locations.length)]
 }
 
-export { SECTIONS, SECTION_LABELS, SECTION_PERMISSIONS }
+export { SECTIONS, SECTION_LABELS }
 export default forumApi

@@ -50,13 +50,13 @@
         >
           <template v-for="item in menuItems" :key="item.key">
             <el-menu-item v-if="!item.children" :index="item.path" :disabled="item.disabled">
-              <el-icon><component :is="item.icon" /></el-icon>
+              <el-icon><component :is="ICON_MAP[item.icon]" /></el-icon>
               <template #title>{{ item.title }}</template>
             </el-menu-item>
 
             <el-sub-menu v-else :index="'sub-' + item.key">
               <template #title>
-                <el-icon><component :is="item.icon" /></el-icon>
+                <el-icon><component :is="ICON_MAP[item.icon]" /></el-icon>
                 <span>{{ item.title }}</span>
               </template>
               <el-menu-item
@@ -65,13 +65,13 @@
                 :index="child.path"
                 :disabled="child.disabled"
               >
-                <el-icon><component :is="child.icon" /></el-icon>
+                <el-icon><component :is="ICON_MAP[child.icon]" /></el-icon>
                 <template #title>{{ child.title }}</template>
               </el-menu-item>
             </el-sub-menu>
           </template>
 
-          <el-menu-divider />
+          <el-divider style="margin: 8px 0; border-color: rgba(255,255,255,0.1);" />
           <el-menu-item index="/docs">
             <el-icon><Document /></el-icon>
             <template #title>使用文档</template>
@@ -144,7 +144,7 @@
               </el-menu-item>
             </el-sub-menu>
           </template>
-          <el-menu-divider />
+          <el-divider style="margin: 8px 0; border-color: rgba(255,255,255,0.1);" />
           <el-menu-item index="/docs">
             <el-icon><Document /></el-icon>
             <template #title>使用文档</template>
@@ -319,7 +319,8 @@ import {
   HomeFilled, PartlyCloudy, Goods, Monitor, List, Position, Connection,
   DataAnalysis, Coin, Box, Setting, Tools, Document,
   Fold, Expand, Moon, Sunny, ArrowDown, User, SwitchButton,
-  MagicStick, InfoFilled, Cpu, Menu, Bell, MapLocation, Clock, Loading
+  MagicStick, InfoFilled, Cpu, Menu, Bell, MapLocation, Clock, Loading,
+  ChatDotRound, Plus, UserFilled
 } from '@element-plus/icons-vue'
 import { useAuthStore } from '../stores/auth'
 import { useAppStore } from '../stores/app'
@@ -444,11 +445,6 @@ onMounted(() => {
     }
   } catch (_) {}
 
-  // 启动健康检查定时器（演示模式每 2 分钟推送一条）
-  if (authStore.demoMode) {
-    notificationStore.startHealthCheck(120000)
-  }
-
   // 连接 WebSocket 通知服务
   if (authStore.userId) {
     notificationStore.connect(authStore.userId)
@@ -510,6 +506,13 @@ const roleTagType = computed(() => {
   return map[authStore.role] || 'info'
 })
 
+// 图标映射表：将字符串名称映射到实际组件
+const ICON_MAP = {
+  HomeFilled, PartlyCloudy, Goods, Monitor, List, Position, Connection,
+  DataAnalysis, Coin, Box, Setting, Tools, Document,
+  ChatDotRound, MagicStick, InfoFilled, Cpu, Menu, Bell, MapLocation, Clock, Loading
+}
+
 const menuItems = computed(() => {
   const all = [
     { key: 'dashboard', title: t('menu.dashboard'), icon: 'HomeFilled', path: '/dashboard' },
@@ -532,7 +535,7 @@ const menuItems = computed(() => {
     { key: 'database', title: t('menu.database'), icon: 'Coin', path: '/database' },
     { key: 'docker', title: t('menu.docker'), icon: 'Box', path: '/docker' },
     { key: 'api-config', title: t('menu.apiConfig'), icon: 'Cpu', path: '/api-config' },
-    { key: 'forum', title: t('menu.forum'), icon: 'MessageSquare', path: '/forum' },
+    { key: 'forum', title: t('menu.forum'), icon: 'ChatDotRound', path: '/forum' },
     { key: 'user-stats', title: t('menu.userStats'), icon: 'DataAnalysis', path: '/user-stats', roles: ['admin'] },
     { key: 'permission-templates', title: t('menu.permissionTemplates'), icon: 'Setting', path: '/permission-templates' }
   ]

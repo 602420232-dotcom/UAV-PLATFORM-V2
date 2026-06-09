@@ -105,13 +105,44 @@
         <div class="card-header">
           <span class="card-title">📝 活动日志</span>
           <div class="filter-actions">
-            <el-select v-model="filterAction" placeholder="筛选操作" clearable size="small" style="width: 120px">
-              <el-option label="全部" value="" />
+            <el-select v-model="filterAction" placeholder="操作类型" clearable size="small" style="width: 120px">
+              <el-option label="全部操作" value="" />
               <el-option label="登录" value="login" />
               <el-option label="发帖" value="create_post" />
               <el-option label="评论" value="comment" />
               <el-option label="访问页面" value="view_page" />
+              <el-option label="算法测试" value="algorithm_test" />
             </el-select>
+            <el-select v-model="filterRole" placeholder="选择角色" clearable size="small" style="width: 120px" @change="handleRoleChange">
+              <el-option label="全部角色" value="" />
+              <el-option label="管理员" value="管理员" />
+              <el-option label="开发" value="开发" />
+              <el-option label="测试" value="测试" />
+              <el-option label="部署" value="部署" />
+              <el-option label="飞控" value="飞控" />
+              <el-option label="生产" value="生产" />
+            </el-select>
+            <el-select v-model="filterUser" placeholder="选择用户" clearable filterable size="small" style="width: 130px" :disabled="!filterRole && filteredUsersByRole.length === 0">
+              <el-option label="全部用户" value="" />
+              <el-option v-for="user in filteredUsersByRole" :key="user.userId" :label="user.userName" :value="user.userId" />
+            </el-select>
+            <el-date-picker
+              v-model="filterDateRange"
+              type="daterange"
+              range-separator="至"
+              start-placeholder="开始日期"
+              end-placeholder="结束日期"
+              size="small"
+              style="width: 240px"
+              :shortcuts="dateShortcuts"
+              format="YYYY-MM-DD"
+              value-format="YYYY-MM-DD"
+              clearable
+            />
+            <el-button size="small" @click="resetFilters" :disabled="!hasActiveFilters">
+              <el-icon><Refresh /></el-icon>
+              重置
+            </el-button>
           </div>
         </div>
       </template>
@@ -141,16 +172,19 @@
       </el-timeline>
 
       <div class="load-more" v-if="hasMoreLogs">
-        <el-button @click="loadMoreLogs">加载更多</el-button>
+        <el-button @click="loadMoreLogs" :disabled="hasActiveFilters">
+          加载更多
+        </el-button>
+        <span v-if="hasActiveFilters" class="load-hint">（请先清除筛选条件以加载全部）</span>
       </div>
     </el-card>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { Download } from '@element-plus/icons-vue'
+import { Download, Refresh } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import activityLogApi from '@/api/activityLog'
 
@@ -168,13 +202,120 @@ const overviewStats = ref({
 })
 const activityLogs = ref([])
 const filterAction = ref('')
+const filterUser = ref('')
+const filterRole = ref('')
+const filterDateRange = ref(null)
 const currentPage = ref(1)
 const pageSize = ref(10)
 const totalLogs = ref(0)
 
+// 根据角色筛选用户列表
+const filteredUsersByRole = computed(() => {
+  if (!filterRole.value) {
+    return userStats.value
+  }
+  return userStats.value.filter(user => user.role === filterRole.value)
+})
+
+// 角色变更时重置用户选择
+const handleRoleChange = () => {
+  filterUser.value = ''
+}
+
+// 日期快捷选项
+const dateShortcuts = [
+  {
+    text: '今天',
+    value: () => {
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      const tomorrow = new Date(today)
+      tomorrow.setDate(tomorrow.getDate() + 1)
+      return [today, tomorrow]
+    }
+  },
+  {
+    text: '最近3天',
+    value: () => {
+      const end = new Date()
+      end.setHours(23, 59, 59, 999)
+      const start = new Date()
+      start.setDate(start.getDate() - 3)
+      start.setHours(0, 0, 0, 0)
+      return [start, end]
+    }
+  },
+  {
+    text: '最近7天',
+    value: () => {
+      const end = new Date()
+      end.setHours(23, 59, 59, 999)
+      const start = new Date()
+      start.setDate(start.getDate() - 7)
+      start.setHours(0, 0, 0, 0)
+      return [start, end]
+    }
+  },
+  {
+    text: '最近30天',
+    value: () => {
+      const end = new Date()
+      end.setHours(23, 59, 59, 999)
+      const start = new Date()
+      start.setDate(start.getDate() - 30)
+      start.setHours(0, 0, 0, 0)
+      return [start, end]
+    }
+  }
+]
+
+// 是否有激活的筛选条件
+const hasActiveFilters = computed(() => {
+  return filterAction.value !== '' || filterUser.value !== '' || filterRole.value !== '' || filterDateRange.value !== null
+})
+
+// 重置筛选条件
+const resetFilters = () => {
+  filterAction.value = ''
+  filterUser.value = ''
+  filterRole.value = ''
+  filterDateRange.value = null
+  currentPage.value = 1
+  loadActivityLogs()
+}
+
 const filteredLogs = computed(() => {
-  if (!filterAction.value) return activityLogs.value
-  return activityLogs.value.filter(log => log.action === filterAction.value)
+  let logs = activityLogs.value
+
+  if (filterAction.value) {
+    logs = logs.filter(log => log.action === filterAction.value)
+  }
+
+  if (filterRole.value) {
+    // 需要根据用户ID找到用户的角色进行筛选
+    const usersInRole = userStats.value
+      .filter(user => user.role === filterRole.value)
+      .map(user => user.userId)
+    logs = logs.filter(log => usersInRole.includes(log.userId))
+  }
+
+  if (filterUser.value) {
+    logs = logs.filter(log => log.userId === filterUser.value)
+  }
+
+  if (filterDateRange.value && filterDateRange.value.length === 2) {
+    const [startDate, endDate] = filterDateRange.value
+    const start = new Date(startDate)
+    start.setHours(0, 0, 0, 0)
+    const end = new Date(endDate)
+    end.setHours(23, 59, 59, 999)
+    logs = logs.filter(log => {
+      const logDate = new Date(log.timestamp)
+      return logDate >= start && logDate <= end
+    })
+  }
+
+  return logs
 })
 
 const hasMoreLogs = computed(() => {
@@ -201,10 +342,20 @@ const loadOverviewStats = async () => {
 
 const loadActivityLogs = async () => {
   try {
-    const result = await activityLogApi.getActivityLogs({
+    const params = {
       page: currentPage.value,
       pageSize: pageSize.value
-    })
+    }
+    // 添加筛选参数
+    if (filterAction.value) params.action = filterAction.value
+    if (filterUser.value) params.userId = filterUser.value
+    // 注意：角色筛选在前端进行，因为需要关联用户表
+    if (filterDateRange.value && filterDateRange.value.length === 2) {
+      params.startDate = filterDateRange.value[0]
+      params.endDate = filterDateRange.value[1]
+    }
+
+    const result = await activityLogApi.getActivityLogs(params)
     activityLogs.value = result.list
     totalLogs.value = result.total
   } catch (error) {
@@ -215,16 +366,31 @@ const loadActivityLogs = async () => {
 const loadMoreLogs = async () => {
   try {
     currentPage.value++
-    const result = await activityLogApi.getActivityLogs({
+    const params = {
       page: currentPage.value,
       pageSize: pageSize.value
-    })
+    }
+    // 添加筛选参数
+    if (filterAction.value) params.action = filterAction.value
+    if (filterUser.value) params.userId = filterUser.value
+    if (filterDateRange.value && filterDateRange.value.length === 2) {
+      params.startDate = filterDateRange.value[0]
+      params.endDate = filterDateRange.value[1]
+    }
+    
+    const result = await activityLogApi.getActivityLogs(params)
     activityLogs.value = [...activityLogs.value, ...result.list]
   } catch (error) {
     ElMessage.error(t('common.loadFailed') + ': ' + error.message)
     currentPage.value--
   }
 }
+
+// 监听筛选条件变化，自动重新加载
+watch([filterAction, filterUser, filterRole, filterDateRange], () => {
+  currentPage.value = 1
+  loadActivityLogs()
+}, { deep: true })
 
 const getRoleTagType = (role) => {
   const map = {
@@ -433,6 +599,13 @@ onMounted(async () => {
 .load-more {
   text-align: center;
   margin-top: 20px;
+}
+
+.load-hint {
+  display: block;
+  margin-top: 8px;
+  font-size: 12px;
+  color: #909399;
 }
 
 @media (max-width: 768px) {

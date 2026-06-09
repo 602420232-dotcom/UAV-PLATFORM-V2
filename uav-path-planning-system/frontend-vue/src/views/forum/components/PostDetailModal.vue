@@ -23,6 +23,7 @@
             v-for="tag in post.tags"
             :key="tag"
             size="small"
+            effect="plain"
           >
             {{ tag }}
           </el-tag>
@@ -53,7 +54,7 @@
       <div class="comments-section">
         <h3 class="comments-title">
           <el-icon><Message /></el-icon>
-          {{ t('forum.submitComment') }} ({{ comments.length }})
+          {{ t('forum.submitComment') }} ({{ post.commentCount || 0 }})
         </h3>
 
         <div class="comments-list">
@@ -190,6 +191,7 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+/* ===== 基础样式 ===== */
 .post-detail-modal {
   :deep(.el-dialog__body) {
     padding: 20px;
@@ -205,7 +207,7 @@ onMounted(async () => {
     align-items: flex-start;
     margin-bottom: 20px;
     padding-bottom: 15px;
-    border-bottom: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--el-border-color-lighter, #e4e7ed);
   }
 
   .author-section {
@@ -230,23 +232,28 @@ onMounted(async () => {
   .author-name {
     font-size: 16px;
     font-weight: 600;
-    color: var(--color-text);
+    color: var(--el-text-color-primary, #303133);
   }
 
   .post-time {
     font-size: 12px;
-    color: var(--color-text-muted);
+    color: var(--el-text-color-secondary, #909399);
+  }
+
+  .author-location {
+    margin-left: 8px;
   }
 
   .post-tags {
     display: flex;
     gap: 8px;
+    flex-wrap: wrap;
   }
 
   .post-content {
     font-size: 15px;
     line-height: 1.8;
-    color: var(--color-text);
+    color: var(--el-text-color-primary, #303133);
     margin-bottom: 20px;
   }
 
@@ -255,7 +262,7 @@ onMounted(async () => {
     gap: 24px;
     margin-bottom: 20px;
     padding-bottom: 15px;
-    border-bottom: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--el-border-color-lighter, #e4e7ed);
   }
 
   .action-btn {
@@ -263,19 +270,20 @@ onMounted(async () => {
     align-items: center;
     gap: 6px;
     cursor: pointer;
-    color: var(--color-text-muted);
+    color: var(--el-text-color-secondary, #909399);
     transition: all 0.2s;
     padding: 8px 12px;
     border-radius: 8px;
+    user-select: none;
   }
 
   .action-btn:hover {
-    background: var(--color-primary-light);
-    color: var(--color-primary);
+    background: var(--el-color-primary-light-9, #ecf5ff);
+    color: var(--el-color-primary, #409eff);
   }
 
   .action-btn.liked {
-    color: #f56c6c;
+    color: var(--el-color-danger, #f56c6c);
   }
 }
 
@@ -287,7 +295,7 @@ onMounted(async () => {
     font-size: 16px;
     font-weight: 600;
     margin: 0 0 16px 0;
-    color: var(--color-text);
+    color: var(--el-text-color-primary, #303133);
   }
 
   .comments-list {
@@ -312,7 +320,7 @@ onMounted(async () => {
 
   .comment-content {
     flex: 1;
-    background: var(--color-bg-secondary);
+    background: var(--el-fill-color-light, #f5f7fa);
     border-radius: 8px;
     padding: 12px;
   }
@@ -329,27 +337,24 @@ onMounted(async () => {
   .comment-author {
     font-size: 14px;
     font-weight: 500;
-    color: var(--color-text);
+    color: var(--el-text-color-primary, #303133);
   }
 
   .comment-time {
     font-size: 12px;
-    color: var(--color-text-muted);
+    color: var(--el-text-color-secondary, #909399);
   }
 
   .comment-location {
     margin-left: auto;
   }
 
-  .author-location {
-    margin-left: 8px;
-  }
-
   .comment-text {
     font-size: 14px;
-    color: var(--color-text);
+    color: var(--el-text-color-primary, #303133);
     margin: 0;
     line-height: 1.6;
+    word-break: break-word;
   }
 
   .empty-comments {
@@ -358,7 +363,7 @@ onMounted(async () => {
     align-items: center;
     justify-content: center;
     padding: 40px;
-    color: var(--color-text-muted);
+    color: var(--el-text-color-secondary, #909399);
   }
 
   .empty-icon {
@@ -367,8 +372,8 @@ onMounted(async () => {
   }
 
   .comment-input-section {
-    background: var(--color-bg-secondary);
-    border: 1px solid var(--color-border);
+    background: var(--el-fill-color-light, #f5f7fa);
+    border: 1px solid var(--el-border-color-lighter, #e4e7ed);
     border-radius: 8px;
     padding: 12px;
   }
@@ -382,11 +387,12 @@ onMounted(async () => {
     line-height: 1.5;
     outline: none;
     box-sizing: border-box;
-    color: var(--color-text);
+    color: var(--el-text-color-primary, #303133);
+    min-height: 60px;
   }
 
   .comment-input::placeholder {
-    color: var(--color-text-muted);
+    color: var(--el-text-color-secondary, #909399);
   }
 
   .comment-actions {
@@ -394,7 +400,127 @@ onMounted(async () => {
     justify-content: flex-end;
     margin-top: 12px;
     padding-top: 12px;
-    border-top: 1px solid var(--color-border);
+    border-top: 1px solid var(--el-border-color-lighter, #e4e7ed);
   }
+}
+
+/* ===== 暗色模式全局覆盖 ===== */
+/* 使用 :global() 让样式穿透到 el-dialog 内部 */
+:deep(.el-dialog) {
+  --el-dialog-bg-color: var(--el-bg-color, #ffffff);
+  --el-dialog-title-font-size: 18px;
+}
+
+:deep(.el-dialog__header) {
+  background: var(--el-fill-color-lighter, #f5f7fa) !important;
+  border-bottom: 1px solid var(--el-border-color-lighter, #e4e7ed) !important;
+  padding: 16px 20px !important;
+  margin-right: 0 !important;
+}
+
+:deep(.el-dialog__title) {
+  color: var(--el-text-color-primary, #303133) !important;
+  font-size: 18px !important;
+  font-weight: 600 !important;
+}
+
+:deep(.el-dialog__body) {
+  background: var(--el-bg-color, #ffffff) !important;
+  color: var(--el-text-color-primary, #303133) !important;
+  padding: 20px !important;
+}
+
+:deep(.el-dialog__footer) {
+  background: var(--el-fill-color-lighter, #f5f7fa) !important;
+  border-top: 1px solid var(--el-border-color-lighter, #e4e7ed) !important;
+}
+
+/* 帖子内容 HTML 渲染的暗色模式 */
+:deep(.post-content) {
+  color: var(--el-text-color-primary, #303133) !important;
+}
+
+:deep(.post-content p),
+:deep(.post-content li),
+:deep(.post-content strong),
+:deep(.post-content em),
+:deep(.post-content h1),
+:deep(.post-content h2),
+:deep(.post-content h3),
+:deep(.post-content h4),
+:deep(.post-content h5),
+:deep(.post-content h6) {
+  color: var(--el-text-color-primary, #303133) !important;
+}
+
+:deep(.post-content a) {
+  color: var(--el-color-primary, #409eff) !important;
+}
+
+:deep(.post-content code) {
+  background: var(--el-fill-color-dark, #f5f7fa);
+  color: var(--el-text-color-primary, #303133);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: monospace;
+}
+
+:deep(.post-content pre) {
+  background: var(--el-fill-color-dark, #f5f7fa);
+  color: var(--el-text-color-primary, #303133);
+  padding: 12px;
+  border-radius: 8px;
+  overflow-x: auto;
+}
+
+:deep(.post-content blockquote) {
+  border-left: 3px solid var(--el-color-primary, #409eff);
+  padding-left: 12px;
+  color: var(--el-text-color-secondary, #909399);
+  margin: 12px 0;
+}
+
+/* 评论输入框暗色模式 */
+:deep(.comment-input) {
+  background: transparent !important;
+  color: var(--el-text-color-primary, #303133) !important;
+}
+
+:deep(.comment-input)::placeholder {
+  color: var(--el-text-color-secondary, #909399) !important;
+}
+
+/* 评论内容暗色模式 */
+:deep(.comment-content) {
+  background: var(--el-fill-color-light, #f5f7fa) !important;
+}
+
+:deep(.comment-text) {
+  color: var(--el-text-color-primary, #303133) !important;
+}
+
+/* 操作按钮暗色模式 */
+:deep(.action-btn) {
+  color: var(--el-text-color-secondary, #909399) !important;
+}
+
+:deep(.action-btn:hover) {
+  background: var(--el-color-primary-light-9, #ecf5ff) !important;
+  color: var(--el-color-primary, #409eff) !important;
+}
+
+:deep(.action-btn.liked) {
+  color: var(--el-color-danger, #f56c6c) !important;
+}
+
+/* 元信息暗色模式 */
+:deep(.author-name),
+:deep(.comment-author) {
+  color: var(--el-text-color-primary, #303133) !important;
+}
+
+:deep(.post-time),
+:deep(.comment-time) {
+  color: var(--el-text-color-secondary, #909399) !important;
 }
 </style>

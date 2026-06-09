@@ -184,9 +184,9 @@
             <el-tag size="small" type="info" effect="plain" class="algo-tag-tip">支持多选</el-tag>
           </template>
           <el-checkbox-group v-model="selectedAlgorithms" class="algo-checks">
-            <el-checkbox-button value="de_rrt_star" label="DE-RRT*" />
-            <el-checkbox-button value="dwa" label="DWA" />
-            <el-checkbox-button value="vrptw" label="VRPTW" />
+            <el-checkbox-button value="de_rrt_star">DE-RRT*</el-checkbox-button>
+            <el-checkbox-button value="dwa">DWA</el-checkbox-button>
+            <el-checkbox-button value="vrptw">VRPTW</el-checkbox-button>
           </el-checkbox-group>
         </el-card>
       </el-col>

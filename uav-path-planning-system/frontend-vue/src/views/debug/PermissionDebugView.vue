@@ -240,26 +240,45 @@ const allRouteKeys = computed(() => {
 
 // 为路由键提供简单的说明/标题
 const routeTitleMap = {
+  // 通用页面
   dashboard: '首页 / 项目简介',
   weather: '气象数据',
   orders: '下单 / 选择运输地点',
   cockpit: '智能驾驶舱',
   tasks: '运输任务管理',
-  'task-report': '任务报告中心',
-  'utm-integration': '低空 UTM 对接',
-  'path-planning': '路径规划',
-  'model-evaluation': '模型评估',
-  'parameter-tuning': '算法参数调优',
-  assimilation: '数据同化',
-  monitoring: '系统监控面板',
-  database: '数据库管理',
-  docker: 'Docker / 服务器状态',
-  'api-config': '气象模型 API 配置',
-  'permission-templates': '权限模板管理',
   settings: '设置',
   'theme-customizer': '主题定制',
   docs: '使用文档',
-  'permission-debug': '权限调试工具'
+
+  // 飞控相关
+  'path-planning': '路径规划',
+  'model-evaluation': '模型评估',
+  'parameter-tuning': '算法参数调优',
+  'sensitivity-analysis': '参数敏感性分析',
+  'experiment-compare': '实验对比工具',
+  airworthiness: '适航性评估',
+
+  // 测试/部署相关
+  'weather-station': '气象站点管理',
+  'weather-source': '气象数据源',
+  monitoring: '系统监控面板',
+  database: '数据库管理',
+  docker: 'Docker / 服务器状态',
+  'docker-build': 'Docker 构建',
+  'api-config': '气象模型 API 配置',
+
+  // 协作相关
+  'utm-integration': '低空 UTM 对接',
+  'task-report': '任务报告中心',
+  forum: '团队论坛',
+
+  // 管理相关
+  'permission-templates': '权限模板管理',
+  'user-stats': '用户统计',
+  'permission-debug': '权限调试工具',
+
+  // 数据同化
+  assimilation: '数据同化'
 }
 
 function hasRouteAccessForDebug(routeKey) {
@@ -298,13 +317,110 @@ const hitRoutes = computed(() =>
 
 // 动作权限：按需求列出的动作 key 映射到实际 ACTION_PERMISSIONS 中的键
 const ACTION_KEY_MAP = [
+  // 通用
+  { key: 'common:export', displayKey: 'common.export', desc: '通用导出操作（仅管理员）' },
+  { key: 'common:delete', displayKey: 'common.delete', desc: '通用删除操作（仅管理员）' },
+  { key: 'common:edit', displayKey: 'common.edit', desc: '通用编辑操作（仅管理员）' },
+
+  // 气象数据
+  { key: 'weather:view', displayKey: 'weather.view', desc: '查看气象数据（所有角色）' },
+  { key: 'weather:download', displayKey: 'weather.download', desc: '下载气象数据（飞控/测试/管理员）' },
+  { key: 'weather:advanced', displayKey: 'weather.advanced', desc: '高级气象功能（飞控/测试/管理员）' },
+
+  // 下单
+  { key: 'orders:view', displayKey: 'orders.view', desc: '查看订单（用户/生产/管理员）' },
+  { key: 'orders:create', displayKey: 'orders.create', desc: '创建订单（用户/生产/管理员）' },
   { key: 'orders:advanced', displayKey: 'orders.advanced', desc: '高级下单操作（飞控/管理员）' },
-  { key: 'api-config:edit', displayKey: 'api-config.edit', desc: '编辑气象模型 API 配置（仅管理员）' },
-  { key: 'api-config:view', displayKey: 'api-config.view', desc: '查看气象模型 API 配置（部署/管理员）' },
-  { key: 'database:edit', displayKey: 'database.edit', desc: '数据库管理操作（仅管理员）' },
+
+  // 智能驾驶舱
+  { key: 'cockpit:view', displayKey: 'cockpit.view', desc: '查看驾驶舱（生产/飞控/管理员）' },
+  { key: 'cockpit:control', displayKey: 'cockpit.control', desc: '控制驾驶舱（飞控/管理员）' },
+  { key: 'cockpit:emergency', displayKey: 'cockpit.emergency', desc: '紧急控制（飞控/管理员）' },
+
+  // 任务管理
+  { key: 'tasks:view', displayKey: 'tasks.view', desc: '查看任务（生产/飞控/管理员）' },
+  { key: 'tasks:create', displayKey: 'tasks.create', desc: '创建任务（生产/管理员）' },
+  { key: 'tasks:edit', displayKey: 'tasks.edit', desc: '编辑任务（生产/飞控/管理员）' },
+  { key: 'tasks:delete', displayKey: 'tasks.delete', desc: '删除任务（仅管理员）' },
+
+  // 路径规划
+  { key: 'planning:view', displayKey: 'planning.view', desc: '查看路径规划（飞控/测试/管理员）' },
   { key: 'planning:execute', displayKey: 'planning.execute', desc: '执行路径规划（飞控/测试/管理员）' },
-  { key: 'monitoring:restart', displayKey: 'monitoring.restart', desc: '系统监控重启操作（运维/管理员）' },
-  { key: 'report:export', displayKey: 'report.export', desc: '任务报告导出（生产/飞控/管理员）' }
+
+  // 模型评估
+  { key: 'evaluation:view', displayKey: 'evaluation.view', desc: '查看模型评估（飞控/测试/管理员）' },
+  { key: 'evaluation:run', displayKey: 'evaluation.run', desc: '运行模型评估（飞控/测试/管理员）' },
+
+  // 算法参数调优
+  { key: 'tuning:view', displayKey: 'tuning.view', desc: '查看参数调优（飞控/测试/管理员）' },
+  { key: 'tuning:adjust', displayKey: 'tuning.adjust', desc: '调整参数（飞控/测试/管理员）' },
+  { key: 'tuning:save', displayKey: 'tuning.save', desc: '保存参数配置（仅管理员）' },
+
+  // 数据同化
+  { key: 'assimilation:view', displayKey: 'assimilation.view', desc: '查看数据同化（测试/部署/管理员）' },
+  { key: 'assimilation:execute', displayKey: 'assimilation.execute', desc: '执行数据同化（测试/部署/管理员）' },
+  { key: 'assimilation:config', displayKey: 'assimilation.config', desc: '配置数据同化（部署/管理员）' },
+  { key: 'assimilation:download', displayKey: 'assimilation.download', desc: '下载同化结果（测试/部署/管理员）' },
+
+  // 数据库
+  { key: 'database:view', displayKey: 'database.view', desc: '查看数据库（部署/管理员）' },
+  { key: 'database:backup', displayKey: 'database.backup', desc: '备份数据库（部署/管理员）' },
+  { key: 'database:edit', displayKey: 'database.edit', desc: '编辑数据库（仅管理员）' },
+
+  // Docker
+  { key: 'docker:view', displayKey: 'docker.view', desc: '查看 Docker 状态（部署/管理员）' },
+  { key: 'docker:restart', displayKey: 'docker.restart', desc: '重启 Docker 容器（部署/管理员）' },
+  { key: 'docker:build', displayKey: 'docker.build', desc: '构建 Docker 镜像（部署/管理员）' },
+
+  // 系统监控
+  { key: 'monitoring:view', displayKey: 'monitoring.view', desc: '查看系统监控（部署/管理员）' },
+  { key: 'monitoring:restart', displayKey: 'monitoring.restart', desc: '重启监控服务（仅管理员）' },
+
+  // 任务报告
+  { key: 'report:view', displayKey: 'report.view', desc: '查看任务报告（生产/飞控/部署/管理员）' },
+  { key: 'report:export', displayKey: 'report.export', desc: '导出任务报告（仅管理员）' },
+
+  // 气象站点
+  { key: 'weather-station:view', displayKey: 'weather-station.view', desc: '查看气象站点（测试/部署/管理员）' },
+  { key: 'weather-station:add', displayKey: 'weather-station.add', desc: '添加气象站点（仅管理员）' },
+  { key: 'weather-station:edit', displayKey: 'weather-station.edit', desc: '编辑气象站点（仅管理员）' },
+
+  // 气象数据源
+  { key: 'weather-source:view', displayKey: 'weather-source.view', desc: '查看气象数据源（测试/部署/管理员）' },
+  { key: 'weather-source:edit', displayKey: 'weather-source.edit', desc: '编辑气象数据源（仅管理员）' },
+  { key: 'weather-source:toggle', displayKey: 'weather-source.toggle', desc: '开关气象数据源（仅管理员）' },
+
+  // 适航性评估
+  { key: 'airworthiness:view', displayKey: 'airworthiness.view', desc: '查看适航性（飞控/测试/管理员）' },
+  { key: 'airworthiness:evaluate', displayKey: 'airworthiness.evaluate', desc: '执行适航评估（飞控/测试/管理员）' },
+  { key: 'airworthiness:approve', displayKey: 'airworthiness.approve', desc: '批准适航性（仅管理员）' },
+
+  // 敏感性分析
+  { key: 'sensitivity:view', displayKey: 'sensitivity.view', desc: '查看敏感性分析（飞控/测试/管理员）' },
+  { key: 'sensitivity:run', displayKey: 'sensitivity.run', desc: '运行敏感性分析（飞控/测试/管理员）' },
+
+  // 实验对比
+  { key: 'experiment:view', displayKey: 'experiment.view', desc: '查看实验对比（飞控/测试/管理员）' },
+  { key: 'experiment:run', displayKey: 'experiment.run', desc: '运行实验（飞控/测试/管理员）' },
+
+  // 论坛
+  { key: 'forum:view', displayKey: 'forum.view', desc: '查看论坛（所有角色）' },
+  { key: 'forum:post', displayKey: 'forum.post', desc: '发帖（所有角色）' },
+  { key: 'forum:delete', displayKey: 'forum.delete', desc: '删帖（仅管理员）' },
+  { key: 'forum:admin', displayKey: 'forum.admin', desc: '论坛管理（仅管理员）' },
+
+  // 用户统计
+  { key: 'user-stats:view', displayKey: 'user-stats.view', desc: '查看用户统计（仅管理员）' },
+  { key: 'user-stats:export', displayKey: 'user-stats.export', desc: '导出用户统计（仅管理员）' },
+
+  // API 配置
+  { key: 'api-config:view', displayKey: 'api-config.view', desc: '查看 API 配置（部署/管理员）' },
+  { key: 'api-config:edit', displayKey: 'api-config.edit', desc: '编辑 API 配置（仅管理员）' },
+
+  // UTM
+  { key: 'utm:view', displayKey: 'utm.view', desc: '查看 UTM（生产/飞控/管理员）' },
+  { key: 'utm:request', displayKey: 'utm.request', desc: '申请 UTM 授权（飞控/管理员）' },
+  { key: 'utm:approve', displayKey: 'utm.approve', desc: '批准 UTM 请求（仅管理员）' }
 ]
 
 const actionRows = computed(() =>

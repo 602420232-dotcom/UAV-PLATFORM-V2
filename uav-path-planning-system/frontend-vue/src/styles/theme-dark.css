@@ -52,6 +52,17 @@
   --transition-fast: 0.15s ease;
   --transition-normal: 0.3s ease;
   --transition-slow: 0.5s ease;
+
+  /* 兼容 color- 前缀的变量（用于组件） */
+  --color-primary: var(--primary-color);
+  --color-hover: var(--primary-hover);
+  --color-text: var(--text-primary);
+  --color-text-muted: var(--text-muted);
+  --color-bg: var(--bg-primary);
+  --color-bg-secondary: var(--bg-secondary);
+  --color-surface: var(--bg-secondary);
+  --color-border: var(--border-color);
+  --color-primary-light: var(--primary-light);
 }
 
 /* 全局样式 */
