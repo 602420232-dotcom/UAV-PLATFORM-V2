@@ -3,11 +3,11 @@ E2E测试运行脚本
 """
 
 import logging
-logger = logging.getLogger(__name__)
-
 import subprocess
 import sys
 import os
+
+logger = logging.getLogger(__name__)
 
 
 def run_e2e_tests():
