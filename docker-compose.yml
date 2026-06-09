@@ -382,7 +382,7 @@ services:
 
   edge-cloud-coordinator:
     build: ./edge-cloud-coordinator
-    image: ghcr.io/602420232-dotcom/weather/edge-cloud:latest
+    image: ghcr.io/602420232-dotcom/weather/edge-cloud-coordinator:latest
     container_name: uav-edge-cloud
     ports:
       - "8000:8000"
@@ -492,7 +492,7 @@ services:
     build:
       context: ./tianzi-service
       dockerfile: Dockerfile
-    image: ghcr.io/602420232-dotcom/weather/tianzi:latest
+    image: ghcr.io/602420232-dotcom/weather/tianzi-service:latest
     container_name: uav-tianzi
     ports:
       - "8090:8090"
@@ -523,7 +523,7 @@ services:
     build:
       context: ./fenglei-service
       dockerfile: Dockerfile
-    image: ghcr.io/602420232-dotcom/weather/fenglei:latest
+    image: ghcr.io/602420232-dotcom/weather/fenglei-service:latest
     container_name: uav-fenglei
     ports:
       - "8091:8091"

@@ -32,7 +32,7 @@
             <el-icon><Collection /></el-icon>
             <span>{{ t('settings.license') }}</span>
           </el-menu-item>
-          <el-menu-divider />
+          <li class="menu-divider"></li>
           <el-menu-item index="logout" class="logout-item">
             <el-icon><SwitchButton /></el-icon>
             <span>{{ t('settings.logout') }}</span>
@@ -139,10 +139,10 @@
           <el-form :model="prefForm" label-width="140px" class="preference-form">
             <el-form-item :label="t('settings.theme')">
               <el-radio-group v-model="prefForm.theme">
-                <el-radio-button label="light">
+                <el-radio-button value="light">
                   <el-icon><Sunny /></el-icon>&nbsp;{{ t('settings.light') }}
                 </el-radio-button>
-                <el-radio-button label="dark">
+                <el-radio-button value="dark">
                   <el-icon><Moon /></el-icon>&nbsp;{{ t('settings.dark') }}
                 </el-radio-button>
               </el-radio-group>
@@ -150,9 +150,9 @@
 
             <el-form-item :label="t('settings.language')">
               <el-radio-group v-model="prefForm.language">
-                <el-radio-button label="zh">{{ t('settings.chinese') }}</el-radio-button>
-                <el-radio-button label="en">{{ t('settings.english') }}</el-radio-button>
-                <el-radio-button label="ja">{{ t('settings.japanese') }}</el-radio-button>
+                <el-radio-button value="zh">{{ t('settings.chinese') }}</el-radio-button>
+                <el-radio-button value="en">{{ t('settings.english') }}</el-radio-button>
+                <el-radio-button value="ja">{{ t('settings.japanese') }}</el-radio-button>
               </el-radio-group>
             </el-form-item>
 
@@ -630,6 +630,13 @@ function goDocs() {
 
 .nav-menu {
   border-right: none;
+}
+
+.nav-menu .menu-divider {
+  height: 1px;
+  margin: 8px 16px;
+  background-color: var(--el-border-color-light, #e4e7ed);
+  list-style: none;
 }
 
 .nav-menu .logout-item :deep(.el-menu-item__icon),

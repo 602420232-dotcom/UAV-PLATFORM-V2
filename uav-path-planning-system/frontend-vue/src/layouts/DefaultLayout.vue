@@ -394,11 +394,23 @@ async function fetchCurrentLocation() {
   
   if (result.success) {
     currentLocation.value = result
-    const addr = result.address?.formatted || `${result.position.latitude.toFixed(4)}, ${result.position.longitude.toFixed(4)}`
-    const regionName = result.region?.name || ''
-    locationText.value = regionName ? `${regionName} · ${addr}` : addr
+    
+    // 检查地址是否有效
+    if (result.address && result.address.formatted) {
+      const addr = result.address.formatted
+      const regionName = result.region?.name || ''
+      locationText.value = regionName ? `${regionName} · ${addr}` : addr
+    } else if (result.position) {
+      // 没有有效地址时显示经纬度
+      const { latitude, longitude } = result.position
+      locationText.value = `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`
+    } else {
+      locationText.value = '位置信息无效'
+    }
+    
     updateWeather()
   } else {
+    // 定位失败
     locationText.value = '定位失败'
     console.warn('[Header] Failed to get location:', result.error)
   }

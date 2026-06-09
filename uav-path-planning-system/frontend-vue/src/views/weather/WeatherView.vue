@@ -37,7 +37,7 @@
                     </el-button>
                     <div v-if="currentLocation" class="location-info">
                       <span class="location-label">{{ t('weather.currentLocation') }}:</span>
-                      <span class="location-value">{{ currentLocation.address?.formatted || `${currentLocation.position.latitude.toFixed(4)}, ${currentLocation.position.longitude.toFixed(4)}` }}</span>
+                      <span class="location-value">{{ currentLocation.address?.formatted || (currentLocation.position ? `${currentLocation.position.latitude.toFixed(4)}, ${currentLocation.position.longitude.toFixed(4)}` : '未知位置') }}</span>
                     </div>
                     <div v-if="locationError" class="location-error">
                       <el-alert type="error" :message="locationError" show-icon :closable="false" />
@@ -807,14 +807,22 @@ async function fetchCurrentLocation() {
       windRegion.value = result.region.name
       compareRegion.value = result.region.name
     }
+    
+    // 检查地址是否有效
+    const locationText = result.address?.formatted 
+      ? result.address.formatted
+      : result.position 
+        ? `${result.position.latitude.toFixed(4)}, ${result.position.longitude.toFixed(4)}`
+        : '未知位置'
+    
     notificationStore.push({
       type: 'success',
       title: t('weather.currentLocation'),
-      message: result.address?.formatted || `${result.position.latitude.toFixed(4)}, ${result.position.longitude.toFixed(4)}`,
+      message: locationText,
       source: 'weather'
     })
   } else {
-    locationError.value = result.error
+    locationError.value = result.error || '定位失败'
     console.warn('[WeatherView] Failed to get location:', result.error)
   }
   

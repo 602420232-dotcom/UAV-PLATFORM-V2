@@ -60,6 +60,7 @@ class WebSocketService {
       {
         id: `n_${Date.now()}`,
         type: 'reply',
+        source: 'forum',
         message: '张三 回复了你的帖子',
         postTitle: '关于DE-RRT*算法参数调优的讨论',
         postId: '2',
@@ -69,6 +70,7 @@ class WebSocketService {
       {
         id: `n_${Date.now()}`,
         type: 'mention',
+        source: 'forum',
         message: '李四 在评论中提到了你',
         postTitle: '飞控端GPS信号异常问题反馈',
         postId: '3',
@@ -78,6 +80,7 @@ class WebSocketService {
       {
         id: `n_${Date.now()}`,
         type: 'system',
+        source: 'system',
         message: '系统公告：有新的版本更新',
         postTitle: 'V2.0版本发布公告',
         postId: '1',
@@ -120,6 +123,21 @@ class WebSocketService {
   }
 
   showNotification(data) {
+    // 检查免打扰模式
+    try {
+      const doNotDisturb = localStorage.getItem('notification_doNotDisturb')
+      if (doNotDisturb === 'true') {
+        return // 免打扰模式下不显示弹窗
+      }
+    } catch (e) {
+      // localStorage 不可用，继续显示通知
+    }
+    
+    // 静默消息不弹窗
+    if (data.silent) {
+      return
+    }
+    
     const typeMap = {
       reply: { type: 'info', icon: '💬' },
       mention: { type: 'warning', icon: '@' },

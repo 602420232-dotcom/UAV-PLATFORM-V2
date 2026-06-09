@@ -10,6 +10,7 @@ export const useNotificationStore = defineStore('notification', () => {
   const isConnected = ref(false)
   const showNotificationDialog = ref(false)
   const currentNotification = ref(null)
+  const doNotDisturb = ref(false) // 免打扰模式
 
   // 通知偏好设置
   const subscriptionPrefs = ref({
@@ -22,6 +23,28 @@ export const useNotificationStore = defineStore('notification', () => {
     system: true,
     desktop: true
   })
+
+  // 初始化：从 localStorage 加载设置
+  function init() {
+    try {
+      const saved = localStorage.getItem('notification_doNotDisturb')
+      if (saved !== null) {
+        doNotDisturb.value = saved === 'true'
+      }
+    } catch (e) {
+      console.error('[NotificationStore] Failed to load settings:', e)
+    }
+  }
+
+  // 保存免打扰设置
+  function setDoNotDisturb(enabled) {
+    doNotDisturb.value = enabled
+    try {
+      localStorage.setItem('notification_doNotDisturb', String(enabled))
+    } catch (e) {
+      console.error('[NotificationStore] Failed to save settings:', e)
+    }
+  }
 
   // 计算属性
   const unreadNotifications = computed(() => {
@@ -70,8 +93,10 @@ export const useNotificationStore = defineStore('notification', () => {
       postId: data.postId || null,
       postTitle: data.postTitle || '',
       from: data.from || '系统',
+      source: data.source || 'system',
       read: false,
-      timestamp: data.timestamp || new Date().toISOString()
+      timestamp: data.timestamp || new Date().toISOString(),
+      createdAt: data.timestamp || data.createdAt || new Date().toISOString()
     })
   }
 
@@ -98,6 +123,16 @@ export const useNotificationStore = defineStore('notification', () => {
   }
 
   function showDesktopNotification(notification) {
+    // 免打扰模式下不弹窗
+    if (doNotDisturb.value) {
+      return
+    }
+    
+    // 静默消息不弹窗
+    if (notification.silent) {
+      return
+    }
+    
     ElNotification({
       title: `${notification.title}`,
       message: notification.message,
@@ -184,6 +219,14 @@ export const useNotificationStore = defineStore('notification', () => {
     addNotification(testNotification)
   }
 
+  // 按来源筛选通知
+  function filterBySource(source) {
+    if (!source || source === 'all') {
+      return notifications.value
+    }
+    return notifications.value.filter(n => n.source === source)
+  }
+
   return {
     // 状态
     notifications,
@@ -192,12 +235,15 @@ export const useNotificationStore = defineStore('notification', () => {
     showNotificationDialog,
     currentNotification,
     subscriptionPrefs,
+    doNotDisturb,
 
     // 计算属性
     unreadNotifications,
     hasUnread,
     
     // 方法
+    init,
+    setDoNotDisturb,
     connect,
     disconnect,
     addNotification,
@@ -208,6 +254,7 @@ export const useNotificationStore = defineStore('notification', () => {
     openNotificationDialog,
     closeNotificationDialog,
     triggerTestNotification,
-    pushWithDesktop
+    pushWithDesktop,
+    filterBySource
   }
 })

@@ -222,7 +222,7 @@ jobs:
           context: ./edge-cloud-coordinator
           file: ./edge-cloud-coordinator/Dockerfile
           push: true
-          tags: ghcr.io/${{ github.repository }}/edge-cloud:${{ github.sha }},ghcr.io/${{ github.repository }}/edge-cloud:latest
+          tags: ghcr.io/${{ github.repository }}/edge-cloud-coordinator:${{ github.sha }},ghcr.io/${{ github.repository }}/edge-cloud-coordinator:latest
           provenance: false
           cache-from: type=gha
 

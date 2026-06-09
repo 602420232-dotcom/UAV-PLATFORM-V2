@@ -68,10 +68,10 @@
           </div>
           <div class="card-body">
             <div class="card-header-row">
-              <span class="card-title">{{ item.title }}</span>
-              <span class="card-time">{{ formatTime(item.createdAt) }}</span>
+              <span class="card-title">{{ item.title || '无标题' }}</span>
+              <span class="card-time">{{ formatTime(item.createdAt) || '未知时间' }}</span>
             </div>
-            <div class="card-message">{{ item.message }}</div>
+            <div class="card-message">{{ item.message || '' }}</div>
             <div class="card-meta">
               <el-tag size="small" :type="tagTypeMap[item.type] || 'info'">
                 {{ sourceLabelMap[item.source] || item.source }}
@@ -149,6 +149,20 @@
           />
         </div>
         <div class="pref-row">
+          <span class="pref-label">免打扰模式</span>
+          <el-switch
+            :model-value="store.doNotDisturb"
+            active-text="开启"
+            inactive-text="关闭"
+            inline-prompt
+            @update:model-value="handleDoNotDisturbChange"
+          />
+        </div>
+        <div class="pref-hint" v-if="store.doNotDisturb">
+          <el-icon><Warning /></el-icon>
+          免打扰模式已开启，桌面弹窗已静默，但通知仍会出现在列表中
+        </div>
+        <div class="pref-row">
           <el-button size="small" @click="handleRequestPermission">
             <el-icon><Bell /></el-icon>&nbsp;请求桌面通知权限
           </el-button>
@@ -184,6 +198,10 @@ const props = defineProps({
 const emit = defineEmits(['update:visible', 'close'])
 
 const store = useNotificationStore()
+
+// 初始化 store 设置
+store.init()
+
 const keyword = ref('')
 const currentSource = ref('all')
 const readFilter = ref('all') // 全部/未读筛选
@@ -205,15 +223,24 @@ const prefs = reactive({
   desktop: store.subscriptionPrefs.desktop
 })
 
+// 本地按来源筛选方法
+const filterBySource = (source) => {
+  if (!source || source === 'all') {
+    return store.notifications
+  }
+  return store.notifications.filter(n => n.source === source)
+}
+
 const sourceTabs = [
   { key: 'all', label: '全部' },
+  { key: 'forum', label: '论坛' },
   { key: 'task', label: '任务' },
   { key: 'weather', label: '气象' },
   { key: 'uav', label: '无人机' },
   { key: 'planning', label: '规划' },
   { key: 'apiConfig', label: '配置' },
-  { key: 'utm', label: 'UTM' },
-  { key: 'system', label: '系统' }
+  { key: 'utm', label: 'UTM 对接' },
+  { key: 'system', label: '系统消息' }
 ]
 
 const sourceOptions = [
@@ -233,7 +260,8 @@ const sourceLabelMap = {
   planning: '规划',
   apiConfig: '配置',
   utm: 'UTM',
-  system: '系统'
+  system: '系统',
+  forum: '论坛'
 }
 
 const typeIconMap = {
@@ -251,9 +279,7 @@ const tagTypeMap = {
 }
 
 const filteredList = computed(() => {
-  let list = currentSource.value === 'all'
-    ? store.notifications
-    : store.filterBySource(currentSource.value)
+  let list = filterBySource(currentSource.value)
 
   // 已读/未读筛选
   if (readFilter.value === 'unread') {
@@ -311,12 +337,21 @@ const desktopPermissionLabel = computed(() => {
 
 function formatTime(iso) {
   try {
+    // 异常处理：检查输入是否有效
+    if (!iso) return ''
+    
     const d = new Date(iso)
+    // 检查是否为有效日期
+    if (isNaN(d.getTime())) return ''
+    
     const now = new Date()
     const diff = now - d
+    
+    if (diff < 0) return '刚刚' // 未来时间显示为刚刚
     if (diff < 60 * 1000) return '刚刚'
     if (diff < 60 * 60 * 1000) return Math.floor(diff / 60000) + ' 分钟前'
     if (diff < 24 * 60 * 60 * 1000) return Math.floor(diff / 3600000) + ' 小时前'
+    
     const pad = (n) => String(n).padStart(2, '0')
     return (
       d.getFullYear() +
@@ -330,7 +365,7 @@ function formatTime(iso) {
       pad(d.getMinutes())
     )
   } catch (_) {
-    return iso || ''
+    return ''
   }
 }
 
@@ -347,7 +382,7 @@ function handleCardClick(item) {
     store.markAsRead(item.id)
   }
 
-  // 根据通知类型跳转到相关页面
+  // 根据通知来源跳转到相关页面
   const pathMap = {
     task: '/tasks',
     weather: '/weather-station',
@@ -355,7 +390,8 @@ function handleCardClick(item) {
     planning: '/path-planning',
     apiConfig: '/api-config',
     utm: '/utm-integration',
-    system: '/dashboard'
+    system: '/dashboard',
+    forum: '/forum'
   }
   const path = pathMap[item.source]
   if (path) {
@@ -403,6 +439,15 @@ function handlePrefChange(key, value) {
   store.updateSubscriptionPrefs(patch)
 }
 
+function handleDoNotDisturbChange(enabled) {
+  store.setDoNotDisturb(enabled)
+  if (enabled) {
+    ElMessage.success('已开启免打扰模式，通知弹窗已静默')
+  } else {
+    ElMessage.success('已关闭免打扰模式')
+  }
+}
+
 function handleRequestPermission() {
   store.requestDesktopPermission().then((result) => {
     if (result === 'granted') {
@@ -428,9 +473,7 @@ function loadMore() {
 }
 
 function handleExport() {
-  const allNotifications = currentSource.value === 'all'
-    ? store.notifications
-    : store.filterBySource(currentSource.value)
+  const allNotifications = filterBySource(currentSource.value)
 
   if (allNotifications.length === 0) {
     ElMessage.info('没有可导出的通知')
@@ -440,11 +483,11 @@ function handleExport() {
   // 转换为 CSV 格式
   const headers = ['时间', '类型', '来源', '标题', '内容', '状态']
   const rows = allNotifications.map(n => [
-    formatTime(n.createdAt),
-    n.type,
-    sourceLabelMap[n.source] || n.source,
-    n.title,
-    n.message,
+    formatTime(n.createdAt) || '',
+    n.type || '',
+    sourceLabelMap[n.source] || n.source || '',
+    n.title || '',
+    n.message || '',
     n.read ? '已读' : '未读'
   ])
 
@@ -681,5 +724,17 @@ watch(
 .pref-status {
   font-size: 12px;
   color: #909399;
+}
+
+.pref-hint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  margin: 8px 0;
+  background: #fdf6ec;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #e6a23c;
 }
 </style>

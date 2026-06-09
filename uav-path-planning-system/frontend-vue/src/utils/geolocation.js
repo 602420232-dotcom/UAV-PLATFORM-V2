@@ -112,8 +112,14 @@ export class GeolocationService {
         throw new Error('Failed to fetch address')
       }
       const data = await response.json()
+      
+      // 检查返回数据是否有效
+      if (!data || !data.address) {
+        return null
+      }
+      
       return {
-        displayName: data.display_name,
+        displayName: data.display_name || '',
         address: data.address,
         formatted: this._formatAddress(data.address)
       }
@@ -125,12 +131,20 @@ export class GeolocationService {
 
   _formatAddress(address) {
     if (!address) return ''
+    
     const parts = []
+    // 优先使用市辖区
     if (address.city) parts.push(address.city)
+    else if (address.county) parts.push(address.county)
     else if (address.town) parts.push(address.town)
     else if (address.village) parts.push(address.village)
+    else if (address.municipality) parts.push(address.municipality)
     
+    // 省份
     if (address.state) parts.push(address.state)
+    else if (address.province) parts.push(address.province)
+    
+    // 国家
     if (address.country) parts.push(address.country)
     
     return parts.join(', ')

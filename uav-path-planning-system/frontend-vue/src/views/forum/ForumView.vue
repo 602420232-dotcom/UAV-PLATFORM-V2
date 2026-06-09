@@ -142,16 +142,19 @@
 
 <script setup>import { ref, computed, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { useRoute } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import { EditPen, Search, User, Star, Check, ChatDotRound, Collection, Message } from '@element-plus/icons-vue';
 import * as ElementPlusIconsVue from '@element-plus/icons-vue';
 import forumApi, { SECTIONS } from '@/api/forum';
 import PostDetailModal from './components/PostDetailModal.vue';
 import CreatePostModal from './components/CreatePostModal.vue';
+import { ElMessage } from 'element-plus';
 
 // 将所有 Element Plus 图标注册到全局，使动态组件渲染生效
 const icons = ElementPlusIconsVue;
 const { t } = useI18n();
+const route = useRoute();
 const authStore = useAuthStore();
 const sections = ref([]);
 const posts = ref([]);
@@ -241,6 +244,22 @@ const viewPost = async (post) => {
   showPostDetail.value = true;
 };
 
+// 根据ID加载帖子（用于通知跳转）
+const loadPostById = async (postId) => {
+  try {
+    const post = await forumApi.getPost(postId);
+    selectedPost.value = post;
+    showPostDetail.value = true;
+    // 跳转到对应板块
+    if (post.section) {
+      activeSection.value = post.section;
+    }
+  } catch (error) {
+    ElMessage.warning('帖子不存在或已被删除');
+    console.warn('[ForumView] Failed to load post:', error.message);
+  }
+};
+
 // 处理帖子更新（点赞、评论后更新列表）
 const handlePostUpdate = ({ id, likeCount, commentCount }) => {
   const postIndex = posts.value.findIndex(p => p.id === id);
@@ -306,6 +325,12 @@ onMounted(async () => {
     loadPosts(),
     loadSectionStats()
   ]);
+  
+  // 检查URL参数，是否有通知跳转的帖子ID
+  const postId = route.query.post;
+  if (postId) {
+    loadPostById(postId);
+  }
 });
 </script>
 
