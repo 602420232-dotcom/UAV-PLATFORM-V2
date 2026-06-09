@@ -1,119 +1,215 @@
-// 错误处理和容错机制工具类
+let ElMessageRef = null
 
-/**
- * 全局错误处理器
- */
+export function setElMessage(elMessage) {
+  ElMessageRef = elMessage
+}
+
+function showMessage(type, text) {
+  try {
+    if (ElMessageRef && typeof ElMessageRef[type] === 'function') {
+      ElMessageRef[type]({ message: text, duration: 4000, showClose: true })
+    } else {
+      const fn = type === 'error' ? console.error : type === 'warning' ? console.warn : console.log
+      fn('[提示]', text)
+    }
+  } catch (e) {
+    console.error('[errorHandler] 提示展示失败:', e, text)
+  }
+}
+
+const HTTP_MESSAGES = {
+  400: '请求参数不正确，请检查输入后重试',
+  401: '登录已过期，请重新登录',
+  403: '抱歉，您没有权限执行此操作',
+  404: '请求的资源不存在或接口未找到',
+  405: '请求方法不被允许',
+  408: '请求超时，请稍后再试',
+  415: '请求格式不正确，请联系管理员',
+  422: '请求数据校验失败，请检查输入',
+  429: '请求过于频繁，请稍后再试',
+  500: '服务器内部错误，请稍后再试或联系管理员',
+  502: '网关错误，服务暂时不可用',
+  503: '服务暂时不可用，请稍后再试',
+  504: '网关超时，请稍后再试'
+}
+
+function classifyError(err) {
+  if (!err || typeof err !== 'object') return 'UNKNOWN'
+
+  if (
+    err.code === 'ECONNABORTED' ||
+    (typeof err.message === 'string' && /timeout/i.test(err.message))
+  ) {
+    return 'TIMEOUT'
+  }
+
+  if (err.message === 'Network Error' || err.code === 'NETWORK_ERROR') {
+    return 'NETWORK_ERROR'
+  }
+
+  if (!err.response) return 'NETWORK_ERROR'
+
+  const status = err.response.status
+  if (status === 401) return 'UNAUTHORIZED'
+  if (status === 403) return 'FORBIDDEN'
+  if (status === 404) return 'NOT_FOUND'
+  if (status === 429) return 'TOO_MANY_REQUESTS'
+  if (status >= 400 && status < 500) return 'CLIENT_ERROR'
+  if (status >= 500 && status < 600) return 'SERVER_ERROR'
+  return 'UNKNOWN'
+}
+
+export function handleApiError(err, customMessage = null) {
+  const kind = classifyError(err)
+  const status = err && err.response ? err.response.status : null
+  const url = err && err.config ? err.config.url : ''
+  const method = err && err.config ? err.config.method : ''
+
+  let userMessage = customMessage
+  let logLevel = 'error'
+  let shouldRetry = false
+  let shouldLogout = false
+
+  switch (kind) {
+    case 'UNAUTHORIZED':
+      userMessage = userMessage || HTTP_MESSAGES[401]
+      shouldLogout = true
+      break
+    case 'FORBIDDEN':
+      userMessage = userMessage || HTTP_MESSAGES[403]
+      logLevel = 'warning'
+      break
+    case 'NOT_FOUND':
+      userMessage = userMessage || HTTP_MESSAGES[404]
+      logLevel = 'warning'
+      break
+    case 'CLIENT_ERROR':
+      userMessage = userMessage || (status ? HTTP_MESSAGES[status] : null) || '请求失败，请稍后再试'
+      logLevel = 'warning'
+      break
+    case 'TOO_MANY_REQUESTS':
+      userMessage = userMessage || HTTP_MESSAGES[429]
+      logLevel = 'warning'
+      break
+    case 'SERVER_ERROR':
+      userMessage = userMessage || (status ? HTTP_MESSAGES[status] : null) || '服务器错误，请稍后再试'
+      shouldRetry = true
+      break
+    case 'TIMEOUT':
+      userMessage = userMessage || '请求超时，请检查网络连接后重试'
+      shouldRetry = true
+      break
+    case 'NETWORK_ERROR':
+      userMessage = userMessage || '网络连接异常，请检查网络后重试'
+      shouldRetry = true
+      break
+    default:
+      userMessage = userMessage || (err && err.message) || '请求失败，请稍后再试'
+  }
+
+  console[logLevel](
+    `[API Error] kind=${kind} status=${status || '-'} method=${method || '-'} url=${url || '-'}`,
+    (err && err.message) || '',
+    err
+  )
+
+  if (kind !== 'UNAUTHORIZED') {
+    showMessage(logLevel === 'warning' ? 'warning' : 'error', userMessage)
+  }
+
+  return {
+    kind, status, userMessage, shouldRetry, shouldLogout, url, method
+  }
+}
+
+export function handleGenericError(err, { context = 'runtime' } = {}) {
+  if (!err) return null
+  const message = (err && err.message) ? err.message : String(err)
+  console.error(`[Runtime Error] context=${context} message=${message}`, err)
+  return { message, context }
+}
+
 export class ErrorHandler {
   constructor() {
     this.errors = []
     this.listeners = []
   }
 
-  /**
-   * 注册错误监听器
-   * @param {Function} listener - 错误监听器函数
-   */
-  onError(listener) {
-    this.listeners.push(listener)
-  }
-
-  /**
-   * 移除错误监听器
-   * @param {Function} listener - 错误监听器函数
-   */
-  offError(listener) {
-    this.listeners = this.listeners.filter(l => l !== listener)
-  }
-
-  /**
-   * 处理错误
-   * @param {Error} error - 错误对象
-   * @param {string} context - 错误上下文
-   * @param {Object} extra - 额外信息
-   */
   handleError(error, context = 'unknown', extra = {}) {
-    const errorInfo = {
+    const errorRecord = {
       timestamp: new Date().toISOString(),
-      error: {
-        message: error.message,
-        stack: error.stack,
-        name: error.name
-      },
       context,
-      extra
+      extra: typeof extra === 'object' ? extra : {},
+      error: error instanceof Error ? error : new Error(String(error))
     }
-
-    this.errors.push(errorInfo)
-    this.notifyListeners(errorInfo)
-    this.logError(errorInfo)
-
-    return errorInfo
+    this.errors.push(errorRecord)
+    this.notifyListeners(errorRecord)
+    console.error(`[ErrorHandler] ${context}:`, error)
+    return errorRecord
   }
 
-  /**
-   * 通知错误监听器
-   * @param {Object} errorInfo - 错误信息
-   */
-  notifyListeners(errorInfo) {
+  onError(listener) {
+    if (typeof listener === 'function' && !this.listeners.includes(listener)) {
+      this.listeners.push(listener)
+    }
+  }
+
+  offError(listener) {
+    const index = this.listeners.indexOf(listener)
+    if (index > -1) {
+      this.listeners.splice(index, 1)
+    }
+  }
+
+  subscribe(listener) {
+    this.onError(listener)
+  }
+
+  unsubscribe(listener) {
+    this.offError(listener)
+  }
+
+  notifyListeners(errorRecord) {
     this.listeners.forEach(listener => {
       try {
-        listener(errorInfo)
+        listener(errorRecord)
       } catch (e) {
-        console.error('Error in error listener:', e)
+        console.error('[ErrorHandler] Listener error:', e)
       }
     })
   }
 
-  /**
-   * 记录错误
-   * @param {Object} errorInfo - 错误信息
-   */
-  logError(errorInfo) {
-    console.error('Error occurred:', errorInfo)
-    // 这里可以添加远程日志记录
-  }
-
-  /**
-   * 获取错误列表
-   * @returns {Array} 错误列表
-   */
   getErrors() {
-    return this.errors
+    return [...this.errors]
   }
 
-  /**
-   * 清空错误列表
-   */
   clearErrors() {
     this.errors = []
   }
 }
 
-// 全局错误处理器实例
 export const errorHandler = new ErrorHandler()
 
-/**
- * 网络请求错误处理
- * @param {Error} error - 错误对象
- * @returns {Object} 错误处理结果
- */
 export function handleNetworkError(error) {
-  let message = '网络请求失败'
-  let code = 'NETWORK_ERROR'
+  const status = error.response?.status
+  const data = error.response?.data
+
+  let message = '请求配置错误'
+  let code = 'REQUEST_ERROR'
 
   if (error.response) {
-    // 服务器返回错误状态码
-    const status = error.response.status
-    message = error.response.data?.message || `服务器错误 (${status})`
     code = `HTTP_${status}`
+    if (data?.message) {
+      message = data.message
+    } else {
+      message = `服务器错误 (${status})`
+    }
+  } else if (error.message) {
+    message = error.message
+    if (error.code) code = error.code
   } else if (error.request) {
-    // 请求已发送但没有收到响应
     message = '服务器无响应，请检查网络连接'
     code = 'NO_RESPONSE'
-  } else {
-    // 请求配置错误
-    message = error.message || '请求配置错误'
-    code = 'REQUEST_ERROR'
   }
 
   return {
@@ -124,154 +220,81 @@ export function handleNetworkError(error) {
   }
 }
 
-/**
- * 重试函数
- * @param {Function} func - 要重试的函数
- * @param {number} maxAttempts - 最大重试次数
- * @param {number} delay - 重试延迟（毫秒）
- * @returns {Promise} 重试结果
- */
-export async function retry(func, maxAttempts = 3, delay = 1000) {
-  let attempts = 0
-  
-  while (attempts < maxAttempts) {
+export async function retry(func, maxRetries = 3, delayMs = 1000) {
+  let lastError
+  for (let i = 0; i < maxRetries; i++) {
     try {
       return await func()
     } catch (error) {
-      attempts++
-      if (attempts >= maxAttempts) {
-        throw error
+      lastError = error
+      if (i < maxRetries - 1) {
+        await new Promise(resolve => setTimeout(resolve, delayMs))
       }
-      await new Promise(resolve => setTimeout(resolve, delay * attempts))
     }
   }
+  throw lastError
 }
 
-/**
- * 安全执行函数
- * @param {Function} func - 要执行的函数
- * @param {any} defaultValue - 默认值
- * @returns {any} 执行结果或默认值
- */
 export function safeExecute(func, defaultValue = null) {
   try {
     return func()
-  } catch (error) {
-    errorHandler.handleError(error, 'safeExecute')
+  } catch {
     return defaultValue
   }
 }
 
-/**
- * 组件错误边界
- * @param {Object} options - 选项
- * @returns {Object} 错误边界组件
- */
-export function createErrorBoundary(options = {}) {
-  const {
-    fallbackComponent = null,
-    onError = null
-  } = options
+export function createErrorBoundary({ onError } = {}) {
+  function data() {
+    return { hasError: false, error: null }
+  }
+
+  function errorCaptured(err, instance, info) {
+    if (this && typeof this === 'object') {
+      this.hasError = true
+      this.error = err
+    }
+    if (onError) {
+      onError(err, instance, info)
+    }
+    console.error('[ErrorBoundary] Captured:', err)
+    return false
+  }
+
+  function render() {}
 
   return {
-    data() {
-      return {
-        hasError: false,
-        error: null
-      }
-    },
-    errorCaptured(error, instance, info) {
-      this.hasError = true
-      this.error = error
-      
-      if (onError) {
-        onError(error, instance, info)
-      }
-      
-      errorHandler.handleError(error, 'component', {
-        component: instance.$options.name,
-        info
-      })
-      
-      return false
-    },
-    render(h) {
-      if (this.hasError) {
-        if (fallbackComponent) {
-          return h(fallbackComponent, {
-            props: {
-              error: this.error
-            }
-          })
-        }
-        return h('div', {
-          class: 'error-boundary'
-        }, [
-          h('h3', '组件加载失败'),
-          h('p', this.error?.message || '未知错误')
-        ])
-      }
-      return this.$slots.default ? this.$slots.default() : null
-    }
+    data,
+    errorCaptured,
+    render
   }
 }
 
-/**
- * 日志记录器
- */
 export class Logger {
   constructor(name) {
     this.name = name
   }
 
-  /**
-   * 记录信息
-   * @param {string} message - 日志信息
-   * @param {Object} data - 附加数据
-   */
-  info(message, data = {}) {
-    console.info(`[${this.name}] ${message}`, data)
+  info(message, extra = {}) {
+    console.info(`[${this.name}] ${message}`, extra)
   }
 
-  /**
-   * 记录警告
-   * @param {string} message - 警告信息
-   * @param {Object} data - 附加数据
-   */
-  warn(message, data = {}) {
-    console.warn(`[${this.name}] ${message}`, data)
+  warn(message, extra = {}) {
+    console.warn(`[${this.name}] ${message}`, extra)
   }
 
-  /**
-   * 记录错误
-   * @param {string} message - 错误信息
-   * @param {Error} error - 错误对象
-   * @param {Object} data - 附加数据
-   */
-  error(message, error = null, data = {}) {
-    console.error(`[${this.name}] ${message}`, error, data)
-    if (error) {
-      errorHandler.handleError(error, this.name, data)
-    }
+  error(message, error = null, extra = {}) {
+    console.error(`[${this.name}] ${message}`, error, extra)
   }
 
-  /**
-   * 记录调试信息
-   * @param {string} message - 调试信息
-   * @param {Object} data - 附加数据
-   */
-  debug(message, data = {}) {
+  debug(message, extra = {}) {
     if (process.env.NODE_ENV === 'development') {
-      console.debug(`[${this.name}] ${message}`, data)
+      console.debug(`[${this.name}] ${message}`, extra)
     }
   }
 }
 
-/**
- * 创建日志记录器
- * @param {string} name - 日志记录器名称
- * @returns {Logger} 日志记录器实例
- */
 export function createLogger(name) {
   return new Logger(name)
 }
+
+export { classifyError }

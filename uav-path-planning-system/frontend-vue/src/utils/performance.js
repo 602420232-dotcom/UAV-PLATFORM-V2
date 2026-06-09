@@ -155,3 +155,59 @@ export function monitorPerformance(callback) {
     }, 0)
   })
 }
+
+// ============ 高频消息节流（Throttle Stream）============
+// 统一用于：模拟 WebSocket 推送、路径规划实时重算、驾驶舱指标刷新等高频更新场景
+// 用法：const push = createThrottledStream(100, (events) => { /* 批量渲染 */ }); push(event);
+
+export function createThrottledStream(windowMs = 100, onFlush = () => {}) {
+  let buffer = []
+  let timer = null
+  let lastFlush = 0
+
+  const flush = () => {
+    if (buffer.length === 0) return
+    const snapshot = buffer
+    buffer = []
+    lastFlush = Date.now()
+    try { onFlush(snapshot) } catch (e) { console.warn('[throttle] onFlush error', e) }
+  }
+
+  return {
+    push(event) {
+      buffer.push(event)
+      if (timer) return
+      const waitMs = Math.max(0, windowMs - (Date.now() - lastFlush))
+      timer = setTimeout(() => {
+        timer = null
+        flush()
+      }, waitMs)
+    },
+    flushNow: flush,
+    cancel() {
+      if (timer) { clearTimeout(timer); timer = null }
+      buffer = []
+    },
+    pendingCount() { return buffer.length }
+  }
+}
+
+// ============ DOM 批量更新（requestAnimationFrame 合并）============
+// 用于避免高频 setState 触发多次浏览器重绘
+export function batchRaf(fn) {
+  let rafId = null
+  let pendingArg = null
+  return (arg) => {
+    pendingArg = arg
+    if (rafId) return
+    rafId = requestAnimationFrame(() => {
+      rafId = null
+      try { fn(pendingArg) } catch (e) { console.warn('[raf] error', e) }
+    })
+  }
+}
+
+// 便捷：防抖 300ms（搜索框输入 / tab 切换）
+export function debounced(fn, wait = 300) { return debounce(fn, wait) }
+// 便捷：节流 100ms（高频事件）
+export function throttled(fn, limit = 100) { return throttle(fn, limit) }
