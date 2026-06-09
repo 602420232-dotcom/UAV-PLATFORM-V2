@@ -6,14 +6,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -26,12 +24,13 @@ class AssimilationControllerTest {
     @Mock
     private PythonScriptInvoker pythonScriptInvoker;
 
-    @InjectMocks
     private AssimilationController assimilationController;
 
     @BeforeEach
     void setUp() {
-        ReflectionTestUtils.setField(Objects.requireNonNull(assimilationController), "pythonScriptPath", "assimilation_handler.py");
+        // 显式构造函数注入
+        assimilationController = new AssimilationController(pythonScriptInvoker);
+        ReflectionTestUtils.setField(assimilationController, "pythonScriptPath", "assimilation_handler.py");
     }
 
     private AssimilationRequest createValidRequest() {

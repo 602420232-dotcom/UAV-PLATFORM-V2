@@ -2,12 +2,13 @@ package com.uav.controller;
 
 import com.uav.common.exception.BusinessException;
 import com.uav.config.JwtUtil;
+import com.uav.repository.RoleRepository;
+import com.uav.repository.UserRepository;
 import com.uav.service.CustomUserDetailsService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
@@ -61,13 +62,23 @@ class AuthControllerTest {
     @Mock
     private HttpServletRequest httpServletRequest;
 
-    @InjectMocks
+    @Mock
+    private UserRepository userRepository;
+
+    @Mock
+    private RoleRepository roleRepository;
+
     private AuthController authController;
 
     private Map<String, String> validRequest;
 
     @BeforeEach
     void setUp() {
+        // 显式构造函数注入
+        authController = new AuthController(
+            authenticationManager, userDetailsService, jwtUtil,
+            passwordEncoder, userRepository, roleRepository);
+
         validRequest = new HashMap<>();
         validRequest.put("username", "testuser");
         validRequest.put("password", "testpass");

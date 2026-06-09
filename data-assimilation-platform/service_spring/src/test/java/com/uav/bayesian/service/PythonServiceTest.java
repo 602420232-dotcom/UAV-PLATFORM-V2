@@ -6,7 +6,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -24,12 +23,12 @@ class PythonServiceTest {
     @Mock
     private PythonServiceClient pythonClient;
 
-    @InjectMocks
     private PythonService service;
 
     @BeforeEach
     void setUp() {
-        assertNotNull(service, "service should not be null");
+        // 显式构造函数注入
+        service = new PythonService(pythonClient);
         ReflectionTestUtils.setField(service, "pythonServiceUrl", "http://localhost:8000");
     }
 

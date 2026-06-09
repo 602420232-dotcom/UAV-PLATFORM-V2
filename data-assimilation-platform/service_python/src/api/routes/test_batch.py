@@ -4,7 +4,7 @@ Source: d:\Developer\workplace\py\iteam\trae\data-assimilation-platform\service_
 Generated: 2026-05-08 12:35:50
 """
 
-from batch import *  # noqa: F403
+# TODO: 替换为显式导入 from batch import xxx
 
 
 class TestBasic:

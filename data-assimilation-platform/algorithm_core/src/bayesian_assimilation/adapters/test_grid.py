@@ -8,7 +8,7 @@ import logging  # noqa: E402
 logger = logging.getLogger(__name__)
 
 import pytest  # noqa: E402
-from grid import *  # type: ignore[reportWildcardImportFromLibrary]  # noqa: E402, F403
+# TODO: 替换为显式导入 from grid import xxx
 
 
 class TestBasic:

@@ -25,13 +25,13 @@ class PythonServiceTest {
     @Mock
     private PythonServiceClient pythonClient;
 
-    @InjectMocks
     private PythonService service;
 
     @BeforeEach
     void setUp() {
-        ReflectionTestUtils.setField(
-                Objects.requireNonNull(service), "pythonServiceUrl", "http://localhost:8000");
+        // 显式构造函数注入
+        service = new PythonService(pythonClient);
+        ReflectionTestUtils.setField(service, "pythonServiceUrl", "http://localhost:8000");
     }
 
     @Nested

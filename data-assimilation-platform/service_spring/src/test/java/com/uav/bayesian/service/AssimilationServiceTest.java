@@ -3,8 +3,8 @@ package com.uav.bayesian.service;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -22,8 +22,13 @@ class AssimilationServiceTest {
     @Mock
     private PythonService pythonService;
 
-    @InjectMocks
     private AssimilationService service;
+
+    @BeforeEach
+    void setUp() {
+        // 显式构造函数注入
+        service = new AssimilationService(pythonService);
+    }
 
     @Nested
     @DisplayName("executeAssimilation")

@@ -20,8 +20,8 @@
 | 任务 | 文档 |
 |------|------|
 | JWT配置 | [PRODUCTION_SECRETS_GUIDE.md](PRODUCTION_SECRETS_GUIDE.md) |
-| 安全审计报告 | [security_audit_report.md](security_audit_report.md) |
-| CSRF/CORS配置 | [common-utils/../README.md](../common-utils/README.md) |
+| 安全审计报告 | [安全改进报告](../archive/SECURITY_IMPROVEMENTS.md) |
+| CSRF/CORS配置 | [common-utils/README.md](../common-utils/README.md) |
 
 ### 🛡️ 熔断器 (Circuit Breaker)
 | 任务 | 文档 |
@@ -47,15 +47,13 @@
 ### 📈 代码质量
 | 任务 | 文档 |
 |------|------|
-| 改进报告 | [IMPROVEMENTS_COMPLETED_REPORT.md](IMPROVEMENTS_COMPLETED_REPORT.md) |
-| 自动修复总结 | [AUTO_FIXES_SUMMARY.md](AUTO_FIXES_SUMMARY.md) |
-| 质量审计报告 | [PROJECT_QUALITY_AUDIT_FINAL_REPORT.md](PROJECT_QUALITY_AUDIT_FINAL_REPORT.md) |
+| 改进报告 | [FIX_COMPLETION_REPORT.md](reports/FIX_COMPLETION_REPORT.md) |
+| 质量审计报告 | [质量评估报告](reports/COMPREHENSIVE_QUALITY_ASSESSMENT.md) |
 
 ### 📝 API文档
 | 任务 | 文档 |
 |------|------|
 | API总览 | [api/README.md](api/README.md) |
-| API调用示例 | [api/USAGE_EXAMPLES.md](api/USAGE_EXAMPLES.md) |
 
 ### 🧪 测试
 | 任务 | 文档 |
@@ -80,13 +78,13 @@
 
 ### 🛡️ 安全运维
 1. [PRODUCTION_SECRETS_GUIDE.md](PRODUCTION_SECRETS_GUIDE.md) - 安全配置
-2. [security_audit_report.md](security_audit_report.md) - 安全审计
+2. [安全改进报告](../archive/SECURITY_IMPROVEMENTS.md) - 安全加固
 3. [deployments/monitoring/README.md](../deployments/monitoring/README.md) - 监控运维
 
 ### 📊 项目管理
-1. [IMPROVEMENTS_COMPLETED_REPORT.md](IMPROVEMENTS_COMPLETED_REPORT.md) - 改进报告
+1. [FIX_COMPLETION_REPORT.md](reports/FIX_COMPLETION_REPORT.md) - 改进报告
 2. [CHANGELOG.md](../CHANGELOG.md) - 更新日志
-3. [PROJECT_QUALITY_AUDIT_FINAL_REPORT.md](PROJECT_QUALITY_AUDIT_FINAL_REPORT.md) - 质量审计
+3. [质量评估报告](reports/COMPREHENSIVE_QUALITY_ASSESSMENT.md) - 质量审计
 
 ---
 
@@ -102,10 +100,9 @@
 | [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md) | 项目结构 |
 | [CIRCUIT_BREAKER_GUIDE.md](CIRCUIT_BREAKER_GUIDE.md) | 熔断器指南 |
 | [PRODUCTION_SECRETS_GUIDE.md](PRODUCTION_SECRETS_GUIDE.md) | 生产配置 |
-| [IMPROVEMENTS_COMPLETED_REPORT.md](IMPROVEMENTS_COMPLETED_REPORT.md) | 改进报告 |
-| [AUTO_FIXES_SUMMARY.md](AUTO_FIXES_SUMMARY.md) | 自动修复 |
-| [PROJECT_QUALITY_AUDIT_FINAL_REPORT.md](PROJECT_QUALITY_AUDIT_FINAL_REPORT.md) | 质量审计 |
-| [security_audit_report.md](security_audit_report.md) | 安全审计 |
+| [IMPROVEMENTS_COMPLETED_REPORT.md](reports/FIX_COMPLETION_REPORT.md) | 改进报告 |
+| [AUTO_FIXES_SUMMARY.md](reports/FIX_COMPLETION_REPORT.md) | 自动修复 |
+| [PROJECT_QUALITY_AUDIT_FINAL_REPORT.md](reports/COMPREHENSIVE_QUALITY_ASSESSMENT.md) | 质量审计 |
 
 ---
 

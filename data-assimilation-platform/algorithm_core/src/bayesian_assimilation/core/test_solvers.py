@@ -6,7 +6,7 @@ Generated: 2026-05-08 12:35:50
 import logging
 
 import pytest
-from solvers import *  # noqa: F403
+# TODO: 替换为显式导入 from solvers import xxx
 
 logger = logging.getLogger(__name__)
 

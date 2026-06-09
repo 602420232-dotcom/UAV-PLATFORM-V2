@@ -25,8 +25,13 @@ class CacheServiceTest {
     @Mock
     private ValueOperations<String, Object> valueOperations;
 
-    @InjectMocks
     private CacheService cacheService;
+
+    @BeforeEach
+    void setUp() {
+        // 显式构造函数注入
+        cacheService = new CacheService(redisTemplate);
+    }
 
     @Nested
     @DisplayName("cache")

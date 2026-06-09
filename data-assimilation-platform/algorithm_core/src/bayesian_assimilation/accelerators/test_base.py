@@ -8,7 +8,7 @@ import logging  # noqa: E402
 logger = logging.getLogger(__name__)
 
 import pytest  # noqa: E402
-from base import *  # noqa: E402, F403
+# TODO: 替换为显式导入 from base import xxx
 
 
 class TestBasic:

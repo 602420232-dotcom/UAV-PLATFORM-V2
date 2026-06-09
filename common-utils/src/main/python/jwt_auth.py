@@ -9,7 +9,8 @@ JWT 认证模块
     from common_utils.jwt_auth import JwtAuth, TokenType
 
     # 初始化
-    auth = JwtAuth(secret_key="your-secret-key")
+    # 生产环境应从环境变量读取密钥: auth = JwtAuth(secret_key=os.getenv("JWT_SECRET_KEY"))
+    auth = JwtAuth(secret_key=os.getenv("JWT_SECRET_KEY", ""))
 
     # 验证令牌
     claims = auth.verify_token(token)

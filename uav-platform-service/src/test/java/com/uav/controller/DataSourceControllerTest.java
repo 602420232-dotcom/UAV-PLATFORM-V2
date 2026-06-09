@@ -7,7 +7,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
@@ -27,13 +26,15 @@ class DataSourceControllerTest {
     @Mock
     private DataSourceService dataSourceService;
 
-    @InjectMocks
     private DataSourceController controller;
 
     private Map<String, Object> sampleSource;
 
     @BeforeEach
     void setUp() {
+        // 显式构造函数注入
+        controller = new DataSourceController(dataSourceService);
+
         sampleSource = new HashMap<>();
         sampleSource.put("id", 1L);
         sampleSource.put("name", "Test Source");

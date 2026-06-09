@@ -528,10 +528,10 @@ docker-compose up -d
 
 ## 📚 更多资源
 
-- [项目Wiki](https://wiki.example.com)
-- [API文档](docs/api/README.md)
+- [部署配置说明](../deployments/README.md)
+- [API文档](api/README.md)
 - [部署指南](DEPLOYMENT.md)
-- [监控配置](deployments/monitoring/README.md)
+- [监控配置](../deployments/monitoring/README.md)
 
 
 ---

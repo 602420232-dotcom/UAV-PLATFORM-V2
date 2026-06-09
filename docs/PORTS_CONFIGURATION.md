@@ -25,7 +25,7 @@
 | **Satellite Weather** | 8094 | HTTP | 卫星气象数据服务 | - | 📝 |
 | **Radiosonde Weather** | 8095 | HTTP | 探空气象数据服务 | - | 📝 |
 | **Detection Drone** | 8096 | HTTP | 检测无人机服务 | - | 📝 |
-| **Model Engine** | 8097 | HTTP | AI模型引擎（CNN/UNet/GPR/EnKF） | - | 📝 |
+| **Model Engine** | 8087 | HTTP | AI模型引擎（CNN/UNet/GPR/EnKF） | - | ✅ |
 | **Edge-Cloud Coordinator** | 8000 | HTTP | 边云协同（联邦学习/WebSocket） | - | ✅ |
 | **Edge-Cloud Coordinator** | 8765 | WebSocket | WebSocket 实时通信 | - | ✅ |
 
@@ -96,7 +96,7 @@ export default defineConfig({
 | `/api/satellite/**` | satellite-weather-service | 8094 | 卫星气象 API |
 | `/api/radiosonde/**` | radiosonde-weather-service | 8095 | 探空气象 API |
 | `/api/detection/**` | detection-drone-service | 8096 | 检测无人机 API |
-| `/api/model/**` | model-engine | 8097 | AI模型引擎 API |
+| `/api/model/**` | model-engine | 8087 | AI模型引擎 API |
 
 ### 前端 API 调用
 
@@ -146,7 +146,7 @@ Platform Service (localhost:8080)
 | Satellite Weather | 8094 | `/actuator/health` |
 | Radiosonde Weather | 8095 | `/actuator/health` |
 | Detection Drone | 8096 | `/actuator/health` |
-| Model Engine | 8097 | `/health` |
+| Model Engine | 8087 | `/health` |
 | Edge-Cloud Coordinator | 8000 | `/health` |
 | Frontend | 3000 | `/` |
 

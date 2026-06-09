@@ -14,8 +14,13 @@ import static org.junit.jupiter.api.Assertions.*;
 @DisplayName("VarianceFieldService 单元测试")
 class VarianceFieldServiceTest {
 
-    @InjectMocks
     private VarianceFieldService service;
+
+    @BeforeEach
+    void setUp() {
+        // 显式构造函数注入（无依赖）
+        service = new VarianceFieldService();
+    }
 
     @Test
     @DisplayName("computeVariance 返回成功状态")

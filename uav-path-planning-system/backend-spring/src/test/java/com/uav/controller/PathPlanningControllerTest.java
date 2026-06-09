@@ -2,10 +2,10 @@ package com.uav.controller;
 
 import com.uav.model.PathPlan;
 import com.uav.utils.PythonAlgorithmUtil;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -22,8 +22,13 @@ class PathPlanningControllerTest {
     @Mock
     private PythonAlgorithmUtil pythonAlgorithmUtil;
 
-    @InjectMocks
     private PathPlanningController pathPlanningController;
+
+    @BeforeEach
+    void setUp() {
+        // 显式构造函数注入
+        pathPlanningController = new PathPlanningController(pythonAlgorithmUtil);
+    }
 
     @Test
     @DisplayName("执行路径规划")

@@ -498,8 +498,7 @@ public class CircuitBreakerIntegrationTest {
 
 ## 🔗 相关配置
 
-- [监控配置](deployments/monitoring/README.md)
-- [日志配置](deployments/logging/README.md)
+- [监控配置](../deployments/monitoring/README.md)
 - [告警配置](deployments/monitoring/prometheus/alerts.yml)
 
 ---

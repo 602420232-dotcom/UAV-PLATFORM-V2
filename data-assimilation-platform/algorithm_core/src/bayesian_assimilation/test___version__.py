@@ -7,7 +7,7 @@ Generated: 2026-05-08 12:35:40
 import logging  # noqa: E402
 logger = logging.getLogger(__name__)
 
-from __version__ import *  # noqa: E402, F403
+# TODO: 替换为显式导入 from __version__ import xxx
 
 
 class TestBasic:

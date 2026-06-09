@@ -6,14 +6,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -26,12 +24,12 @@ class PlanningControllerTest {
     @Mock
     private PythonScriptInvoker pythonScriptInvoker;
 
-    @InjectMocks
     private PlanningController planningController;
 
     @BeforeEach
     void setUp() {
-        ReflectionTestUtils.setField(Objects.requireNonNull(planningController), "pythonScriptPath", "path_planner.py");
+        planningController = new PlanningController(pythonScriptInvoker);
+        ReflectionTestUtils.setField(planningController, "pythonScriptPath", "path_planner.py");
     }
 
     @Test

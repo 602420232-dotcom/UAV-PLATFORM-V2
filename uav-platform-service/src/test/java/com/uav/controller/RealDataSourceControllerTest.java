@@ -4,8 +4,8 @@ import com.uav.service.RealDataSourceService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
@@ -24,8 +24,13 @@ class RealDataSourceControllerTest {
     @Mock
     private RealDataSourceService realDataSourceService;
 
-    @InjectMocks
     private RealDataSourceController controller;
+
+    @BeforeEach
+    void setUp() {
+        // 显式构造函数注入
+        controller = new RealDataSourceController(realDataSourceService);
+    }
 
     @Nested
     @DisplayName("GET /api/v1/real-data/ground-station")

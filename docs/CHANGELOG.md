@@ -78,9 +78,9 @@ common-utils/
 - `GET /api/admin/circuit-breaker/health` - 健康检查
 
 **相关文档**:
-- [Circuit Breaker Guide](docs/CIRCUIT_BREAKER_GUIDE.md) - 完整使用指南
-- [Circuit Breaker Examples](docs/CIRCUIT_BREAKER_USAGE_EXAMPLES.md) - 代码示例
-- [Circuit Breaker Implementation Report](docs/CIRCUIT_BREAKER_IMPLEMENTATION_REPORT.md) - 实现报告
+- [Circuit Breaker Guide](guides/CIRCUIT_BREAKER_GUIDE.md) - 完整使用指南
+- [Circuit Breaker Examples](guides/CIRCUIT_BREAKER_USAGE_EXAMPLES.md) - 代码示例
+- [Circuit Breaker Implementation Report](archive/CIRCUIT_BREAKER_IMPLEMENTATION_REPORT.md) - 实现报告
 
 #### 2. 文档更新
 
@@ -259,10 +259,10 @@ common-utils/
 
 ## 📚 相关文档
 
-- [项目根目录 README](README.md)
+- [项目根目录 README](../README.md)
 - [部署指南](DEPLOYMENT.md)
-- [API文档](docs/api/README.md)
-- [监控配置](deployments/monitoring/README.md)
+- [API文档](api/README.md)
+- [监控配置](../deployments/monitoring/README.md)
 
 ---
 

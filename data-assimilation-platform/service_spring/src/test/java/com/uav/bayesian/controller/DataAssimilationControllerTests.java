@@ -6,8 +6,8 @@ import com.uav.bayesian.service.CacheService;
 import com.uav.bayesian.service.VarianceFieldService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
@@ -36,17 +36,13 @@ class DataAssimilationControllerTests {
     @Mock
     private AlertService alertService;
 
-    @InjectMocks
     private AssimilationController assimilationController;
 
-    @InjectMocks
-    private VarianceFieldController varianceFieldController;
-
-    @InjectMocks
-    private DataController dataController;
-
-    @InjectMocks
-    private ResilienceController resilienceController;
+    @BeforeEach
+    void setUp() {
+        // 显式构造函数注入
+        assimilationController = new AssimilationController(assimilationService);
+    }
 
     @Test
     @DisplayName("执行同化")

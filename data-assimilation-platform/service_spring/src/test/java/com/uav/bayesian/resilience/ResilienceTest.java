@@ -5,8 +5,8 @@ import com.uav.bayesian.service.PythonService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -23,8 +23,13 @@ class ResilienceTest {
     @Mock
     private PythonService pythonService;
 
-    @InjectMocks
     private AssimilationService assimilationService;
+
+    @BeforeEach
+    void setUp() {
+        // 显式构造函数注入
+        assimilationService = new AssimilationService(pythonService);
+    }
 
     @Nested
     @DisplayName("AssimilationService 测试")

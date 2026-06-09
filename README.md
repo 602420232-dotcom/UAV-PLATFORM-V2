@@ -292,7 +292,7 @@ trae/
 ## ✨ 功能特性
 
 | 功能模块 | 描述 |
-|---------|------|
+|:-------:|:----:|
 | **气象预报** | WRF + AI 双引擎，5分钟级高频更新，支持ConvLSTM+XGBoost |
 | **数据同化** | 3D-VAR/4D-VAR/EnKF 多算法融合，支持GPU加速 |
 | **路径规划** | VRPTW + DE-RRT* + DWA 三层架构，考虑气象约束 |
@@ -354,7 +354,7 @@ trae/
 四个气象模型通过 `model-engine` 进行动态加权融合：
 
 | 模型 | 分辨率 | 权重 | 角色定位 |
-|------|--------|:---:|---------|
+|:----:|:------:|:---:|:-------:|
 | **SWC-WRF** | 3km | 0.20 | 区域气象数据基础 |
 | **FengWu** | 25km | 0.15 | 全球背景场约束 |
 | **TianZi** | 25km | 0.25 | 全球模式参考 |
@@ -404,7 +404,7 @@ trae/
 ## 🛠️ 技术栈
 
 | 类别 | 技术 | 版本/说明 |
-|------|------|----------|
+|:----:|:----:|:--------:|
 | **后端框架** | Spring Boot | 3.5.14 |
 | **服务发现** | Nacos | 2.x |
 | **API 网关** | Spring Cloud Gateway | 2025.0.0 |
@@ -418,7 +418,7 @@ trae/
 | **前端框架** | Vue 3 + TypeScript | - |
 | **移动框架** | Flutter/Dart | 3.2.0+ |
 | **AI/ML** | PyTorch, XGBoost, ONNX Runtime | - |
-| **气象模型** | WRF, FengWu (风乌) | - |
+| **气象模型** | WRF, FengWu (风乌)，tianzi（天资），fenglei（风雷） | - |
 | **容器化** | Docker, Docker Compose | 19.03+ |
 | **编排** | Kubernetes, ArgoCD | 1.19+ |
 | **监控** | Prometheus, Grafana, Jaeger | - |
@@ -481,7 +481,7 @@ docker-compose logs -f wrf-processor
 ## 📡 服务与端口
 
 | 服务名称 | 端口 | 说明 | 模块路径 | 健康检查 |
-|---------|:---:|------|---------|---------|
+|:-------:|:---:|:----:|:-------:|:-------:|
 | **API Gateway** | 8088 | API 网关（限流/熔断/路由） | `api-gateway/` | `/actuator/health` |
 | **WRF Processor** | 8081 | WRF 气象数据处理 | `wrf-processor-service/` | `/actuator/health` |
 | **Meteor Forecast** | 8082 | 气象预测与订正（ConvLSTM+XGBoost） | `meteor-forecast-service/` | `/actuator/health` |
@@ -501,7 +501,7 @@ docker-compose logs -f wrf-processor
 ## 📚 详细文档
 
 | 文档 | 说明 | 优先级 |
-|------|------|--------|
+|:----:|:----:|:------:|
 | [部署指南](docs/DEPLOYMENT.md) | 完整的部署与运维手册 | ⭐⭐⭐ |
 | [架构设计](docs/architecture.md) | 系统架构设计文档 | ⭐⭐⭐ |
 | [项目结构](docs/PROJECT_STRUCTURE.md) | 详细目录结构说明 | ⭐⭐ |
@@ -632,7 +632,7 @@ kubectl get pods -n uav-platform
 ### 常见问题
 
 | 问题 | 可能原因 | 解决方案 |
-|------|---------|---------|
+|:----:|:-------:|:-------:|
 | **服务启动失败** | 数据库连接失败 | 检查 .env 文件中的 DB 配置 |
 | **端口已被占用** | 端口被其他进程占用 | 修改 .env 中的端口配置，或停止占用进程 |
 | **Maven 依赖下载失败** | 网络问题或镜像源不可达 | 配置 Maven 镜像源，如阿里云 |
@@ -691,7 +691,7 @@ docker image prune -f
 所有模块的详细文档：
 
 | 模块 | 文档路径 |
-|------|---------|
+|:----:|:-------:|
 | **uav-mobile-app** | [README](uav-mobile-app/README.md) |
 | **wrf-processor-service** | [README](wrf-processor-service/README.md) |
 | **data-assimilation-service** | [README](data-assimilation-service/README.md) |
@@ -719,7 +719,7 @@ docker image prune -f
 ## ✅ 近期完成的关键任务
 
 | 任务 | 说明 | 状态 |
-|------|------|------|
+|:----:|:----:|:----:|
 | **Vite配置更新** | 添加代理指向api-gateway，配置多个后端服务路由 | ✅ |
 | **JWT自动刷新机制** | 实现定时刷新，处理刷新失败自动重试 | ✅ |
 | **API层真实对接** | 更新各业务API模块，支持从Mock切换到真实后端 | ✅ |
@@ -727,13 +727,6 @@ docker image prune -f
 | **系统监控页面** | 添加真实API调用，根据环境模式选择数据源 | ✅ |
 | **MyPanel独立部署配置** | 更新nginx.conf、Dockerfile、环境变量配置 | ✅ |
 | **国际化优化** | 完善zh-CN/en-US词条，更新布局组件支持国际化 | ✅ |
-
-## 🔜 下一阶段计划
-
-| 阶段 | 模块 | 状态 |
-|------|------|------|
-| **P3** | PX4/ArduPilot飞控对接（MAVLink协议） | ⏳ 规划中 |
-| **P3** | 端侧离线SDK（离线状态面板、离线任务包） | ⏳ 规划中 |
 
 ---
 
