@@ -28,15 +28,40 @@
       </div>
     </div>
 
-    <!-- 算法类型 Tab -->
-    <el-tabs v-model="activeAlgo" type="card" class="algo-tabs">
-      <el-tab-pane label="路径规划 · DE-RRT*" name="de-rrt-star" />
-      <el-tab-pane label="路径规划 · DWA" name="dwa" />
-      <el-tab-pane label="机器学习 · GPR" name="gpr" />
-      <el-tab-pane label="数据同化 · 3DVAR" name="three-d-var" />
-      <el-tab-pane label="数据同化 · 5DVAR" name="five-d-var" />
-      <el-tab-pane label="数据同化 · EnKF" name="enkf" />
-    </el-tabs>
+    <!-- 算法选择下拉框 -->
+    <div class="algo-select-container">
+      <div class="algo-select-label">
+        <el-icon><Cpu /></el-icon>
+        <span>选择算法</span>
+      </div>
+      <el-select 
+        v-model="activeAlgo" 
+        class="algo-select"
+        placeholder="请选择算法"
+        filterable
+        clearable
+        size="large"
+      >
+        <el-option-group label="路径规划">
+          <el-option label="VRPTW · 车辆路径问题" value="vrptw" />
+          <el-option label="DE-RRT* · 差分进化路径规划" value="de-rrt-star" />
+          <el-option label="DWA · 动态窗口法" value="dwa" />
+        </el-option-group>
+        <el-option-group label="机器学习">
+          <el-option label="ConvLSTM · 卷积长短期记忆网络" value="convlstm" />
+          <el-option label="XGBoost · 极端梯度提升" value="xgboost" />
+          <el-option label="GPR · 高斯过程回归" value="gpr" />
+          <el-option label="CNN · 卷积神经网络" value="cnn" />
+          <el-option label="U-Net · 语义分割网络" value="unet" />
+        </el-option-group>
+        <el-option-group label="数据同化">
+          <el-option label="3DVAR · 三维变分同化" value="three-d-var" />
+          <el-option label="4DVAR · 四维变分同化" value="four-d-var" />
+          <el-option label="5DVAR · 五维变分同化" value="five-d-var" />
+          <el-option label="EnKF · 集合卡尔曼滤波" value="enkf" />
+        </el-option-group>
+      </el-select>
+    </div>
 
     <!-- 主体：左 35% / 右 65% -->
     <div class="main-body">
@@ -107,8 +132,53 @@
           <div class="section-block">
             <div class="section-title">{{ algoMeta[activeAlgo].label }} · 专用参数</div>
 
+            <!-- VRPTW -->
+            <div v-if="activeAlgo === 'vrptw'">
+              <el-form label-position="top" class="params-form">
+                <el-row :gutter="12">
+                  <el-col :span="12">
+                    <el-form-item label="车辆数量 (vehicleCount)">
+                      <el-slider v-model="params.vrptw.vehicleCount" :min="1" :max="50" :step="1" show-input />
+                      <div class="help-text">可用车辆总数</div>
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-form-item label="车辆容量 (capacity)">
+                      <el-slider v-model="params.vrptw.capacity" :min="10" :max="500" :step="10" show-input />
+                      <div class="help-text">每辆车的最大负载容量</div>
+                    </el-form-item>
+                  </el-col>
+                </el-row>
+
+                <el-form-item label="硬时间窗约束 (timeWindowHard)">
+                  <el-switch v-model="params.vrptw.timeWindowHard" active-text="启用" inactive-text="禁用" />
+                  <div class="help-text">启用后不允许违反时间窗约束</div>
+                </el-form-item>
+
+                <el-row :gutter="12">
+                  <el-col :span="12">
+                    <el-form-item label="延误惩罚系数 (penaltyDelay)">
+                      <el-slider v-model="params.vrptw.penaltyDelay" :min="1" :max="500" :step="10" show-input />
+                      <div class="help-text">超出时间窗的惩罚权重</div>
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-form-item label="提前惩罚系数 (penaltyEarly)">
+                      <el-slider v-model="params.vrptw.penaltyEarly" :min="1" :max="100" :step="5" show-input />
+                      <div class="help-text">提前到达的惩罚权重</div>
+                    </el-form-item>
+                  </el-col>
+                </el-row>
+
+                <el-form-item label="最大路径数 (maxRoutes)">
+                  <el-slider v-model="params.vrptw.maxRoutes" :min="5" :max="200" :step="5" show-input />
+                  <div class="help-text">算法生成的最大路径数量限制</div>
+                </el-form-item>
+              </el-form>
+            </div>
+
             <!-- DE-RRT* -->
-            <div v-if="activeAlgo === 'de-rrt-star'">
+            <div v-else-if="activeAlgo === 'de-rrt-star'">
               <el-form label-position="top" class="params-form">
                 <el-row :gutter="12">
                   <el-col :span="12">
@@ -247,6 +317,253 @@
               </el-form>
             </div>
 
+            <!-- ConvLSTM -->
+            <div v-else-if="activeAlgo === 'convlstm'">
+              <el-form label-position="top" class="params-form">
+                <el-row :gutter="12">
+                  <el-col :span="12">
+                    <el-form-item label="隐藏层维度 (hiddenDim)">
+                      <el-slider v-model="params.convlstm.hiddenDim" :min="16" :max="256" :step="16" show-input />
+                      <div class="help-text">LSTM隐藏层特征维度</div>
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-form-item label="层数 (numLayers)">
+                      <el-slider v-model="params.convlstm.numLayers" :min="1" :max="8" :step="1" show-input />
+                      <div class="help-text">LSTM堆叠层数</div>
+                    </el-form-item>
+                  </el-col>
+                </el-row>
+
+                <el-row :gutter="12">
+                  <el-col :span="12">
+                    <el-form-item label="序列长度 (seqLen)">
+                      <el-slider v-model="params.convlstm.seqLen" :min="6" :max="96" :step="6" show-input />
+                      <div class="help-text">时间序列输入长度</div>
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-form-item label="Dropout (dropout)">
+                      <el-slider v-model="params.convlstm.dropout" :min="0" :max="0.5" :step="0.05" :precision="2" show-input />
+                      <div class="help-text">Dropout正则化概率</div>
+                    </el-form-item>
+                  </el-col>
+                </el-row>
+
+                <el-row :gutter="12">
+                  <el-col :span="12">
+                    <el-form-item label="学习率 (learningRate)">
+                      <el-slider v-model="params.convlstm.learningRate" :min="0.0001" :max="0.01" :step="0.0001" :precision="4" show-input />
+                      <div class="help-text">优化器学习率</div>
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-form-item label="批次大小 (batchSize)">
+                      <el-slider v-model="params.convlstm.batchSize" :min="8" :max="128" :step="8" show-input />
+                      <div class="help-text">训练批次大小</div>
+                    </el-form-item>
+                  </el-col>
+                </el-row>
+
+                <el-form-item label="训练轮数 (epochs)">
+                  <el-slider v-model="params.convlstm.epochs" :min="10" :max="200" :step="10" show-input />
+                  <div class="help-text">训练轮数</div>
+                </el-form-item>
+              </el-form>
+            </div>
+
+            <!-- XGBoost -->
+            <div v-else-if="activeAlgo === 'xgboost'">
+              <el-form label-position="top" class="params-form">
+                <el-row :gutter="12">
+                  <el-col :span="12">
+                    <el-form-item label="最大深度 (maxDepth)">
+                      <el-slider v-model="params.xgboost.maxDepth" :min="1" :max="20" :step="1" show-input />
+                      <div class="help-text">决策树最大深度</div>
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-form-item label="学习率 (learningRate)">
+                      <el-slider v-model="params.xgboost.learningRate" :min="0.01" :max="0.3" :step="0.01" :precision="2" show-input />
+                      <div class="help-text">每棵树的学习率</div>
+                    </el-form-item>
+                  </el-col>
+                </el-row>
+
+                <el-form-item label="树数量 (nEstimators)">
+                  <el-slider v-model="params.xgboost.nEstimators" :min="50" :max="1000" :step="50" show-input />
+                  <div class="help-text">集成树的数量</div>
+                </el-form-item>
+
+                <el-row :gutter="12">
+                  <el-col :span="12">
+                    <el-form-item label="子采样比例 (subsample)">
+                      <el-slider v-model="params.xgboost.subsample" :min="0.5" :max="1" :step="0.05" :precision="2" show-input />
+                      <div class="help-text">每棵树使用的数据比例</div>
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-form-item label="特征采样比例 (colsampleByTree)">
+                      <el-slider v-model="params.xgboost.colsampleByTree" :min="0.5" :max="1" :step="0.05" :precision="2" show-input />
+                      <div class="help-text">每棵树使用的特征比例</div>
+                    </el-form-item>
+                  </el-col>
+                </el-row>
+
+                <el-row :gutter="12">
+                  <el-col :span="12">
+                    <el-form-item label="L1正则化 (regAlpha)">
+                      <el-slider v-model="params.xgboost.regAlpha" :min="0" :max="10" :step="0.1" :precision="2" show-input />
+                      <div class="help-text">L1正则化系数</div>
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-form-item label="L2正则化 (regLambda)">
+                      <el-slider v-model="params.xgboost.regLambda" :min="0" :max="10" :step="0.1" :precision="2" show-input />
+                      <div class="help-text">L2正则化系数</div>
+                    </el-form-item>
+                  </el-col>
+                </el-row>
+              </el-form>
+            </div>
+
+            <!-- CNN -->
+            <div v-else-if="activeAlgo === 'cnn'">
+              <el-form label-position="top" class="params-form">
+                <el-row :gutter="12">
+                  <el-col :span="12">
+                    <el-form-item label="卷积核数量 (filters)">
+                      <el-slider v-model="params.cnn.filters" :min="16" :max="256" :step="16" show-input />
+                      <div class="help-text">卷积层输出通道数</div>
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-form-item label="卷积核大小 (kernelSize)">
+                      <el-slider v-model="params.cnn.kernelSize" :min="1" :max="7" :step="1" show-input />
+                      <div class="help-text">卷积核尺寸</div>
+                    </el-form-item>
+                  </el-col>
+                </el-row>
+
+                <el-row :gutter="12">
+                  <el-col :span="12">
+                    <el-form-item label="步长 (strides)">
+                      <el-slider v-model="params.cnn.strides" :min="1" :max="3" :step="1" show-input />
+                      <div class="help-text">卷积步长</div>
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-form-item label="填充方式 (padding)">
+                      <el-select v-model="params.cnn.padding" style="width: 100%">
+                        <el-option label="Same (保持尺寸)" value="same" />
+                        <el-option label="Valid (不填充)" value="valid" />
+                      </el-select>
+                      <div class="help-text">卷积填充策略</div>
+                    </el-form-item>
+                  </el-col>
+                </el-row>
+
+                <el-row :gutter="12">
+                  <el-col :span="12">
+                    <el-form-item label="激活函数 (activation)">
+                      <el-select v-model="params.cnn.activation" style="width: 100%">
+                        <el-option label="ReLU" value="relu" />
+                        <el-option label="Leaky ReLU" value="leaky_relu" />
+                        <el-option label="Sigmoid" value="sigmoid" />
+                        <el-option label="Tanh" value="tanh" />
+                      </el-select>
+                      <div class="help-text">激活函数类型</div>
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-form-item label="Dropout (dropout)">
+                      <el-slider v-model="params.cnn.dropout" :min="0" :max="0.5" :step="0.05" :precision="2" show-input />
+                      <div class="help-text">Dropout正则化概率</div>
+                    </el-form-item>
+                  </el-col>
+                </el-row>
+
+                <el-row :gutter="12">
+                  <el-col :span="12">
+                    <el-form-item label="学习率 (learningRate)">
+                      <el-slider v-model="params.cnn.learningRate" :min="0.0001" :max="0.01" :step="0.0001" :precision="4" show-input />
+                      <div class="help-text">优化器学习率</div>
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-form-item label="训练轮数 (epochs)">
+                      <el-slider v-model="params.cnn.epochs" :min="10" :max="100" :step="5" show-input />
+                      <div class="help-text">训练轮数</div>
+                    </el-form-item>
+                  </el-col>
+                </el-row>
+              </el-form>
+            </div>
+
+            <!-- U-Net -->
+            <div v-else-if="activeAlgo === 'unet'">
+              <el-form label-position="top" class="params-form">
+                <el-row :gutter="12">
+                  <el-col :span="12">
+                    <el-form-item label="基础通道数 (baseFilters)">
+                      <el-slider v-model="params.unet.baseFilters" :min="16" :max="256" :step="16" show-input />
+                      <div class="help-text">U-Net编码器第一层通道数</div>
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-form-item label="网络深度 (depth)">
+                      <el-slider v-model="params.unet.depth" :min="2" :max="6" :step="1" show-input />
+                      <div class="help-text">编码器/解码器层数</div>
+                    </el-form-item>
+                  </el-col>
+                </el-row>
+
+                <el-row :gutter="12">
+                  <el-col :span="12">
+                    <el-form-item label="激活函数 (activation)">
+                      <el-select v-model="params.unet.activation" style="width: 100%">
+                        <el-option label="ReLU" value="relu" />
+                        <el-option label="Leaky ReLU" value="leaky_relu" />
+                        <el-option label="GELU" value="gelu" />
+                      </el-select>
+                      <div class="help-text">激活函数类型</div>
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-form-item label="Dropout (dropout)">
+                      <el-slider v-model="params.unet.dropout" :min="0" :max="0.5" :step="0.05" :precision="2" show-input />
+                      <div class="help-text">Dropout正则化概率</div>
+                    </el-form-item>
+                  </el-col>
+                </el-row>
+
+                <el-row :gutter="12">
+                  <el-col :span="12">
+                    <el-form-item label="学习率 (learningRate)">
+                      <el-slider v-model="params.unet.learningRate" :min="0.00001" :max="0.001" :step="0.00001" :precision="5" show-input />
+                      <div class="help-text">优化器学习率</div>
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-form-item label="训练轮数 (epochs)">
+                      <el-slider v-model="params.unet.epochs" :min="10" :max="100" :step="5" show-input />
+                      <div class="help-text">训练轮数</div>
+                    </el-form-item>
+                  </el-col>
+                </el-row>
+
+                <el-form-item label="损失函数 (loss)">
+                  <el-select v-model="params.unet.loss" style="width: 100%">
+                    <el-option label="均方误差 (MSE)" value="mse" />
+                    <el-option label="平均绝对误差 (MAE)" value="mae" />
+                    <el-option label="Dice Loss" value="dice" />
+                    <el-option label="交叉熵 (Cross-Entropy)" value="cross_entropy" />
+                  </el-select>
+                  <div class="help-text">损失函数类型</div>
+                </el-form-item>
+              </el-form>
+            </div>
+
             <!-- GPR -->
             <div v-else-if="activeAlgo === 'gpr'">
               <el-form label-position="top" class="params-form">
@@ -341,6 +658,51 @@
                     </el-form-item>
                   </el-col>
                 </el-row>
+              </el-form>
+            </div>
+
+            <!-- 4DVAR -->
+            <div v-else-if="activeAlgo === 'four-d-var'">
+              <el-form label-position="top" class="params-form">
+                <el-form-item label="时间窗长度 windowLength (小时)">
+                  <el-slider v-model="params.fourDVar.windowLength" :min="1" :max="12" :step="1" show-input />
+                  <div class="help-text">四维变分的同化时间窗口</div>
+                </el-form-item>
+
+                <el-row :gutter="12">
+                  <el-col :span="12">
+                    <el-form-item label="外部迭代 outerIter">
+                      <el-slider v-model="params.fourDVar.outerIter" :min="1" :max="10" :step="1" show-input />
+                      <div class="help-text">非线性代价函数外层循环次数</div>
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-form-item label="内部迭代 innerIter">
+                      <el-slider v-model="params.fourDVar.innerIter" :min="10" :max="100" :step="5" show-input />
+                      <div class="help-text">每个外步内部线性求解迭代上限</div>
+                    </el-form-item>
+                  </el-col>
+                </el-row>
+
+                <el-row :gutter="12">
+                  <el-col :span="12">
+                    <el-form-item label="TLM/Adjoint 步长 tlmStep">
+                      <el-slider v-model="params.fourDVar.tlmStep" :min="0.01" :max="1" :step="0.01" :precision="2" show-input />
+                      <div class="help-text">切线性 / 伴随模式的数值步长</div>
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-form-item label="正则化 regularization">
+                      <el-slider v-model="params.fourDVar.regularization" :min="0" :max="0.1" :step="0.005" :precision="3" show-input />
+                      <div class="help-text">代价函数 L2 正则项强度</div>
+                    </el-form-item>
+                  </el-col>
+                </el-row>
+
+                <el-form-item label="背景误差因子 bgErrorFactor">
+                  <el-slider v-model="params.fourDVar.bgErrorFactor" :min="0.5" :max="2" :step="0.05" :precision="2" show-input />
+                  <div class="help-text">背景误差协方差矩阵的整体缩放系数</div>
+                </el-form-item>
               </el-form>
             </div>
 
@@ -553,7 +915,7 @@ import * as echarts from 'echarts'
 import { ElMessage } from 'element-plus'
 import {
   MagicStick, RefreshLeft, CollectionTag, VideoPlay, Download,
-  Tools, DocumentCopy, TrendCharts, PieChart, Clock, FolderOpened, Refresh
+  Tools, DocumentCopy, TrendCharts, PieChart, Clock, FolderOpened, Refresh, Cpu
 } from '@element-plus/icons-vue'
 
 // ===== 常量定义 =====
@@ -561,12 +923,18 @@ const TEMPLATES_KEY = 'uav_param_templates_v1'
 const HISTORY_KEY = 'uav_param_history_v1'
 
 const algoMeta = {
-  'de-rrt-star': { label: 'DE-RRT*', tagType: 'primary' },
-  'dwa':         { label: 'DWA',     tagType: 'success' },
-  'gpr':         { label: 'GPR',     tagType: 'warning' },
-  'three-d-var': { label: '3DVAR',   tagType: 'info' },
-  'five-d-var':  { label: '5DVAR',   tagType: 'info' },
-  'enkf':        { label: 'EnKF',    tagType: 'danger' }
+  'vrptw':       { label: 'VRPTW',     tagType: 'primary' },
+  'de-rrt-star': { label: 'DE-RRT*',   tagType: 'primary' },
+  'dwa':         { label: 'DWA',       tagType: 'success' },
+  'convlstm':    { label: 'ConvLSTM',  tagType: 'warning' },
+  'xgboost':     { label: 'XGBoost',   tagType: 'warning' },
+  'gpr':         { label: 'GPR',       tagType: 'warning' },
+  'cnn':         { label: 'CNN',       tagType: 'warning' },
+  'unet':        { label: 'U-Net',     tagType: 'warning' },
+  'three-d-var': { label: '3DVAR',     tagType: 'info' },
+  'four-d-var':  { label: '4DVAR',     tagType: 'info' },
+  'five-d-var':  { label: '5DVAR',     tagType: 'info' },
+  'enkf':        { label: 'EnKF',      tagType: 'danger' }
 }
 
 // 默认值
@@ -577,30 +945,48 @@ const DEFAULT_COMMON = {
 }
 
 const DEFAULT_PARAMS = {
+  vrptw:     { vehicleCount: 10, capacity: 100, timeWindowHard: true, penaltyDelay: 100, penaltyEarly: 10, maxRoutes: 50 },
   deRrtStar: { popSize: 150, maxIter: 2000, stepSize: 1.0, goalRadius: 2.0, elitism: 0.2, mutationRate: 0.08 },
   dwa:       { vMin: 0, vMax: 5, omegaMin: -1.57, omegaMax: 1.57, dtPred: 0.1, alphaGain: 1.5, betaGain: 3.0, gammaGain: 1.0, samples: 30 },
+  convlstm:  { hiddenDim: 64, numLayers: 3, seqLen: 24, dropout: 0.2, learningRate: 0.001, batchSize: 32, epochs: 50 },
+  xgboost:   { maxDepth: 6, learningRate: 0.1, nEstimators: 100, subsample: 0.8, colsampleByTree: 0.8, regAlpha: 0.1, regLambda: 1.0 },
   gpr:       { kernel: 'RBF', optimizer: 'L-BFGS-B', noise: 0.01, lengthScale: 1.0, signalVariance: 1.0, maxIterOpt: 1000 },
+  cnn:       { filters: 64, kernelSize: 3, strides: 1, padding: 'same', activation: 'relu', dropout: 0.3, learningRate: 0.001, epochs: 30 },
+  unet:      { baseFilters: 64, depth: 4, activation: 'relu', dropout: 0.2, learningRate: 0.0001, epochs: 50, loss: 'mse' },
   threeDVar: { bFactor: 1.0, rFactor: 1.0, convergence: 1e-4, maxIter: 50, incrementCutoff: 0.01 },
+  fourDVar:  { windowLength: 6, outerIter: 3, innerIter: 30, tlmStep: 0.1, regularization: 0.01, bgErrorFactor: 1.0 },
   fiveDVar:  { windowLength: 6, outerIter: 5, innerIter: 50, tlmStep: 0.1, regularization: 0.05 },
   enkf:      { ensembleSize: 80, localizationRadius: 500, inflation: 1.02, covarianceInflation: 0.02, assimilationWindow: 3 }
 }
 
 // 参数键名映射（供 JSON 输出使用）
 const ALGO_PARAM_KEYS = {
+  'vrptw':       'vrptw',
   'de-rrt-star': 'deRrtStar',
-  'dwa': 'dwa',
-  'gpr': 'gpr',
+  'dwa':         'dwa',
+  'convlstm':    'convlstm',
+  'xgboost':     'xgboost',
+  'gpr':         'gpr',
+  'cnn':         'cnn',
+  'unet':        'unet',
   'three-d-var': 'threeDVar',
-  'five-d-var': 'fiveDVar',
-  'enkf': 'enkf'
+  'four-d-var':  'fourDVar',
+  'five-d-var':  'fiveDVar',
+  'enkf':        'enkf'
 }
 
 // 雷达图指标：每个算法取 5 个主要参数
 const SENSITIVITY_KEYS = {
+  'vrptw':       ['vehicleCount', 'capacity', 'penaltyDelay', 'penaltyEarly', 'maxRoutes'],
   'de-rrt-star': ['popSize', 'maxIter', 'stepSize', 'goalRadius', 'elitism'],
   'dwa':         ['alphaGain', 'betaGain', 'gammaGain', 'dtPred', 'samples'],
+  'convlstm':    ['hiddenDim', 'numLayers', 'seqLen', 'dropout', 'learningRate'],
+  'xgboost':     ['maxDepth', 'learningRate', 'nEstimators', 'subsample', 'colsampleByTree'],
   'gpr':         ['lengthScale', 'signalVariance', 'noise', 'maxIterOpt', 'kernel'],
+  'cnn':         ['filters', 'kernelSize', 'dropout', 'learningRate', 'epochs'],
+  'unet':        ['baseFilters', 'depth', 'dropout', 'learningRate', 'epochs'],
   'three-d-var': ['bFactor', 'rFactor', 'convergence', 'maxIter', 'incrementCutoff'],
+  'four-d-var':  ['windowLength', 'outerIter', 'innerIter', 'tlmStep', 'regularization'],
   'five-d-var':  ['windowLength', 'outerIter', 'innerIter', 'tlmStep', 'regularization'],
   'enkf':        ['ensembleSize', 'localizationRadius', 'inflation', 'covarianceInflation', 'assimilationWindow']
 }
@@ -942,7 +1328,36 @@ watch(activeAlgo, () => {
 .top-bar-controls { display: flex; gap: 8px; flex-wrap: wrap; }
 .demo-tag { font-size: 12px; }
 
-.algo-tabs { margin-top: -4px; }
+/* 算法选择器 */
+.algo-select-container {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: #fff;
+  border-radius: 10px;
+  padding: 16px 20px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+.algo-select-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #24292f;
+}
+.algo-select {
+  width: 400px;
+}
+@media (max-width: 768px) {
+  .algo-select-container {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .algo-select {
+    width: 100%;
+  }
+}
 
 /* 主体 */
 .main-body {
