@@ -5,11 +5,14 @@ Migrated from: edge-cloud-coordinator/federated_learning.py
 Supports FedAvg and FedProx aggregation strategies.
 """
 from __future__ import annotations
+
 import logging
 from typing import Any, Optional
+
 import numpy as np
 
 logger = logging.getLogger(__name__)
+
 
 class FederatedLearner:
     """Federated Learning orchestrator.
@@ -37,7 +40,8 @@ class FederatedLearner:
                 - n_rounds: number of aggregation rounds
 
         Returns:
-            Dictionary with global model, training metrics, and convergence info.
+            Dictionary with global model, training metrics,
+            and convergence info.
         """
         client_updates = params.get("client_updates", [])
         strategy = params.get("strategy", self.strategy)
@@ -51,15 +55,19 @@ class FederatedLearner:
         history = []
 
         for round_idx in range(n_rounds):
-            # Simulate client updates (in real scenario, clients compute locally)
+            # Simulate client updates
             aggregated = self._aggregate(client_updates, strategy)
             self.global_model = aggregated
 
             loss = float(np.random.rand() * 0.5)  # Simulated loss
             history.append({"round": round_idx + 1, "loss": loss})
 
+        global_model_list = None
+        if self.global_model is not None:
+            global_model_list = self.global_model.tolist()
+
         return {
-            "global_model": self.global_model.tolist(),
+            "global_model": global_model_list,
             "strategy": strategy,
             "n_rounds": n_rounds,
             "n_clients": len(client_updates),

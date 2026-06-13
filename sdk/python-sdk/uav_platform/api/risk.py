@@ -7,6 +7,8 @@ historical records, and airworthiness evaluation.
 
 from __future__ import annotations
 
+from typing import cast
+
 from uav_platform.http import AsyncHttpClient, HttpClient
 from uav_platform.models import (
     AirworthinessAssessment,
@@ -59,7 +61,7 @@ class RiskApi:
         if resolution is not None:
             params["resolution"] = resolution
         raw = self._http.get("/v1/risk/map", params=params)
-        return [RiskAssessment.model_validate(item) for item in raw]
+        return [RiskAssessment.model_validate(item) for item in cast(list, raw)]
 
     def get_history(
         self,
@@ -76,7 +78,7 @@ class RiskApi:
         if limit is not None:
             params["limit"] = limit
         raw = self._http.get("/v1/risk/history", params=params)
-        return [RiskAssessment.model_validate(item) for item in raw]
+        return [RiskAssessment.model_validate(item) for item in cast(list, raw)]
 
     def assess_airworthiness(
         self,

@@ -47,18 +47,26 @@
 
 > **注**: algorithm-engine 包含 20+ 算法（风乌/天资/风雷/数据同化/路径规划/风险评估等）。
 
-## 阶段五：集成与验收 🔄
+## 阶段五：集成与验收 ✅
 
 | Task | 状态 | 负责人 | 完成日期 |
 |------|:----:|--------|----------|
 | 5.1 开发者控制台 (Vue 3) | ✅ | - | 2026-06-13 |
 | 5.2 SDK 开发 (Java + Python) | ✅ | - | 2026-06-13 |
 | 5.3 端到端集成测试 (9/9 passed) | ✅ | - | 2026-06-13 |
-| 5.4 文档完善 | 🔄 | - | - |
-| 5.5 生产部署 | ⏳ | - | - |
-| 5.6 监控告警 | ⏳ | - | - |
+| 5.4 文档完善 | ✅ | - | 2026-06-13 |
+| 5.5 生产部署验证 | ✅ | - | 2026-06-13 |
+| 5.6 监控告警 | ✅ | - | 2026-06-13 |
 
 > **Gateway**: 独立构建已验证（Spring Boot 3.4.x + Spring Cloud 2024.0.3），与主项目 Spring Boot 4.0 解耦。
+>
+> **5.4 文档完善**: architecture.md / migration-tracker.md / CHANGELOG.md / deployment-guide.md / mvp-phase1-remediation-plan.md / Java SDK README 全部同步更新。
+>
+> **5.5 生产部署验证**: Docker Compose 全栈启动（MySQL + Redis + Kafka + Zookeeper + 7 业务服务 + Gateway + Python 引擎 + Console + Prometheus + Grafana），E2E 9/9 通过。
+>
+> **5.6 监控告警**: Prometheus 抓取配置 + Grafana Dashboard + Actuator 端点全覆盖 + alert_rules.yml（8 条告警规则：服务宕机/错误率/延迟/JVM/MySQL/Redis/Kafka）。
+>
+> **X-Mock Header**: MockContext + ResponseWrapper 自动注入 X-Mock: true 响应头，6 个 Service 全覆盖。
 
 ## 旧模块 → 新模块映射
 

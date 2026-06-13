@@ -7,6 +7,8 @@ real-time position tracking, and conflict detection.
 
 from __future__ import annotations
 
+from typing import cast
+
 from uav_platform.http import AsyncHttpClient, HttpClient
 from uav_platform.models import (
     Airspace,
@@ -36,7 +38,7 @@ class UtmApi:
     def list_airspaces(self) -> list[Airspace]:
         """List all airspaces."""
         raw = self._http.get("/v1/airspaces")
-        return [Airspace.model_validate(item) for item in raw]
+        return [Airspace.model_validate(item) for item in cast(list, raw)]
 
     def create_airspace(self, data: dict) -> Airspace:
         """Create a dynamic airspace."""
@@ -45,7 +47,10 @@ class UtmApi:
 
     def check_restriction(self, lon: float, lat: float, altitude: float) -> bool:
         """Check if a location has airspace restrictions."""
-        raw = self._http.get("/v1/airspaces/check", params={"lon": lon, "lat": lat, "altitude": altitude})
+        raw = self._http.get(
+            "/v1/airspaces/check",
+            params={"lon": lon, "lat": lat, "altitude": altitude},
+        )
         return bool(raw)
 
     # ------------------------------------------------------------------
@@ -70,7 +75,7 @@ class UtmApi:
     def list_flight_plans(self) -> list[FlightPlan]:
         """List all flight plans."""
         raw = self._http.get("/v1/flight-plans")
-        return [FlightPlan.model_validate(item) for item in raw]
+        return [FlightPlan.model_validate(item) for item in cast(list, raw)]
 
     def approve_flight_plan(self, plan_id: int) -> FlightPlan:
         """Approve a submitted flight plan."""
@@ -98,12 +103,12 @@ class UtmApi:
         """Check for conflicts with existing flights."""
         data = ConflictCheckRequest(planned_path=planned_path, time_window=time_window)
         raw = self._http.post("/v1/tracking/conflicts/check", data.model_dump())
-        return [ConflictAlert.model_validate(item) for item in raw]
+        return [ConflictAlert.model_validate(item) for item in cast(list, raw)]
 
     def list_conflict_alerts(self) -> list[ConflictAlert]:
         """List all active conflict alerts."""
         raw = self._http.get("/v1/conflict-alerts")
-        return [ConflictAlert.model_validate(item) for item in raw]
+        return [ConflictAlert.model_validate(item) for item in cast(list, raw)]
 
     # ------------------------------------------------------------------
     # Async methods

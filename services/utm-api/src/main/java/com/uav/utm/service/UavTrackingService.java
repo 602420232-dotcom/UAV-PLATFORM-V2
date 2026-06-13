@@ -1,6 +1,7 @@
 package com.uav.utm.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.uav.common.core.context.MockContext;
 import com.uav.utm.dto.UavPositionReport;
 import com.uav.utm.entity.ConflictAlert;
 import com.uav.utm.entity.UavPosition;

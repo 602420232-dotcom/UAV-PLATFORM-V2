@@ -61,7 +61,11 @@ class RedisCache:
 
     async def set_result(self, task_id: str, result: dict[str, Any]) -> None:
         """Cache algorithm result with TTL."""
-        await self.client.set(f"result:{task_id}", json.dumps(result, default=str), ex=self._result_ttl)
+        await self.client.set(
+            f"result:{task_id}",
+            json.dumps(result, default=str),
+            ex=self._result_ttl,
+        )
 
     async def get_result(self, task_id: str) -> Optional[dict[str, Any]]:
         """Retrieve cached algorithm result."""
@@ -71,6 +75,7 @@ class RedisCache:
     async def ping(self) -> bool:
         """Check Redis connectivity."""
         try:
-            return await self.client.ping()
+            result: bool = await self.client.ping()  # type: ignore[return-value]
+            return result
         except Exception:
             return False

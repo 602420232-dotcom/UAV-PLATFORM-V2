@@ -4,11 +4,14 @@ TODO: Migrate full implementation from path-planning-service.
 Skeleton implementation with nearest-neighbour heuristic.
 """
 from __future__ import annotations
+
 import logging
 from typing import Any
+
 import numpy as np
 
 logger = logging.getLogger(__name__)
+
 
 class VRPTWPlanner:
     """Vehicle Routing Problem with Time Windows for multi-UAV mission planning."""

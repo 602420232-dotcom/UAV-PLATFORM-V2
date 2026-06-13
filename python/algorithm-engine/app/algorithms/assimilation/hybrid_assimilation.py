@@ -19,7 +19,11 @@ class HybridAssimilation:
     Supports weighted combination of 3D-VAR, EnKF, 4D-VAR, and Enhanced Bayesian.
     """
 
-    def __init__(self, config: Optional[dict[str, Any]] = None, algorithm_types: Optional[list[str]] = None):
+    def __init__(
+        self,
+        config: Optional[dict[str, Any]] = None,
+        algorithm_types: Optional[list[str]] = None,
+    ):
         self.config = config or {}
         self.algorithm_types = algorithm_types or ["3dvar", "enkf"]
         self.weights: dict[str, float] = {}
@@ -32,8 +36,8 @@ class HybridAssimilation:
 
     def assimilate(self, params: dict[str, Any]) -> dict[str, Any]:
         """Run hybrid assimilation."""
-        from app.algorithms.assimilation.three_dimensional_var import ThreeDimensionalVAR
         from app.algorithms.assimilation.ensemble_kalman_filter import EnKF
+        from app.algorithms.assimilation.three_dimensional_var import ThreeDimensionalVAR
 
         custom_weights = params.get("weights")
         if custom_weights:
@@ -62,7 +66,11 @@ class HybridAssimilation:
                 results[algo_type] = {"error": str(exc)}
 
         if analysis_fields:
-            weights = np.array([self.weights.get(t, 0) for t in self.algorithm_types if t in results and "error" not in results[t]])
+            weights = np.array([
+                self.weights.get(t, 0)
+                for t in self.algorithm_types
+                if t in results and "error" not in results[t]
+            ])
             if weights.sum() > 0:
                 weights = weights / weights.sum()
                 combined = sum(w * f for w, f in zip(weights, analysis_fields))
@@ -72,7 +80,7 @@ class HybridAssimilation:
             combined = background
 
         return {
-            "analysis_field": combined.tolist(),
+            "analysis_field": np.asarray(combined).tolist(),
             "individual_results": results,
             "weights_used": self.weights,
             "algorithms_used": self.algorithm_types,

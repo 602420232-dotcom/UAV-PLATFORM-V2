@@ -3,11 +3,14 @@
 TODO: Full implementation requires PyTorch. Skeleton with numpy fallback.
 """
 from __future__ import annotations
+
 import logging
 from typing import Any, Optional
+
 import numpy as np
 
 logger = logging.getLogger(__name__)
+
 
 class BayesianNN:
     """Bayesian Neural Network for uncertainty-aware prediction.
@@ -22,32 +25,49 @@ class BayesianNN:
         self.output_dim = self.config.get("output_dim", 1)
         self.n_mc_samples = self.config.get("n_mc_samples", 50)
         self.dropout_rate = self.config.get("dropout_rate", 0.2)
-        self._weights = None
+        self._weights: list = []
 
-    def _initialize_weights(self):
-        layers = [self.input_dim, self.hidden_dim, self.hidden_dim, self.output_dim]
-        self._weights = []
+    def _initialize_weights(self) -> None:
+        layers = [self.input_dim, self.hidden_dim,
+                  self.hidden_dim, self.output_dim]
+        weights: list = []
         for i in range(len(layers) - 1):
             w = np.random.randn(layers[i], layers[i + 1]) * 0.1
             b = np.zeros(layers[i + 1])
-            self._weights.extend([w, b])
+            weights.extend([w, b])
+        self._weights = weights
 
     def predict(self, params: dict[str, Any]) -> dict[str, Any]:
-        input_data = np.asarray(params.get("input_data", np.zeros((5, self.input_dim))))
+        input_data = np.asarray(
+            params.get("input_data", np.zeros((5, self.input_dim))),
+        )
         n_samples = params.get("n_samples", self.n_mc_samples)
-        if self._weights is None:
+        if not self._weights:
             self._initialize_weights()
+
+        weights = self._weights
+
         predictions = []
         for _ in range(n_samples):
             h = input_data
-            for i, (w, b) in enumerate(zip(self._weights[::2], self._weights[1::2])):
+            for i in range(0, len(weights), 2):
+                w = weights[i]
+                b = weights[i + 1]
                 h = h @ w + b
-                if i < len(self._weights) // 2 - 1:
+                if i < len(weights) - 2:
                     h = np.maximum(0, h)
-                    mask = (np.random.rand(*h.shape) > self.dropout_rate).astype(float)
+                    mask = (
+                        np.random.rand(*h.shape) > self.dropout_rate
+                    ).astype(float)
                     h = h * mask / (1 - self.dropout_rate)
             predictions.append(h)
+
         samples = np.array(predictions)
         mean = samples.mean(axis=0)
         std = samples.std(axis=0)
-        return {"mean": mean.tolist(), "std": std.tolist(), "n_samples": n_samples, "samples_shape": list(samples.shape)}
+        return {
+            "mean": mean.tolist(),
+            "std": std.tolist(),
+            "n_samples": n_samples,
+            "samples_shape": list(samples.shape),
+        }

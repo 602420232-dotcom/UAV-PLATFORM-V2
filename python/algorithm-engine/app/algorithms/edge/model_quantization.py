@@ -6,11 +6,14 @@ Supports INT8 and FP16 quantization.
 TODO: Full implementation requires PyTorch/TensorRT.
 """
 from __future__ import annotations
+
 import logging
 from typing import Any, Optional
+
 import numpy as np
 
 logger = logging.getLogger(__name__)
+
 
 class ModelQuantizer:
     """Model quantization for edge deployment.
@@ -44,13 +47,21 @@ class ModelQuantizer:
         original_size = original_weights.nbytes
 
         if q_type == "int8":
-            scale = (original_weights.max() - original_weights.min()) / 255.0
-            zero_point = int(-original_weights.min() / scale)
-            quantized = np.clip(np.round(original_weights / scale + zero_point), 0, 255).astype(np.uint8)
+            w_max = original_weights.max()
+            w_min = original_weights.min()
+            scale = (w_max - w_min) / 255.0
+            zero_point = int(-w_min / scale)
+            quantized = np.clip(
+                np.round(original_weights / scale + zero_point),
+                0, 255,
+            ).astype(np.uint8)
         elif q_type == "fp16":
             quantized = original_weights.astype(np.float16)
         else:
-            return {"error": f"Unsupported quantization type: {q_type}", "quantized": False}
+            return {
+                "error": f"Unsupported quantization type: {q_type}",
+                "quantized": False,
+            }
 
         quantized_size = quantized.nbytes
         compression_ratio = original_size / max(quantized_size, 1)

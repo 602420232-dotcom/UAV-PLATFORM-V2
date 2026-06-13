@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 from fastapi import APIRouter, HTTPException
 
@@ -66,7 +65,10 @@ async def submit_task(request: TaskSubmitRequest):
     """Submit an algorithm execution task."""
     registry = get_registry()
     if request.algorithm_id not in registry:
-        raise HTTPException(status_code=404, detail=f"Algorithm '{request.algorithm_id}' not registered")
+        raise HTTPException(
+            status_code=404,
+            detail=f"Algorithm '{request.algorithm_id}' not registered",
+        )
     if _scheduler is None:
         raise HTTPException(status_code=503, detail="Task scheduler not available")
     task_id = await _scheduler.submit(
@@ -75,7 +77,11 @@ async def submit_task(request: TaskSubmitRequest):
         priority=request.priority,
         callback_topic=request.callback_topic,
     )
-    return TaskSubmitResponse(task_id=task_id, algorithm_id=request.algorithm_id, status=TaskStatusEnum.PENDING)
+    return TaskSubmitResponse(
+        task_id=task_id,
+        algorithm_id=request.algorithm_id,
+        status=TaskStatusEnum.PENDING,
+    )
 
 
 @router.get("/api/v1/tasks/{task_id}", response_model=TaskStatus)
@@ -107,7 +113,10 @@ async def cancel_task(task_id: str):
         raise HTTPException(status_code=503, detail="Task scheduler not available")
     success = await _scheduler.cancel(task_id)
     if not success:
-        raise HTTPException(status_code=404, detail=f"Task '{task_id}' not found or cannot be cancelled")
+        raise HTTPException(
+            status_code=404,
+            detail=f"Task '{task_id}' not found or cannot be cancelled",
+        )
     return {"message": f"Task '{task_id}' cancelled", "task_id": task_id}
 
 
@@ -118,7 +127,13 @@ async def execute_pipeline(request: PipelineExecuteRequest):
     pipeline = Pipeline(name=request.name)
     for step in request.steps:
         if step.algorithm_id not in registry:
-            raise HTTPException(status_code=404, detail=f"Pipeline step algorithm '{step.algorithm_id}' not registered")
+            raise HTTPException(
+                status_code=404,
+                detail=(
+                    f"Pipeline step algorithm "
+                    f"'{step.algorithm_id}' not registered"
+                ),
+            )
         pipeline.add_step(step.algorithm_id)
     result = await pipeline.execute(request.initial_params)
     return result

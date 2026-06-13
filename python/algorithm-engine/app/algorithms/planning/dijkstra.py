@@ -3,11 +3,13 @@
 Migrated from: path-planning-service/src/main/python/planners/dijkstra.py
 """
 from __future__ import annotations
+
 import heapq
 import logging
 from typing import Any
 
 logger = logging.getLogger(__name__)
+
 
 class DijkstraPlanner:
     """Dijkstra shortest path algorithm for grid-based planning."""
@@ -23,7 +25,9 @@ class DijkstraPlanner:
         start_grid = self._world_to_grid(self.start)
         goal_grid = self._world_to_grid(self.goal)
         dist = {start_grid: 0}
-        prev = {start_grid: None}
+        prev: dict[tuple[int, int], tuple[int, int] | None] = {
+            start_grid: None,
+        }
         pq = [(0, start_grid)]
         while pq:
             d, current = heapq.heappop(pq)

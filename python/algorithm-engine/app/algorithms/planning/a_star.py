@@ -3,12 +3,13 @@
 Migrated from: path-planning-service/src/main/python/planners/
 """
 from __future__ import annotations
+
 import heapq
 import logging
 from typing import Any
-import numpy as np
 
 logger = logging.getLogger(__name__)
+
 
 class AStarPlanner:
     """A* search algorithm for grid-based path planning."""
@@ -30,7 +31,11 @@ class AStarPlanner:
             _, current = heapq.heappop(open_set)
             if current == goal_grid:
                 path = self._reconstruct_path(came_from, current)
-                return {"path": path, "cost": float(g_score[current]), "nodes_explored": len(g_score)}
+                return {
+                    "path": path,
+                    "cost": float(g_score[current]),
+                    "nodes_explored": len(g_score),
+                }
             for neighbor in self._get_neighbors(current):
                 tentative_g = g_score[current] + 1
                 if tentative_g < g_score.get(neighbor, float("inf")):

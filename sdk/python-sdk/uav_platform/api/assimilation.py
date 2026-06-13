@@ -7,6 +7,8 @@ Provides methods for submitting, querying, and managing data assimilation tasks
 
 from __future__ import annotations
 
+from typing import Any, cast
+
 from uav_platform.http import AsyncHttpClient, HttpClient
 from uav_platform.models import (
     AssimilationResult,
@@ -49,7 +51,7 @@ class AssimilationApi:
             observation_sources=observation_sources,
         )
         raw = self._http.post("/v1/assimilation/tasks", data.model_dump(exclude_none=True))
-        return int(raw)
+        return int(cast(Any, raw))
 
     def get_task_status(self, task_id: int) -> AssimilationTask:
         """Get the status of an assimilation task."""
@@ -71,7 +73,7 @@ class AssimilationApi:
         """List assimilation tasks with optional filtering."""
         params = TaskQueryRequest(status=status, type=type, page=page, size=size)
         raw = self._http.get("/v1/assimilation/tasks", params=params.model_dump(exclude_none=True))
-        return raw
+        return cast(dict, raw)
 
     def cancel_task(self, task_id: int) -> None:
         """Cancel a pending or running assimilation task."""
@@ -121,7 +123,9 @@ class AssimilationApi:
     ) -> dict:
         """Async: List assimilation tasks with optional filtering."""
         params = TaskQueryRequest(status=status, type=type, page=page, size=size)
-        raw = await self._http.get("/v1/assimilation/tasks", params=params.model_dump(exclude_none=True))
+        raw = await self._http.get(
+            "/v1/assimilation/tasks", params=params.model_dump(exclude_none=True)
+        )
         return raw
 
     async def cancel_task_async(self, task_id: int) -> None:

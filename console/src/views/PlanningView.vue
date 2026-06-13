@@ -35,7 +35,7 @@ async function loadTasks() {
 
 async function submitPathPlanning() {
   try {
-    const task = await planningApi.planPath({
+    await planningApi.planPath({
       startPoint: {
         lon: createForm.value.startLon,
         lat: createForm.value.startLat,

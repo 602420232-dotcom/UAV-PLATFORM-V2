@@ -3,11 +3,14 @@
 TODO: Full implementation requires PyTorch. Skeleton with numpy fallback.
 """
 from __future__ import annotations
+
 import logging
 from typing import Any, Optional
+
 import numpy as np
 
 logger = logging.getLogger(__name__)
+
 
 class LSTMPredictor:
     """LSTM based time series prediction for weather forecasting."""
@@ -29,7 +32,12 @@ class LSTMPredictor:
             output = self._persistence_forecast(input_sequence, self.pred_length)
         else:
             output = self._forward(input_sequence)
-        return {"prediction": output.tolist(), "input_shape": list(input_sequence.shape), "output_shape": list(output.shape), "pred_length": self.pred_length}
+        return {
+            "prediction": output.tolist(),
+            "input_shape": list(input_sequence.shape),
+            "output_shape": list(output.shape),
+            "pred_length": self.pred_length,
+        }
 
     def _persistence_forecast(self, sequence, pred_length):
         """Fallback: persistence forecast (repeat last frame)."""

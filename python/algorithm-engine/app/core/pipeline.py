@@ -7,7 +7,6 @@ import time
 from typing import Any, Callable, Optional
 
 from app.core.models import (
-    PipelineExecuteRequest,
     PipelineResult,
     PipelineStepConfig,
     StepResult,

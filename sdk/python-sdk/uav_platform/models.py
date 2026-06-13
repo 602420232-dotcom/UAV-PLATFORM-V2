@@ -4,15 +4,14 @@ Pydantic v2 data models for UAV Platform API.
 
 from __future__ import annotations
 
-from datetime import datetime
 from typing import Any
 
 from pydantic import BaseModel, Field
 
-
 # ============================================================
 # Common / Shared
 # ============================================================
+
 
 class Result(BaseModel):
     """Unified API response envelope."""
@@ -144,11 +143,16 @@ class AssimilationResult(BaseModel):
 class SubmitTaskRequest(BaseModel):
     """Request to submit an assimilation task."""
 
-    type: str = Field(..., description="Assimilation type: 3DVAR, 4DVAR, 5DVAR, EnKF, Hybrid, EnhancedBayesian")
+    type: str = Field(
+        ...,
+        description="Assimilation type: 3DVAR, 4DVAR, 5DVAR, EnKF, Hybrid, EnhancedBayesian",
+    )
     algorithm: str = Field(..., description="Algorithm identifier")
     start_time: str = Field(..., description="ISO 8601 start time")
     end_time: str = Field(..., description="ISO 8601 end time")
-    region: dict[str, float] | None = Field(None, description="Bounding box: minLon, minLat, maxLon, maxLat")
+    region: dict[str, float] | None = Field(
+        None, description="Bounding box: minLon, minLat, maxLon, maxLat"
+    )
     observation_sources: list[str] | None = None
 
 

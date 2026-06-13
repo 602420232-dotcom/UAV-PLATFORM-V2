@@ -46,15 +46,21 @@ class KafkaResultConsumer:
 
     async def start(self) -> None:
         """Initialize and start the Kafka consumer."""
-        self._consumer = AIOKafkaConsumer(
+        consumer = AIOKafkaConsumer(
             self._topic,
             bootstrap_servers=self._bootstrap_servers,
             group_id=self._group_id,
             value_deserializer=lambda v: json.loads(v.decode("utf-8")),
         )
-        await self._consumer.start()
-        logger.info("KafkaResultConsumer started (servers=%s, topic=%s, group=%s)",
-                     self._bootstrap_servers, self._topic, self._group_id)
+        await consumer.start()
+        self._consumer = consumer
+        logger.info(
+            "KafkaResultConsumer started "
+            "(servers=%s, topic=%s, group=%s)",
+            self._bootstrap_servers,
+            self._topic,
+            self._group_id,
+        )
 
     async def stop(self) -> None:
         """Stop the consumer."""
@@ -67,10 +73,17 @@ class KafkaResultConsumer:
         if self._consumer is None:
             raise RuntimeError("Consumer not started. Call start() first.")
         async for message in self._consumer:
-            data = message.value
-            logger.debug("Received result: task_id=%s, status=%s", data.get("task_id"), data.get("status"))
+            raw = message.value
+            data: dict[str, Any] = raw if isinstance(raw, dict) else {}
+            logger.debug(
+                "Received result: task_id=%s, status=%s",
+                data.get("task_id"), data.get("status"),
+            )
             for handler in self._handlers:
                 try:
                     await handler(data)
                 except Exception:
-                    logger.exception("Handler error for task_id=%s", data.get("task_id"))
+                    logger.exception(
+                        "Handler error for task_id=%s",
+                        data.get("task_id"),
+                    )

@@ -41,24 +41,26 @@ class EnKF:
         perturbation = np.random.randn(n_ens, n) * self.background_error_scale
         ensemble = xb[np.newaxis, :] + perturbation
 
-        y_obs, H = self._build_observation_operator(xb, observations, background.shape)
+        y_obs, H = self._build_observation_operator(  # noqa: N806
+            xb, observations, background.shape
+        )
         m = len(y_obs)
 
         obs_perturbation = np.random.randn(n_ens, m) * self.observation_error_scale
         obs_ensemble = y_obs[np.newaxis, :] + obs_perturbation
 
         x_mean = ensemble.mean(axis=0)
-        X_pert = ensemble - x_mean[np.newaxis, :]
+        X_pert = ensemble - x_mean[np.newaxis, :]  # noqa: N806
 
-        HX = H @ X_pert.T
-        HPHT = (HX @ HX.T) / (n_ens - 1)
-        R = np.eye(m) * self.observation_error_scale ** 2
-        HPHT_plus_R = HPHT + R
+        HX = H @ X_pert.T  # noqa: N806
+        HPHT = (HX @ HX.T) / (n_ens - 1)  # noqa: N806
+        R = np.eye(m) * self.observation_error_scale ** 2  # noqa: N806
+        HPHT_plus_R = HPHT + R  # noqa: N806
 
         try:
-            K = (X_pert.T @ HX.T) @ np.linalg.inv(HPHT_plus_R) / (n_ens - 1)
+            K = (X_pert.T @ HX.T) @ np.linalg.inv(HPHT_plus_R) / (n_ens - 1)  # noqa: N806
         except np.linalg.LinAlgError:
-            K = np.zeros((n, m))
+            K = np.zeros((n, m))  # noqa: N806
 
         for i in range(n_ens):
             innovation = obs_ensemble[i] - H @ ensemble[i]
@@ -79,7 +81,7 @@ class EnKF:
         n = len(xb)
         m = len(observations)
         y_obs = np.zeros(m)
-        H = np.zeros((m, n))
+        H = np.zeros((m, n))  # noqa: N806
         for j, obs in enumerate(observations):
             pos = obs.get("position", [0] * len(shape))
             y_obs[j] = obs.get("value", 0.0)

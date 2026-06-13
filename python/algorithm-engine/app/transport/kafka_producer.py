@@ -43,7 +43,11 @@ class KafkaTaskProducer:
             key_serializer=lambda k: k.encode("utf-8") if k else None,
         )
         await self._producer.start()
-        logger.info("KafkaTaskProducer started (servers=%s, topic=%s)", self._bootstrap_servers, self._topic)
+        logger.info(
+            "KafkaTaskProducer started (servers=%s, topic=%s)",
+            self._bootstrap_servers,
+            self._topic,
+        )
 
     async def stop(self) -> None:
         """Stop and clean up the producer."""

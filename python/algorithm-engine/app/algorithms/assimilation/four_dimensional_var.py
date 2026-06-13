@@ -1,6 +1,7 @@
 """4D-VAR Data Assimilation Algorithm.
 
-Migrated from: data-assimilation-platform/algorithm_core/src/bayesian_assimilation/models/four_dimensional_var.py
+Migrated from:
+    data-assimilation-platform/algorithm_core/src/bayesian_assimilation/models/four_dimensional_var.py
 
 Original: FourDimensionalVar class extending AssimilationBase with temporal dimension.
 """
@@ -52,8 +53,8 @@ class FourDimensionalVAR:
             if not slot_obs:
                 cost_history.append(0.0)
                 continue
-            y_obs, H = self._build_observation_operator(x, slot_obs, background.shape)
-            Hx = H @ x
+            y_obs, H = self._build_observation_operator(x, slot_obs, background.shape)  # noqa: N806
+            Hx = H @ x  # noqa: N806
             residual = Hx - y_obs
             dx = H.T @ (residual / (self.observation_error_scale ** 2 + 1e-10))
             x = x - 0.1 * dx
@@ -74,7 +75,7 @@ class FourDimensionalVAR:
         n = len(xb)
         m = len(observations)
         y_obs = np.zeros(m)
-        H = np.zeros((m, n))
+        H = np.zeros((m, n))  # noqa: N806
         for j, obs in enumerate(observations):
             pos = obs.get("position", [0] * len(shape))
             y_obs[j] = obs.get("value", 0.0)

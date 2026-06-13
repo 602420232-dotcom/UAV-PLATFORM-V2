@@ -7,7 +7,7 @@ regional grids, wind profiles, and multi-source fusion.
 
 from __future__ import annotations
 
-from typing import Any
+from typing import cast
 
 from uav_platform.http import AsyncHttpClient, HttpClient
 from uav_platform.models import (
@@ -75,7 +75,7 @@ class WeatherApi:
             forecast_time=forecast_time,
         )
         raw = self._http.get("/v1/weather/region", params=params.model_dump(exclude_none=True))
-        return [WeatherGrid.model_validate(item) for item in raw]
+        return [WeatherGrid.model_validate(item) for item in cast(list, raw)]
 
     def query_wind_profile(
         self,
@@ -158,7 +158,9 @@ class WeatherApi:
             source=source,
             forecast_time=forecast_time,
         )
-        raw = await self._http.get("/v1/weather/region", params=params.model_dump(exclude_none=True))
+        raw = await self._http.get(
+            "/v1/weather/region", params=params.model_dump(exclude_none=True)
+        )
         return [WeatherGrid.model_validate(item) for item in raw]
 
     async def query_wind_profile_async(

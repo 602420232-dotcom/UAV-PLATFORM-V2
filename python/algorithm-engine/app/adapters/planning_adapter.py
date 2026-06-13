@@ -24,13 +24,32 @@ class VRPTWAdapter(PlanningAdapter):
     def __init__(self) -> None:
         super().__init__()
         self.set_metadata(AlgorithmMetadata(
-            id="vrptw", name="VRPTW", category="planning", version="1.0.0",
-            description="Vehicle Routing Problem with Time Windows for multi-UAV mission planning",
-            input_schema={"type": "object", "required": ["start", "goal", "waypoints"],
-                          "properties": {"start": {"type": "array"}, "goal": {"type": "array"},
-                                         "waypoints": {"type": "array"}, "time_windows": {"type": "array"},
-                                         "capacity": {"type": "number"}}},
-            output_schema={"type": "object", "properties": {"routes": {"type": "array"}, "total_cost": {"type": "number"}}},
+            id="vrptw",
+            name="VRPTW",
+            category="planning",
+            version="1.0.0",
+            description=(
+                "Vehicle Routing Problem with Time Windows "
+                "for multi-UAV mission planning"
+            ),
+            input_schema={
+                "type": "object",
+                "required": ["start", "goal", "waypoints"],
+                "properties": {
+                    "start": {"type": "array"},
+                    "goal": {"type": "array"},
+                    "waypoints": {"type": "array"},
+                    "time_windows": {"type": "array"},
+                    "capacity": {"type": "number"},
+                },
+            },
+            output_schema={
+                "type": "object",
+                "properties": {
+                    "routes": {"type": "array"},
+                    "total_cost": {"type": "number"},
+                },
+            },
         ))
 
     def execute(self, params: dict[str, Any]) -> dict[str, Any]:
@@ -42,12 +61,31 @@ class DERRTStarAdapter(PlanningAdapter):
     def __init__(self) -> None:
         super().__init__()
         self.set_metadata(AlgorithmMetadata(
-            id="de_rrt_star", name="DERRTStar", category="planning", version="1.0.0",
-            description="Differential Evolution enhanced RRT* for complex environments",
-            input_schema={"type": "object", "required": ["start", "goal"],
-                          "properties": {"start": {"type": "array"}, "goal": {"type": "array"},
-                                         "obstacles": {"type": "array"}, "max_iterations": {"type": "integer"}}},
-            output_schema={"type": "object", "properties": {"path": {"type": "array"}, "cost": {"type": "number"}}},
+            id="de_rrt_star",
+            name="DERRTStar",
+            category="planning",
+            version="1.0.0",
+            description=(
+                "Differential Evolution enhanced RRT* "
+                "for complex environments"
+            ),
+            input_schema={
+                "type": "object",
+                "required": ["start", "goal"],
+                "properties": {
+                    "start": {"type": "array"},
+                    "goal": {"type": "array"},
+                    "obstacles": {"type": "array"},
+                    "max_iterations": {"type": "integer"},
+                },
+            },
+            output_schema={
+                "type": "object",
+                "properties": {
+                    "path": {"type": "array"},
+                    "cost": {"type": "number"},
+                },
+            },
         ))
 
     def execute(self, params: dict[str, Any]) -> dict[str, Any]:
@@ -59,12 +97,28 @@ class DWAAdapter(PlanningAdapter):
     def __init__(self) -> None:
         super().__init__()
         self.set_metadata(AlgorithmMetadata(
-            id="dwa", name="DWA", category="planning", version="1.0.0",
+            id="dwa",
+            name="DWA",
+            category="planning",
+            version="1.0.0",
             description="Dynamic Window Approach for local obstacle avoidance",
-            input_schema={"type": "object", "required": ["start", "goal"],
-                          "properties": {"start": {"type": "array"}, "goal": {"type": "array"},
-                                         "obstacles": {"type": "array"}, "velocity": {"type": "array"}}},
-            output_schema={"type": "object", "properties": {"trajectory": {"type": "array"}, "velocity": {"type": "array"}}},
+            input_schema={
+                "type": "object",
+                "required": ["start", "goal"],
+                "properties": {
+                    "start": {"type": "array"},
+                    "goal": {"type": "array"},
+                    "obstacles": {"type": "array"},
+                    "velocity": {"type": "array"},
+                },
+            },
+            output_schema={
+                "type": "object",
+                "properties": {
+                    "trajectory": {"type": "array"},
+                    "velocity": {"type": "array"},
+                },
+            },
         ))
 
     def execute(self, params: dict[str, Any]) -> dict[str, Any]:
@@ -76,12 +130,31 @@ class MPCAdapter(PlanningAdapter):
     def __init__(self) -> None:
         super().__init__()
         self.set_metadata(AlgorithmMetadata(
-            id="mpc", name="MPC", category="planning", version="1.0.0",
-            description="Model Predictive Control for dynamic re-planning under uncertainty",
-            input_schema={"type": "object", "required": ["start", "goal"],
-                          "properties": {"start": {"type": "array"}, "goal": {"type": "array"},
-                                         "horizon": {"type": "integer"}, "risk_field": {"type": "array"}}},
-            output_schema={"type": "object", "properties": {"path": {"type": "array"}, "control_sequence": {"type": "array"}}},
+            id="mpc",
+            name="MPC",
+            category="planning",
+            version="1.0.0",
+            description=(
+                "Model Predictive Control for dynamic "
+                "re-planning under uncertainty"
+            ),
+            input_schema={
+                "type": "object",
+                "required": ["start", "goal"],
+                "properties": {
+                    "start": {"type": "array"},
+                    "goal": {"type": "array"},
+                    "horizon": {"type": "integer"},
+                    "risk_field": {"type": "array"},
+                },
+            },
+            output_schema={
+                "type": "object",
+                "properties": {
+                    "path": {"type": "array"},
+                    "control_sequence": {"type": "array"},
+                },
+            },
         ))
 
     def execute(self, params: dict[str, Any]) -> dict[str, Any]:
@@ -93,12 +166,28 @@ class AStarAdapter(PlanningAdapter):
     def __init__(self) -> None:
         super().__init__()
         self.set_metadata(AlgorithmMetadata(
-            id="a_star", name="AStar", category="planning", version="1.0.0",
+            id="a_star",
+            name="AStar",
+            category="planning",
+            version="1.0.0",
             description="A* search algorithm for grid-based path planning",
-            input_schema={"type": "object", "required": ["start", "goal"],
-                          "properties": {"start": {"type": "array"}, "goal": {"type": "array"},
-                                         "grid_size": {"type": "array"}, "obstacles": {"type": "array"}}},
-            output_schema={"type": "object", "properties": {"path": {"type": "array"}, "cost": {"type": "number"}}},
+            input_schema={
+                "type": "object",
+                "required": ["start", "goal"],
+                "properties": {
+                    "start": {"type": "array"},
+                    "goal": {"type": "array"},
+                    "grid_size": {"type": "array"},
+                    "obstacles": {"type": "array"},
+                },
+            },
+            output_schema={
+                "type": "object",
+                "properties": {
+                    "path": {"type": "array"},
+                    "cost": {"type": "number"},
+                },
+            },
         ))
 
     def execute(self, params: dict[str, Any]) -> dict[str, Any]:
@@ -110,12 +199,31 @@ class DijkstraAdapter(PlanningAdapter):
     def __init__(self) -> None:
         super().__init__()
         self.set_metadata(AlgorithmMetadata(
-            id="dijkstra", name="Dijkstra", category="planning", version="1.0.0",
-            description="Dijkstra shortest path algorithm for grid-based planning",
-            input_schema={"type": "object", "required": ["start", "goal"],
-                          "properties": {"start": {"type": "array"}, "goal": {"type": "array"},
-                                         "grid_size": {"type": "array"}, "obstacles": {"type": "array"}}},
-            output_schema={"type": "object", "properties": {"path": {"type": "array"}, "cost": {"type": "number"}}},
+            id="dijkstra",
+            name="Dijkstra",
+            category="planning",
+            version="1.0.0",
+            description=(
+                "Dijkstra shortest path algorithm "
+                "for grid-based planning"
+            ),
+            input_schema={
+                "type": "object",
+                "required": ["start", "goal"],
+                "properties": {
+                    "start": {"type": "array"},
+                    "goal": {"type": "array"},
+                    "grid_size": {"type": "array"},
+                    "obstacles": {"type": "array"},
+                },
+            },
+            output_schema={
+                "type": "object",
+                "properties": {
+                    "path": {"type": "array"},
+                    "cost": {"type": "number"},
+                },
+            },
         ))
 
     def execute(self, params: dict[str, Any]) -> dict[str, Any]:
@@ -127,13 +235,32 @@ class RRTStarAdapter(PlanningAdapter):
     def __init__(self) -> None:
         super().__init__()
         self.set_metadata(AlgorithmMetadata(
-            id="rrt_star", name="RRTStar", category="planning", version="1.0.0",
-            description="Rapidly-exploring Random Tree Star for optimal path planning",
-            input_schema={"type": "object", "required": ["start", "goal"],
-                          "properties": {"start": {"type": "array"}, "goal": {"type": "array"},
-                                         "obstacles": {"type": "array"}, "max_iterations": {"type": "integer"},
-                                         "step_size": {"type": "number"}}},
-            output_schema={"type": "object", "properties": {"path": {"type": "array"}, "cost": {"type": "number"}}},
+            id="rrt_star",
+            name="RRTStar",
+            category="planning",
+            version="1.0.0",
+            description=(
+                "Rapidly-exploring Random Tree Star "
+                "for optimal path planning"
+            ),
+            input_schema={
+                "type": "object",
+                "required": ["start", "goal"],
+                "properties": {
+                    "start": {"type": "array"},
+                    "goal": {"type": "array"},
+                    "obstacles": {"type": "array"},
+                    "max_iterations": {"type": "integer"},
+                    "step_size": {"type": "number"},
+                },
+            },
+            output_schema={
+                "type": "object",
+                "properties": {
+                    "path": {"type": "array"},
+                    "cost": {"type": "number"},
+                },
+            },
         ))
 
     def execute(self, params: dict[str, Any]) -> dict[str, Any]:

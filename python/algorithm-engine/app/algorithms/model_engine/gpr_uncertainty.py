@@ -5,12 +5,15 @@ Migrated from: model-engine/gpr_risk/model.py
 Original: GPRegressionModel using GPyTorch. Standalone numpy/scipy implementation.
 """
 from __future__ import annotations
+
 import logging
 from typing import Any, Optional
+
 import numpy as np
 from scipy.spatial.distance import cdist
 
 logger = logging.getLogger(__name__)
+
 
 class GPRUncertaintyQuantifier:
     """Gaussian Process Regression for uncertainty quantification."""
@@ -27,11 +30,11 @@ class GPRUncertaintyQuantifier:
         test_x = np.asarray(params.get("test_x", np.zeros((5, 2))))
         n_train = len(train_x)
         n_test = len(test_x)
-        K = self._rbf_kernel(train_x, train_x) + self.noise_variance * np.eye(n_train)
-        K_s = self._rbf_kernel(train_x, test_x)
-        K_ss = self._rbf_kernel(test_x, test_x)
+        K = self._rbf_kernel(train_x, train_x) + self.noise_variance * np.eye(n_train)  # noqa: N806
+        K_s = self._rbf_kernel(train_x, test_x)  # noqa: N806
+        K_ss = self._rbf_kernel(test_x, test_x)  # noqa: N806
         try:
-            L = np.linalg.cholesky(K)
+            L = np.linalg.cholesky(K)  # noqa: N806
             alpha = np.linalg.solve(L.T, np.linalg.solve(L, train_y))
             mean = K_s.T @ alpha
             v = np.linalg.solve(L, K_s)
@@ -40,8 +43,16 @@ class GPRUncertaintyQuantifier:
         except np.linalg.LinAlgError:
             mean = np.zeros(n_test)
             var = np.ones(n_test) * self.signal_variance
-        return {"mean": mean.tolist(), "variance": var.tolist(), "std": np.sqrt(var).tolist(), "confidence_95_lower": (mean - 1.96 * np.sqrt(var)).tolist(), "confidence_95_upper": (mean + 1.96 * np.sqrt(var)).tolist(), "n_train": n_train, "n_test": n_test}
+        return {
+            "mean": mean.tolist(),
+            "variance": var.tolist(),
+            "std": np.sqrt(var).tolist(),
+            "confidence_95_lower": (mean - 1.96 * np.sqrt(var)).tolist(),
+            "confidence_95_upper": (mean + 1.96 * np.sqrt(var)).tolist(),
+            "n_train": n_train,
+            "n_test": n_test,
+        }
 
-    def _rbf_kernel(self, X1, X2):
-        dists = cdist(X1, X2, metric="sqeuclidean")
+    def _rbf_kernel(self, x1, x2):  # noqa: N803
+        dists = cdist(x1, x2, metric="sqeuclidean")
         return self.signal_variance * np.exp(-0.5 * dists / self.length_scale ** 2)

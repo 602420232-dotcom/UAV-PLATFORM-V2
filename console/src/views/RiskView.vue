@@ -1,9 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import { ElMessage } from 'element-plus'
 import { riskApi } from '@/api/risk'
 import type { RiskAssessment } from '@/api/risk'
-import StatusBadge from '@/components/common/StatusBadge.vue'
 import { formatDateTime } from '@/utils/format'
 
 const loading = ref(false)

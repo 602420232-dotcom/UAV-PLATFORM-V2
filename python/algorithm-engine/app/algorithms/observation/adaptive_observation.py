@@ -3,11 +3,14 @@
 Migrated from: model-engine/active_obs/bayesian_observer.py
 """
 from __future__ import annotations
+
 import logging
 from typing import Any
+
 import numpy as np
 
 logger = logging.getLogger(__name__)
+
 
 class AdaptiveObservationPlanner:
     """Adaptive observation strategy that adjusts based on real-time uncertainty."""
@@ -42,4 +45,11 @@ class AdaptiveObservationPlanner:
                         if len(filtered) >= n_sensors:
                             break
                 positions = filtered[:n_sensors]
-        return {"strategy": {"method": "adaptive_uncertainty", "history_weight": 0.3, "n_positions": len(positions)}, "positions": positions}
+        return {
+            "strategy": {
+                "method": "adaptive_uncertainty",
+                "history_weight": 0.3,
+                "n_positions": len(positions),
+            },
+            "positions": positions,
+        }

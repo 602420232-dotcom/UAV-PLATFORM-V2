@@ -7,13 +7,15 @@ VRPTW, DE-RRT*, DWA, MPC, A*, Dijkstra, and RRT* algorithms.
 
 from __future__ import annotations
 
+from typing import cast
+
 from uav_platform.http import AsyncHttpClient, HttpClient
 from uav_platform.models import (
     MissionPlan,
     PathResult,
     PlanMissionRequest,
-    PlanPathRequest,
     PlanningTask,
+    PlanPathRequest,
 )
 
 
@@ -83,7 +85,7 @@ class PlanningApi:
     def list_tasks(self) -> list[PlanningTask]:
         """List all planning tasks."""
         raw = self._http.get("/v1/planning/tasks")
-        return [PlanningTask.model_validate(item) for item in raw]
+        return [PlanningTask.model_validate(item) for item in cast(list, raw)]
 
     def cancel_task(self, task_id: int) -> None:
         """Cancel a planning task."""

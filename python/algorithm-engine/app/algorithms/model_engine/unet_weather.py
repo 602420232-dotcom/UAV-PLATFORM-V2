@@ -6,11 +6,15 @@ Original: UNetDownscaler for 3km->1km super-resolution.
 Skeleton implementation (full model requires PyTorch).
 """
 from __future__ import annotations
+
 import logging
 from typing import Any, Optional
+
 import numpy as np
+from numpy.typing import NDArray
 
 logger = logging.getLogger(__name__)
+
 
 class UNetWeatherPredictor:
     """U-Net based weather prediction/downscaling model.
@@ -30,23 +34,44 @@ class UNetWeatherPredictor:
         self._model_loaded = False
 
     def predict(self, params: dict[str, Any]) -> dict[str, Any]:
-        input_field = np.asarray(params.get("input_field", np.zeros((50, 50, 6))))
+        input_field: NDArray[np.float64] = np.asarray(
+            params.get("input_field", np.zeros((50, 50, 6))),
+            dtype=np.float64,
+        )
         if not self._model_loaded:
-            logger.info("U-Net model not loaded, using bilinear interpolation fallback")
-            output = self._bilinear_upsample(input_field, self.scale_factor)
+            logger.info(
+                "U-Net model not loaded, "
+                "using bilinear interpolation fallback",
+            )
+            output = self._bilinear_upsample(
+                input_field, self.scale_factor,
+            )
         else:
             output = self._forward(input_field)
-        return {"output_field": output.tolist(), "input_shape": list(input_field.shape), "output_shape": list(output.shape), "scale_factor": self.scale_factor}
 
-    def _bilinear_upsample(self, field, scale):
+        return {
+            "output_field": output.tolist(),
+            "input_shape": list(input_field.shape),
+            "output_shape": list(output.shape),
+            "scale_factor": self.scale_factor,
+        }
+
+    def _bilinear_upsample(
+        self, field: NDArray[np.float64], scale: int,
+    ) -> NDArray[np.float64]:
         """Fallback: simple bilinear upsampling."""
         from scipy.ndimage import zoom
         if field.ndim == 3:
-            result = np.stack([zoom(field[:, :, c], scale, order=1) for c in range(field.shape[2])], axis=-1)
+            channels = field.shape[2]
+            upsampled: list[NDArray[np.float64]] = []
+            for c in range(channels):
+                z = zoom(field[:, :, c], scale, order=1)
+                upsampled.append(np.asarray(z, dtype=np.float64))
+            result = np.stack(upsampled, axis=-1)
         else:
-            result = zoom(field, scale, order=1)
+            result = np.asarray(zoom(field, scale, order=1), dtype=np.float64)
         return result
 
-    def _forward(self, field):
+    def _forward(self, field: NDArray[np.float64]) -> NDArray[np.float64]:
         """Forward pass through U-Net (placeholder)."""
         return self._bilinear_upsample(field, self.scale_factor)

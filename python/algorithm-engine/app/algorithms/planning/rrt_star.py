@@ -3,12 +3,15 @@
 Migrated from: path-planning-service/src/main/python/planners/rrt_star.py
 """
 from __future__ import annotations
+
 import logging
 import random
 from typing import Any
+
 import numpy as np
 
 logger = logging.getLogger(__name__)
+
 
 class RRTStarPlanner:
     """RRT* optimal path planning algorithm."""
@@ -25,14 +28,20 @@ class RRTStarPlanner:
 
     def solve(self) -> dict[str, Any]:
         nodes = [self.start]
-        parents = {0: None}
-        costs = {0: 0.0}
+        parents: dict[int, int | None] = {0: None}
+        costs: dict[int, float] = {0: 0.0}
         for iteration in range(self.max_iterations):
             if random.random() < 0.1:
                 rand_point = self.goal
             else:
-                x_range = (min(self.start[0], self.goal[0]) - 5, max(self.start[0], self.goal[0]) + 5)
-                y_range = (min(self.start[1], self.goal[1]) - 5, max(self.start[1], self.goal[1]) + 5)
+                x_range = (
+                    min(self.start[0], self.goal[0]) - 5,
+                    max(self.start[0], self.goal[0]) + 5,
+                )
+                y_range = (
+                    min(self.start[1], self.goal[1]) - 5,
+                    max(self.start[1], self.goal[1]) + 5,
+                )
                 rand_point = (random.uniform(*x_range), random.uniform(*y_range))
             nearest_idx = min(range(len(nodes)), key=lambda i: self._distance(nodes[i], rand_point))
             nearest = np.array(nodes[nearest_idx])
@@ -61,7 +70,9 @@ class RRTStarPlanner:
                 d = self._distance(nodes[i], tuple(new_point))
                 if d < self.rewire_radius:
                     new_cost = costs[new_idx] + d
-                    if new_cost < costs[i] and not self._check_line_collision(nodes[i], tuple(new_point)):
+                    if new_cost < costs[i] and not self._check_line_collision(
+                        nodes[i], tuple(new_point),
+                    ):
                         parents[i] = new_idx
                         costs[i] = new_cost
             if self._distance(tuple(new_point), self.goal) < self.goal_radius:

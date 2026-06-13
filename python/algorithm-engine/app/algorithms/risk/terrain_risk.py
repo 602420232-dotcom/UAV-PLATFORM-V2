@@ -3,11 +3,14 @@
 TODO: Migrate full implementation.
 """
 from __future__ import annotations
+
 import logging
 from typing import Any
+
 import numpy as np
 
 logger = logging.getLogger(__name__)
+
 
 class TerrainRiskAssessor:
     """Terrain and obstacle risk assessment for low-altitude UAV flights."""
@@ -27,4 +30,10 @@ class TerrainRiskAssessor:
         else:
             risk_score = 0.1
         risk_level = "low" if risk_score < 0.3 else "medium" if risk_score < 0.6 else "high"
-        return {"risk_score": risk_score, "risk_level": risk_level, "flight_altitude": flight_altitude, "terrain_map": np.asarray(elevation_data).tolist() if elevation_data is not None else []}
+        terrain_list = np.asarray(elevation_data).tolist() if elevation_data is not None else []
+        return {
+            "risk_score": risk_score,
+            "risk_level": risk_level,
+            "flight_altitude": flight_altitude,
+            "terrain_map": terrain_list,
+        }

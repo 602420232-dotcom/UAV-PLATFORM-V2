@@ -42,7 +42,9 @@ class TaskScheduler:
         self._futures: dict[str, asyncio.Task] = {}
         self._semaphore = asyncio.Semaphore(max_concurrent)
         self._executor = ThreadPoolExecutor(max_workers=max_concurrent)
-        self._priority_queue: asyncio.PriorityQueue[tuple[int, str, dict[str, Any]]] = asyncio.PriorityQueue()
+        self._priority_queue: asyncio.PriorityQueue[
+            tuple[int, str, dict[str, Any]]
+        ] = asyncio.PriorityQueue()
         self._running = False
         # Kafka producer (lazy-loaded)
         self._kafka_bootstrap_servers = kafka_bootstrap_servers
@@ -91,7 +93,10 @@ class TaskScheduler:
             "params": params,
             "callback_topic": callback_topic,
         }))
-        logger.info("Task submitted: %s (algorithm=%s, priority=%d)", task_id, algorithm_id, priority)
+        logger.info(
+            "Task submitted: %s (algorithm=%s, priority=%d)",
+            task_id, algorithm_id, priority,
+        )
         return task_id
 
     async def get_status(self, task_id: str) -> TaskStatus | None:
@@ -117,7 +122,11 @@ class TaskScheduler:
         status = self._tasks.get(task_id)
         if status is None:
             return False
-        if status.status in (TaskStatusEnum.SUCCESS, TaskStatusEnum.FAILED, TaskStatusEnum.CANCELLED):
+        if status.status in (
+            TaskStatusEnum.SUCCESS,
+            TaskStatusEnum.FAILED,
+            TaskStatusEnum.CANCELLED,
+        ):
             return False
         status.status = TaskStatusEnum.CANCELLED
         status.completed_at = datetime.now(timezone.utc)

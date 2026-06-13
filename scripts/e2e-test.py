@@ -750,12 +750,12 @@ def test_assimilation_task(client: E2EClient, results: TestResult) -> None:
 
         # 查询任务状态
         task = client.get(f"/v1/assimilation/tasks/{task_id}")
-        assert task["id"] == task_id, f"task id mismatch"
+        assert task["id"] == task_id, "task id mismatch"
         assert task["status"] in ("PENDING", "RUNNING", "COMPLETED", "FAILED"), f"unexpected status: {task['status']}"
 
         # 查询任务结果
         result = client.get(f"/v1/assimilation/tasks/{task_id}/result")
-        assert result["taskId"] == task_id, f"result taskId mismatch"
+        assert result["taskId"] == task_id, "result taskId mismatch"
         assert len(result["variables"]) > 0, "no variables in result"
         assert result["gridInfo"] is not None, "no gridInfo in result"
 

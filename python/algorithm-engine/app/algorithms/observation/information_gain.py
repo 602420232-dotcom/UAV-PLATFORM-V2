@@ -3,11 +3,14 @@
 Migrated from: model-engine/active_obs/bayesian_observer.py
 """
 from __future__ import annotations
+
 import logging
 from typing import Any
+
 import numpy as np
 
 logger = logging.getLogger(__name__)
+
 
 class InformationGainOptimizer:
     """Information gain based optimal observation placement."""
@@ -28,4 +31,8 @@ class InformationGainOptimizer:
             pos = np.unravel_index(idx, shape)
             selected_positions.append([int(p) for p in pos])
         expected_gain = float(np.sum(flat[top_indices]))
-        return {"selected_positions": selected_positions, "expected_gain": expected_gain, "budget_used": len(selected_positions)}
+        return {
+            "selected_positions": selected_positions,
+            "expected_gain": expected_gain,
+            "budget_used": len(selected_positions),
+        }

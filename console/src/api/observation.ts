@@ -77,9 +77,7 @@ export const observationApi = {
 
   /** 更新任务状态 */
   updateTaskStatus(id: number, status: string): Promise<ObservationTask> {
-    return post<ObservationTask>(`/v1/observation/tasks/${id}/status`, null, {
-      params: { status },
-    } as never)
+    return post<ObservationTask>(`/v1/observation/tasks/${id}/status`, { status })
   },
 
   /** 获取观测决策建议 */
