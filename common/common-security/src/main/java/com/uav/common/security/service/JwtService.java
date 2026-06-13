@@ -38,6 +38,9 @@ public class JwtService {
 
     /**
      * 从 token 中提取用户名（subject）
+     *
+     * @param token JWT token
+     * @return 用户名
      */
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
@@ -45,6 +48,11 @@ public class JwtService {
 
     /**
      * 从 token 中提取指定声明
+     *
+     * @param <T>            声明值类型
+     * @param token          JWT token
+     * @param claimsResolver 声明解析函数
+     * @return 指定声明的值
      */
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
         final Claims claims = extractAllClaims(token);
@@ -53,6 +61,9 @@ public class JwtService {
 
     /**
      * 生成 JWT Token
+     *
+     * @param username 用户名
+     * @return JWT token 字符串
      */
     public String generateToken(String username) {
         return generateToken(new HashMap<>(), username);
@@ -60,6 +71,10 @@ public class JwtService {
 
     /**
      * 生成携带额外声明的 JWT Token
+     *
+     * @param extraClaims 额外声明
+     * @param username    用户名
+     * @return JWT token 字符串
      */
     public String generateToken(Map<String, Object> extraClaims, String username) {
         Date now = new Date();
@@ -77,6 +92,10 @@ public class JwtService {
 
     /**
      * 验证 token 是否有效（用户名匹配且未过期）
+     *
+     * @param token    JWT token
+     * @param username 用户名
+     * @return 是否有效
      */
     public boolean isTokenValid(String token, String username) {
         final String extractedUsername = extractUsername(token);
@@ -85,6 +104,9 @@ public class JwtService {
 
     /**
      * 验证 token 是否有效（仅校验签名和过期时间）
+     *
+     * @param token JWT token
+     * @return 是否有效
      */
     public boolean validateToken(String token) {
         try {
@@ -106,6 +128,9 @@ public class JwtService {
 
     /**
      * 判断 token 是否已过期
+     *
+     * @param token JWT token
+     * @return 是否已过期
      */
     public boolean isTokenExpired(String token) {
         return extractExpiration(token).before(new Date());
@@ -113,6 +138,9 @@ public class JwtService {
 
     /**
      * 提取 token 过期时间
+     *
+     * @param token JWT token
+     * @return 过期时间
      */
     public Date extractExpiration(String token) {
         return extractClaim(token, Claims::getExpiration);
@@ -120,6 +148,9 @@ public class JwtService {
 
     /**
      * 解析 token 获取全部声明
+     *
+     * @param token JWT token
+     * @return 声明对象
      */
     private Claims extractAllClaims(String token) {
         return Jwts.parser()
@@ -131,6 +162,8 @@ public class JwtService {
 
     /**
      * 获取签名密钥
+     *
+     * @return 签名密钥
      */
     private SecretKey getSigningKey() {
         byte[] keyBytes = Decoders.BASE64.decode(jwtSecret);

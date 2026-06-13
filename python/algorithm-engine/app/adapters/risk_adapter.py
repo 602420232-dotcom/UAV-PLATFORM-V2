@@ -139,7 +139,9 @@ class CompositeRiskAdapter(RiskAdapter):
                 name="CompositeRisk",
                 category="risk",
                 version="1.0.0",
-                description=("Composite risk assessment combining weather, terrain, and airspace risks"),
+                description=(  # fmt: skip
+                    "Composite risk assessment combining weather, terrain, and airspace risks"
+                ),
                 input_schema={
                     "type": "object",
                     "required": ["area", "conditions"],

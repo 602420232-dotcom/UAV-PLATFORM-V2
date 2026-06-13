@@ -42,7 +42,9 @@ class TaskScheduler:
         self._futures: dict[str, asyncio.Task] = {}
         self._semaphore = asyncio.Semaphore(max_concurrent)
         self._executor = ThreadPoolExecutor(max_workers=max_concurrent)
-        self._priority_queue: asyncio.PriorityQueue[tuple[int, str, dict[str, Any]]] = asyncio.PriorityQueue()
+        self._priority_queue: asyncio.PriorityQueue[  # fmt: skip
+            tuple[int, str, dict[str, Any]]
+        ] = asyncio.PriorityQueue()
         self._running = False
         # Kafka producer (lazy-loaded)
         self._kafka_bootstrap_servers = kafka_bootstrap_servers
@@ -158,7 +160,9 @@ class TaskScheduler:
         """Pull tasks from the priority queue and execute them."""
         while self._running:
             try:
-                _, task_id, payload = await asyncio.wait_for(self._priority_queue.get(), timeout=1.0)
+                _, task_id, payload = await asyncio.wait_for(  # fmt: skip
+                    self._priority_queue.get(), timeout=1.0
+                )
             except asyncio.TimeoutError:
                 continue
             asyncio.create_task(self._execute_task(task_id, payload))
@@ -212,7 +216,11 @@ class TaskScheduler:
 
     async def _save_task(self, task_id: str, data: dict[str, Any]) -> None:
         if self._redis:
-            await self._redis.set(f"task:{task_id}", json.dumps(data, default=str), ex=self._task_ttl)
+            await self._redis.set(
+                f"task:{task_id}",
+                json.dumps(data, default=str),
+                ex=self._task_ttl,
+            )
 
     async def _load_task(self, task_id: str) -> dict[str, Any] | None:
         if self._redis:
@@ -223,7 +231,11 @@ class TaskScheduler:
 
     async def _save_result(self, task_id: str, data: dict[str, Any]) -> None:
         if self._redis:
-            await self._redis.set(f"result:{task_id}", json.dumps(data, default=str), ex=self._task_ttl)
+            await self._redis.set(
+                f"result:{task_id}",
+                json.dumps(data, default=str),
+                ex=self._task_ttl,
+            )
 
     async def _load_result(self, task_id: str) -> dict[str, Any] | None:
         if self._redis:

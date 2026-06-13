@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import math
 import logging
 from datetime import datetime, timezone
 from typing import Any, Optional
@@ -10,6 +11,28 @@ from typing import Any, Optional
 from aiokafka import AIOKafkaProducer
 
 logger = logging.getLogger(__name__)
+
+
+def _sanitize_value(obj: Any) -> Any:
+    """Recursively sanitize a value for JSON serialization.
+
+    Replaces non-finite floats (inf, nan) with None so that Java
+    Jackson can deserialize the message without errors.
+    """
+    if isinstance(obj, float):
+        if math.isinf(obj) or math.isnan(obj):
+            return None
+        return obj
+    if isinstance(obj, dict):
+        return {k: _sanitize_value(v) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple)):
+        return [_sanitize_value(item) for item in obj]
+    return obj
+
+
+def _value_serializer(v: Any) -> bytes:
+    """Serialize a value to JSON bytes, sanitizing non-finite floats."""
+    return json.dumps(_sanitize_value(v), default=str).encode("utf-8")
 
 
 class KafkaTaskProducer:
@@ -39,7 +62,7 @@ class KafkaTaskProducer:
         """Initialize and start the Kafka producer."""
         self._producer = AIOKafkaProducer(
             bootstrap_servers=self._bootstrap_servers,
-            value_serializer=lambda v: json.dumps(v, default=str).encode("utf-8"),
+            value_serializer=_value_serializer,
             key_serializer=lambda k: k.encode("utf-8") if k else None,
         )
         await self._producer.start()

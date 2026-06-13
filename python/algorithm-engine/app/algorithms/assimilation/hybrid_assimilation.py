@@ -50,11 +50,9 @@ class HybridAssimilation:
         for algo_type in self.algorithm_types:
             try:
                 if algo_type == "3dvar":
-                    algo = ThreeDimensionalVAR(self.config)
-                    result = algo.assimilate(params)
+                    result = ThreeDimensionalVAR(self.config).assimilate(params)
                 elif algo_type == "enkf":
-                    algo = EnKF(self.config)
-                    result = algo.assimilate(params)
+                    result = EnKF(self.config).assimilate(params)
                 else:
                     logger.warning("Unknown algorithm type: %s, skipping", algo_type)
                     continue
@@ -66,9 +64,10 @@ class HybridAssimilation:
                 results[algo_type] = {"error": str(exc)}
 
         if analysis_fields:
-            weights = np.array(
-                [self.weights.get(t, 0) for t in self.algorithm_types if t in results and "error" not in results[t]]
-            )
+            valid_types = [  # fmt: skip
+                t for t in self.algorithm_types if t in results and "error" not in results[t]
+            ]
+            weights = np.array([self.weights.get(t, 0) for t in valid_types])
             if weights.sum() > 0:
                 weights = weights / weights.sum()
                 combined = sum(w * f for w, f in zip(weights, analysis_fields))

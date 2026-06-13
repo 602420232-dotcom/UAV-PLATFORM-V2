@@ -406,9 +406,10 @@ services:
       - ALGORITHM_ENGINE_NACOS_PORT=8848
       - LOG_LEVEL=INFO
     depends_on:
-      - nacos
-      - redis
-      - kafka
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-sf", "http://localhost:9090/health"]
       interval: 30s

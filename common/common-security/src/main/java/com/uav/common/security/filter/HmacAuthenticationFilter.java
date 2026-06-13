@@ -1,7 +1,6 @@
 package com.uav.common.security.filter;
 
 import com.uav.common.core.util.HmacUtil;
-import com.uav.common.core.util.TenantContext;
 import com.uav.common.security.annotation.RequireApiKey;
 import com.uav.common.security.service.ApiKeyService;
 import jakarta.servlet.FilterChain;
@@ -124,6 +123,9 @@ public class HmacAuthenticationFilter extends OncePerRequestFilter {
 
     /**
      * 判断当前请求是否标记了 @RequireApiKey
+     *
+     * @param request HTTP 请求
+     * @return 是否需要 API Key 验证
      */
     private boolean requiresApiKey(HttpServletRequest request) {
         try {
@@ -144,6 +146,9 @@ public class HmacAuthenticationFilter extends OncePerRequestFilter {
 
     /**
      * 读取请求体内容
+     *
+     * @param request HTTP 请求
+     * @return 请求体字符串
      */
     private String readBody(HttpServletRequest request) {
         try (Scanner scanner = new Scanner(request.getInputStream(), StandardCharsets.UTF_8)) {
@@ -157,6 +162,10 @@ public class HmacAuthenticationFilter extends OncePerRequestFilter {
 
     /**
      * 写入错误响应
+     *
+     * @param response HTTP 响应
+     * @param status   HTTP 状态码
+     * @param message  错误消息
      */
     private void writeError(HttpServletResponse response, HttpStatus status, String message) throws IOException {
         response.setStatus(status.value());

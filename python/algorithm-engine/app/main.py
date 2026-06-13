@@ -40,6 +40,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         max_concurrent=settings.max_concurrent_tasks,
         task_timeout=settings.task_timeout,
         task_ttl=settings.redis_task_ttl,
+        kafka_bootstrap_servers=settings.kafka_bootstrap_servers,
     )
     await scheduler.start()
     set_scheduler(scheduler)
@@ -108,7 +109,7 @@ def _register_builtin_algorithms() -> None:
     )
 
     for cls in all_adapters:
-        adapter = cls()
+        adapter = cls()  # type: ignore[abstract]
         meta = adapter.get_metadata()
         registry.register(
             algorithm_id=meta.id,

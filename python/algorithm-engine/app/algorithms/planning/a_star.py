@@ -26,7 +26,7 @@ class AStarPlanner:
         start_grid = self._world_to_grid(self.start)
         goal_grid = self._world_to_grid(self.goal)
         open_set = [(0, start_grid)]
-        came_from = {}
+        came_from: dict[tuple[int, int], tuple[int, int]] = {}
         g_score = {start_grid: 0}
         while open_set:
             _, current = heapq.heappop(open_set)
