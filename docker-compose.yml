@@ -167,9 +167,13 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - ALGORITHM_ENGINE_URL=http://algorithm-engine:9090
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - KAFKA_MOCK=false
       - JAVA_OPTS=-Xms256m -Xmx512m -XX:+UseG1GC
     depends_on:
       nacos:
+        condition: service_healthy
+      kafka:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-sf", "http://localhost:8080/actuator/health"]
@@ -196,11 +200,15 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - ALGORITHM_ENGINE_URL=http://algorithm-engine:9090
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - KAFKA_MOCK=false
       - JAVA_OPTS=-Xms256m -Xmx512m -XX:+UseG1GC
     depends_on:
       nacos:
         condition: service_healthy
       mysql:
+        condition: service_healthy
+      kafka:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-sf", "http://localhost:8080/actuator/health"]
@@ -252,11 +260,15 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - ALGORITHM_ENGINE_URL=http://algorithm-engine:9090
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - KAFKA_MOCK=false
       - JAVA_OPTS=-Xms256m -Xmx512m -XX:+UseG1GC
     depends_on:
       nacos:
         condition: service_healthy
       mysql:
+        condition: service_healthy
+      kafka:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-sf", "http://localhost:8080/actuator/health"]
@@ -283,11 +295,15 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - ALGORITHM_ENGINE_URL=http://algorithm-engine:9090
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - KAFKA_MOCK=false
       - JAVA_OPTS=-Xms256m -Xmx512m -XX:+UseG1GC
     depends_on:
       nacos:
         condition: service_healthy
       mysql:
+        condition: service_healthy
+      kafka:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-sf", "http://localhost:8080/actuator/health"]
@@ -345,11 +361,15 @@ services:
       - NACOS_SERVER_ADDR=nacos:8848
       - REDIS_HOST=redis
       - REDIS_PORT=6379
-      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - ALGORITHM_ENGINE_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - ALGORITHM_ENGINE_REDIS_URL=redis://redis:6379/0
+      - ALGORITHM_ENGINE_NACOS_HOST=nacos
+      - ALGORITHM_ENGINE_NACOS_PORT=8848
       - LOG_LEVEL=INFO
     depends_on:
       - nacos
       - redis
+      - kafka
     healthcheck:
       test: ["CMD", "curl", "-sf", "http://localhost:9090/health"]
       interval: 30s
