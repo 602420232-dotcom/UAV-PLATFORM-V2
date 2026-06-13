@@ -6,7 +6,9 @@ import logging
 from typing import Any
 
 from fastapi import APIRouter, HTTPException
+from fastapi.responses import PlainTextResponse
 
+from app.core.metrics import ExecutionTimer, get_metrics
 from app.core.models import (
     HealthResponse,
     PipelineExecuteRequest,
@@ -31,6 +33,13 @@ def set_scheduler(scheduler: TaskScheduler) -> None:
     """Inject the task scheduler instance (called from main.py)."""
     global _scheduler
     _scheduler = scheduler
+
+
+@router.get("/metrics", response_class=PlainTextResponse)
+async def metrics():
+    """Prometheus metrics exposition endpoint."""
+    body, content_type = get_metrics()
+    return PlainTextResponse(content=body, media_type=content_type)
 
 
 @router.get("/health", response_model=HealthResponse)
@@ -72,12 +81,16 @@ async def submit_task(request: TaskSubmitRequest):
         )
     if _scheduler is None:
         raise HTTPException(status_code=503, detail="Task scheduler not available")
-    task_id = await _scheduler.submit(
-        algorithm_id=request.algorithm_id,
-        params=request.params,
-        priority=request.priority,
-        callback_topic=request.callback_topic,
-    )
+    # Look up the algorithm category for metrics
+    entry = registry.get_entry(request.algorithm_id)
+    category = entry.category if entry else "unknown"
+    with ExecutionTimer(request.algorithm_id, category):
+        task_id = await _scheduler.submit(
+            algorithm_id=request.algorithm_id,
+            params=request.params,
+            priority=request.priority,
+            callback_topic=request.callback_topic,
+        )
     return TaskSubmitResponse(
         task_id=task_id,
         algorithm_id=request.algorithm_id,
@@ -133,7 +146,26 @@ async def execute_pipeline(request: PipelineExecuteRequest):
                 detail=(f"Pipeline step algorithm '{step.algorithm_id}' not registered"),
             )
         pipeline.add_step(step.algorithm_id)
-    result = await pipeline.execute(request.initial_params)
+    # Record metrics for the overall pipeline execution
+    import time
+
+    start = time.perf_counter()
+    try:
+        result = await pipeline.execute(request.initial_params)
+        status = "success"
+    except Exception:
+        status = "error"
+        raise
+    finally:
+        duration = time.perf_counter() - start
+        from app.core.metrics import record_execution
+
+        record_execution(
+            algorithm_id=f"pipeline:{request.name}",
+            category="pipeline",
+            duration=duration,
+            status=status,
+        )
     return result
 
 

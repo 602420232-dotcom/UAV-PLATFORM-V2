@@ -45,6 +45,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     await scheduler.start()
     set_scheduler(scheduler)
     _register_builtin_algorithms()
+    _update_registered_metrics()
 
     logger.info("Algorithm Engine ready. Registered %d algorithms.", len(get_registry()))
     yield
@@ -71,18 +72,18 @@ def _register_builtin_algorithms() -> None:
         VarianceFieldOptimizerAdapter,
     )
     from app.adapters.edge_adapter import (
+        EdgeAggregatorAdapter,
+        EdgeAIInferenceAdapter,
         EdgeAnomalyDetectorAdapter,
         EdgeBandwidthOptimizerAdapter,
-        EdgeDataSyncAdapter,
-        EdgeAIInferenceAdapter,
-        EdgeAggregatorAdapter,
         EdgeCacheManagerAdapter,
+        EdgeDataSyncAdapter,
+        EdgeFaultToleranceAdapter,
         EdgeModelUpdateAdapter,
         EdgeResourceMonitorAdapter,
         EdgeSchedulerAdapter,
         EdgeSecurityAdapter,
         EdgeTaskOffloadAdapter,
-        EdgeFaultToleranceAdapter,
         FederatedLearningAdapter,
         KnowledgeDistillationAdapter,
         LLMAssistedDecisionAdapter,
@@ -96,12 +97,12 @@ def _register_builtin_algorithms() -> None:
         BayesianNNAdapter,
         CNNCorrectorAdapter,
         DataPipelineAdapter,
-        DynamicWeightFusionAdapter,
         DQNModelAdapter,
+        DynamicWeightFusionAdapter,
         EnsembleKalmanFilterModelAdapter,
-        GPRPathPlannerAdapter,
-        GPRiskEstimatorAdapter,
         GPRegressionModelAdapter,
+        GPRiskEstimatorAdapter,
+        GPRPathPlannerAdapter,
         GPRUncertaintyAdapter,
         LSTMPredictorAdapter,
         LSTMTemporalCorrectorAdapter,
@@ -121,15 +122,15 @@ def _register_builtin_algorithms() -> None:
         SensorSchedulingAdapter,
     )
     from app.adapters.planning_adapter import (
-        AStarAdapter,
         AntColonyAdapter,
+        AStarAdapter,
         BidirectionalAStarAdapter,
         CBBAAdapter,
         CBSAdapter,
         ConflictDetectorAdapter,
         DERRTStarAdapter,
-        DijkstraAdapter,
         DigitalTwinAdapter,
+        DijkstraAdapter,
         DQNPlannerAdapter,
         DStarLiteAdapter,
         DWAAdapter,
@@ -146,8 +147,8 @@ def _register_builtin_algorithms() -> None:
         NSGA2Adapter,
         OrbitalDecompositionAdapter,
         ParticleSwarmAdapter,
-        PPOPlannerAdapter,
         PotentialFieldAdapter,
+        PPOPlannerAdapter,
         RapidlyExploringTreeAdapter,
         RiskAwareAStarAdapter,
         RiskAwareRRTStarAdapter,
@@ -293,6 +294,18 @@ def _register_builtin_algorithms() -> None:
             input_schema=meta.input_schema,
             output_schema=meta.output_schema,
         )
+
+
+def _update_registered_metrics() -> None:
+    """Update the Prometheus registered-algorithm gauge for every category."""
+    from collections import Counter
+
+    from app.core.metrics import update_registered_count
+
+    registry = get_registry()
+    category_counts = Counter(e.category for e in registry._entries.values())
+    for category, count in category_counts.items():
+        update_registered_count(category, count)
 
 
 app = FastAPI(

@@ -1,4 +1,5 @@
-import { get, post } from './request'
+import { get, post, put, del } from './request'
+import type { PageResult } from './request'
 
 export interface Algorithm {
   id: number
@@ -49,7 +50,7 @@ export interface AlgorithmExecuteResult {
 }
 
 export const algorithmApi = {
-  /** 获取算法列表 */
+  /** 获取算法列表（分页） */
   list(params?: AlgorithmListParams): Promise<AlgorithmListResult> {
     return get<AlgorithmListResult>('/v1/algorithms/list', params as Record<string, unknown>)
   },
@@ -67,5 +68,10 @@ export const algorithmApi = {
   /** 执行算法 */
   execute(id: number, data?: AlgorithmExecuteParams): Promise<AlgorithmExecuteResult> {
     return post<AlgorithmExecuteResult>(`/v1/algorithms/${id}/execute`, data)
+  },
+
+  /** 获取指定分类的算法列表（用于路径规划算法选择） */
+  listByCategory(category: string): Promise<Algorithm[]> {
+    return get<Algorithm[]>('/v1/algorithms/list', { category, size: 200 })
   },
 }

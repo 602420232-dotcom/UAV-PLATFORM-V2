@@ -45,6 +45,7 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-aop</artifactId>
+            <version>4.0.0</version>
         </dependency>
 
         <!-- SpEL 表达式解析（审计日志 detail 表达式） -->

@@ -14,7 +14,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -45,6 +44,9 @@ public class WeatherService {
 
     /**
      * 查询单点气象数据（支持多源融合）
+     *
+     * @param request 气象查询请求
+     * @return 气象格点数据
      */
     public WeatherGrid queryPoint(WeatherQueryRequest request) {
         String cacheKey = buildCacheKey(request);
@@ -69,6 +71,15 @@ public class WeatherService {
 
     /**
      * 查询区域气象格点
+     *
+     * @param minLon 最小经度
+     * @param minLat 最小纬度
+     * @param maxLon 最大经度
+     * @param maxLat 最大纬度
+     * @param altitude 海拔高度
+     * @param source 数据源
+     * @param forecastTime 预报时间
+     * @return 气象格点列表
      */
     public List<WeatherGrid> queryRegion(double minLon, double minLat, double maxLon, double maxLat,
                                           Double altitude, String source, LocalDateTime forecastTime) {
@@ -91,6 +102,9 @@ public class WeatherService {
 
     /**
      * 查询风场剖面
+     *
+     * @param request 风场剖面查询请求
+     * @return 风场剖面数据
      */
     public WindProfile queryWindProfile(WindProfileQueryRequest request) {
         WindProfile profile = new WindProfile();
@@ -111,8 +125,10 @@ public class WeatherService {
                 layer.setVerticalWindSpeed(generateVerticalWindMock(alt));
                 layer.setTurbulence(generateTurbulenceMock(alt));
             } else {
-                layer.setWindSpeed(calculateWindSpeed(request.getLatitude(), request.getLongitude(), alt, request.getForecastTime()));
-                layer.setWindDirection(calculateWindDirection(request.getLatitude(), request.getLongitude(), alt, request.getForecastTime()));
+                layer.setWindSpeed(calculateWindSpeed(
+                        request.getLatitude(), request.getLongitude(), alt, request.getForecastTime()));
+                layer.setWindDirection(calculateWindDirection(
+                        request.getLatitude(), request.getLongitude(), alt, request.getForecastTime()));
                 layer.setVerticalWindSpeed(calculateVerticalWind(alt, request.getForecastTime()));
                 layer.setTurbulence(calculateTurbulence(alt));
             }
@@ -124,6 +140,9 @@ public class WeatherService {
 
     /**
      * 多源融合查询
+     *
+     * @param request 气象查询请求
+     * @return 气象格点数据
      */
     public WeatherGrid queryFusion(WeatherQueryRequest request) {
         request.setSource(null);
@@ -228,6 +247,12 @@ public class WeatherService {
     /**
      * 基于纬度、经度、高度和时间的温度计算模型
      * 使用纬度递减率 + 日变化正弦波 + 季节变化
+     *
+     * @param lat 纬度
+     * @param lon 经度
+     * @param alt 海拔高度
+     * @param time 时间
+     * @return 温度值（°C）
      */
     private double calculateTemperature(double lat, double lon, double alt, LocalDateTime time) {
         // 基础温度：赤道约30°C，极地约-15°C
@@ -253,6 +278,11 @@ public class WeatherService {
     /**
      * 基于纬度、经度和时间的湿度计算模型
      * 沿海湿度高，内陆低；清晨高，午后低
+     *
+     * @param lat 纬度
+     * @param lon 经度
+     * @param time 时间
+     * @return 湿度百分比（%）
      */
     private double calculateHumidity(double lat, double lon, LocalDateTime time) {
         // 基础湿度：沿海高，内陆低
@@ -273,6 +303,12 @@ public class WeatherService {
     /**
      * 基于纬度、经度、高度和时间的风速计算模型
      * 地面摩擦层风速小，高空风速大（对数风廓线）
+     *
+     * @param lat 纬度
+     * @param lon 经度
+     * @param alt 海拔高度
+     * @param time 时间
+     * @return 风速（m/s）
      */
     private double calculateWindSpeed(double lat, double lon, double alt, LocalDateTime time) {
         // 地面基准风速（约3-5 m/s）
@@ -300,6 +336,12 @@ public class WeatherService {
     /**
      * 基于纬度、经度、高度和时间的主导风向计算模型
      * 中国东部中纬度地区盛行西风带
+     *
+     * @param lat 纬度
+     * @param lon 经度
+     * @param alt 海拔高度
+     * @param time 时间
+     * @return 风向角度（°）
      */
     private double calculateWindDirection(double lat, double lon, double alt, LocalDateTime time) {
         // 基础风向：中纬度盛行偏西风（约270°）
@@ -325,6 +367,9 @@ public class WeatherService {
 
     /**
      * 基于高度的气压计算模型（气压高度公式）
+     *
+     * @param alt 海拔高度
+     * @return 气压值（hPa）
      */
     private double calculatePressure(double alt) {
         // 标准大气压 1013.25 hPa，标高 8500m
@@ -333,6 +378,11 @@ public class WeatherService {
 
     /**
      * 基于纬度、经度和时间的降水概率计算模型
+     *
+     * @param lat 纬度
+     * @param lon 经度
+     * @param time 时间
+     * @return 降水量（mm）
      */
     private double calculatePrecipitation(double lat, double lon, LocalDateTime time) {
         // 降水概率与湿度相关（简化模型）
@@ -361,6 +411,10 @@ public class WeatherService {
 
     /**
      * 基于湿度和降水量的能见度计算模型
+     *
+     * @param humidity 湿度
+     * @param precipitation 降水量
+     * @return 能见度（km）
      */
     private double calculateVisibility(double humidity, double precipitation) {
         // 基础能见度
@@ -381,6 +435,10 @@ public class WeatherService {
 
     /**
      * 基于湿度和降水量的云量计算模型
+     *
+     * @param humidity 湿度
+     * @param precipitation 降水量
+     * @return 云量百分比（%）
      */
     private double calculateCloudCover(double humidity, double precipitation) {
         double cloudCover = 20.0 + (humidity - 30.0) * 0.8;
@@ -394,6 +452,10 @@ public class WeatherService {
 
     /**
      * 基于高度和时间计算垂直风速
+     *
+     * @param alt 海拔高度
+     * @param time 时间
+     * @return 垂直风速（m/s）
      */
     private double calculateVerticalWind(double alt, LocalDateTime time) {
         double hourOfDay = time.getHour() + time.getMinute() / 60.0;
@@ -406,6 +468,9 @@ public class WeatherService {
     /**
      * 基于高度计算湍流强度
      * 地面湍流强，高空减弱
+     *
+     * @param alt 海拔高度
+     * @return 湍流强度
      */
     private double calculateTurbulence(double alt) {
         double turbulence = 0.25 * Math.exp(-alt / 2000.0);

@@ -16,7 +16,9 @@ set(UAV_EDGE_SDK_COMPILE_OPTIONS
     $<$<CXX_COMPILER_ID:GNU,Clang>:-Wall -Wextra -Wpedantic>
 )
 
-# ---- 头文件路径 ----
+# ---- 接口库（纯头文件 + 依赖传递） ----
+add_library(uav_edge_sdk INTERFACE)
+
 target_include_directories(uav_edge_sdk INTERFACE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
