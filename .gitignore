@@ -1,0 +1,43 @@
+# Build output
+**/target/
+**/build/
+**/out/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.settings/
+.project
+.classpath
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+*.egg-info/
+
+# Node
+node_modules/
+dist/
+
+# Docker volumes
+mysql_data/
+redis_data/
+kafka_data/
+zookeeper_data/
+
+# Logs
+*.log
+
+# Environment
+.env
+.env.local

@@ -1,0 +1,63 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'api-gateway'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['api-gateway:8080']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'api-gateway'
+
+  - job_name: 'platform-api'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['platform-api:8080']
+
+  - job_name: 'weather-api'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['weather-api:8080']
+
+  - job_name: 'assimilation-api'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['assimilation-api:8080']
+
+  - job_name: 'risk-api'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['risk-api:8080']
+
+  - job_name: 'observation-api'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['observation-api:8080']
+
+  - job_name: 'planning-api'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['planning-api:8080']
+
+  - job_name: 'utm-api'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['utm-api:8080']
+
+  - job_name: 'algorithm-engine'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['algorithm-engine:9090']
+
+  - job_name: 'mysql'
+    static_configs:
+      - targets: ['mysql:3306']
+    # 需要安装 mysqld_exporter
+
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis:6379']
+    # 需要安装 redis_exporter

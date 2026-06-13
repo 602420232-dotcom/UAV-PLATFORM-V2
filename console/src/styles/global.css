@@ -1,0 +1,215 @@
+/* ============================================
+   UAV Platform Console - 全局样式
+   配色方案：深蓝色主题
+   ============================================ */
+
+:root {
+  /* 主色调 */
+  --color-bg: #1a1a2e;
+  --color-bg-light: #1f1f35;
+  --color-sidebar: #16213e;
+  --color-sidebar-hover: #1a2745;
+  --color-sidebar-active: #0f3460;
+  --color-primary: #0f3460;
+  --color-primary-light: #1a4a7a;
+  --color-accent: #e94560;
+  --color-accent-light: #ff6b81;
+
+  /* 文字颜色 */
+  --color-text-primary: #e0e0e0;
+  --color-text-secondary: #a0a0b0;
+  --color-text-muted: #6c6c80;
+
+  /* 边框和分割线 */
+  --color-border: #2a2a40;
+  --color-border-light: #3a3a55;
+
+  /* 状态颜色 */
+  --color-success: #2ecc71;
+  --color-warning: #f39c12;
+  --color-danger: #e74c3c;
+  --color-info: #3498db;
+
+  /* 卡片 */
+  --card-bg: #1f1f35;
+  --card-border: #2a2a40;
+  --card-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+
+  /* 布局 */
+  --sidebar-width: 240px;
+  --sidebar-collapsed-width: 64px;
+  --header-height: 60px;
+
+  /* Element Plus 覆盖 */
+  --el-color-primary: #0f3460;
+  --el-color-primary-light-3: #1a4a7a;
+  --el-color-primary-light-5: #3a6a9a;
+  --el-color-primary-light-7: #6a8aba;
+  --el-color-primary-light-9: #b0c8e8;
+  --el-color-primary-dark-2: #0a2848;
+  --el-color-danger: #e94560;
+  --el-bg-color: #1a1a2e;
+  --el-bg-color-overlay: #1f1f35;
+  --el-bg-color-page: #1a1a2e;
+  --el-text-color-primary: #e0e0e0;
+  --el-text-color-regular: #a0a0b0;
+  --el-text-color-secondary: #6c6c80;
+  --el-border-color: #2a2a40;
+  --el-border-color-light: #3a3a55;
+  --el-fill-color-blank: #1f1f35;
+}
+
+/* 全局重置 */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  width: 100%;
+  height: 100%;
+  font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB',
+    'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
+  background-color: var(--color-bg);
+  color: var(--color-text-primary);
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  color: var(--el-color-primary-light-5);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--el-color-primary-light-3);
+}
+
+/* 滚动条样式 */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border-light);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-muted);
+}
+
+/* Element Plus 深色主题覆盖 */
+.el-table {
+  --el-table-bg-color: var(--card-bg);
+  --el-table-tr-bg-color: var(--card-bg);
+  --el-table-header-bg-color: var(--color-sidebar);
+  --el-table-row-hover-bg-color: var(--color-sidebar-hover);
+  --el-table-border-color: var(--color-border);
+  --el-table-text-color: var(--color-text-primary);
+  --el-table-header-text-color: var(--color-text-secondary);
+}
+
+.el-card {
+  --el-card-bg-color: var(--card-bg);
+  --el-card-border-color: var(--card-border);
+}
+
+.el-dialog {
+  --el-dialog-bg-color: var(--card-bg);
+  --el-dialog-title-font-size: 16px;
+}
+
+.el-form-item__label {
+  color: var(--color-text-secondary) !important;
+}
+
+.el-input__wrapper,
+.el-textarea__inner {
+  background-color: var(--color-bg) !important;
+  box-shadow: 0 0 0 1px var(--color-border) inset !important;
+}
+
+.el-input__inner {
+  color: var(--color-text-primary) !important;
+}
+
+.el-select .el-input__wrapper {
+  background-color: var(--color-bg) !important;
+}
+
+.el-pagination {
+  --el-pagination-bg-color: var(--card-bg);
+  --el-pagination-text-color: var(--color-text-secondary);
+  --el-pagination-button-bg-color: var(--color-bg);
+  --el-pagination-hover-color: var(--el-color-primary-light-5);
+}
+
+.el-menu {
+  border-right: none !important;
+}
+
+/* 页面过渡动画 */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+/* 工具类 */
+.text-center {
+  text-align: center;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.mt-16 {
+  margin-top: 16px;
+}
+
+.mb-16 {
+  margin-bottom: 16px;
+}
+
+.ml-8 {
+  margin-left: 8px;
+}
+
+.mr-8 {
+  margin-right: 8px;
+}
+
+.flex {
+  display: flex;
+}
+
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.gap-16 {
+  gap: 16px;
+}

@@ -1,0 +1,137 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    nacos:
+      discovery:
+        enabled: true
+        server-addr: localhost:8848
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods: "*"
+            allowedHeaders: "*"
+            allowCredentials: true
+      routes:
+        # UAV Control Service
+        - id: uav-control-service
+          uri: lb://uav-control-service
+          predicates:
+            - Path=/api/v1/uav/**, /api/v2/uav/**
+          filters:
+            - StripPrefix=0
+            - name: Retry
+              args:
+                retries: 3
+                statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+
+        # UTM Service
+        - id: utm-service
+          uri: lb://utm-service
+          predicates:
+            - Path=/api/v1/utm/**, /api/v2/utm/**
+          filters:
+            - StripPrefix=0
+
+        # Flight Planning Service
+        - id: flight-plan-service
+          uri: lb://flight-plan-service
+          predicates:
+            - Path=/api/v1/flight/**, /api/v2/flight/**
+          filters:
+            - StripPrefix=0
+
+        # Device Management Service
+        - id: device-service
+          uri: lb://device-service
+          predicates:
+            - Path=/api/v1/device/**, /api/v2/device/**
+          filters:
+            - StripPrefix=0
+
+        # User Service
+        - id: user-service
+          uri: lb://user-service
+          predicates:
+            - Path=/api/v1/user/**, /api/v2/user/**, /api/v1/auth/**, /api/v2/auth/**
+          filters:
+            - StripPrefix=0
+
+        # WebSocket Route
+        - id: websocket-service
+          uri: lb:ws://websocket-service
+          predicates:
+            - Path=/ws/**
+          filters:
+            - StripPrefix=0
+
+        # Actuator routes (direct access)
+        - id: actuator
+          uri: http://localhost:${server.port}
+          predicates:
+            - Path=/actuator/**
+
+  redis:
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
+    password: ${REDIS_PASSWORD:}
+    database: 0
+    timeout: 2000ms
+    lettuce:
+      pool:
+        max-active: 50
+        max-idle: 20
+        min-idle: 5
+
+# Gateway specific configuration
+gateway:
+  utm:
+    whitelist: ${UTM_WHITELIST:127.0.0.1,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16}
+    secret: ${UTM_SECRET:uav-platform-utm-secret-key-2024}
+    replay-window: 300
+
+  rate-limit:
+    default-tenant-qps: 1000
+    default-api-key-qps: 100
+    default-ws-connections: 50
+    window-seconds: 1
+    tenant-limits:
+      premium: 5000
+      enterprise: 10000
+    api-key-limits:
+      internal-service: 10000
+    path-limits:
+      /api/v1/uav/control: 500
+      /api/v1/utm/callback: 200
+      /api/v1/flight/plan: 300
+    ws-connection-limits:
+      premium: 200
+      enterprise: 500
+
+# Management endpoints
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,gateway,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when_authorized
+    gateway:
+      enabled: true
+
+# Logging
+logging:
+  level:
+    com.uav.gateway: INFO
+    org.springframework.cloud.gateway: INFO
+    reactor.netty: WARN

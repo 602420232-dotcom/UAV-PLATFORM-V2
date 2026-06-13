@@ -1,0 +1,320 @@
+name: UAV Platform CI/CD
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+env:
+  JAVA_VERSION: '21'
+  NODE_VERSION: '20'
+  PYTHON_VERSION: '3.11'
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: ${{ github.repository }}
+
+jobs:
+  # ============================================================
+  # Java 构建 + 测试 + 覆盖率
+  # ============================================================
+  java-build:
+    name: Java Build & Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+
+      - name: Cache Maven local repository
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: maven-${{ runner.os }}-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            maven-${{ runner.os }}-
+
+      - name: Compile
+        run: mvn compile -B
+
+      - name: Run Checkstyle
+        run: mvn checkstyle:check -B
+
+      - name: Run Unit Tests
+        run: mvn test -B
+
+      - name: Generate JaCoCo Coverage Report
+        run: mvn jacoco:report -B
+
+      - name: Check JaCoCo Coverage
+        run: mvn jacoco:check -B
+
+      - name: Package
+        run: mvn package -DskipTests -B
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: java-build-artifacts
+          path: |
+            **/target/*.jar
+            !**/target/*-original.jar
+          retention-days: 3
+
+  # ============================================================
+  # Python 代码检查
+  # ============================================================
+  python-lint:
+    name: Python Lint & Type Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Cache pip packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-${{ runner.os }}-${{ hashFiles('python/**/requirements*.txt', 'python/**/pyproject.toml') }}
+          restore-keys: |
+            pip-${{ runner.os }}-
+
+      - name: Install linting tools
+        run: pip install ruff mypy
+
+      - name: Ruff lint check
+        run: ruff check python/
+
+      - name: Ruff format check
+        run: ruff format --check python/
+
+      - name: MyPy type check
+        run: mypy python/ --ignore-missing-imports
+
+  # ============================================================
+  # 前端构建
+  # ============================================================
+  frontend-build:
+    name: Frontend Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Cache npm dependencies
+        uses: actions/cache@v4
+        with:
+          path: console/developer-console/node_modules
+          key: npm-${{ runner.os }}-${{ hashFiles('console/developer-console/package-lock.json') }}
+          restore-keys: |
+            npm-${{ runner.os }}-
+
+      - name: Install dependencies
+        working-directory: console/developer-console
+        run: npm ci
+
+      - name: Lint
+        working-directory: console/developer-console
+        run: npm run lint
+
+      - name: Build
+        working-directory: console/developer-console
+        run: npm run build
+
+      - name: Upload dist artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: console/developer-console/dist
+          retention-days: 3
+
+  # ============================================================
+  # Docker 镜像构建
+  # ============================================================
+  docker-build:
+    name: Docker Build (${{ matrix.service }})
+    needs: [java-build, python-lint, frontend-build]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      matrix:
+        service:
+          - api-gateway
+          - platform-api
+          - weather-api
+          - assimilation-api
+          - risk-api
+          - observation-api
+          - planning-api
+          - utm-api
+          - algorithm-engine
+      fail-fast: false
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up JDK 21 for Maven build
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+
+      - name: Download Java build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: java-build-artifacts
+          path: target-artifacts
+
+      - name: Extract service JAR
+        run: |
+          mkdir -p services/${{ matrix.service }}/target
+          find target-artifacts -name "${{ matrix.service }}*.jar" ! -name "*-original.jar" -exec cp {} services/${{ matrix.service }}/target/ \;
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/${{ matrix.service }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=sha,prefix=
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: services/${{ matrix.service }}/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ============================================================
+  # 前端 Docker 镜像构建
+  # ============================================================
+  docker-build-frontend:
+    name: Docker Build (console)
+    needs: [frontend-build]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Download frontend dist
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: console/developer-console/dist
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/console
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=sha,prefix=
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./console
+          file: console/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ============================================================
+  # 部署到测试环境
+  # ============================================================
+  deploy-staging:
+    name: Deploy to Staging
+    needs: [docker-build, docker-build-frontend]
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+      url: http://staging.uav-platform.example.com
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.STAGING_SSH_KEY }}" > ~/.ssh/staging_key
+          chmod 600 ~/.ssh/staging_key
+          echo -e "Host staging\n  HostName ${{ secrets.STAGING_HOST }}\n  User ${{ secrets.STAGING_USER }}\n  IdentityFile ~/.ssh/staging_key\n  StrictHostKeyChecking no" >> ~/.ssh/config
+
+      - name: Deploy with docker-compose
+        run: |
+          ssh staging << 'DEPLOY_SCRIPT'
+            cd /opt/uav-platform-v2
+            git pull origin main
+            docker compose pull
+            docker compose up -d
+            echo "Waiting for services to be healthy..."
+            timeout 120 bash -c 'until docker compose ps | grep -v "unhealthy\|starting" | grep -q "running"; do sleep 5; done'
+            docker compose ps
+          DEPLOY_SCRIPT
+
+      - name: Health check
+        run: |
+          ssh staging << 'HEALTH_CHECK'
+            echo "Checking API Gateway health..."
+            curl -sf http://localhost:8088/actuator/health || exit 1
+            echo "API Gateway is healthy"
+          HEALTH_CHECK
+
+      - name: Notify deployment result
+        if: always()
+        run: |
+          if [ "${{ job.status }}" == "success" ]; then
+            echo "Deployment to staging succeeded"
+          else
+            echo "Deployment to staging failed"
+          fi

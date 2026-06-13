@@ -1,0 +1,3004 @@
+openapi: 3.0.3
+info:
+  title: UAV Platform API
+  version: 2.0.0
+  description: |
+    基于WRF气象驱动的无人机VRP智能路径规划系统 API 平台。
+
+    ## 功能模块
+    - **平台管理**: 租户管理、API密钥管理、用量统计
+    - **气象数据**: WRF/风云/天姿/风雷多源气象数据查询与融合
+    - **数据同化**: 3DVAR/4DVAR/5DVAR/EnKF/Hybrid/Enhanced Bayesian 同化算法
+    - **风险评估**: 综合风险感知与区域风险栅格地图
+    - **适航评估**: 全维度适航评估与适航标准查询
+    - **观测决策**: 自适应/计划/应急观测任务管理与决策
+    - **路径规划**: VRPTW/DE-RRT*/DWA/MPC/A*/Dijkstra/RRT* 路径规划
+    - **UTM**: 空域管理、飞行计划、实时追踪与冲突检测
+
+    ## 认证方式
+    - **Bearer Token**: JWT 认证，用于平台管理接口
+    - **API Key**: HMAC 签名认证，用于业务接口调用
+
+  contact:
+    name: UAV Platform Team
+    email: support@uav-platform.example.com
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0
+
+servers:
+  - url: http://localhost:8080
+    description: 开发环境（通过网关访问）
+  - url: https://api.uav-platform.example.com
+    description: 生产环境
+
+tags:
+  - name: Platform
+    description: 平台管理（租户、API密钥、用量统计）
+  - name: Weather
+    description: 气象数据查询
+  - name: Assimilation
+    description: 数据同化任务管理
+  - name: Risk
+    description: 风险评估
+  - name: Airworthiness
+    description: 适航评估
+  - name: Observation
+    description: 观测任务与决策
+  - name: Planning
+    description: 路径规划与任务规划
+  - name: UTM
+    description: 空域管理、飞行计划、追踪
+
+paths:
+  # ============================================================
+  # 平台管理
+  # ============================================================
+  /api/v1/platform/tenants:
+    post:
+      tags: [Platform]
+      summary: 创建租户
+      description: 创建新的租户账户，包含名称、数据库Schema和配额配置。
+      operationId: createTenant
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTenantRequest'
+            example:
+              name: "示例航空公司"
+              schemaName: "tenant_airline_01"
+              quotaConfig: '{"maxUavs": 50, "maxApiCallsPerDay": 10000}'
+      responses:
+        '200':
+          description: 租户创建成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultTenant'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    get:
+      tags: [Platform]
+      summary: 分页查询租户列表
+      description: 分页获取所有租户信息。
+      operationId: listTenants
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: current
+          in: query
+          description: 当前页码
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: size
+          in: query
+          description: 每页大小
+          required: false
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultPageTenant'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/v1/platform/tenants/{id}:
+    get:
+      tags: [Platform]
+      summary: 获取租户详情
+      description: 根据ID获取租户详细信息。
+      operationId: getTenant
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+      responses:
+        '200':
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultTenant'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags: [Platform]
+      summary: 更新租户信息
+      description: 更新指定租户的名称和配额配置。
+      operationId: updateTenant
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTenantRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags: [Platform]
+      summary: 删除租户
+      description: 删除指定租户及其所有关联数据。
+      operationId: deleteTenant
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/platform/tenants/{id}/disable:
+    post:
+      tags: [Platform]
+      summary: 禁用租户
+      description: 禁用指定租户，禁用后该租户无法访问任何API。
+      operationId: disableTenant
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/platform/tenants/{id}/enable:
+    post:
+      tags: [Platform]
+      summary: 启用租户
+      description: 重新启用已禁用的租户。
+      operationId: enableTenant
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/platform/api-keys:
+    post:
+      tags: [Platform]
+      summary: 生成API密钥
+      description: 为指定租户生成新的API密钥，支持配置速率限制和有效期。
+      operationId: generateApiKey
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GenerateApiKeyRequest'
+            example:
+              tenantId: 1
+              name: "生产环境密钥"
+              rateLimit: 1000
+              expiresInDays: 365
+      responses:
+        '200':
+          description: 密钥生成成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultApiKey'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/v1/platform/api-keys/{id}:
+    get:
+      tags: [Platform]
+      summary: 获取API密钥详情
+      description: 根据ID获取API密钥详细信息。
+      operationId: getApiKey
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ApiKeyId'
+      responses:
+        '200':
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultApiKey'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags: [Platform]
+      summary: 删除API密钥
+      description: 删除指定的API密钥。
+      operationId: deleteApiKey
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ApiKeyId'
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/platform/api-keys/{id}/enable:
+    post:
+      tags: [Platform]
+      summary: 启用API密钥
+      description: 启用已禁用的API密钥。
+      operationId: enableApiKey
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ApiKeyId'
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+
+  /api/v1/platform/api-keys/{id}/disable:
+    post:
+      tags: [Platform]
+      summary: 禁用API密钥
+      description: 禁用指定的API密钥。
+      operationId: disableApiKey
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ApiKeyId'
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+
+  /api/v1/platform/api-keys/tenant/{tenantId}:
+    get:
+      tags: [Platform]
+      summary: 查询租户的API密钥列表
+      description: 获取指定租户下所有API密钥。
+      operationId: listApiKeysByTenant
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: tenantId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultListApiKey'
+
+  /api/v1/platform/usage/daily:
+    get:
+      tags: [Platform]
+      summary: 每日用量聚合
+      description: 查询指定租户在时间范围内的每日API调用用量统计。
+      operationId: getDailyUsage
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: tenantId
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: startDate
+          in: query
+          required: true
+          description: 开始日期 (yyyy-MM-dd)
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          required: true
+          description: 结束日期 (yyyy-MM-dd)
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultListMap'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/v1/platform/usage/api-path:
+    get:
+      tags: [Platform]
+      summary: API路径用量聚合
+      description: 按API路径维度聚合用量统计。
+      operationId: getApiPathUsage
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: tenantId
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: startDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultListMap'
+
+  # ============================================================
+  # 气象数据
+  # ============================================================
+  /api/v1/weather/point:
+    post:
+      tags: [Weather]
+      summary: 单点气象查询
+      description: 查询指定经纬度坐标的气象数据，支持指定数据源、海拔高度和预报时间。
+      operationId: queryWeatherPoint
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WeatherQueryRequest'
+            example:
+              longitude: 116.4074
+              latitude: 39.9042
+              altitude: 100.0
+              source: "WRF"
+              forecastTime: "2025-06-01T12:00:00"
+              radius: 5000
+      responses:
+        '200':
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultWeatherGrid'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/v1/weather/region:
+    get:
+      tags: [Weather]
+      summary: 区域气象格点查询
+      description: 查询指定矩形区域内的气象格点数据，返回多个格点的气象信息。
+      operationId: queryWeatherRegion
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: minLon
+          in: query
+          required: true
+          description: 最小经度
+          schema:
+            type: number
+            format: double
+        - name: minLat
+          in: query
+          required: true
+          description: 最小纬度
+          schema:
+            type: number
+            format: double
+        - name: maxLon
+          in: query
+          required: true
+          description: 最大经度
+          schema:
+            type: number
+            format: double
+        - name: maxLat
+          in: query
+          required: true
+          description: 最大纬度
+          schema:
+            type: number
+            format: double
+        - name: altitude
+          in: query
+          required: false
+          description: 海拔高度(m)
+          schema:
+            type: number
+            format: double
+        - name: source
+          in: query
+          required: false
+          description: 数据源 (WRF/FENGWU_GHR/TIANZI/FENGLEI)
+          schema:
+            type: string
+        - name: forecastTime
+          in: query
+          required: false
+          description: 预报时间
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultListWeatherGrid'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/v1/weather/wind-profile:
+    post:
+      tags: [Weather]
+      summary: 风场剖面查询
+      description: 查询指定位置的风场垂直剖面数据，包含各高度层的风速、风向、垂直风速和湍流强度。
+      operationId: queryWindProfile
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WindProfileQueryRequest'
+            example:
+              longitude: 116.4074
+              latitude: 39.9042
+              minAltitude: 0.0
+              maxAltitude: 1000.0
+              interval: 50.0
+              source: "WRF"
+      responses:
+        '200':
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultWindProfile'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/v1/weather/fusion:
+    post:
+      tags: [Weather]
+      summary: 多源融合气象查询
+      description: 融合WRF、风云、天姿、风雷等多源气象数据进行查询，提供更高精度的气象信息。
+      operationId: queryWeatherFusion
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WeatherQueryRequest'
+            example:
+              longitude: 116.4074
+              latitude: 39.9042
+              radius: 5000
+      responses:
+        '200':
+          description: 融合查询成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultWeatherGrid'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ============================================================
+  # 数据同化
+  # ============================================================
+  /api/v1/assimilation/tasks:
+    get:
+      tags: [Assimilation]
+      summary: 查询同化任务列表
+      description: 分页查询数据同化任务列表，支持按状态和算法类型过滤。
+      operationId: listAssimilationTasks
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: status
+          in: query
+          required: false
+          description: 任务状态 (QUEUED/RUNNING/SUCCESS/FAILED/TIMEOUT/CANCELLED)
+          schema:
+            type: string
+        - name: algorithmType
+          in: query
+          required: false
+          description: 算法类型 (3DVAR/4DVAR/5DVAR/ENKF/HYBRID/ENHANCED_BAYESIAN)
+          schema:
+            type: string
+        - name: current
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: size
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultObject'
+
+    post:
+      tags: [Assimilation]
+      summary: 提交同化任务
+      description: 提交数据同化任务，支持3DVAR、4DVAR、5DVAR、EnKF、Hybrid和Enhanced Bayesian算法。
+      operationId: submitAssimilationTask
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubmitTaskRequest'
+            example:
+              algorithmType: "5DVAR"
+              tenantId: 1
+              params:
+                maxIterations: 50
+                convergenceThreshold: 0.001
+      responses:
+        '200':
+          description: 任务提交成功，返回任务ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultLong'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '1006':
+          description: 请求过于频繁
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultVoid'
+
+  /api/v1/assimilation/tasks/{id}:
+    get:
+      tags: [Assimilation]
+      summary: 查询同化任务状态
+      description: 根据任务ID查询数据同化任务的当前状态、进度等信息。
+      operationId: getAssimilationTask
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TaskId'
+      responses:
+        '200':
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultAssimilationTask'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/assimilation/tasks/{id}/result:
+    get:
+      tags: [Assimilation]
+      summary: 查询同化任务结果
+      description: 获取已完成同化任务的分析场数据、不确定性估计和收敛信息。
+      operationId: getAssimilationResult
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TaskId'
+      responses:
+        '200':
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultAssimilationResult'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/assimilation/tasks/{id}/cancel:
+    post:
+      tags: [Assimilation]
+      summary: 取消同化任务
+      description: 取消正在运行或排队中的同化任务。
+      operationId: cancelAssimilationTask
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TaskId'
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ============================================================
+  # 风险评估
+  # ============================================================
+  /api/v1/risk/assess:
+    post:
+      tags: [Risk]
+      summary: 综合风险评估
+      description: 对指定位置进行综合风险评估，考虑气象、地形、空域、设备等多维度风险因子。
+      operationId: assessRisk
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RiskQueryRequest'
+            example:
+              longitude: 116.4074
+              latitude: 39.9042
+              altitude: 100.0
+              uavModel: "DJI-M300"
+              missionType: "INSPECTION"
+      responses:
+        '200':
+          description: 评估成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultRiskAssessment'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/v1/risk/map:
+    get:
+      tags: [Risk]
+      summary: 区域风险栅格地图
+      description: 生成指定矩形区域的风险栅格地图，用于可视化展示风险分布。
+      operationId: generateRiskMap
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: minLon
+          in: query
+          required: true
+          schema:
+            type: number
+            format: double
+        - name: minLat
+          in: query
+          required: true
+          schema:
+            type: number
+            format: double
+        - name: maxLon
+          in: query
+          required: true
+          schema:
+            type: number
+            format: double
+        - name: maxLat
+          in: query
+          required: true
+          schema:
+            type: number
+            format: double
+        - name: resolution
+          in: query
+          required: false
+          description: 栅格分辨率(度)
+          schema:
+            type: number
+            format: double
+            default: 0.01
+      responses:
+        '200':
+          description: 生成成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultListRiskAssessment'
+
+  /api/v1/risk/history:
+    get:
+      tags: [Risk]
+      summary: 历史风险评估记录
+      description: 查询历史风险评估记录，支持按租户和风险类型过滤。
+      operationId: getRiskHistory
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: tenantId
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int64
+        - name: type
+          in: query
+          required: false
+          description: 风险类型 (WEATHER/TERRAIN/AIRSPACE/EQUIPMENT/COMPOSITE)
+          schema:
+            type: string
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultListRiskAssessment'
+
+  # ============================================================
+  # 适航评估
+  # ============================================================
+  /api/v1/airworthiness/assess:
+    post:
+      tags: [Airworthiness]
+      summary: 全维度适航评估
+      description: 对指定无人机型号在当前气象条件下进行全维度适航评估，包含气象、结构、动力、通信、任务五个维度。
+      operationId: assessAirworthiness
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AirworthinessRequest'
+            example:
+              uavModel: "DJI-M300"
+              weight: 6.3
+              wingspan: 0.895
+              batteryCapacity: 5200
+              missionType: "INSPECTION"
+              weatherConditions:
+                windSpeed: 8.0
+                visibility: 10.0
+                temperature: 25.0
+      responses:
+        '200':
+          description: 评估成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultAirworthinessAssessment'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/v1/airworthiness/standards/{uavModel}:
+    get:
+      tags: [Airworthiness]
+      summary: 获取适航标准
+      description: 查询指定无人机型号的适航标准参数。
+      operationId: getAirworthinessStandards
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: uavModel
+          in: path
+          required: true
+          description: 无人机型号
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultMap'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ============================================================
+  # 观测任务
+  # ============================================================
+  /api/v1/observation/tasks:
+    get:
+      tags: [Observation]
+      summary: 列出所有观测任务
+      description: 获取当前租户下所有观测任务列表。
+      operationId: listObservationTasks
+      security:
+        - ApiKeyAuth: []
+      responses:
+        '200':
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultListObservationTask'
+
+    post:
+      tags: [Observation]
+      summary: 创建观测任务
+      description: 创建新的观测任务，支持自适应(ADAPTIVE)、计划(PLANNED)和应急(EMERGENCY)三种类型。
+      operationId: createObservationTask
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateObservationRequest'
+            example:
+              type: "ADAPTIVE"
+              targetArea: '{"minLon":116.0,"minLat":39.8,"maxLon":116.5,"maxLat":40.0}'
+              sensorType: "LIDAR"
+              priority: 5
+      responses:
+        '200':
+          description: 创建成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultObservationTask'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/v1/observation/tasks/{id}:
+    get:
+      tags: [Observation]
+      summary: 获取观测任务详情
+      description: 根据ID获取观测任务详细信息。
+      operationId: getObservationTask
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TaskId'
+      responses:
+        '200':
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultObservationTask'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/observation/tasks/{id}/status:
+    post:
+      tags: [Observation]
+      summary: 更新观测任务状态
+      description: 更新指定观测任务的执行状态。
+      operationId: updateObservationTaskStatus
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TaskId'
+        - name: status
+          in: query
+          required: true
+          description: 目标状态
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultObservationTask'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ============================================================
+  # 观测决策
+  # ============================================================
+  /api/v1/observation/decisions:
+    get:
+      tags: [Observation]
+      summary: 获取决策历史
+      description: 获取所有观测决策记录。
+      operationId: getDecisionHistory
+      security:
+        - ApiKeyAuth: []
+      responses:
+        '200':
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultListObservationDecision'
+
+    post:
+      tags: [Observation]
+      summary: 做出观测决策
+      description: 基于当前状态和可用传感器，做出最优观测决策，返回目标区域和优先级。
+      operationId: makeObservationDecision
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ObservationDecisionRequest'
+            example:
+              currentState: '{"uavPositions":[...],"weatherData":[...]}'
+              availableSensors: '["LIDAR","CAMERA","RADAR"]'
+              constraints: '{"maxFlightTime":30,"maxDistance":5000}'
+      responses:
+        '200':
+          description: 决策成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultObservationDecision'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/v1/observation/decisions/{id}:
+    get:
+      tags: [Observation]
+      summary: 获取决策详情
+      description: 根据ID获取观测决策详细信息。
+      operationId: getObservationDecision
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TaskId'
+      responses:
+        '200':
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultObservationDecision'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ============================================================
+  # 路径规划
+  # ============================================================
+  /api/v1/planning/path:
+    post:
+      tags: [Planning]
+      summary: 提交路径规划任务
+      description: 提交单条路径规划任务，支持多种优化目标（风险最小、能耗最低、时间最短、综合平衡）。
+      operationId: submitPathPlanning
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlanPathRequest'
+            example:
+              start: {"lon": 116.3, "lat": 39.9, "alt": 100}
+              end: {"lon": 116.5, "lat": 40.0, "alt": 150}
+              waypoints:
+                - {"lon": 116.4, "lat": 39.95, "alt": 120}
+              uavModel: "DJI-M300"
+              optimizationTarget: "BALANCED"
+              constraints:
+                maxAltitude: 200
+                minAltitude: 50
+      responses:
+        '200':
+          description: 任务提交成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultPlanningTask'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/v1/planning/mission:
+    post:
+      tags: [Planning]
+      summary: 提交任务规划
+      description: 提交多无人机多任务规划，使用VRPTW算法进行任务分配和路径优化。
+      operationId: submitMissionPlanning
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlanMissionRequest'
+            example:
+              uavList:
+                - {"id": "UAV-001", "model": "DJI-M300", "battery": 5200}
+              taskList:
+                - {"id": "T-001", "location": {"lon": 116.4, "lat": 39.9}, "priority": 1}
+              areaBounds: {"minLon": 116.0, "minLat": 39.8, "maxLon": 116.5, "maxLat": 40.0}
+      responses:
+        '200':
+          description: 任务提交成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultPlanningTask'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/v1/planning/tasks:
+    get:
+      tags: [Planning]
+      summary: 列出所有规划任务
+      description: 获取当前租户下所有路径规划和任务规划列表。
+      operationId: listPlanningTasks
+      security:
+        - ApiKeyAuth: []
+      responses:
+        '200':
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultListPlanningTask'
+
+  /api/v1/planning/tasks/{id}:
+    get:
+      tags: [Planning]
+      summary: 获取规划任务状态
+      description: 根据ID查询规划任务的当前状态和进度。
+      operationId: getPlanningTask
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TaskId'
+      responses:
+        '200':
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultPlanningTask'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/planning/tasks/{id}/result:
+    get:
+      tags: [Planning]
+      summary: 获取路径规划结果
+      description: 获取已完成路径规划任务的航点列表、总距离、预计耗时、风险评分和能耗估算。
+      operationId: getPathResult
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TaskId'
+      responses:
+        '200':
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultPathResult'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/planning/tasks/{id}/mission:
+    get:
+      tags: [Planning]
+      summary: 获取任务规划结果
+      description: 获取已完成任务规划的调度方案和整体评分。
+      operationId: getMissionPlan
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TaskId'
+      responses:
+        '200':
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultMissionPlan'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/planning/tasks/{id}/cancel:
+    post:
+      tags: [Planning]
+      summary: 取消规划任务
+      description: 取消正在运行或排队中的规划任务。
+      operationId: cancelPlanningTask
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TaskId'
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ============================================================
+  # UTM - 空域管理
+  # ============================================================
+  /api/v1/airspaces:
+    get:
+      tags: [UTM]
+      summary: 查询空域列表
+      description: 获取所有空域信息，包括静态空域、动态空域和限制空域。
+      operationId: getAirspaces
+      security:
+        - ApiKeyAuth: []
+      responses:
+        '200':
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultListAirspace'
+
+    post:
+      tags: [UTM]
+      summary: 创建动态空域
+      description: 创建新的动态空域限制区域。
+      operationId: createAirspace
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Airspace'
+            example:
+              type: "DYNAMIC"
+              boundsJson: '{"type":"Polygon","coordinates":[...]}'
+              altitudeMin: 0
+              altitudeMax: 300
+              status: "ACTIVE"
+              tenantId: "1"
+      responses:
+        '200':
+          description: 创建成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultAirspace'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/v1/airspaces/check:
+    get:
+      tags: [UTM]
+      summary: 空域限制检查
+      description: 检查指定坐标和高度是否受到空域限制。
+      operationId: checkAirspaceRestriction
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: lon
+          in: query
+          required: true
+          schema:
+            type: number
+            format: double
+        - name: lat
+          in: query
+          required: true
+          schema:
+            type: number
+            format: double
+        - name: altitude
+          in: query
+          required: true
+          schema:
+            type: number
+            format: double
+      responses:
+        '200':
+          description: 检查成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultBoolean'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  # ============================================================
+  # UTM - 飞行计划
+  # ============================================================
+  /api/v1/flight-plans:
+    get:
+      tags: [UTM]
+      summary: 列出飞行计划
+      description: 获取所有飞行计划列表。
+      operationId: listFlightPlans
+      security:
+        - ApiKeyAuth: []
+      responses:
+        '200':
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultListFlightPlan'
+
+    post:
+      tags: [UTM]
+      summary: 提交飞行计划
+      description: 提交新的飞行计划，包含无人机ID、航点列表和计划时间窗口。
+      operationId: submitFlightPlan
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubmitFlightPlanRequest'
+            example:
+              uavId: "UAV-001"
+              waypoints:
+                - {"lon": 116.3, "lat": 39.9, "alt": 100}
+                - {"lon": 116.5, "lat": 40.0, "alt": 150}
+              plannedStartTime: "2025-06-01T08:00:00"
+              plannedEndTime: "2025-06-01T10:00:00"
+              purpose: "巡检任务"
+      responses:
+        '200':
+          description: 提交成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultFlightPlan'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/v1/flight-plans/{id}:
+    get:
+      tags: [UTM]
+      summary: 获取飞行计划详情
+      description: 根据ID获取飞行计划详细信息。
+      operationId: getFlightPlan
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultFlightPlan'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/flight-plans/{id}/approve:
+    post:
+      tags: [UTM]
+      summary: 审批通过飞行计划
+      description: 审批通过指定的飞行计划。
+      operationId: approveFlightPlan
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 审批成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultFlightPlan'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/flight-plans/{id}/reject:
+    post:
+      tags: [UTM]
+      summary: 驳回飞行计划
+      description: 驳回指定的飞行计划。
+      operationId: rejectFlightPlan
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 驳回成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultFlightPlan'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/flight-plans/{id}/start:
+    post:
+      tags: [UTM]
+      summary: 开始飞行
+      description: 将飞行计划状态变更为执行中。
+      operationId: startFlight
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 操作成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultFlightPlan'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/flight-plans/{id}/complete:
+    post:
+      tags: [UTM]
+      summary: 完成飞行
+      description: 将飞行计划标记为已完成。
+      operationId: completeFlight
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 操作成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultFlightPlan'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ============================================================
+  # UTM - 实时追踪
+  # ============================================================
+  /api/v1/tracking/positions:
+    post:
+      tags: [UTM]
+      summary: 上报无人机位置
+      description: 无人机上报当前位置信息，用于实时追踪。
+      operationId: reportUavPosition
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UavPositionReport'
+            example:
+              uavId: "UAV-001"
+              lon: 116.4074
+              lat: 39.9042
+              alt: 100.0
+              speed: 15.0
+              heading: 45.0
+              timestamp: "2025-06-01T08:30:00"
+      responses:
+        '200':
+          description: 上报成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultUavPosition'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/v1/tracking/uavs/{uavId}/position:
+    get:
+      tags: [UTM]
+      summary: 获取无人机当前位置
+      description: 获取指定无人机的最新位置信息。
+      operationId: getCurrentUavPosition
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: uavId
+          in: path
+          required: true
+          description: 无人机ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultUavPosition'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/tracking/uavs/{uavId}/history:
+    get:
+      tags: [UTM]
+      summary: 获取无人机轨迹历史
+      description: 获取指定无人机的历史轨迹记录。
+      operationId: getUavTrackHistory
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: uavId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultListUavPosition'
+
+  /api/v1/tracking/conflicts/check:
+    post:
+      tags: [UTM]
+      summary: 冲突检测
+      description: 检测指定无人机在计划路径和时间窗口内是否存在飞行冲突。
+      operationId: checkConflicts
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConflictCheckRequest'
+            example:
+              uavId: "UAV-001"
+              plannedPath:
+                - {"lon": 116.3, "lat": 39.9, "alt": 100, "eta": "2025-06-01T08:10:00"}
+                - {"lon": 116.5, "lat": 40.0, "alt": 150, "eta": "2025-06-01T08:30:00"}
+              timeWindow:
+                start: "2025-06-01T08:00:00"
+                end: "2025-06-01T09:00:00"
+      responses:
+        '200':
+          description: 检测完成
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultListConflictAlert'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+# ============================================================
+# 组件定义
+# ============================================================
+components:
+
+  # ----------------------------------------------------------
+  # 通用参数
+  # ----------------------------------------------------------
+  parameters:
+    TaskId:
+      name: id
+      in: path
+      required: true
+      description: 任务ID
+      schema:
+        type: integer
+        format: int64
+
+    TenantId:
+      name: id
+      in: path
+      required: true
+      description: 租户ID
+      schema:
+        type: integer
+        format: int64
+
+    ApiKeyId:
+      name: id
+      in: path
+      required: true
+      description: API密钥ID
+      schema:
+        type: integer
+        format: int64
+
+  # ----------------------------------------------------------
+  # 数据模型
+  # ----------------------------------------------------------
+  schemas:
+
+    # --- 统一响应 ---
+    Result:
+      type: object
+      description: 统一API响应结构
+      properties:
+        code:
+          type: integer
+          description: 业务状态码 (200=成功)
+          example: 200
+        message:
+          type: string
+          description: 提示消息
+          example: success
+        data:
+          description: 响应数据（泛型）
+        requestId:
+          type: string
+          description: 请求追踪ID
+        timestamp:
+          type: integer
+          format: int64
+          description: 时间戳
+
+    ResultVoid:
+      allOf:
+        - $ref: '#/components/schemas/Result'
+      description: 无数据的成功响应
+
+    ResultLong:
+      allOf:
+        - $ref: '#/components/schemas/Result'
+      description: 包含Long类型数据的响应
+      properties:
+        data:
+          type: integer
+          format: int64
+          description: 任务ID
+
+    ResultBoolean:
+      allOf:
+        - $ref: '#/components/schemas/Result'
+      description: 包含布尔值的响应
+      properties:
+        data:
+          type: boolean
+          description: 检查结果
+
+    ResultObject:
+      allOf:
+        - $ref: '#/components/schemas/Result'
+      description: 包含分页对象的响应
+
+    ResultMap:
+      allOf:
+        - $ref: '#/components/schemas/Result'
+      description: 包含Map数据的响应
+      properties:
+        data:
+          type: object
+          additionalProperties:
+            type: object
+
+    ResultListMap:
+      allOf:
+        - $ref: '#/components/schemas/Result'
+      description: 包含Map列表的响应
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+            additionalProperties:
+              type: object
+
+    # --- 平台管理 ---
+    CreateTenantRequest:
+      type: object
+      required: [name, schemaName]
+      properties:
+        name:
+          type: string
+          description: 租户名称
+          example: "示例航空公司"
+        schemaName:
+          type: string
+          description: 数据库Schema名称
+          example: "tenant_airline_01"
+        quotaConfig:
+          type: string
+          description: 配额配置JSON
+          example: '{"maxUavs": 50, "maxApiCallsPerDay": 10000}'
+
+    UpdateTenantRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: 租户名称
+        quotaConfig:
+          type: string
+          description: 配额配置JSON
+
+    Tenant:
+      type: object
+      description: 租户实体
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        schemaName:
+          type: string
+        status:
+          type: integer
+          description: "状态: 1=启用, 0=禁用"
+        quotaConfig:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    ResultTenant:
+      allOf:
+        - $ref: '#/components/schemas/Result'
+      description: 包含租户数据的响应
+      properties:
+        data:
+          $ref: '#/components/schemas/Tenant'
+
+    ResultPageTenant:
+      allOf:
+        - $ref: '#/components/schemas/Result'
+      description: 包含租户分页数据的响应
+      properties:
+        data:
+          type: object
+          properties:
+            records:
+              type: array
+              items:
+                $ref: '#/components/schemas/Tenant'
+            total:
+              type: integer
+            size:
+              type: integer
+            current:
+              type: integer
+
+    GenerateApiKeyRequest:
+      type: object
+      required: [tenantId, name]
+      properties:
+        tenantId:
+          type: integer
+          format: int64
+        name:
+          type: string
+          description: 密钥名称
+        rateLimit:
+          type: integer
+          description: 速率限制(次/分钟)
+        expiresInDays:
+          type: integer
+          description: 有效天数
+
+    ApiKey:
+      type: object
+      description: API密钥实体
+      properties:
+        id:
+          type: integer
+          format: int64
+        tenantId:
+          type: integer
+          format: int64
+        keyValue:
+          type: string
+          description: API Key值
+        secret:
+          type: string
+          description: 密钥Secret
+        name:
+          type: string
+        status:
+          type: integer
+          description: "状态: 1=启用, 0=禁用"
+        rateLimit:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: string
+          format: date-time
+
+    ResultApiKey:
+      allOf:
+        - $ref: '#/components/schemas/Result'
+      properties:
+        data:
+          $ref: '#/components/schemas/ApiKey'
+
+    ResultListApiKey:
+      allOf:
+        - $ref: '#/components/schemas/Result'
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApiKey'
+
+    # --- 气象数据 ---
+    WeatherQueryRequest:
+      type: object
+      required: [longitude, latitude]
+      properties:
+        longitude:
+          type: number
+          format: double
+          description: 经度
+          example: 116.4074
+        latitude:
+          type: number
+          format: double
+          description: 纬度
+          example: 39.9042
+        altitude:
+          type: number
+          format: double
+          description: 海拔高度(m)，null表示地面层
+        source:
+          type: string
+          description: "数据源: WRF, FENGWU_GHR, TIANZI, FENGLEI"
+        forecastTime:
+          type: string
+          format: date-time
+          description: 预报时间，null表示最新
+        radius:
+          type: integer
+          description: 查询半径(m)
+          default: 5000
+
+    WeatherGrid:
+      type: object
+      description: 气象格点数据
+      properties:
+        id:
+          type: integer
+          format: int64
+        source:
+          type: string
+          description: "数据源: WRF, FENGWU_GHR, TIANZI, FENGLEI"
+        longitude:
+          type: number
+          format: double
+          description: 经度
+        latitude:
+          type: number
+          format: double
+          description: 纬度
+        altitude:
+          type: number
+          format: double
+          description: 海拔高度(m)
+        forecastTime:
+          type: string
+          format: date-time
+          description: 预报时间
+        temperature:
+          type: number
+          format: double
+          description: 气温(degC)
+        humidity:
+          type: number
+          format: double
+          description: 相对湿度(%)
+        windSpeed:
+          type: number
+          format: double
+          description: 风速(m/s)
+        windDirection:
+          type: number
+          format: double
+          description: 风向(deg)
+        pressure:
+          type: number
+          format: double
+          description: 气压(hPa)
+        precipitation:
+          type: number
+          format: double
+          description: 降水量(mm)
+        visibility:
+          type: number
+          format: double
+          description: 能见度(km)
+        cloudCover:
+          type: number
+          format: double
+          description: 云量(%)
+        createdAt:
+          type: string
+          format: date-time
+
+    ResultWeatherGrid:
+      allOf:
+        - $ref: '#/components/schemas/Result'
+      properties:
+        data:
+          $ref: '#/components/schemas/WeatherGrid'
+
+    ResultListWeatherGrid:
+      allOf:
+        - $ref: '#/components/schemas/Result'
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/WeatherGrid'
+
+    WindProfileQueryRequest:
+      type: object
+      required: [longitude, latitude]
+      properties:
+        longitude:
+          type: number
+          format: double
+        latitude:
+          type: number
+          format: double
+        minAltitude:
+          type: number
+          format: double
+          description: 最低高度(m)
+          default: 0.0
+        maxAltitude:
+          type: number
+          format: double
+          description: 最高高度(m)
+          default: 1000.0
+        interval:
+          type: number
+          format: double
+          description: 高度层间隔(m)
+          default: 50.0
+        source:
+          type: string
+        forecastTime:
+          type: string
+          format: date-time
+
+    WindProfile:
+      type: object
+      description: 风场剖面数据
+      properties:
+        id:
+          type: integer
+          format: int64
+        source:
+          type: string
+        longitude:
+          type: number
+          format: double
+        latitude:
+          type: number
+          format: double
+        forecastTime:
+          type: string
+          format: date-time
+        layers:
+          type: array
+          description: 各高度层风场数据
+          items:
+            $ref: '#/components/schemas/WindLayer'
+        createdAt:
+          type: string
+          format: date-time
+
+    WindLayer:
+      type: object
+      description: 风场高度层数据
+      properties:
+        altitude:
+          type: number
+          format: double
+          description: 高度(m)
+        windSpeed:
+          type: number
+          format: double
+          description: 风速(m/s)
+        windDirection:
+          type: number
+          format: double
+          description: 风向(deg)
+        verticalWindSpeed:
+          type: number
+          format: double
+          description: 垂直风速(m/s)
+        turbulence:
+          type: number
+          format: double
+          description: 湍流强度
+
+    ResultWindProfile:
+      allOf:
+        - $ref: '#/components/schemas/Result'
+      properties:
+        data:
+          $ref: '#/components/schemas/WindProfile'
+
+    # --- 数据同化 ---
+    SubmitTaskRequest:
+      type: object
+      required: [algorithmType, tenantId]
+      properties:
+        algorithmType:
+          type: string
+          description: "算法类型: 3DVAR, 4DVAR, 5DVAR, ENKF, HYBRID, ENHANCED_BAYESIAN"
+          example: "5DVAR"
+        tenantId:
+          type: integer
+          format: int64
+        params:
+          type: object
+          additionalProperties:
+            type: object
+          description: 算法参数
+
+    AssimilationTask:
+      type: object
+      description: 数据同化任务
+      properties:
+        id:
+          type: integer
+          format: int64
+        algorithmType:
+          type: string
+          description: "算法类型: 3DVAR, 4DVAR, 5DVAR, ENKF, HYBRID, ENHANCED_BAYESIAN"
+        status:
+          type: string
+          description: "任务状态: QUEUED, RUNNING, SUCCESS, FAILED, TIMEOUT, CANCELLED"
+        paramsJson:
+          type: string
+          description: 算法参数JSON
+        resultJson:
+          type: string
+          description: 结果数据JSON
+        progress:
+          type: integer
+          description: 进度(0-100)
+        errorMsg:
+          type: string
+          description: 错误信息
+        tenantId:
+          type: integer
+          format: int64
+        createdAt:
+          type: string
+          format: date-time
+        startedAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+
+    AssimilationResult:
+      type: object
+      description: 数据同化结果
+      properties:
+        id:
+          type: integer
+          format: int64
+        taskId:
+          type: integer
+          format: int64
+        analysisFieldJson:
+          type: string
+          description: 分析场数据JSON
+        uncertaintyJson:
+          type: string
+          description: 不确定性估计JSON
+        convergenceInfo:
+          type: string
+          description: 收敛信息
+        createdAt:
+          type: string
+          format: date-time
+
+    ResultAssimilationTask:
+      allOf:
+        - $ref: '#/components/schemas/Result'
+      properties:
+        data:
+          $ref: '#/components/schemas/AssimilationTask'
+
+    ResultAssimilationResult:
+      allOf:
+        - $ref: '#/components/schemas/Result'
+      properties:
+        data:
+          $ref: '#/components/schemas/AssimilationResult'
+
+    # --- 风险评估 ---
+    RiskQueryRequest:
+      type: object
+      required: [longitude, latitude]
+      properties:
+        longitude:
+          type: number
+          format: double
+        latitude:
+          type: number
+          format: double
+        altitude:
+          type: number
+          format: double
+          description: 海拔高度(m)
+        uavModel:
+          type: string
+          description: 无人机型号
+        missionType:
+          type: string
+          description: 任务类型
+
+    RiskAssessment:
+      type: object
+      description: 风险评估结果
+      properties:
+        id:
+          type: integer
+          format: int64
+        type:
+          type: string
+          description: "风险类型: WEATHER, TERRAIN, AIRSPACE, EQUIPMENT, COMPOSITE"
+        level:
+          type: integer
+          description: 风险等级(1-5)
+        score:
+          type: integer
+          description: 风险评分(0-100)
+        factorsJson:
+          type: string
+          description: 风险因子JSON
+        locationJson:
+          type: string
+          description: 位置信息JSON
+        tenantId:
+          type: integer
+          format: int64
+        createdAt:
+          type: string
+          format: date-time
+
+    ResultRiskAssessment:
+      allOf:
+        - $ref: '#/components/schemas/Result'
+      properties:
+        data:
+          $ref: '#/components/schemas/RiskAssessment'
+
+    ResultListRiskAssessment:
+      allOf:
+        - $ref: '#/components/schemas/Result'
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/RiskAssessment'
+
+    # --- 适航评估 ---
+    AirworthinessRequest:
+      type: object
+      required: [uavModel]
+      properties:
+        uavModel:
+          type: string
+          description: 无人机型号
+        weight:
+          type: number
+          format: double
+          description: 重量(kg)
+        wingspan:
+          type: number
+          format: double
+          description: 翼展(m)
+        batteryCapacity:
+          type: integer
+          description: 电池容量(mAh)
+        missionType:
+          type: string
+          description: 任务类型
+        weatherConditions:
+          type: object
+          additionalProperties:
+            type: object
+          description: 气象条件
+
+    AirworthinessAssessment:
+      type: object
+      description: 适航评估结果
+      properties:
+        id:
+          type: integer
+          format: int64
+        uavModel:
+          type: string
+          description: 无人机型号
+        overallScore:
+          type: integer
+          description: 综合适航评分
+        dimensionScoresJson:
+          type: string
+          description: 各维度评分JSON（气象/结构/动力/通信/任务）
+        status:
+          type: string
+          description: "评估状态: PASS, FAIL, WARNING"
+        recommendationsJson:
+          type: string
+          description: 改进建议JSON
+        tenantId:
+          type: integer
+          format: int64
+        createdAt:
+          type: string
+          format: date-time
+
+    ResultAirworthinessAssessment:
+      allOf:
+        - $ref: '#/components/schemas/Result'
+      properties:
+        data:
+          $ref: '#/components/schemas/AirworthinessAssessment'
+
+    # --- 观测任务 ---
+    CreateObservationRequest:
+      type: object
+      required: [type, targetArea, sensorType, priority]
+      properties:
+        type:
+          type: string
+          description: "任务类型: ADAPTIVE, PLANNED, EMERGENCY"
+        targetArea:
+          type: string
+          description: 目标区域JSON
+        sensorType:
+          type: string
+          description: 传感器类型
+        priority:
+          type: integer
+          description: 优先级(1-10)
+
+    ObservationTask:
+      type: object
+      description: 观测任务
+      properties:
+        id:
+          type: integer
+          format: int64
+        type:
+          type: string
+          description: "任务类型: ADAPTIVE, PLANNED, EMERGENCY"
+        status:
+          type: string
+          description: 任务状态
+        sensorConfigJson:
+          type: string
+          description: 传感器配置JSON
+        plannedPathJson:
+          type: string
+          description: 规划路径JSON
+        actualPathJson:
+          type: string
+          description: 实际路径JSON
+        dataQuality:
+          type: number
+          format: double
+          description: 数据质量评分(0-100)
+        assimilationFeedbackJson:
+          type: string
+          description: 同化反馈JSON
+        tenantId:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    ResultObservationTask:
+      allOf:
+        - $ref: '#/components/schemas/Result'
+      properties:
+        data:
+          $ref: '#/components/schemas/ObservationTask'
+
+    ResultListObservationTask:
+      allOf:
+        - $ref: '#/components/schemas/Result'
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ObservationTask'
+
+    ObservationDecisionRequest:
+      type: object
+      required: [currentState, availableSensors]
+      properties:
+        currentState:
+          type: string
+          description: 当前状态JSON
+        availableSensors:
+          type: string
+          description: 可用传感器列表JSON
+        constraints:
+          type: string
+          description: 约束条件JSON
+
+    ObservationDecision:
+      type: object
+      description: 观测决策
+      properties:
+        id:
+          type: integer
+          format: int64
+        taskId:
+          type: integer
+          format: int64
+          description: 关联任务ID
+        decisionType:
+          type: string
+          description: 决策类型
+        targetAreaJson:
+          type: string
+          description: 目标区域JSON
+        priority:
+          type: integer
+          description: 优先级(1-10)
+        expectedInfoGain:
+          type: number
+          format: double
+          description: 预期信息增益
+        executedAt:
+          type: string
+          format: date-time
+
+    ResultObservationDecision:
+      allOf:
+        - $ref: '#/components/schemas/Result'
+      properties:
+        data:
+          $ref: '#/components/schemas/ObservationDecision'
+
+    ResultListObservationDecision:
+      allOf:
+        - $ref: '#/components/schemas/Result'
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ObservationDecision'
+
+    # --- 路径规划 ---
+    PlanPathRequest:
+      type: object
+      required: [start, end, optimizationTarget]
+      properties:
+        start:
+          type: object
+          description: 起点坐标 {lon, lat, alt}
+          required: [lon, lat, alt]
+          properties:
+            lon:
+              type: number
+              format: double
+            lat:
+              type: number
+              format: double
+            alt:
+              type: number
+              format: double
+        end:
+          type: object
+          description: 终点坐标 {lon, lat, alt}
+          required: [lon, lat, alt]
+          properties:
+            lon:
+              type: number
+              format: double
+            lat:
+              type: number
+              format: double
+            alt:
+              type: number
+              format: double
+        waypoints:
+          type: array
+          description: 途经点列表
+          items:
+            type: object
+            properties:
+              lon:
+                type: number
+                format: double
+              lat:
+                type: number
+                format: double
+              alt:
+                type: number
+                format: double
+        uavModel:
+          type: string
+          description: 无人机型号
+        constraints:
+          type: object
+          additionalProperties:
+            type: object
+          description: 约束条件
+        optimizationTarget:
+          type: string
+          description: "优化目标: RISK, ENERGY, TIME, BALANCED"
+
+    PlanMissionRequest:
+      type: object
+      required: [uavList, taskList]
+      properties:
+        uavList:
+          type: array
+          description: 无人机列表
+          items:
+            type: object
+            additionalProperties:
+              type: object
+        taskList:
+          type: array
+          description: 任务列表
+          items:
+            type: object
+            additionalProperties:
+              type: object
+        areaBounds:
+          type: object
+          description: 区域边界 {minLon, minLat, maxLon, maxLat}
+          properties:
+            minLon:
+              type: number
+              format: double
+            minLat:
+              type: number
+              format: double
+            maxLon:
+              type: number
+              format: double
+            maxLat:
+              type: number
+              format: double
+        priorities:
+          type: object
+          additionalProperties:
+            type: integer
+          description: 优先级配置
+
+    PlanningTask:
+      type: object
+      description: 规划任务
+      properties:
+        id:
+          type: integer
+          format: int64
+        algorithmType:
+          type: string
+          description: "算法类型: VRPTW, DERRTSTAR, DWA, MPC, A_STAR, DIJKSTRA, RRTSTAR"
+        status:
+          type: string
+          description: "任务状态: QUEUED, RUNNING, SUCCESS, FAILED, TIMEOUT, CANCELLED"
+        paramsJson:
+          type: string
+          description: 算法参数JSON
+        resultJson:
+          type: string
+          description: 结果数据JSON
+        progress:
+          type: integer
+          description: 进度(0-100)
+        errorMsg:
+          type: string
+          description: 错误信息
+        tenantId:
+          type: integer
+          format: int64
+        createdAt:
+          type: string
+          format: date-time
+        startedAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+
+    ResultPlanningTask:
+      allOf:
+        - $ref: '#/components/schemas/Result'
+      properties:
+        data:
+          $ref: '#/components/schemas/PlanningTask'
+
+    ResultListPlanningTask:
+      allOf:
+        - $ref: '#/components/schemas/Result'
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/PlanningTask'
+
+    PathResult:
+      type: object
+      description: 路径规划结果
+      properties:
+        id:
+          type: integer
+          format: int64
+        taskId:
+          type: integer
+          format: int64
+        waypointsJson:
+          type: string
+          description: 航点列表JSON [{lon, lat, alt, speed, time}]
+        totalDistance:
+          type: number
+          format: double
+          description: 总距离(m)
+        estimatedTime:
+          type: number
+          format: double
+          description: 预计耗时(s)
+        riskScore:
+          type: number
+          format: double
+          description: 风险评分(0-100)
+        energyConsumption:
+          type: number
+          format: double
+          description: 能耗估算(Wh)
+
+    ResultPathResult:
+      allOf:
+        - $ref: '#/components/schemas/Result'
+      properties:
+        data:
+          $ref: '#/components/schemas/PathResult'
+
+    MissionPlan:
+      type: object
+      description: 任务规划结果
+      properties:
+        id:
+          type: integer
+          format: int64
+        uavsJson:
+          type: string
+          description: 无人机列表JSON
+        tasksJson:
+          type: string
+          description: 任务列表JSON
+        scheduleJson:
+          type: string
+          description: 调度方案JSON
+        overallScore:
+          type: number
+          format: double
+          description: 整体评分
+        tenantId:
+          type: integer
+          format: int64
+        createdAt:
+          type: string
+          format: date-time
+
+    ResultMissionPlan:
+      allOf:
+        - $ref: '#/components/schemas/Result'
+      properties:
+        data:
+          $ref: '#/components/schemas/MissionPlan'
+
+    # --- UTM ---
+    Airspace:
+      type: object
+      description: 空域信息
+      properties:
+        id:
+          type: integer
+          format: int64
+        type:
+          type: string
+          enum: [STATIC, DYNAMIC, RESTRICTED]
+          description: 空域类型
+        boundsJson:
+          type: string
+          description: 边界JSON
+        altitudeMin:
+          type: number
+          format: double
+          description: 最低高度(m)
+        altitudeMax:
+          type: number
+          format: double
+          description: 最高高度(m)
+        effectiveTimeStart:
+          type: string
+          format: date-time
+          description: 生效开始时间
+        effectiveTimeEnd:
+          type: string
+          format: date-time
+          description: 生效结束时间
+        status:
+          type: string
+          enum: [ACTIVE, INACTIVE]
+          description: 空域状态
+        tenantId:
+          type: string
+
+    ResultAirspace:
+      allOf:
+        - $ref: '#/components/schemas/Result'
+      properties:
+        data:
+          $ref: '#/components/schemas/Airspace'
+
+    ResultListAirspace:
+      allOf:
+        - $ref: '#/components/schemas/Result'
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Airspace'
+
+    SubmitFlightPlanRequest:
+      type: object
+      required: [uavId, waypoints, plannedStartTime, plannedEndTime]
+      properties:
+        uavId:
+          type: string
+          description: 无人机ID
+        waypoints:
+          type: array
+          description: 航点列表
+          items:
+            $ref: '#/components/schemas/Waypoint'
+        plannedStartTime:
+          type: string
+          format: date-time
+          description: 计划开始时间
+        plannedEndTime:
+          type: string
+          format: date-time
+          description: 计划结束时间
+        purpose:
+          type: string
+          description: 飞行目的
+
+    Waypoint:
+      type: object
+      properties:
+        lon:
+          type: number
+          format: double
+        lat:
+          type: number
+          format: double
+        alt:
+          type: number
+          format: double
+
+    FlightPlan:
+      type: object
+      description: 飞行计划
+      properties:
+        id:
+          type: integer
+          format: int64
+        uavId:
+          type: string
+        operatorId:
+          type: string
+        waypointsJson:
+          type: string
+          description: 航点列表JSON
+        plannedStartTime:
+          type: string
+          format: date-time
+        plannedEndTime:
+          type: string
+          format: date-time
+        actualStartTime:
+          type: string
+          format: date-time
+        actualEndTime:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [SUBMITTED, APPROVED, REJECTED, ACTIVE, COMPLETED, CANCELLED]
+          description: 飞行计划状态
+        approvalCode:
+          type: string
+          description: 审批编号
+        emergencyFlag:
+          type: boolean
+          description: 是否应急飞行
+        tenantId:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    ResultFlightPlan:
+      allOf:
+        - $ref: '#/components/schemas/Result'
+      properties:
+        data:
+          $ref: '#/components/schemas/FlightPlan'
+
+    ResultListFlightPlan:
+      allOf:
+        - $ref: '#/components/schemas/Result'
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/FlightPlan'
+
+    UavPositionReport:
+      type: object
+      required: [uavId, lon, lat, alt, timestamp]
+      properties:
+        uavId:
+          type: string
+          description: 无人机ID
+        lon:
+          type: number
+          format: double
+          description: 经度
+        lat:
+          type: number
+          format: double
+          description: 纬度
+        alt:
+          type: number
+          format: double
+          description: 海拔高度(m)
+        speed:
+          type: number
+          format: double
+          description: 速度(m/s)
+        heading:
+          type: number
+          format: double
+          description: 航向(deg)
+        timestamp:
+          type: string
+          format: date-time
+
+    UavPosition:
+      type: object
+      description: 无人机位置
+      properties:
+        id:
+          type: integer
+          format: int64
+        uavId:
+          type: string
+        longitude:
+          type: number
+          format: double
+        latitude:
+          type: number
+          format: double
+        altitude:
+          type: number
+          format: double
+        speed:
+          type: number
+          format: double
+        heading:
+          type: number
+          format: double
+        timestamp:
+          type: string
+          format: date-time
+        flightPlanId:
+          type: integer
+          format: int64
+
+    ResultUavPosition:
+      allOf:
+        - $ref: '#/components/schemas/Result'
+      properties:
+        data:
+          $ref: '#/components/schemas/UavPosition'
+
+    ResultListUavPosition:
+      allOf:
+        - $ref: '#/components/schemas/Result'
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/UavPosition'
+
+    ConflictCheckRequest:
+      type: object
+      required: [uavId, plannedPath, timeWindow]
+      properties:
+        uavId:
+          type: string
+          description: 无人机ID
+        plannedPath:
+          type: array
+          description: 计划路径点
+          items:
+            type: object
+            properties:
+              lon:
+                type: number
+                format: double
+              lat:
+                type: number
+                format: double
+              alt:
+                type: number
+                format: double
+              eta:
+                type: string
+                format: date-time
+        timeWindow:
+          type: object
+          description: 时间窗口
+          properties:
+            start:
+              type: string
+              format: date-time
+            end:
+              type: string
+              format: date-time
+
+    ConflictAlert:
+      type: object
+      description: 冲突告警
+      properties:
+        id:
+          type: integer
+          format: int64
+        type:
+          type: string
+          enum: [GEOFENCE, UAV]
+          description: 冲突类型
+        severity:
+          type: string
+          enum: [LOW, MEDIUM, HIGH, CRITICAL]
+          description: 严重程度
+        involvedEntitiesJson:
+          type: string
+          description: 涉及实体JSON
+        resolutionAdviceJson:
+          type: string
+          description: 解决建议JSON
+        status:
+          type: string
+          enum: [ACTIVE, RESOLVED]
+          description: 告警状态
+        createdAt:
+          type: string
+          format: date-time
+        resolvedAt:
+          type: string
+          format: date-time
+
+    ResultListConflictAlert:
+      allOf:
+        - $ref: '#/components/schemas/Result'
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ConflictAlert'
+
+  # ----------------------------------------------------------
+  # 安全认证
+  # ----------------------------------------------------------
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT Token 认证，用于平台管理接口
+
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API Key 认证，配合 HMAC 签名使用
+
+  # ----------------------------------------------------------
+  # 通用响应
+  # ----------------------------------------------------------
+  responses:
+    Success:
+      description: 操作成功
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ResultVoid'
+          example:
+            code: 200
+            message: success
+            data: null
+            timestamp: 1717200000000
+
+    BadRequest:
+      description: 请求参数错误
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Result'
+          example:
+            code: 1000
+            message: "请求参数错误"
+            data: null
+            timestamp: 1717200000000
+
+    Unauthorized:
+      description: 未授权，请先登录
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Result'
+          example:
+            code: 1001
+            message: "未授权，请先登录"
+            data: null
+            timestamp: 1717200000000
+
+    Forbidden:
+      description: 权限不足
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Result'
+          example:
+            code: 1002
+            message: "权限不足"
+            data: null
+            timestamp: 1717200000000
+
+    NotFound:
+      description: 资源不存在
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Result'
+          example:
+            code: 1003
+            message: "资源不存在"
+            data: null
+            timestamp: 1717200000000
+
+    InternalServerError:
+      description: 服务器内部错误
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Result'
+          example:
+            code: 2000
+            message: "服务器内部错误"
+            data: null
+            timestamp: 1717200000000
