@@ -5,6 +5,7 @@ import com.uav.common.core.result.Result;
 import com.uav.platform.entity.Tenant;
 import com.uav.platform.service.TenantService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,7 +28,11 @@ public class TenantController {
 
     private final TenantService tenantService;
 
+    /**
+     * 创建租户 - 仅 ADMIN 角色可操作
+     */
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public Result<Tenant> create(@Valid @RequestBody CreateTenantRequest request) {
         Tenant tenant = tenantService.createTenant(
                 request.getName(),
@@ -37,12 +42,20 @@ public class TenantController {
         return Result.success(tenant);
     }
 
+    /**
+     * 查询租户详情 - ADMIN 或 OPERATOR 可查看
+     */
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
     public Result<Tenant> getById(@PathVariable Long id) {
         return Result.success(tenantService.getById(id));
     }
 
+    /**
+     * 分页查询租户列表 - ADMIN 或 OPERATOR 可查看
+     */
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
     public Result<Page<Tenant>> list(
             @RequestParam(defaultValue = "1") Integer current,
             @RequestParam(defaultValue = "10") Integer size) {
@@ -50,7 +63,11 @@ public class TenantController {
         return Result.success(page);
     }
 
+    /**
+     * 更新租户 - 仅 ADMIN 角色可操作
+     */
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public Result<Void> update(@PathVariable Long id, @Valid @RequestBody UpdateTenantRequest request) {
         Tenant tenant = new Tenant();
         tenant.setId(id);
@@ -60,19 +77,31 @@ public class TenantController {
         return Result.success();
     }
 
+    /**
+     * 禁用租户 - 仅 ADMIN 角色可操作
+     */
     @PostMapping("/{id}/disable")
+    @PreAuthorize("hasRole('ADMIN')")
     public Result<Void> disable(@PathVariable Long id) {
         tenantService.disableTenant(id);
         return Result.success();
     }
 
+    /**
+     * 启用租户 - 仅 ADMIN 角色可操作
+     */
     @PostMapping("/{id}/enable")
+    @PreAuthorize("hasRole('ADMIN')")
     public Result<Void> enable(@PathVariable Long id) {
         tenantService.enableTenant(id);
         return Result.success();
     }
 
+    /**
+     * 删除租户 - 仅 ADMIN 角色（SUPER_ADMIN 权限）可操作
+     */
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public Result<Void> delete(@PathVariable Long id) {
         tenantService.removeById(id);
         return Result.success();

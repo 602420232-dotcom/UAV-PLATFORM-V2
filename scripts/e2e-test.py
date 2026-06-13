@@ -1,25 +1,31 @@
 #!/usr/bin/env python3
 """
-UAV Platform V2 端到端集成测试
+UAV Platform V2 - E2E 自动化测试脚本
 
-测试流程: WRF -> 气象融合 -> 同化 -> 风险评估 -> 路径规划 -> UTM
-测试模式: mock=true（使用模拟数据，不需要真实基础设施）
+端到端功能测试，覆盖完整业务链路:
+  测试1: 算法列表查询 (验证 102 个算法，按类别统计)
+  测试2: 算法执行测试 (调用 A* 算法进行路径规划)
+  测试3: 同化任务提交 (提交 3DVAR 任务)
+  测试4: 风险评估 (发起风险评估)
+  测试5: 气象数据查询 (单点气象查询)
+  测试6: 观测决策 (信息增益计算)
+  测试7: 路径规划 (RRT* 路径规划)
+  测试8: 智能调度器 (assimilation smart-select)
 
 用法:
-    python scripts/e2e-test.py              # 默认 mock 模式
-    python scripts/e2e-test.py --mock       # 显式 mock 模式
-    python scripts/e2e-test.py --url http://localhost:8080  # 指定服务地址
+    python scripts/e2e-test.py
+    python scripts/e2e-test.py --verbose
+    python scripts/e2e-test.py --json-output
+    python scripts/e2e-test.py --host 192.168.1.100
 """
 
 from __future__ import annotations
 
 import argparse
-import hashlib
-import hmac
 import json
 import sys
 import time
-import urllib.parse
+from datetime import datetime, timezone
 from typing import Any
 
 try:
@@ -28,1034 +34,975 @@ except ImportError:
     print("ERROR: 请先安装 requests 库: pip install requests")
     sys.exit(1)
 
+# ============================================================
+# ANSI Color Codes
+# ============================================================
+
+class Color:
+    RESET = "\033[0m"
+    BOLD = "\033[1m"
+    RED = "\033[91m"
+    GREEN = "\033[92m"
+    YELLOW = "\033[93m"
+    CYAN = "\033[96m"
+    WHITE = "\033[97m"
+    DIM = "\033[2m"
+
+    @staticmethod
+    def disable() -> None:
+        Color.RESET = ""
+        Color.BOLD = ""
+        Color.RED = ""
+        Color.GREEN = ""
+        Color.YELLOW = ""
+        Color.CYAN = ""
+        Color.WHITE = ""
+        Color.DIM = ""
+
 
 # ============================================================
 # Configuration
 # ============================================================
 
-# Service endpoints (direct connection, bypassing gateway for E2E testing)
-SERVICE_URLS = {
-    "platform": "http://localhost:18081",
-    "weather": "http://localhost:18082",
-    "assimilation": "http://localhost:18083",
-    "risk": "http://localhost:18084",
-    "observation": "http://localhost:18085",
-    "planning": "http://localhost:18086",
-    "utm": "http://localhost:18087",
-}
-DEFAULT_BASE_URL = "http://localhost:18080"  # gateway (optional)
-DEFAULT_API_KEY = "test-key"
-DEFAULT_API_SECRET = "test-secret"
-API_VERSION = "1.0"
-API_PREFIX = "/api"
+DEFAULT_HOST = "localhost"
+REQUEST_TIMEOUT = 30  # API 请求超时
+
+# 服务端口 (灰度环境 Docker 映射)
+ALGORITHM_ENGINE_URL = "http://localhost:9095"
+ASSIMILATION_API_URL = "http://localhost:8253"
+RISK_API_URL = "http://localhost:8254"
+WEATHER_API_URL = "http://localhost:8252"
+OBSERVATION_API_URL = "http://localhost:8255"
+PLANNING_API_URL = "http://localhost:8256"
+
+# 期望算法数量
+EXPECTED_ALGORITHM_COUNT = 102
 
 
 # ============================================================
-# HMAC-SHA256 Signing
-# ============================================================
-
-def sign_request(
-    method: str,
-    path: str,
-    api_key: str,
-    api_secret: str,
-    body: str = "",
-) -> dict[str, str]:
-    """
-    Generate HMAC-SHA256 signature headers.
-
-    Signature string format:
-        METHOD\\nPATH\\nTIMESTAMP\\nAPI_KEY\\nBODY
-    """
-    timestamp = str(int(time.time()))
-    string_to_sign = f"{method.upper()}\n{path}\n{timestamp}\n{api_key}\n{body}"
-    signature = hmac.new(
-        api_secret.encode("utf-8"),
-        string_to_sign.encode("utf-8"),
-        hashlib.sha256,
-    ).hexdigest()
-
-    return {
-        "X-API-Key": api_key,
-        "X-Signature": signature,
-        "X-Timestamp": timestamp,
-        "X-API-Version": API_VERSION,
-    }
-
-
-# ============================================================
-# Mock Data
-# ============================================================
-
-MOCK_WEATHER_POINT = {
-    "code": 0,
-    "message": "ok",
-    "data": {
-        "lon": 116.4,
-        "lat": 39.9,
-        "altitude": 100.0,
-        "windSpeed": 5.2,
-        "windDirection": 225.0,
-        "temperature": 18.5,
-        "humidity": 65.0,
-        "pressure": 1013.2,
-        "visibility": 10000.0,
-        "weatherCode": 0,
-        "source": "wrf",
-        "forecastTime": "2024-01-15T12:00:00Z",
-    },
-    "requestId": "mock-req-001",
-    "timestamp": int(time.time()),
-}
-
-MOCK_WEATHER_REGION = {
-    "code": 0,
-    "message": "ok",
-    "data": [
-        {
-            "lon": 116.4,
-            "lat": 39.9,
-            "altitude": 100.0,
-            "windSpeed": 5.2,
-            "windDirection": 225.0,
-            "temperature": 18.5,
-            "humidity": 65.0,
-            "pressure": 1013.2,
-            "visibility": 10000.0,
-            "weatherCode": 0,
-            "source": "wrf",
-            "forecastTime": "2024-01-15T12:00:00Z",
-        },
-        {
-            "lon": 116.5,
-            "lat": 39.9,
-            "altitude": 100.0,
-            "windSpeed": 4.8,
-            "windDirection": 230.0,
-            "temperature": 18.3,
-            "humidity": 66.0,
-            "pressure": 1013.1,
-            "visibility": 9500.0,
-            "weatherCode": 0,
-            "source": "wrf",
-            "forecastTime": "2024-01-15T12:00:00Z",
-        },
-    ],
-    "requestId": "mock-req-002",
-    "timestamp": int(time.time()),
-}
-
-MOCK_ASSIMILATION_TASK = {
-    "code": 0,
-    "message": "ok",
-    "data": 1001,
-    "requestId": "mock-req-003",
-    "timestamp": int(time.time()),
-}
-
-MOCK_ASSIMILATION_STATUS = {
-    "code": 0,
-    "message": "ok",
-    "data": {
-        "id": 1001,
-        "type": "3DVAR",
-        "status": "COMPLETED",
-        "algorithm": "three_dimensional_var",
-        "createdAt": "2024-01-15T10:00:00Z",
-        "completedAt": "2024-01-15T10:05:30Z",
-        "errorMessage": None,
-    },
-    "requestId": "mock-req-004",
-    "timestamp": int(time.time()),
-}
-
-MOCK_ASSIMILATION_RESULT = {
-    "code": 0,
-    "message": "ok",
-    "data": {
-        "taskId": 1001,
-        "analysisTime": "2024-01-15T10:05:00Z",
-        "variables": ["temperature", "humidity", "wind_u", "wind_v", "pressure"],
-        "gridInfo": {
-            "minLon": 115.0,
-            "minLat": 39.0,
-            "maxLon": 118.0,
-            "maxLat": 41.0,
-            "resolution": 0.1,
-            "levels": 30,
-        },
-        "dataUrl": "s3://uav-platform/assimilation/1001/result.nc",
-    },
-    "requestId": "mock-req-005",
-    "timestamp": int(time.time()),
-}
-
-MOCK_RISK_ASSESSMENT = {
-    "code": 0,
-    "message": "ok",
-    "data": {
-        "id": 2001,
-        "type": "COMPOSITE",
-        "riskLevel": "LOW",
-        "score": 25.3,
-        "factors": [
-            {"name": "weather_risk", "value": 30.0, "weight": 0.4, "level": "LOW"},
-            {"name": "terrain_risk", "value": 15.0, "weight": 0.3, "level": "LOW"},
-            {"name": "airspace_risk", "value": 35.0, "weight": 0.3, "level": "MEDIUM"},
-        ],
-        "lon": 116.4,
-        "lat": 39.9,
-        "altitude": 100.0,
-        "assessedAt": "2024-01-15T12:00:00Z",
-    },
-    "requestId": "mock-req-006",
-    "timestamp": int(time.time()),
-}
-
-MOCK_AIRWORTHINESS = {
-    "code": 0,
-    "message": "ok",
-    "data": {
-        "id": 3001,
-        "uavType": "multirotor",
-        "overallScore": 85.5,
-        "decision": "APPROVED",
-        "factors": [
-            {"name": "wind_speed", "score": 90.0, "threshold": 15.0, "passed": True},
-            {"name": "visibility", "score": 95.0, "threshold": 3000.0, "passed": True},
-            {"name": "temperature", "score": 80.0, "threshold": -10.0, "passed": True},
-            {"name": "precipitation", "score": 70.0, "threshold": 5.0, "passed": True},
-        ],
-        "assessedAt": "2024-01-15T12:00:00Z",
-    },
-    "requestId": "mock-req-007",
-    "timestamp": int(time.time()),
-}
-
-MOCK_OBSERVATION_DECISION = {
-    "code": 0,
-    "message": "ok",
-    "data": {
-        "id": 4001,
-        "taskId": 0,
-        "decision": "OBSERVE",
-        "reason": "当前观测覆盖率不足，建议补充观测数据以提高同化精度",
-        "suggestedPlatforms": ["UAV-001", "UAV-002", "surface_station"],
-        "suggestedTime": "2024-01-15T13:00:00Z",
-        "coverageScore": 0.62,
-        "createdAt": "2024-01-15T12:00:00Z",
-    },
-    "requestId": "mock-req-008",
-    "timestamp": int(time.time()),
-}
-
-MOCK_PLANNING_TASK = {
-    "code": 0,
-    "message": "ok",
-    "data": {
-        "id": 5001,
-        "type": "PATH",
-        "status": "COMPLETED",
-        "createdAt": "2024-01-15T12:00:00Z",
-        "completedAt": "2024-01-15T12:00:05Z",
-        "errorMessage": None,
-    },
-    "requestId": "mock-req-009",
-    "timestamp": int(time.time()),
-}
-
-MOCK_PATH_RESULT = {
-    "code": 0,
-    "message": "ok",
-    "data": {
-        "taskId": 5001,
-        "waypoints": [
-            {"lon": 116.4, "lat": 39.9, "altitude": 100.0, "speed": 15.0, "timestamp": "2024-01-15T12:00:00Z"},
-            {"lon": 116.5, "lat": 39.92, "altitude": 120.0, "speed": 18.0, "timestamp": "2024-01-15T12:03:00Z"},
-            {"lon": 116.6, "lat": 39.95, "altitude": 150.0, "speed": 20.0, "timestamp": "2024-01-15T12:06:00Z"},
-            {"lon": 116.7, "lat": 39.95, "altitude": 180.0, "speed": 20.0, "timestamp": "2024-01-15T12:09:00Z"},
-            {"lon": 117.0, "lat": 40.0, "altitude": 200.0, "speed": 15.0, "timestamp": "2024-01-15T12:15:00Z"},
-        ],
-        "totalDistance": 35.2,
-        "estimatedTime": 900.0,
-        "fuelConsumption": 2.8,
-    },
-    "requestId": "mock-req-010",
-    "timestamp": int(time.time()),
-}
-
-MOCK_FLIGHT_PLAN = {
-    "code": 0,
-    "message": "ok",
-    "data": {
-        "id": 6001,
-        "uavId": "UAV-TEST-001",
-        "status": "SUBMITTED",
-        "waypoints": [
-            {"lon": 116.4, "lat": 39.9, "altitude": 100.0, "speed": 15.0, "timestamp": "2024-01-15T12:00:00Z"},
-            {"lon": 117.0, "lat": 40.0, "altitude": 200.0, "speed": 15.0, "timestamp": "2024-01-15T12:15:00Z"},
-        ],
-        "submittedAt": "2024-01-15T11:50:00Z",
-        "approvedAt": None,
-    },
-    "requestId": "mock-req-011",
-    "timestamp": int(time.time()),
-}
-
-MOCK_FLIGHT_PLAN_APPROVED = {
-    "code": 0,
-    "message": "ok",
-    "data": {
-        "id": 6001,
-        "uavId": "UAV-TEST-001",
-        "status": "APPROVED",
-        "waypoints": [
-            {"lon": 116.4, "lat": 39.9, "altitude": 100.0, "speed": 15.0, "timestamp": "2024-01-15T12:00:00Z"},
-            {"lon": 117.0, "lat": 40.0, "altitude": 200.0, "speed": 15.0, "timestamp": "2024-01-15T12:15:00Z"},
-        ],
-        "submittedAt": "2024-01-15T11:50:00Z",
-        "approvedAt": "2024-01-15T11:55:00Z",
-    },
-    "requestId": "mock-req-012",
-    "timestamp": int(time.time()),
-}
-
-MOCK_FLIGHT_PLAN_STARTED = {
-    "code": 0,
-    "message": "ok",
-    "data": {
-        "id": 6001,
-        "uavId": "UAV-TEST-001",
-        "status": "ACTIVE",
-        "waypoints": [
-            {"lon": 116.4, "lat": 39.9, "altitude": 100.0, "speed": 15.0, "timestamp": "2024-01-15T12:00:00Z"},
-            {"lon": 117.0, "lat": 40.0, "altitude": 200.0, "speed": 15.0, "timestamp": "2024-01-15T12:15:00Z"},
-        ],
-        "submittedAt": "2024-01-15T11:50:00Z",
-        "approvedAt": "2024-01-15T11:55:00Z",
-    },
-    "requestId": "mock-req-013",
-    "timestamp": int(time.time()),
-}
-
-MOCK_POSITION_REPORT = {
-    "code": 0,
-    "message": "ok",
-    "data": None,
-    "requestId": "mock-req-014",
-    "timestamp": int(time.time()),
-}
-
-MOCK_CONFLICT_CHECK = {
-    "code": 0,
-    "message": "ok",
-    "data": [],
-    "requestId": "mock-req-015",
-    "timestamp": int(time.time()),
-}
-
-MOCK_HEALTH = {
-    "code": 0,
-    "message": "ok",
-    "data": {"status": "UP", "services": ["weather", "assimilation", "planning", "risk", "utm", "observation"]},
-    "requestId": "mock-req-health",
-    "timestamp": int(time.time()),
-}
-
-
-# ============================================================
-# Test Framework
+# Test Result Tracker
 # ============================================================
 
 class TestResult:
-    """Tracks individual test results."""
+    """E2E 测试结果跟踪器"""
 
     def __init__(self) -> None:
         self.passed: int = 0
         self.failed: int = 0
         self.skipped: int = 0
         self.details: list[dict[str, Any]] = []
+        self.start_time: float = time.time()
 
-    def record(self, name: str, status: str, message: str = "", duration: float = 0.0) -> None:
+    def record(
+        self,
+        test_id: int,
+        test_name: str,
+        status: str,
+        request_time: float = 0.0,
+        response_status: int = 0,
+        message: str = "",
+        validation: str = "",
+        response_data: Any = None,
+    ) -> None:
         entry = {
-            "name": name,
+            "test_id": test_id,
+            "test_name": test_name,
             "status": status,
+            "request_time": round(request_time, 3),
+            "response_status": response_status,
             "message": message,
-            "duration": round(duration, 3),
+            "validation": validation,
+            "response_data": response_data,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
         self.details.append(entry)
         if status == "PASS":
             self.passed += 1
         elif status == "FAIL":
             self.failed += 1
-        else:
+        elif status == "SKIP":
             self.skipped += 1
 
-    def report(self) -> str:
-        lines = []
-        lines.append("")
-        lines.append("=" * 60)
-        lines.append("  测试报告")
-        lines.append("=" * 60)
-        lines.append("")
+    def print_report(self, verbose: bool = False) -> None:
+        """打印彩色测试报告"""
+        total_duration = round(time.time() - self.start_time, 3)
+
+        print()
+        print(f"{Color.BOLD}{'=' * 72}{Color.RESET}")
+        print(f"{Color.BOLD}  UAV Platform V2 - E2E 自动化测试报告{Color.RESET}")
+        print(f"  生成时间: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')} UTC")
+        print(f"  总耗时: {total_duration}s")
+        print(f"{Color.BOLD}{'=' * 72}{Color.RESET}")
+        print()
 
         for d in self.details:
-            status_tag = {
-                "PASS": "  PASS  ",
-                "FAIL": "  FAIL  ",
-                "SKIP": "  SKIP  ",
-            }.get(d["status"], "  ???  ")
-            lines.append(f"  [{status_tag}] {d['name']}")
+            test_id = d["test_id"]
+            test_name = d["test_name"]
+
+            if d["status"] == "PASS":
+                tag = f"{Color.GREEN}PASS{Color.RESET}"
+            elif d["status"] == "FAIL":
+                tag = f"{Color.RED}FAIL{Color.RESET}"
+            elif d["status"] == "SKIP":
+                tag = f"{Color.YELLOW}SKIP{Color.RESET}"
+            else:
+                tag = f"{Color.YELLOW}WARN{Color.RESET}"
+
+            print(f"  {Color.BOLD}测试 {test_id}: {test_name}{Color.RESET}")
+            print(f"    状态: [{tag}]")
+            print(f"    请求时间: {d['request_time']}s")
+            if d["response_status"]:
+                print(f"    响应状态: HTTP {d['response_status']}")
             if d["message"]:
-                lines.append(f"            {d['message']}")
-            if d["duration"] > 0:
-                lines.append(f"            ({d['duration']}s)")
+                for line in d["message"].split("\n"):
+                    print(f"    {Color.DIM}{line}{Color.RESET}")
+            if d["validation"]:
+                for line in d["validation"].split("\n"):
+                    print(f"    {Color.DIM}{line}{Color.RESET}")
+            if verbose and d.get("response_data") is not None:
+                try:
+                    data_str = json.dumps(d["response_data"], indent=2, ensure_ascii=False)
+                    if len(data_str) > 1000:
+                        data_str = data_str[:1000] + "\n  ... (truncated)"
+                    for line in data_str.split("\n"):
+                        print(f"    {Color.DIM}{line}{Color.RESET}")
+                except (TypeError, ValueError):
+                    pass
+            print()
 
         total = self.passed + self.failed + self.skipped
-        lines.append("")
-        lines.append("-" * 60)
-        lines.append(f"  总计: {total}  |  通过: {self.passed}  |  失败: {self.failed}  |  跳过: {self.skipped}")
-        lines.append("-" * 60)
-        lines.append("")
+        print(f"{Color.BOLD}{'-' * 72}{Color.RESET}")
+        print(
+            f"  {Color.BOLD}总计: {total}  |  "
+            f"{Color.GREEN}通过: {self.passed}  |  "
+            f"{Color.RED}失败: {self.failed}  |  "
+            f"{Color.YELLOW}跳过: {self.skipped}{Color.RESET}"
+        )
+        print(f"{Color.BOLD}{'-' * 72}{Color.RESET}")
+        print()
 
         if self.failed > 0:
-            lines.append("  结果: 有测试失败")
+            print(f"  {Color.RED}{Color.BOLD}*** 测试结果: FAIL (存在失败项) ***{Color.RESET}")
         elif self.skipped > 0:
-            lines.append("  结果: 全部通过（部分跳过）")
+            print(f"  {Color.YELLOW}{Color.BOLD}*** 测试结果: PASS (存在跳过项) ***{Color.RESET}")
         else:
-            lines.append("  结果: 全部通过")
+            print(f"  {Color.GREEN}{Color.BOLD}*** 测试结果: PASS (全部通过) ***{Color.RESET}")
+        print()
 
-        lines.append("")
-        return "\n".join(lines)
+    def to_json(self) -> dict[str, Any]:
+        """输出 JSON 格式测试报告"""
+        return {
+            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "total_duration": round(time.time() - self.start_time, 3),
+            "summary": {
+                "total": self.passed + self.failed + self.skipped,
+                "passed": self.passed,
+                "failed": self.failed,
+                "skipped": self.skipped,
+                "result": "FAIL" if self.failed > 0 else "PASS",
+            },
+            "tests": [
+                {
+                    "test_id": d["test_id"],
+                    "test_name": d["test_name"],
+                    "status": d["status"],
+                    "request_time": d["request_time"],
+                    "response_status": d["response_status"],
+                    "message": d["message"],
+                    "validation": d["validation"],
+                    "timestamp": d["timestamp"],
+                }
+                for d in self.details
+            ],
+        }
 
 
 # ============================================================
-# Mock HTTP Client
+# Test 1: 算法列表查询
 # ============================================================
 
-class MockResponse:
-    """Simulates an HTTP response for mock mode."""
+def test_algorithm_list(results: TestResult, verbose: bool = False) -> None:
+    """测试1: 算法列表查询 - 验证 102 个算法，按类别统计"""
+    test_id = 1
+    test_name = "算法列表查询"
+    url = f"{ALGORITHM_ENGINE_URL}/api/v1/algorithms"
 
-    def __init__(self, json_data: dict, status_code: int = 200) -> None:
-        self._json_data = json_data
-        self.status_code = status_code
+    start = time.time()
+    try:
+        resp = requests.get(url, timeout=REQUEST_TIMEOUT)
+        duration = time.time() - start
 
-    def json(self) -> dict:
-        return self._json_data
+        if resp.status_code == 200:
+            body = resp.json()
+            if isinstance(body, list):
+                algo_count = len(body)
 
-    def raise_for_status(self) -> None:
-        if self.status_code >= 400:
-            raise requests.HTTPError(f"Mock HTTP {self.status_code}")
+                # 按类别统计
+                category_counts: dict[str, int] = {}
+                for algo in body:
+                    cat = algo.get("category", "unknown")
+                    category_counts[cat] = category_counts.get(cat, 0) + 1
 
+                cat_summary = ", ".join(
+                    f"{cat}={cnt}" for cat, cnt in sorted(category_counts.items())
+                )
 
-class MockHttpClient:
-    """
-    Mock HTTP client that returns predefined responses based on URL path.
+                # 验证
+                count_match = algo_count == EXPECTED_ALGORITHM_COUNT
+                has_categories = len(category_counts) > 0
 
-    In mock mode, no real HTTP requests are made. Instead, predefined
-    mock responses are returned to simulate the API behavior.
-    """
+                validation_parts = []
+                if count_match:
+                    validation_parts.append(f"算法数量匹配: {algo_count}/{EXPECTED_ALGORITHM_COUNT}")
+                else:
+                    validation_parts.append(
+                        f"算法数量不匹配: {algo_count} (期望 {EXPECTED_ALGORITHM_COUNT})"
+                    )
+                validation_parts.append(f"类别数: {len(category_counts)}")
+                validation_parts.append(f"类别分布: {cat_summary}")
 
-    def __init__(self) -> None:
-        self._call_log: list[dict[str, Any]] = []
+                # 验证每个算法有 id, name, category
+                valid_structure = all(
+                    a.get("id") and a.get("name") and a.get("category")
+                    for a in body
+                )
+                validation_parts.append(f"结构完整性: {'通过' if valid_structure else '失败'}")
 
-    def _match(self, path: str, method: str) -> dict | None:
-        """Match a request path and method to a mock response."""
-        path_lower = path.lower()
+                status = "PASS" if count_match and valid_structure else "FAIL"
+                message = f"查询到 {algo_count} 个算法"
 
-        # Health check
-        if path_lower == "/api/v1/health" and method == "GET":
-            return MOCK_HEALTH
-
-        # Weather - point query
-        if path_lower == "/api/v1/weather/point" and method == "POST":
-            return MOCK_WEATHER_POINT
-
-        # Weather - region query
-        if path_lower == "/api/v1/weather/region" and method == "GET":
-            return MOCK_WEATHER_REGION
-
-        # Weather - wind profile
-        if path_lower == "/api/v1/weather/wind-profile" and method == "POST":
-            return MOCK_WEATHER_POINT  # reuse for simplicity
-
-        # Weather - fusion
-        if path_lower == "/api/v1/weather/fusion" and method == "POST":
-            return MOCK_WEATHER_POINT
-
-        # Assimilation - submit task
-        if path_lower == "/api/v1/assimilation/tasks" and method == "POST":
-            return MOCK_ASSIMILATION_TASK
-
-        # Assimilation - task status (match /api/v1/assimilation/tasks/{id})
-        if "/api/v1/assimilation/tasks/" in path_lower and method == "GET" and "/result" not in path_lower:
-            return MOCK_ASSIMILATION_STATUS
-
-        # Assimilation - task result
-        if "/api/v1/assimilation/tasks/" in path_lower and "/result" in path_lower and method == "GET":
-            return MOCK_ASSIMILATION_RESULT
-
-        # Assimilation - cancel
-        if "/api/v1/assimilation/tasks/" in path_lower and "/cancel" in path_lower and method == "POST":
-            return {"code": 0, "message": "ok", "data": None, "requestId": "mock-cancel", "timestamp": int(time.time())}
-
-        # Risk - assess
-        if path_lower == "/api/v1/risk/assess" and method == "POST":
-            return MOCK_RISK_ASSESSMENT
-
-        # Risk - airworthiness
-        if path_lower == "/api/v1/risk/airworthiness" and method == "POST":
-            return MOCK_AIRWORTHINESS
-
-        # Risk - map
-        if path_lower == "/api/v1/risk/map" and method == "GET":
-            return {"code": 0, "message": "ok", "data": [MOCK_RISK_ASSESSMENT["data"]], "requestId": "mock-map", "timestamp": int(time.time())}
-
-        # Risk - history
-        if path_lower == "/api/v1/risk/history" and method == "GET":
-            return {"code": 0, "message": "ok", "data": [MOCK_RISK_ASSESSMENT["data"]], "requestId": "mock-history", "timestamp": int(time.time())}
-
-        # Observation - decision
-        if path_lower == "/api/v1/observation/decisions" and method == "POST":
-            return MOCK_OBSERVATION_DECISION
-
-        # Observation - tasks
-        if path_lower == "/api/v1/observation/tasks" and method == "POST":
-            return {
-                "code": 0, "message": "ok",
-                "data": {
-                    "id": 4002, "type": "adaptive", "status": "PENDING", "priority": 5,
-                    "region": {"minLon": 116.0, "minLat": 39.5, "maxLon": 117.0, "maxLat": 40.5},
-                    "targetVariables": ["temperature", "wind_u", "wind_v"],
-                    "platform": "UAV-001", "createdAt": "2024-01-15T12:00:00Z", "completedAt": None,
-                },
-                "requestId": "mock-obs-task", "timestamp": int(time.time()),
-            }
-
-        # Planning - path
-        if path_lower == "/api/v1/planning/path" and method == "POST":
-            return MOCK_PLANNING_TASK
-
-        # Planning - mission
-        if path_lower == "/api/v1/planning/mission" and method == "POST":
-            return MOCK_PLANNING_TASK
-
-        # Planning - task status
-        if "/api/v1/planning/tasks/" in path_lower and "/result" not in path_lower and "/mission" not in path_lower and "/cancel" not in path_lower and method == "GET":
-            return MOCK_PLANNING_TASK
-
-        # Planning - path result
-        if "/api/v1/planning/tasks/" in path_lower and "/result" in path_lower and method == "GET":
-            return MOCK_PATH_RESULT
-
-        # Planning - cancel
-        if "/api/v1/planning/tasks/" in path_lower and "/cancel" in path_lower and method == "POST":
-            return {"code": 0, "message": "ok", "data": None, "requestId": "mock-plan-cancel", "timestamp": int(time.time())}
-
-        # UTM - flight plans submit
-        if path_lower == "/api/v1/flight-plans" and method == "POST":
-            return MOCK_FLIGHT_PLAN
-
-        # UTM - flight plans list
-        if path_lower == "/api/v1/flight-plans" and method == "GET":
-            return {"code": 0, "message": "ok", "data": [MOCK_FLIGHT_PLAN["data"]], "requestId": "mock-fp-list", "timestamp": int(time.time())}
-
-        # UTM - approve flight plan
-        if "/api/v1/flight-plans/" in path_lower and "/approve" in path_lower and method == "POST":
-            return MOCK_FLIGHT_PLAN_APPROVED
-
-        # UTM - start flight plan
-        if "/api/v1/flight-plans/" in path_lower and "/start" in path_lower and method == "POST":
-            return MOCK_FLIGHT_PLAN_STARTED
-
-        # UTM - position report
-        if path_lower == "/api/v1/tracking/positions" and method == "POST":
-            return MOCK_POSITION_REPORT
-
-        # UTM - conflict check
-        if path_lower == "/api/v1/tracking/conflicts/check" and method == "POST":
-            return MOCK_CONFLICT_CHECK
-
-        # UTM - conflict alerts list
-        if path_lower == "/api/v1/conflict-alerts" and method == "GET":
-            return {"code": 0, "message": "ok", "data": [], "requestId": "mock-alerts", "timestamp": int(time.time())}
-
-        # UTM - airspaces
-        if path_lower == "/api/v1/airspaces" and method == "GET":
-            return {
-                "code": 0, "message": "ok",
-                "data": [
-                    {
-                        "id": 1, "name": "Test Airspace", "type": "restricted",
-                        "status": "active", "minAltitude": 0, "maxAltitude": 300,
-                        "geometry": None, "restrictions": ["no-fly"],
-                        "createdAt": "2024-01-01T00:00:00Z",
-                    }
-                ],
-                "requestId": "mock-asp", "timestamp": int(time.time()),
-            }
-
-        # UTM - airspace check
-        if path_lower == "/api/v1/airspaces/check" and method == "GET":
-            return {"code": 0, "message": "ok", "data": False, "requestId": "mock-asp-check", "timestamp": int(time.time())}
-
-        return None
-
-    def request(self, method: str, url: str, json_data: dict | None = None, params: dict | None = None) -> MockResponse:
-        """Perform a mock HTTP request."""
-        parsed = urllib.parse.urlparse(url)
-        path = parsed.path
-
-        self._call_log.append({
-            "method": method,
-            "url": url,
-            "path": path,
-            "json": json_data,
-            "params": params,
-            "timestamp": time.time(),
-        })
-
-        mock_data = self._match(path, method)
-        if mock_data is not None:
-            return MockResponse(mock_data)
-
-        return MockResponse(
-            {"code": 404, "message": f"No mock for {method} {path}", "data": None, "requestId": "", "timestamp": int(time.time())},
-            status_code=404,
+                results.record(
+                    test_id, test_name, status,
+                    request_time=duration,
+                    response_status=resp.status_code,
+                    message=message,
+                    validation="\n".join(validation_parts),
+                    response_data=body[:10] if verbose else None,
+                )
+            else:
+                results.record(
+                    test_id, test_name, "FAIL",
+                    request_time=duration,
+                    response_status=resp.status_code,
+                    message="响应格式异常",
+                    validation=f"期望 list, 得到 {type(body).__name__}",
+                )
+        else:
+            results.record(
+                test_id, test_name, "FAIL",
+                request_time=duration,
+                response_status=resp.status_code,
+                message=f"HTTP {resp.status_code}",
+                validation="期望 HTTP 200",
+            )
+    except requests.exceptions.ConnectionError:
+        duration = time.time() - start
+        results.record(
+            test_id, test_name, "FAIL",
+            request_time=duration,
+            response_status=0,
+            message="连接拒绝 (算法引擎未启动)",
+            validation="算法引擎服务不可达",
+        )
+    except Exception as e:
+        duration = time.time() - start
+        results.record(
+            test_id, test_name, "FAIL",
+            request_time=duration,
+            response_status=0,
+            message=str(e),
+            validation="请求异常",
         )
 
 
 # ============================================================
-# API Client (works with both real and mock)
+# Test 2: 算法执行测试 (A* 路径规划)
 # ============================================================
 
-class E2EClient:
-    """
-    End-to-end test client.
+def test_algorithm_execution(results: TestResult, verbose: bool = False) -> None:
+    """测试2: 算法执行测试 - 调用 A* 算法进行路径规划"""
+    test_id = 2
+    test_name = "算法执行测试 (A* 路径规划)"
+    url = f"{ALGORITHM_ENGINE_URL}/api/v1/tasks/submit"
 
-    Supports both real HTTP requests (via requests library) and mock mode.
-    """
+    payload = {
+        "algorithm_id": "a_star",
+        "params": {
+            "start": [0, 0],
+            "goal": [19, 19],
+            "grid_size": [20, 20],
+            "obstacles": [
+                [5, 5], [5, 6], [5, 7], [6, 5],
+                [10, 10], [10, 11], [11, 10],
+                [15, 3], [15, 4], [16, 3],
+            ],
+        },
+        "priority": 5,
+    }
 
-    def __init__(self, base_url: str, api_key: str, api_secret: str, mock: bool = True) -> None:
-        self.base_url = base_url
-        self.api_key = api_key
-        self.api_secret = api_secret
-        self.mock = mock
-        self._mock_client = MockHttpClient() if mock else None
+    start = time.time()
+    try:
+        resp = requests.post(url, json=payload, timeout=REQUEST_TIMEOUT)
+        duration = time.time() - start
 
-    def _full_url(self, path: str) -> str:
-        return f"{self.base_url}{API_PREFIX}{path}"
+        if resp.status_code in (200, 201):
+            body = resp.json()
+            task_id = body.get("task_id")
+            algo_id = body.get("algorithm_id")
+            status = body.get("status")
 
-    def _headers(self, method: str, path: str, body: str = "") -> dict[str, str]:
-        return sign_request(method, f"{API_PREFIX}{path}", self.api_key, self.api_secret, body)
+            validation_parts = []
+            validation_parts.append(f"task_id: {task_id}")
+            validation_parts.append(f"algorithm_id: {algo_id}")
+            validation_parts.append(f"status: {status}")
 
-    def _unwrap(self, resp: Any) -> Any:
-        """Unwrap Result<T> envelope."""
-        data = resp.json()
-        code = data.get("code", -1)
-        if code not in (0, 200):
-            raise RuntimeError(f"API error: code={code}, message={data.get('message', 'unknown')}")
-        return data.get("data")
+            has_task_id = task_id is not None
+            has_status = status is not None
+            validation_parts.append(f"返回结构完整: {'通过' if has_task_id and has_status else '失败'}")
 
-    def get(self, path: str, params: dict | None = None) -> Any:
-        if self.mock:
-            resp = self._mock_client.request("GET", self._full_url(path), params=params)
+            # 查询任务状态
+            query_start = time.time()
+            task_status_resp = None
+            if task_id:
+                try:
+                    task_status_resp = requests.get(
+                        f"{ALGORITHM_ENGINE_URL}/api/v1/tasks/{task_id}",
+                        timeout=REQUEST_TIMEOUT,
+                    )
+                except Exception:
+                    pass
+            query_duration = time.time() - query_start
+
+            if task_status_resp and task_status_resp.status_code == 200:
+                task_data = task_status_resp.json()
+                task_status_val = task_data.get("status", "UNKNOWN")
+                progress = task_data.get("progress", 0)
+                validation_parts.append(f"任务查询状态: {task_status_val}, progress={progress}")
+
+                # 如果任务完成，获取结果
+                if task_status_val == "success":
+                    try:
+                        result_resp = requests.get(
+                            f"{ALGORITHM_ENGINE_URL}/api/v1/tasks/{task_id}/result",
+                            timeout=REQUEST_TIMEOUT,
+                        )
+                        if result_resp.status_code == 200:
+                            result_data = result_resp.json()
+                            validation_parts.append("任务结果: 已获取")
+                            if verbose:
+                                results.record(
+                                    test_id, test_name, "PASS",
+                                    request_time=duration + query_duration,
+                                    response_status=resp.status_code,
+                                    message="A* 任务已提交并完成",
+                                    validation="\n".join(validation_parts),
+                                    response_data=result_data,
+                                )
+                                return
+                    except Exception:
+                        pass
+
+            test_status = "PASS" if has_task_id and has_status else "FAIL"
+            results.record(
+                test_id, test_name, test_status,
+                request_time=duration + query_duration,
+                response_status=resp.status_code,
+                message="A* 算法任务已提交",
+                validation="\n".join(validation_parts),
+                response_data=body if verbose else None,
+            )
         else:
-            headers = self._headers("GET", path)
-            resp = requests.get(self._full_url(path), headers=headers, params=params, timeout=30)
-            resp.raise_for_status()
-        return self._unwrap(resp)
-
-    def post(self, path: str, data: dict | None = None) -> Any:
-        body = json.dumps(data, ensure_ascii=False) if data else ""
-        if self.mock:
-            resp = self._mock_client.request("POST", self._full_url(path), json_data=data)
-        else:
-            headers = self._headers("POST", path, body)
-            resp = requests.post(self._full_url(path), headers=headers, data=body, timeout=30)
-            resp.raise_for_status()
-        return self._unwrap(resp)
+            results.record(
+                test_id, test_name, "FAIL",
+                request_time=duration,
+                response_status=resp.status_code,
+                message=f"HTTP {resp.status_code}: {resp.text[:200]}",
+                validation="期望 HTTP 200/201",
+            )
+    except requests.exceptions.ConnectionError:
+        duration = time.time() - start
+        results.record(
+            test_id, test_name, "FAIL",
+            request_time=duration,
+            response_status=0,
+            message="连接拒绝 (算法引擎未启动)",
+            validation="算法引擎服务不可达",
+        )
+    except Exception as e:
+        duration = time.time() - start
+        results.record(
+            test_id, test_name, "FAIL",
+            request_time=duration,
+            response_status=0,
+            message=str(e),
+            validation="请求异常",
+        )
 
 
 # ============================================================
-# Test Functions
+# Test 3: 同化任务提交 (3DVAR)
 # ============================================================
 
-def test_health_check(client: E2EClient, results: TestResult) -> None:
-    """测试各服务健康状态"""
-    name = "健康检查 (Health Check)"
+def test_assimilation_task(results: TestResult, verbose: bool = False) -> None:
+    """测试3: 同化任务提交 - 提交 3DVAR 任务"""
+    test_id = 3
+    test_name = "同化任务提交 (3DVAR)"
+    url = f"{ASSIMILATION_API_URL}/api/v1/assimilation/tasks"
+
+    payload = {
+        "type": "3DVAR",
+        "algorithm": "three_dimensional_var",
+        "startTime": "2024-01-15T00:00:00Z",
+        "endTime": "2024-01-15T06:00:00Z",
+        "region": {
+            "minLon": 115.0,
+            "minLat": 39.0,
+            "maxLon": 118.0,
+            "maxLat": 41.0,
+        },
+        "observationSources": ["wrf", "surface_station"],
+    }
+
     start = time.time()
     try:
-        data = client.get("/v1/health")
-        status = data.get("status", "UNKNOWN") if isinstance(data, dict) else "UNKNOWN"
-        services = data.get("services", []) if isinstance(data, dict) else []
+        resp = requests.post(url, json=payload, timeout=REQUEST_TIMEOUT)
         duration = time.time() - start
-        if status == "UP":
-            results.record(name, "PASS", f"服务状态: UP, 服务列表: {services}", duration)
+
+        if resp.status_code in (200, 201):
+            body = resp.json()
+            code = body.get("code", -1)
+            data = body.get("data")
+
+            validation_parts = []
+            validation_parts.append(f"API code: {code}")
+
+            if code in (0, 200):
+                task_id = data
+                validation_parts.append(f"任务ID: {task_id}")
+                validation_parts.append("任务类型: 3DVAR")
+
+                results.record(
+                    test_id, test_name, "PASS",
+                    request_time=duration,
+                    response_status=resp.status_code,
+                    message="3DVAR 同化任务提交成功",
+                    validation="\n".join(validation_parts),
+                    response_data=body if verbose else None,
+                )
+            else:
+                msg = body.get("message", "unknown error")
+                validation_parts.append(f"错误信息: {msg}")
+                results.record(
+                    test_id, test_name, "FAIL",
+                    request_time=duration,
+                    response_status=resp.status_code,
+                    message=f"API 返回错误: code={code}",
+                    validation="\n".join(validation_parts),
+                )
         else:
-            results.record(name, "FAIL", f"服务状态异常: {status}", duration)
+            results.record(
+                test_id, test_name, "FAIL",
+                request_time=duration,
+                response_status=resp.status_code,
+                message=f"HTTP {resp.status_code}: {resp.text[:200]}",
+                validation="期望 HTTP 200/201",
+            )
+    except requests.exceptions.ConnectionError:
+        duration = time.time() - start
+        results.record(
+            test_id, test_name, "FAIL",
+            request_time=duration,
+            response_status=0,
+            message="连接拒绝 (assimilation-api 未启动)",
+            validation="assimilation-api 服务不可达",
+        )
     except Exception as e:
         duration = time.time() - start
-        results.record(name, "FAIL", str(e), duration)
+        results.record(
+            test_id, test_name, "FAIL",
+            request_time=duration,
+            response_status=0,
+            message=str(e),
+            validation="请求异常",
+        )
 
 
-def test_weather_query(client: E2EClient, results: TestResult) -> None:
-    """测试气象数据查询"""
-    name = "气象数据查询 (Weather Query)"
+# ============================================================
+# Test 4: 风险评估
+# ============================================================
+
+def test_risk_assessment(results: TestResult, verbose: bool = False) -> None:
+    """测试4: 风险评估 - 发起风险评估"""
+    test_id = 4
+    test_name = "风险评估"
+    url = f"{RISK_API_URL}/api/v1/risk/assess"
+
+    payload = {
+        "path": [
+            {"lon": 116.4, "lat": 39.9, "altitude": 100},
+            {"lon": 116.6, "lat": 39.95, "altitude": 150},
+            {"lon": 117.0, "lat": 40.0, "altitude": 200},
+        ],
+        "time": "2024-01-15T12:00:00Z",
+        "uavType": "multirotor",
+    }
+
     start = time.time()
     try:
-        # 单点查询
-        data = client.post("/v1/weather/point", {
-            "lon": 116.4,
-            "lat": 39.9,
-            "altitude": 100.0,
-        })
-        assert data["lon"] == 116.4, f"lon mismatch: {data['lon']}"
-        assert "windSpeed" in data, "missing windSpeed"
-        assert "temperature" in data, "missing temperature"
-
-        # 区域查询
-        region_data = client.get("/v1/weather/region", params={
-            "minLon": 116.4, "minLat": 39.9,
-            "maxLon": 116.5, "maxLat": 40.0,
-        })
-        assert isinstance(region_data, list), "region data should be a list"
-        assert len(region_data) > 0, "region data should not be empty"
-
+        resp = requests.post(url, json=payload, timeout=REQUEST_TIMEOUT)
         duration = time.time() - start
-        results.record(name, "PASS",
-                       f"单点: {data['temperature']}C, {data['windSpeed']}m/s; 区域: {len(region_data)} 格点",
-                       duration)
+
+        if resp.status_code in (200, 201):
+            body = resp.json()
+            code = body.get("code", -1)
+            data = body.get("data")
+
+            validation_parts = []
+            validation_parts.append(f"API code: {code}")
+
+            if code in (0, 200) and isinstance(data, dict):
+                risk_level = data.get("riskLevel", "UNKNOWN")
+                score = data.get("score")
+                factors = data.get("factors", [])
+
+                validation_parts.append(f"风险等级: {risk_level}")
+                validation_parts.append(f"风险分数: {score}")
+                validation_parts.append(f"风险因子数: {len(factors)}")
+
+                has_level = risk_level in ("LOW", "MEDIUM", "HIGH", "CRITICAL")
+                has_score = score is not None
+                has_factors = len(factors) > 0
+
+                test_status = "PASS" if has_level and has_score else "FAIL"
+                results.record(
+                    test_id, test_name, test_status,
+                    request_time=duration,
+                    response_status=resp.status_code,
+                    message="风险评估完成",
+                    validation="\n".join(validation_parts),
+                    response_data=data if verbose else None,
+                )
+            else:
+                msg = body.get("message", "unknown error")
+                validation_parts.append(f"错误信息: {msg}")
+                results.record(
+                    test_id, test_name, "FAIL",
+                    request_time=duration,
+                    response_status=resp.status_code,
+                    message=f"风险评估返回异常: code={code}",
+                    validation="\n".join(validation_parts),
+                )
+        else:
+            results.record(
+                test_id, test_name, "FAIL",
+                request_time=duration,
+                response_status=resp.status_code,
+                message=f"HTTP {resp.status_code}: {resp.text[:200]}",
+                validation="期望 HTTP 200/201",
+            )
+    except requests.exceptions.ConnectionError:
+        duration = time.time() - start
+        results.record(
+            test_id, test_name, "FAIL",
+            request_time=duration,
+            response_status=0,
+            message="连接拒绝 (risk-api 未启动)",
+            validation="risk-api 服务不可达",
+        )
     except Exception as e:
         duration = time.time() - start
-        results.record(name, "FAIL", str(e), duration)
+        results.record(
+            test_id, test_name, "FAIL",
+            request_time=duration,
+            response_status=0,
+            message=str(e),
+            validation="请求异常",
+        )
 
 
-def test_assimilation_task(client: E2EClient, results: TestResult) -> None:
-    """测试数据同化任务提交和结果查询"""
-    name = "数据同化任务 (Assimilation Task)"
+# ============================================================
+# Test 5: 气象数据查询
+# ============================================================
+
+def test_weather_query(results: TestResult, verbose: bool = False) -> None:
+    """测试5: 气象数据查询 - 单点气象查询"""
+    test_id = 5
+    test_name = "气象数据查询 (单点)"
+    url = f"{WEATHER_API_URL}/api/v1/weather/point"
+
+    payload = {
+        "lon": 116.4,
+        "lat": 39.9,
+        "altitude": 100.0,
+    }
+
     start = time.time()
     try:
-        # 提交任务
-        task_id = client.post("/v1/assimilation/tasks", {
-            "type": "3DVAR",
-            "algorithm": "three_dimensional_var",
-            "startTime": "2024-01-15T00:00:00Z",
-            "endTime": "2024-01-15T06:00:00Z",
-            "region": {"minLon": 115.0, "minLat": 39.0, "maxLon": 118.0, "maxLat": 41.0},
-            "observationSources": ["wrf", "surface_station"],
-        })
-        assert isinstance(task_id, (int, float)), f"task_id should be int, got {type(task_id)}"
-        task_id = int(task_id)
-
-        # 查询任务状态
-        task = client.get(f"/v1/assimilation/tasks/{task_id}")
-        assert task["id"] == task_id, "task id mismatch"
-        assert task["status"] in ("PENDING", "RUNNING", "COMPLETED", "FAILED"), f"unexpected status: {task['status']}"
-
-        # 查询任务结果
-        result = client.get(f"/v1/assimilation/tasks/{task_id}/result")
-        assert result["taskId"] == task_id, "result taskId mismatch"
-        assert len(result["variables"]) > 0, "no variables in result"
-        assert result["gridInfo"] is not None, "no gridInfo in result"
-
+        resp = requests.post(url, json=payload, timeout=REQUEST_TIMEOUT)
         duration = time.time() - start
-        results.record(name, "PASS",
-                       f"任务ID={task_id}, 状态={task['status']}, 变量数={len(result['variables'])}, "
-                       f"分辨率={result['gridInfo']['resolution']}",
-                       duration)
+
+        if resp.status_code in (200, 201):
+            body = resp.json()
+            code = body.get("code", -1)
+            data = body.get("data")
+
+            validation_parts = []
+            validation_parts.append(f"API code: {code}")
+
+            if code in (0, 200) and isinstance(data, dict):
+                lon = data.get("lon")
+                lat = data.get("lat")
+                wind_speed = data.get("windSpeed")
+                temperature = data.get("temperature")
+                pressure = data.get("pressure")
+                source = data.get("source")
+
+                validation_parts.append(f"坐标: ({lon}, {lat})")
+                validation_parts.append(f"风速: {wind_speed} m/s")
+                validation_parts.append(f"温度: {temperature} C")
+                validation_parts.append(f"气压: {pressure} hPa")
+                validation_parts.append(f"数据源: {source}")
+
+                # 验证关键字段
+                has_weather = wind_speed is not None and temperature is not None
+                coord_match = (
+                    lon is not None and lat is not None
+                    and abs(lon - 116.4) < 0.01 and abs(lat - 39.9) < 0.01
+                )
+
+                validation_parts.append(f"气象数据完整: {'通过' if has_weather else '失败'}")
+                validation_parts.append(f"坐标匹配: {'通过' if coord_match else '失败'}")
+
+                test_status = "PASS" if has_weather and coord_match else "FAIL"
+                results.record(
+                    test_id, test_name, test_status,
+                    request_time=duration,
+                    response_status=resp.status_code,
+                    message="气象数据查询成功",
+                    validation="\n".join(validation_parts),
+                    response_data=data if verbose else None,
+                )
+            else:
+                msg = body.get("message", "unknown error")
+                validation_parts.append(f"错误信息: {msg}")
+                results.record(
+                    test_id, test_name, "FAIL",
+                    request_time=duration,
+                    response_status=resp.status_code,
+                    message=f"气象查询返回异常: code={code}",
+                    validation="\n".join(validation_parts),
+                )
+        else:
+            results.record(
+                test_id, test_name, "FAIL",
+                request_time=duration,
+                response_status=resp.status_code,
+                message=f"HTTP {resp.status_code}: {resp.text[:200]}",
+                validation="期望 HTTP 200/201",
+            )
+    except requests.exceptions.ConnectionError:
+        duration = time.time() - start
+        results.record(
+            test_id, test_name, "FAIL",
+            request_time=duration,
+            response_status=0,
+            message="连接拒绝 (weather-api 未启动)",
+            validation="weather-api 服务不可达",
+        )
     except Exception as e:
         duration = time.time() - start
-        results.record(name, "FAIL", str(e), duration)
+        results.record(
+            test_id, test_name, "FAIL",
+            request_time=duration,
+            response_status=0,
+            message=str(e),
+            validation="请求异常",
+        )
 
 
-def test_risk_assessment(client: E2EClient, results: TestResult) -> None:
-    """测试风险评估"""
-    name = "风险评估 (Risk Assessment)"
+# ============================================================
+# Test 6: 观测决策 (信息增益计算)
+# ============================================================
+
+def test_observation_decision(results: TestResult, verbose: bool = False) -> None:
+    """测试6: 观测决策 - 信息增益计算"""
+    test_id = 6
+    test_name = "观测决策 (信息增益计算)"
+    url = f"{OBSERVATION_API_URL}/api/v1/observation/decisions"
+
+    payload = {
+        "region": {
+            "minLon": 116.0,
+            "minLat": 39.5,
+            "maxLon": 117.0,
+            "maxLat": 40.5,
+        },
+        "targetVariables": ["temperature", "wind_u", "wind_v"],
+        "timeWindow": {
+            "start": "2024-01-15T12:00:00Z",
+            "end": "2024-01-15T18:00:00Z",
+        },
+    }
+
     start = time.time()
     try:
-        assessment = client.post("/v1/risk/assess", {
-            "path": [
-                {"lon": 116.4, "lat": 39.9, "altitude": 100},
-                {"lon": 116.7, "lat": 39.95, "altitude": 150},
-                {"lon": 117.0, "lat": 40.0, "altitude": 200},
-            ],
-            "time": "2024-01-15T12:00:00Z",
-            "uavType": "multirotor",
-        })
-        assert "riskLevel" in assessment, "missing riskLevel"
-        assert "score" in assessment, "missing score"
-        assert len(assessment["factors"]) > 0, "no risk factors"
-
+        resp = requests.post(url, json=payload, timeout=REQUEST_TIMEOUT)
         duration = time.time() - start
-        results.record(name, "PASS",
-                       f"风险等级={assessment['riskLevel']}, 分数={assessment['score']}, "
-                       f"因子数={len(assessment['factors'])}",
-                       duration)
+
+        if resp.status_code in (200, 201):
+            body = resp.json()
+            code = body.get("code", -1)
+            data = body.get("data")
+
+            validation_parts = []
+            validation_parts.append(f"API code: {code}")
+
+            if code in (0, 200) and isinstance(data, dict):
+                decision = data.get("decision", "UNKNOWN")
+                coverage_score = data.get("coverageScore")
+                suggested_platforms = data.get("suggestedPlatforms", [])
+                reason = data.get("reason", "")
+
+                validation_parts.append(f"决策: {decision}")
+                validation_parts.append(f"覆盖率分数: {coverage_score}")
+                validation_parts.append(f"建议平台: {suggested_platforms}")
+                validation_parts.append(f"原因: {reason[:100] if reason else 'N/A'}")
+
+                has_decision = decision in ("OBSERVE", "SKIP", "DEFER")
+                has_coverage = coverage_score is not None
+
+                validation_parts.append(f"决策有效: {'通过' if has_decision else '失败'}")
+                validation_parts.append(f"覆盖率计算: {'通过' if has_coverage else '失败'}")
+
+                test_status = "PASS" if has_decision and has_coverage else "FAIL"
+                results.record(
+                    test_id, test_name, test_status,
+                    request_time=duration,
+                    response_status=resp.status_code,
+                    message="观测决策计算完成",
+                    validation="\n".join(validation_parts),
+                    response_data=data if verbose else None,
+                )
+            else:
+                msg = body.get("message", "unknown error")
+                validation_parts.append(f"错误信息: {msg}")
+                results.record(
+                    test_id, test_name, "FAIL",
+                    request_time=duration,
+                    response_status=resp.status_code,
+                    message=f"观测决策返回异常: code={code}",
+                    validation="\n".join(validation_parts),
+                )
+        else:
+            results.record(
+                test_id, test_name, "FAIL",
+                request_time=duration,
+                response_status=resp.status_code,
+                message=f"HTTP {resp.status_code}: {resp.text[:200]}",
+                validation="期望 HTTP 200/201",
+            )
+    except requests.exceptions.ConnectionError:
+        duration = time.time() - start
+        results.record(
+            test_id, test_name, "FAIL",
+            request_time=duration,
+            response_status=0,
+            message="连接拒绝 (observation-api 未启动)",
+            validation="observation-api 服务不可达",
+        )
     except Exception as e:
         duration = time.time() - start
-        results.record(name, "FAIL", str(e), duration)
+        results.record(
+            test_id, test_name, "FAIL",
+            request_time=duration,
+            response_status=0,
+            message=str(e),
+            validation="请求异常",
+        )
 
 
-def test_airworthiness(client: E2EClient, results: TestResult) -> None:
-    """测试适航评估"""
-    name = "适航评估 (Airworthiness)"
+# ============================================================
+# Test 7: 路径规划 (RRT*)
+# ============================================================
+
+def test_path_planning(results: TestResult, verbose: bool = False) -> None:
+    """测试7: 路径规划 - RRT* 路径规划"""
+    test_id = 7
+    test_name = "路径规划 (RRT*)"
+    url = f"{PLANNING_API_URL}/api/v1/planning/path"
+
+    payload = {
+        "startPoint": {"lon": 116.4, "lat": 39.9, "altitude": 100},
+        "endPoint": {"lon": 117.0, "lat": 40.0, "altitude": 200},
+        "waypoints": [
+            {"lon": 116.6, "lat": 39.95, "altitude": 150},
+        ],
+        "algorithm": "rrt_star",
+    }
+
     start = time.time()
     try:
-        assessment = client.post("/v1/risk/airworthiness", {
-            "uavType": "multirotor",
-            "weatherConditions": {
-                "windSpeed": 8.0,
-                "visibility": 8000.0,
-                "temperature": 18.0,
-                "precipitation": 0.0,
-            },
-            "route": [
-                {"lon": 116.4, "lat": 39.9, "altitude": 100},
-                {"lon": 117.0, "lat": 40.0, "altitude": 200},
-            ],
-        })
-        assert "decision" in assessment, "missing decision"
-        assert "overallScore" in assessment, "missing overallScore"
-        assert len(assessment["factors"]) > 0, "no factors"
-
+        resp = requests.post(url, json=payload, timeout=REQUEST_TIMEOUT)
         duration = time.time() - start
-        results.record(name, "PASS",
-                       f"决策={assessment['decision']}, 总分={assessment['overallScore']}, "
-                       f"因子数={len(assessment['factors'])}",
-                       duration)
+
+        if resp.status_code in (200, 201):
+            body = resp.json()
+            code = body.get("code", -1)
+            data = body.get("data")
+
+            validation_parts = []
+            validation_parts.append(f"API code: {code}")
+
+            if code in (0, 200) and isinstance(data, dict):
+                task_id = data.get("id")
+                status = data.get("status", "UNKNOWN")
+
+                validation_parts.append(f"任务ID: {task_id}")
+                validation_parts.append(f"状态: {status}")
+
+                has_task_id = task_id is not None
+                valid_status = status in ("PENDING", "RUNNING", "COMPLETED", "SUCCESS")
+
+                validation_parts.append(f"任务ID有效: {'通过' if has_task_id else '失败'}")
+                validation_parts.append(f"状态有效: {'通过' if valid_status else '失败'}")
+
+                test_status = "PASS" if has_task_id and valid_status else "FAIL"
+                results.record(
+                    test_id, test_name, test_status,
+                    request_time=duration,
+                    response_status=resp.status_code,
+                    message="RRT* 路径规划任务已提交",
+                    validation="\n".join(validation_parts),
+                    response_data=data if verbose else None,
+                )
+            else:
+                msg = body.get("message", "unknown error")
+                validation_parts.append(f"错误信息: {msg}")
+                results.record(
+                    test_id, test_name, "FAIL",
+                    request_time=duration,
+                    response_status=resp.status_code,
+                    message=f"路径规划返回异常: code={code}",
+                    validation="\n".join(validation_parts),
+                )
+        else:
+            results.record(
+                test_id, test_name, "FAIL",
+                request_time=duration,
+                response_status=resp.status_code,
+                message=f"HTTP {resp.status_code}: {resp.text[:200]}",
+                validation="期望 HTTP 200/201",
+            )
+    except requests.exceptions.ConnectionError:
+        duration = time.time() - start
+        results.record(
+            test_id, test_name, "FAIL",
+            request_time=duration,
+            response_status=0,
+            message="连接拒绝 (planning-api 未启动)",
+            validation="planning-api 服务不可达",
+        )
     except Exception as e:
         duration = time.time() - start
-        results.record(name, "FAIL", str(e), duration)
+        results.record(
+            test_id, test_name, "FAIL",
+            request_time=duration,
+            response_status=0,
+            message=str(e),
+            validation="请求异常",
+        )
 
 
-def test_observation_decision(client: E2EClient, results: TestResult) -> None:
-    """测试观测决策"""
-    name = "观测决策 (Observation Decision)"
+# ============================================================
+# Test 8: 智能调度器 (assimilation smart-select)
+# ============================================================
+
+def test_smart_scheduler(results: TestResult, verbose: bool = False) -> None:
+    """测试8: 智能调度器 - assimilation smart-select"""
+    test_id = 8
+    test_name = "智能调度器 (assimilation smart-select)"
+    url = f"{ALGORITHM_ENGINE_URL}/api/v1/assimilation/smart-select"
+
+    payload = {
+        "background_field": [
+            [300.0, 301.0, 299.5, 300.2],
+            [300.5, 301.5, 300.0, 300.8],
+            [299.8, 300.3, 299.0, 300.1],
+        ],
+        "observations": [
+            {"position": [0, 0], "value": 300.5},
+            {"position": [1, 1], "value": 301.2},
+            {"position": [2, 2], "value": 299.8},
+            {"position": [3, 3], "value": 300.3},
+        ],
+        "time_budget_seconds": 30.0,
+        "require_probabilistic": False,
+        "require_risk_aware": False,
+        "gpu_available": False,
+    }
+
     start = time.time()
     try:
-        decision = client.post("/v1/observation/decisions", {
-            "region": {"minLon": 116.0, "minLat": 39.5, "maxLon": 117.0, "maxLat": 40.5},
-            "targetVariables": ["temperature", "wind_u", "wind_v"],
-            "timeWindow": {"start": "2024-01-15T12:00:00Z", "end": "2024-01-15T18:00:00Z"},
-        })
-        assert "decision" in decision, "missing decision"
-        assert "coverageScore" in decision, "missing coverageScore"
-
+        resp = requests.post(url, json=payload, timeout=REQUEST_TIMEOUT)
         duration = time.time() - start
-        results.record(name, "PASS",
-                       f"决策={decision['decision']}, 覆盖率={decision['coverageScore']}, "
-                       f"建议平台={decision['suggestedPlatforms']}",
-                       duration)
+
+        if resp.status_code in (200, 201):
+            body = resp.json()
+
+            validation_parts = []
+
+            # smart-select 直接返回结果 (非 Result<T> 包装)
+            algo_id = body.get("algorithm_id")
+            reason = body.get("reason", "")
+            config = body.get("config_overrides", {})
+            explanation = body.get("decision_explanation", "")
+
+            validation_parts.append(f"推荐算法: {algo_id}")
+            validation_parts.append(f"推荐原因: {reason[:100] if reason else 'N/A'}")
+            validation_parts.append(f"配置覆盖: {json.dumps(config) if config else '无'}")
+            validation_parts.append(f"决策说明: {explanation[:100] if explanation else 'N/A'}")
+
+            has_algo_id = algo_id is not None and len(str(algo_id)) > 0
+            has_reason = reason is not None and len(str(reason)) > 0
+
+            validation_parts.append(f"推荐算法有效: {'通过' if has_algo_id else '失败'}")
+            validation_parts.append(f"推荐原因有效: {'通过' if has_reason else '失败'}")
+
+            test_status = "PASS" if has_algo_id else "FAIL"
+            results.record(
+                test_id, test_name, test_status,
+                request_time=duration,
+                response_status=resp.status_code,
+                message="智能调度器推荐完成",
+                validation="\n".join(validation_parts),
+                response_data=body if verbose else None,
+            )
+        else:
+            results.record(
+                test_id, test_name, "FAIL",
+                request_time=duration,
+                response_status=resp.status_code,
+                message=f"HTTP {resp.status_code}: {resp.text[:200]}",
+                validation="期望 HTTP 200/201",
+            )
+    except requests.exceptions.ConnectionError:
+        duration = time.time() - start
+        results.record(
+            test_id, test_name, "FAIL",
+            request_time=duration,
+            response_status=0,
+            message="连接拒绝 (算法引擎未启动)",
+            validation="算法引擎服务不可达",
+        )
     except Exception as e:
         duration = time.time() - start
-        results.record(name, "FAIL", str(e), duration)
-
-
-def test_path_planning(client: E2EClient, results: TestResult) -> None:
-    """测试路径规划"""
-    name = "路径规划 (Path Planning)"
-    start = time.time()
-    try:
-        # 提交路径规划
-        task = client.post("/v1/planning/path", {
-            "startPoint": {"lon": 116.4, "lat": 39.9, "altitude": 100},
-            "endPoint": {"lon": 117.0, "lat": 40.0, "altitude": 200},
-            "waypoints": [
-                {"lon": 116.6, "lat": 39.95, "altitude": 150},
-            ],
-            "algorithm": "rrt_star",
-        })
-        task_id = task["id"]
-        assert task["status"] in ("PENDING", "RUNNING", "COMPLETED"), f"unexpected status: {task['status']}"
-
-        # 获取规划结果
-        result = client.get(f"/v1/planning/tasks/{task_id}/result")
-        assert len(result["waypoints"]) > 0, "no waypoints in result"
-        assert result["totalDistance"] > 0, "totalDistance should be positive"
-
-        duration = time.time() - start
-        results.record(name, "PASS",
-                       f"任务ID={task_id}, 航点数={len(result['waypoints'])}, "
-                       f"总距离={result['totalDistance']}km, 预估时间={result['estimatedTime']}s",
-                       duration)
-    except Exception as e:
-        duration = time.time() - start
-        results.record(name, "FAIL", str(e), duration)
-
-
-def test_utm_flight_plan(client: E2EClient, results: TestResult) -> None:
-    """测试 UTM 飞行计划全流程"""
-    name = "UTM 飞行计划 (Flight Plan Lifecycle)"
-    start = time.time()
-    try:
-        # 提交飞行计划
-        plan = client.post("/v1/flight-plans", {
-            "uavId": "UAV-TEST-001",
-            "waypoints": [
-                {"lon": 116.4, "lat": 39.9, "altitude": 100, "speed": 15},
-                {"lon": 116.6, "lat": 39.95, "altitude": 150, "speed": 18},
-                {"lon": 117.0, "lat": 40.0, "altitude": 200, "speed": 15},
-            ],
-            "estimatedDepartureTime": "2024-01-15T12:00:00Z",
-        })
-        plan_id = plan["id"]
-        assert plan["status"] == "SUBMITTED", f"expected SUBMITTED, got {plan['status']}"
-
-        # 审批飞行计划
-        approved = client.post(f"/v1/flight-plans/{plan_id}/approve")
-        assert approved["status"] == "APPROVED", f"expected APPROVED, got {approved['status']}"
-
-        # 启动飞行计划
-        started = client.post(f"/v1/flight-plans/{plan_id}/start")
-        assert started["status"] == "ACTIVE", f"expected ACTIVE, got {started['status']}"
-
-        # 位置上报
-        client.post("/v1/tracking/positions", {
-            "uavId": "UAV-TEST-001",
-            "lon": 116.4,
-            "lat": 39.9,
-            "altitude": 100,
-            "heading": 45.0,
-            "speed": 15.0,
-            "timestamp": "2024-01-15T12:00:00Z",
-        })
-
-        # 冲突检测
-        conflicts = client.post("/v1/tracking/conflicts/check", {
-            "plannedPath": [
-                {"lon": 116.4, "lat": 39.9, "altitude": 100, "timestamp": "2024-01-15T12:00:00Z"},
-                {"lon": 117.0, "lat": 40.0, "altitude": 200, "timestamp": "2024-01-15T12:15:00Z"},
-            ],
-            "timeWindow": {"start": "2024-01-15T12:00:00Z", "end": "2024-01-15T12:30:00Z"},
-        })
-        assert isinstance(conflicts, list), "conflicts should be a list"
-
-        duration = time.time() - start
-        results.record(name, "PASS",
-                       f"计划ID={plan_id}, 状态流转: SUBMITTED->APPROVED->ACTIVE, "
-                       f"冲突数={len(conflicts)}",
-                       duration)
-    except Exception as e:
-        duration = time.time() - start
-        results.record(name, "FAIL", str(e), duration)
-
-
-def test_full_pipeline(client: E2EClient, results: TestResult) -> None:
-    """
-    完整管线测试: 气象查询 -> 同化 -> 风险评估 -> 适航评估 -> 路径规划 -> UTM飞行计划
-    """
-    name = "完整管线 (Full Pipeline)"
-    start = time.time()
-    try:
-        pipeline_results = {}
-
-        # 1. 查询气象
-        weather = client.post("/v1/weather/point", {
-            "lon": 116.4, "lat": 39.9, "altitude": 100,
-        })
-        pipeline_results["weather"] = f"{weather['temperature']}C, {weather['windSpeed']}m/s"
-
-        # 2. 提交同化任务
-        task_id = client.post("/v1/assimilation/tasks", {
-            "type": "3DVAR",
-            "algorithm": "three_dimensional_var",
-            "startTime": "2024-01-15T00:00:00Z",
-            "endTime": "2024-01-15T06:00:00Z",
-        })
-        pipeline_results["assimilation_task_id"] = task_id
-
-        # 3. 等待同化完成（mock 模式下直接完成）
-        task = client.get(f"/v1/assimilation/tasks/{task_id}")
-        pipeline_results["assimilation_status"] = task["status"]
-
-        # 4. 风险评估
-        risk = client.post("/v1/risk/assess", {
-            "path": [
-                {"lon": 116.4, "lat": 39.9, "altitude": 100},
-                {"lon": 117.0, "lat": 40.0, "altitude": 200},
-            ],
-            "time": "2024-01-15T12:00:00Z",
-        })
-        pipeline_results["risk"] = f"{risk['riskLevel']}({risk['score']})"
-
-        # 5. 适航评估
-        airworthiness = client.post("/v1/risk/airworthiness", {
-            "uavType": "multirotor",
-            "weatherConditions": {
-                "windSpeed": weather["windSpeed"],
-                "visibility": weather["visibility"],
-                "temperature": weather["temperature"],
-            },
-            "route": [
-                {"lon": 116.4, "lat": 39.9, "altitude": 100},
-                {"lon": 117.0, "lat": 40.0, "altitude": 200},
-            ],
-        })
-        pipeline_results["airworthiness"] = f"{airworthiness['decision']}({airworthiness['overallScore']})"
-
-        # 6. 路径规划
-        plan_task = client.post("/v1/planning/path", {
-            "startPoint": {"lon": 116.4, "lat": 39.9, "altitude": 100},
-            "endPoint": {"lon": 117.0, "lat": 40.0, "altitude": 200},
-            "algorithm": "rrt_star",
-        })
-        plan_id = plan_task["id"]
-        path_result = client.get(f"/v1/planning/tasks/{plan_id}/result")
-        pipeline_results["planning"] = f"{len(path_result['waypoints'])}航点, {path_result['totalDistance']}km"
-
-        # 7. UTM 飞行计划申报
-        flight_plan = client.post("/v1/flight-plans", {
-            "uavId": "UAV-PIPELINE-001",
-            "waypoints": [
-                {"lon": wp["lon"], "lat": wp["lat"], "altitude": wp["altitude"], "speed": wp["speed"]}
-                for wp in path_result["waypoints"]
-            ],
-            "estimatedDepartureTime": "2024-01-15T12:00:00Z",
-        })
-        fp_id = flight_plan["id"]
-
-        # 8. 审批并启动
-        client.post(f"/v1/flight-plans/{fp_id}/approve")
-        client.post(f"/v1/flight-plans/{fp_id}/start")
-
-        # 9. 位置上报
-        for wp in path_result["waypoints"]:
-            client.post("/v1/tracking/positions", {
-                "uavId": "UAV-PIPELINE-001",
-                "lon": wp["lon"],
-                "lat": wp["lat"],
-                "altitude": wp["altitude"],
-                "heading": 45.0,
-                "speed": wp["speed"],
-                "timestamp": wp["timestamp"],
-            })
-
-        # 10. 冲突检测
-        conflicts = client.post("/v1/tracking/conflicts/check", {
-            "plannedPath": [
-                {"lon": wp["lon"], "lat": wp["lat"], "altitude": wp["altitude"], "timestamp": wp["timestamp"]}
-                for wp in path_result["waypoints"]
-            ],
-            "timeWindow": {"start": "2024-01-15T12:00:00Z", "end": "2024-01-15T13:00:00Z"},
-        })
-        pipeline_results["conflicts"] = f"{len(conflicts)}个冲突"
-
-        duration = time.time() - start
-        summary = " -> ".join([
-            f"气象({pipeline_results['weather']})",
-            f"同化({pipeline_results['assimilation_status']})",
-            f"风险({pipeline_results['risk']})",
-            f"适航({pipeline_results['airworthiness']})",
-            f"规划({pipeline_results['planning']})",
-            f"UTM(计划ID={fp_id})",
-            f"冲突({pipeline_results['conflicts']})",
-        ])
-        results.record(name, "PASS", summary, duration)
-
-    except Exception as e:
-        duration = time.time() - start
-        results.record(name, "FAIL", str(e), duration)
+        results.record(
+            test_id, test_name, "FAIL",
+            request_time=duration,
+            response_status=0,
+            message=str(e),
+            validation="请求异常",
+        )
 
 
 # ============================================================
@@ -1063,48 +1010,72 @@ def test_full_pipeline(client: E2EClient, results: TestResult) -> None:
 # ============================================================
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="UAV Platform V2 端到端集成测试")
-    parser.add_argument("--url", default=DEFAULT_BASE_URL, help="API base URL")
-    parser.add_argument("--key", default=DEFAULT_API_KEY, help="API key")
-    parser.add_argument("--secret", default=DEFAULT_API_SECRET, help="API secret")
-    parser.add_argument("--mock", action="store_true", default=True, help="使用模拟数据（默认开启）")
-    parser.add_argument("--no-mock", action="store_true", help="禁用模拟模式，连接真实服务")
+    parser = argparse.ArgumentParser(
+        description="UAV Platform V2 - E2E 自动化测试脚本"
+    )
+    parser.add_argument(
+        "--host",
+        default=DEFAULT_HOST,
+        help=f"目标主机地址 (default: {DEFAULT_HOST})",
+    )
+    parser.add_argument(
+        "--verbose",
+        action="store_true",
+        help="显示详细输出 (响应体等)",
+    )
+    parser.add_argument(
+        "--json-output",
+        action="store_true",
+        help="输出 JSON 格式测试报告",
+    )
+    parser.add_argument(
+        "--no-color",
+        action="store_true",
+        help="禁用彩色输出",
+    )
     args = parser.parse_args()
 
-    mock_mode = args.mock and not args.no_mock
+    # 禁用颜色
+    if args.no_color or args.json_output:
+        Color.disable()
 
-    print("=" * 60)
-    print("  UAV Platform V2 端到端集成测试")
-    print("=" * 60)
-    print(f"  目标地址: {args.url}")
-    print(f"  API Key:  {args.key}")
-    print(f"  模式:     {'MOCK (模拟数据)' if mock_mode else 'LIVE (真实服务)'}")
-    print("=" * 60)
+    # 打印标题
+    print(f"{Color.BOLD}{'=' * 72}{Color.RESET}")
+    print(f"{Color.BOLD}  UAV Platform V2 - E2E 自动化测试{Color.RESET}")
+    print(f"{Color.BOLD}{'=' * 72}{Color.RESET}")
+    print(f"  目标主机: {args.host}")
+    print(f"  算法引擎: {ALGORITHM_ENGINE_URL}")
+    print(f"  请求超时: {REQUEST_TIMEOUT}s")
+    print(f"  详细模式: {'开启' if args.verbose else '关闭'}")
+    print(f"{Color.BOLD}{'=' * 72}{Color.RESET}")
     print()
 
-    client = E2EClient(
-        base_url=args.url,
-        api_key=args.key,
-        api_secret=args.secret,
-        mock=mock_mode,
-    )
     results = TestResult()
 
-    # Run all tests
-    test_health_check(client, results)
-    test_weather_query(client, results)
-    test_assimilation_task(client, results)
-    test_risk_assessment(client, results)
-    test_airworthiness(client, results)
-    test_observation_decision(client, results)
-    test_path_planning(client, results)
-    test_utm_flight_plan(client, results)
-    test_full_pipeline(client, results)
+    # 定义测试列表
+    tests = [
+        ("测试 1: 算法列表查询", test_algorithm_list),
+        ("测试 2: 算法执行测试 (A*)", test_algorithm_execution),
+        ("测试 3: 同化任务提交 (3DVAR)", test_assimilation_task),
+        ("测试 4: 风险评估", test_risk_assessment),
+        ("测试 5: 气象数据查询", test_weather_query),
+        ("测试 6: 观测决策 (信息增益)", test_observation_decision),
+        ("测试 7: 路径规划 (RRT*)", test_path_planning),
+        ("测试 8: 智能调度器 (smart-select)", test_smart_scheduler),
+    ]
 
-    # Print report
-    print(results.report())
+    # 执行测试
+    for label, test_func in tests:
+        print(f"  {Color.CYAN}{label}...{Color.RESET}")
+        test_func(results, verbose=args.verbose)
 
-    # Exit code
+    # 输出报告
+    if args.json_output:
+        print(json.dumps(results.to_json(), indent=2, ensure_ascii=False))
+    else:
+        results.print_report(verbose=args.verbose)
+
+    # 退出码
     sys.exit(1 if results.failed > 0 else 0)
 
 

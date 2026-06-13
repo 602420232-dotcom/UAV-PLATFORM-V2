@@ -1,0 +1,186 @@
+# ============================================================================
+# Docker Compose Staging - 灰度/预发布环境
+# ============================================================================
+# 使用方式：
+#   docker compose -f docker-compose.yml -f docker-compose.staging.yml up -d
+#
+# 灰度环境特性：
+#   - 使用 release 镜像标签
+#   - 限制内存（介于 dev 和 prod 之间）
+#   - 启用 Prometheus / Grafana 监控
+#   - Mock 模式关闭
+#   - RBAC 启用
+# ============================================================================
+
+services:
+  # ============================================================
+  # Java 微服务 - 灰度环境覆盖
+  # ============================================================
+  api-gateway:
+    image: uav-platform/api-gateway:release
+    build:
+      target: production
+    environment:
+      - SPRING_PROFILES_ACTIVE=staging,docker
+      - KAFKA_MOCK=false
+      - SECURITY_RBAC_ENABLED=true
+      - JAVA_OPTS=-Xms512m -Xmx1024m -XX:+UseG1GC
+    deploy:
+      resources:
+        limits:
+          memory: 1280M
+          cpus: "1.0"
+        reservations:
+          memory: 512M
+    restart: on-failure
+
+  platform-api:
+    image: uav-platform/platform-api:release
+    build:
+      target: production
+    environment:
+      - SPRING_PROFILES_ACTIVE=staging,docker
+      - KAFKA_MOCK=false
+      - SECURITY_RBAC_ENABLED=true
+      - JAVA_OPTS=-Xms256m -Xmx512m -XX:+UseG1GC
+    deploy:
+      resources:
+        limits:
+          memory: 768M
+          cpus: "0.5"
+        reservations:
+          memory: 256M
+    restart: on-failure
+
+  weather-api:
+    image: uav-platform/weather-api:release
+    build:
+      target: production
+    environment:
+      - SPRING_PROFILES_ACTIVE=staging,docker
+      - KAFKA_MOCK=false
+      - JAVA_OPTS=-Xms256m -Xmx512m -XX:+UseG1GC
+    deploy:
+      resources:
+        limits:
+          memory: 768M
+          cpus: "0.5"
+        reservations:
+          memory: 256M
+    restart: on-failure
+
+  assimilation-api:
+    image: uav-platform/assimilation-api:release
+    build:
+      target: production
+    environment:
+      - SPRING_PROFILES_ACTIVE=staging,docker
+      - KAFKA_MOCK=false
+      - JAVA_OPTS=-Xms256m -Xmx512m -XX:+UseG1GC
+    deploy:
+      resources:
+        limits:
+          memory: 768M
+          cpus: "0.5"
+        reservations:
+          memory: 256M
+    restart: on-failure
+
+  risk-api:
+    image: uav-platform/risk-api:release
+    build:
+      target: production
+    environment:
+      - SPRING_PROFILES_ACTIVE=staging,docker
+      - KAFKA_MOCK=false
+      - JAVA_OPTS=-Xms256m -Xmx512m -XX:+UseG1GC
+    deploy:
+      resources:
+        limits:
+          memory: 768M
+          cpus: "0.5"
+        reservations:
+          memory: 256M
+    restart: on-failure
+
+  observation-api:
+    image: uav-platform/observation-api:release
+    build:
+      target: production
+    environment:
+      - SPRING_PROFILES_ACTIVE=staging,docker
+      - KAFKA_MOCK=false
+      - JAVA_OPTS=-Xms256m -Xmx512m -XX:+UseG1GC
+    deploy:
+      resources:
+        limits:
+          memory: 768M
+          cpus: "0.5"
+        reservations:
+          memory: 256M
+    restart: on-failure
+
+  planning-api:
+    image: uav-platform/planning-api:release
+    build:
+      target: production
+    environment:
+      - SPRING_PROFILES_ACTIVE=staging,docker
+      - KAFKA_MOCK=false
+      - JAVA_OPTS=-Xms256m -Xmx512m -XX:+UseG1GC
+    deploy:
+      resources:
+        limits:
+          memory: 768M
+          cpus: "0.5"
+        reservations:
+          memory: 256M
+    restart: on-failure
+
+  utm-api:
+    image: uav-platform/utm-api:release
+    build:
+      target: production
+    environment:
+      - SPRING_PROFILES_ACTIVE=staging,docker
+      - KAFKA_MOCK=false
+      - JAVA_OPTS=-Xms256m -Xmx512m -XX:+UseG1GC
+    deploy:
+      resources:
+        limits:
+          memory: 768M
+          cpus: "0.5"
+        reservations:
+          memory: 256M
+    restart: on-failure
+
+  # ============================================================
+  # Python 算法引擎 - 灰度环境覆盖
+  # ============================================================
+  algorithm-engine:
+    image: uav-platform/algorithm-engine:release
+    build:
+      target: production
+    environment:
+      - LOG_LEVEL=INFO
+      - PYTHONUNBUFFERED=1
+    deploy:
+      resources:
+        limits:
+          memory: 1024M
+          cpus: "1.0"
+        reservations:
+          memory: 256M
+    restart: on-failure
+
+  # ============================================================
+  # 监控服务 - 灰度环境启用
+  # ============================================================
+  prometheus:
+    profiles: []
+
+  grafana:
+    profiles: []
+
+  alertmanager:
+    profiles: []

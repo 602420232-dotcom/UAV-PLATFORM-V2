@@ -1,0 +1,348 @@
+# ============================================================================
+# Docker Compose Production - 生产环境
+# ============================================================================
+# 使用方式：
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#
+# 生产环境特性：
+#   - 资源限制（CPU / 内存）
+#   - 副本数配置（可水平扩展）
+#   - 日志驱动 json-file + 大小限制（防磁盘写满）
+#   - restart: always（自动重启）
+#   - Mock 模式关闭
+#   - RBAC 启用
+#   - Prometheus / Grafana / AlertManager 全部启用
+# ============================================================================
+
+services:
+  # ============================================================
+  # Java 微服务 - 生产环境覆盖
+  # ============================================================
+  api-gateway:
+    image: uav-platform/api-gateway:latest
+    build:
+      target: production
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod,docker
+      - KAFKA_MOCK=false
+      - SECURITY_RBAC_ENABLED=true
+      - JAVA_OPTS=-Xms1024m -Xmx2048m -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/logs/heapdump.hprof
+    deploy:
+      mode: replicated
+      replicas: 2
+      resources:
+        limits:
+          memory: 2560M
+          cpus: "2.0"
+        reservations:
+          memory: 1024M
+    restart: always
+    logging:
+      driver: json-file
+      options:
+        max-size: "100m"
+        max-file: "5"
+        tag: "uav-gateway"
+
+  platform-api:
+    image: uav-platform/platform-api:latest
+    build:
+      target: production
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod,docker
+      - KAFKA_MOCK=false
+      - SECURITY_RBAC_ENABLED=true
+      - JAVA_OPTS=-Xms512m -Xmx1024m -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/logs/heapdump.hprof
+    deploy:
+      mode: replicated
+      replicas: 2
+      resources:
+        limits:
+          memory: 1280M
+          cpus: "1.0"
+        reservations:
+          memory: 512M
+    restart: always
+    logging:
+      driver: json-file
+      options:
+        max-size: "100m"
+        max-file: "5"
+        tag: "uav-platform-api"
+
+  weather-api:
+    image: uav-platform/weather-api:latest
+    build:
+      target: production
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod,docker
+      - KAFKA_MOCK=false
+      - JAVA_OPTS=-Xms512m -Xmx1024m -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/logs/heapdump.hprof
+    deploy:
+      mode: replicated
+      replicas: 1
+      resources:
+        limits:
+          memory: 1280M
+          cpus: "1.0"
+        reservations:
+          memory: 512M
+    restart: always
+    logging:
+      driver: json-file
+      options:
+        max-size: "100m"
+        max-file: "5"
+        tag: "uav-weather-api"
+
+  assimilation-api:
+    image: uav-platform/assimilation-api:latest
+    build:
+      target: production
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod,docker
+      - KAFKA_MOCK=false
+      - JAVA_OPTS=-Xms512m -Xmx1024m -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/logs/heapdump.hprof
+    deploy:
+      mode: replicated
+      replicas: 1
+      resources:
+        limits:
+          memory: 1280M
+          cpus: "1.0"
+        reservations:
+          memory: 512M
+    restart: always
+    logging:
+      driver: json-file
+      options:
+        max-size: "100m"
+        max-file: "5"
+        tag: "uav-assimilation-api"
+
+  risk-api:
+    image: uav-platform/risk-api:latest
+    build:
+      target: production
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod,docker
+      - KAFKA_MOCK=false
+      - JAVA_OPTS=-Xms512m -Xmx1024m -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/logs/heapdump.hprof
+    deploy:
+      mode: replicated
+      replicas: 1
+      resources:
+        limits:
+          memory: 1280M
+          cpus: "1.0"
+        reservations:
+          memory: 512M
+    restart: always
+    logging:
+      driver: json-file
+      options:
+        max-size: "100m"
+        max-file: "5"
+        tag: "uav-risk-api"
+
+  observation-api:
+    image: uav-platform/observation-api:latest
+    build:
+      target: production
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod,docker
+      - KAFKA_MOCK=false
+      - JAVA_OPTS=-Xms512m -Xmx1024m -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/logs/heapdump.hprof
+    deploy:
+      mode: replicated
+      replicas: 1
+      resources:
+        limits:
+          memory: 1280M
+          cpus: "1.0"
+        reservations:
+          memory: 512M
+    restart: always
+    logging:
+      driver: json-file
+      options:
+        max-size: "100m"
+        max-file: "5"
+        tag: "uav-observation-api"
+
+  planning-api:
+    image: uav-platform/planning-api:latest
+    build:
+      target: production
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod,docker
+      - KAFKA_MOCK=false
+      - JAVA_OPTS=-Xms512m -Xmx1024m -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/logs/heapdump.hprof
+    deploy:
+      mode: replicated
+      replicas: 1
+      resources:
+        limits:
+          memory: 1280M
+          cpus: "1.0"
+        reservations:
+          memory: 512M
+    restart: always
+    logging:
+      driver: json-file
+      options:
+        max-size: "100m"
+        max-file: "5"
+        tag: "uav-planning-api"
+
+  utm-api:
+    image: uav-platform/utm-api:latest
+    build:
+      target: production
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod,docker
+      - KAFKA_MOCK=false
+      - JAVA_OPTS=-Xms512m -Xmx1024m -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/logs/heapdump.hprof
+    deploy:
+      mode: replicated
+      replicas: 1
+      resources:
+        limits:
+          memory: 1280M
+          cpus: "1.0"
+        reservations:
+          memory: 512M
+    restart: always
+    logging:
+      driver: json-file
+      options:
+        max-size: "100m"
+        max-file: "5"
+        tag: "uav-utm-api"
+
+  # ============================================================
+  # Python 算法引擎 - 生产环境覆盖
+  # ============================================================
+  algorithm-engine:
+    image: uav-platform/algorithm-engine:latest
+    build:
+      target: production
+    environment:
+      - LOG_LEVEL=WARNING
+      - PYTHONUNBUFFERED=1
+    deploy:
+      mode: replicated
+      replicas: 2
+      resources:
+        limits:
+          memory: 2048M
+          cpus: "2.0"
+        reservations:
+          memory: 512M
+    restart: always
+    logging:
+      driver: json-file
+      options:
+        max-size: "100m"
+        max-file: "5"
+        tag: "uav-algorithm-engine"
+
+  # ============================================================
+  # 基础设施 - 生产环境加固
+  # ============================================================
+  mysql:
+    restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 2048M
+          cpus: "2.0"
+        reservations:
+          memory: 512M
+    logging:
+      driver: json-file
+      options:
+        max-size: "200m"
+        max-file: "5"
+        tag: "uav-mysql"
+
+  redis:
+    restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 1024M
+          cpus: "1.0"
+        reservations:
+          memory: 256M
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "3"
+        tag: "uav-redis"
+
+  kafka:
+    restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 2048M
+          cpus: "2.0"
+        reservations:
+          memory: 512M
+    logging:
+      driver: json-file
+      options:
+        max-size: "200m"
+        max-file: "5"
+        tag: "uav-kafka"
+
+  nacos:
+    restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 1024M
+          cpus: "1.0"
+        reservations:
+          memory: 256M
+    logging:
+      driver: json-file
+      options:
+        max-size: "100m"
+        max-file: "5"
+        tag: "uav-nacos"
+
+  # ============================================================
+  # 监控服务 - 生产环境启用
+  # ============================================================
+  prometheus:
+    restart: always
+    profiles: []
+    logging:
+      driver: json-file
+      options:
+        max-size: "100m"
+        max-file: "3"
+        tag: "uav-prometheus"
+
+  grafana:
+    restart: always
+    profiles: []
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "3"
+        tag: "uav-grafana"
+
+  alertmanager:
+    restart: always
+    profiles: []
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "3"
+        tag: "uav-alertmanager"

@@ -11,7 +11,7 @@
 | Python | 3.12+ | algorithm-engine (FastAPI) |
 | Node.js | 20+ | 开发者控制台 (Vue 3) |
 | Docker | 24+ | 基础设施容器化 |
-| Docker Compose | 2.20+ | 编排 13 个容器 |
+| Docker Compose | 2.20+ | 编排 16 个容器 |
 
 **硬件最低要求**: 16GB RAM, 8 CPU cores（推荐 32GB RAM）
 
@@ -20,7 +20,7 @@
 ### 2.1 启动全部服务
 
 ```bash
-# 启动基础设施 + 全部业务服务（13 个容器）
+# 启动基础设施 + 全部业务服务（16 个容器）
 docker compose up -d
 ```
 
@@ -48,10 +48,15 @@ powershell -ExecutionPolicy Bypass -File build-standalone.ps1 -SkipTests
 ### 2.4 验证部署状态
 
 ```powershell
-# 检查全部容器状态
+# 检查全部容器状态（预期 16 个容器全部 Up）
 docker compose ps
 
-# 预期输出：13 个容器全部 Up (healthy)
+# 预期容器列表：
+# uav-nacos, uav-mysql, uav-redis, uav-kafka, uav-zookeeper
+# uav-gateway, uav-platform-api, uav-weather-api, uav-assimilation-api
+# uav-risk-api, uav-observation-api, uav-planning-api, uav-utm-api
+# uav-algorithm-engine, uav-console
+# uav-prometheus, uav-grafana, uav-alertmanager
 ```
 
 ## 3. 服务端口清单
@@ -69,10 +74,14 @@ docker compose ps
 | uav-planning-api | 8086 | 8256 | 航迹规划 |
 | uav-utm-api | 8087 | 8259 | UTM 管理 |
 | uav-algorithm-engine | 9090 | 9095 | Python 算法引擎 |
+| uav-console | 80 | 3000 | 前端控制台 (Vue 3) |
 | uav-mysql | 3306 | 3306 | MySQL 8.0 |
 | uav-redis | 6379 | 6379 | Redis 7 |
 | uav-nacos | 8848 | 8950 | Nacos 3.2.0 控制台 |
-| uav-kafka | 9092 | - | Kafka（仅容器内部可达） |
+| uav-kafka | 9092 | 19092 | Kafka |
+| uav-prometheus | 9090 | 19091 | Prometheus 监控 |
+| uav-grafana | 3000 | 3001 | Grafana 可视化 |
+| uav-alertmanager | 9093 | 19093 | AlertManager 告警 |
 | uav-zookeeper | 2181 | - | Zookeeper（仅容器内部可达） |
 
 ### 本地开发端口（非 Docker）
@@ -88,6 +97,7 @@ docker compose ps
 | planning-api | 8086 | Path planning |
 | utm-api | 8087 | UTM management |
 | algorithm-engine | 9090 | Python 算法引擎 |
+| console (dev) | 3000 | Vite dev server |
 
 ## 4. 配置说明
 
@@ -140,7 +150,191 @@ Gateway 使用 `docker` profile，通过 Docker 服务名直接路由（无需 N
 | `/api/v1/utm/**`, `/api/v1/flight/**` | utm-api:8087 |
 | `/api/v1/algorithms/**`, `/api/v1/tasks/**` | algorithm-engine:9090 |
 
-## 5. Kafka 全链路消息格式
+### 4.7 前端开发代理
+
+Vite 开发服务器将 `/api` 代理到 API Gateway (`http://localhost:8258`)：
+
+```typescript
+// vite.config.ts
+server: {
+  port: 3000,
+  proxy: {
+    '/api': {
+      target: 'http://localhost:8258',
+      changeOrigin: true,
+    },
+  },
+}
+```
+
+## 5. RBAC 配置
+
+### 5.1 数据库初始化
+
+首次部署需执行 RBAC 相关表初始化（包含在 `scripts/init-db.sql` 中）：
+
+```sql
+-- 角色表
+CREATE TABLE IF NOT EXISTS sys_role (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  role_code VARCHAR(64) NOT NULL UNIQUE,
+  role_name VARCHAR(128) NOT NULL,
+  description VARCHAR(256),
+  status TINYINT DEFAULT 1,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- 用户角色关联表
+CREATE TABLE IF NOT EXISTS sys_user_role (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  user_id BIGINT NOT NULL,
+  role_id BIGINT NOT NULL,
+  tenant_id BIGINT,
+  UNIQUE KEY uk_user_role (user_id, role_id)
+);
+
+-- 权限表
+CREATE TABLE IF NOT EXISTS sys_permission (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  permission_code VARCHAR(128) NOT NULL UNIQUE,
+  permission_name VARCHAR(128) NOT NULL,
+  resource_type VARCHAR(32),
+  parent_id BIGINT DEFAULT 0
+);
+
+-- 角色权限关联表
+CREATE TABLE IF NOT EXISTS sys_role_permission (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  role_id BIGINT NOT NULL,
+  permission_id BIGINT NOT NULL,
+  UNIQUE KEY uk_role_permission (role_id, permission_id)
+);
+```
+
+### 5.2 预置角色
+
+| 角色编码 | 角色名称 | 说明 |
+|----------|---------|------|
+| `SUPER_ADMIN` | 超级管理员 | 全部权限，可管理租户、用户、系统配置 |
+| `TENANT_ADMIN` | 租户管理员 | 租户内全部权限，可管理租户内用户和资源 |
+| `OPERATOR` | 操作员 | 可执行飞行计划、查看气象数据、提交规划任务 |
+| `OBSERVER` | 观察员 | 只读权限，可查看仪表盘、气象数据、任务状态 |
+| `ALGORITHM_ADMIN` | 算法管理员 | 管理算法注册、执行、监控算法引擎指标 |
+
+### 5.3 角色分配
+
+```sql
+-- 创建超级管理员
+INSERT INTO sys_role (role_code, role_name, description) VALUES
+('SUPER_ADMIN', '超级管理员', '系统最高权限'),
+('TENANT_ADMIN', '租户管理员', '租户内全部权限'),
+('OPERATOR', '操作员', '可执行飞行计划和查看数据'),
+('OBSERVER', '观察员', '只读权限'),
+('ALGORITHM_ADMIN', '算法管理员', '管理算法引擎');
+
+-- 为用户分配角色（示例）
+INSERT INTO sys_user_role (user_id, role_id) VALUES (1, 1);  -- user_id=1 -> SUPER_ADMIN
+```
+
+### 5.4 API Key HMAC 签名
+
+前端请求通过 HMAC-SHA256 签名认证，签名流程：
+
+1. 请求拦截器获取用户 `apiKeySecret`
+2. 计算请求体 SHA-256 哈希（GET 请求跳过）
+3. 签名原文：`timestamp + METHOD + path + bodyHash`
+4. 使用 `apiKeySecret` 对签名原文进行 HMAC-SHA256
+5. 附加 Header：`X-Timestamp`, `X-Signature`, `X-Signature-Method`, `X-Body-Hash`
+
+## 6. 监控操作手册
+
+### 6.1 Prometheus 配置
+
+配置文件位于 `monitoring/prometheus.yml`，已配置以下抓取目标：
+
+| Job | 目标 | 端口 | 说明 |
+|-----|------|------|------|
+| `gateway` | `api-gateway:8088` | 8088 | API Gateway 指标 |
+| `platform-api` | `platform-api:8081` | 8081 | 平台管理指标 |
+| `weather-api` | `weather-api:8082` | 8082 | 气象服务指标 |
+| `planning-api` | `planning-api:8086` | 8086 | 规划服务指标 |
+| `algorithm-engine` | `algorithm-engine:9090` | 9090 | Python 算法引擎指标 |
+
+访问 Prometheus：`http://localhost:19091`
+
+### 6.2 Grafana 访问
+
+- 地址：`http://localhost:3001`
+- 默认账号：`admin / admin123`
+- 数据源：已自动配置 Prometheus 数据源（通过 provisioning）
+
+### 6.3 Dashboard 导入
+
+Grafana Dashboard 通过 provisioning 自动加载（`monitoring/grafana/provisioning/dashboards/`）。
+
+手动导入步骤：
+1. 打开 Grafana -> Dashboards -> Import
+2. 输入 Dashboard JSON 或上传文件
+3. 选择 Prometheus 数据源
+4. 点击 Import
+
+推荐 Dashboard：
+
+| Dashboard | 说明 |
+|-----------|------|
+| JVM Micrometer | Java 服务 JVM 指标（内存、GC、线程） |
+| Spring Boot | Spring Boot 应用指标（HTTP 请求、健康检查） |
+| Algorithm Engine | Python 算法引擎专属指标 |
+| Kafka Exporter | Kafka 消息队列指标 |
+| Node Exporter | 主机资源使用（CPU、内存、磁盘、网络） |
+
+### 6.4 告警配置
+
+AlertManager 配置位于 `monitoring/alertmanager.yml`。
+
+默认告警规则（Prometheus rules）：
+
+| 告警名称 | 级别 | 条件 | 说明 |
+|----------|------|------|------|
+| ServiceDown | critical | 服务健康检查失败超过 2 分钟 | 服务不可用 |
+| HighErrorRate | warning | HTTP 5xx 错误率 > 5% | 服务异常 |
+| HighLatency | warning | P99 延迟 > 2s | 性能劣化 |
+| KafkaLag | warning | 消费者 lag > 1000 | 消息积压 |
+| AlgorithmEngineDown | critical | 算法引擎健康检查失败 | 算法服务不可用 |
+| AlgorithmExecutionFail | warning | 算法执行失败率 > 10% | 算法异常 |
+
+### 6.5 算法引擎指标说明
+
+Python 算法引擎暴露以下 Prometheus 指标：
+
+| 指标名 | 类型 | 说明 |
+|--------|------|------|
+| `algorithm_engine_tasks_total` | Counter | 算法任务总数（按 status 标签分类） |
+| `algorithm_engine_execution_duration_seconds` | Histogram | 算法执行耗时分布 |
+| `algorithm_engine_active_tasks` | Gauge | 当前正在执行的任务数 |
+| `algorithm_engine_registered_algorithms` | Gauge | 已注册算法数量 |
+| `algorithm_engine_kafka_consumer_lag` | Gauge | Kafka 消费者 lag |
+| `algorithm_engine_errors_total` | Counter | 错误总数（按 error_type 标签分类） |
+
+PromQL 查询示例：
+
+```promql
+# 算法执行成功率
+sum(rate(algorithm_engine_tasks_total{status="success"}[5m])) /
+sum(rate(algorithm_engine_tasks_total[5m]))
+
+# P95 执行耗时
+histogram_quantile(0.95, sum(rate(algorithm_engine_execution_duration_seconds_bucket[5m])) by (le))
+
+# 当前活跃任务数
+algorithm_engine_active_tasks
+
+# 已注册算法数
+algorithm_engine_registered_algorithms
+```
+
+## 7. Kafka 全链路消息格式
 
 ### Java -> Python（任务下发）
 
@@ -174,28 +368,161 @@ Topic: `uav.algorithm.results`
 
 > 注意：消息格式统一使用 snake_case，Java 端通过 `@JsonNaming(SnakeCaseStrategy.class)` 自动转换。
 
-## 6. 常见故障排查
+## 8. 多环境部署
 
-### 6.1 端口被占用
+### 8.1 环境区分
+
+| 环境 | 配置文件 | Profile | Mock | 监控 | Debug | 说明 |
+|------|---------|---------|------|------|-------|------|
+| dev | `docker-compose.override.yml`（自动加载） | `dev,docker` | true | 可选（`--profile monitoring`） | 开启（JDWP :5005） | 本地开发，挂载源码卷热重载 |
+| staging | `docker-compose.staging.yml` | `staging,docker` | false | 启用 | 关闭 | 灰度环境，release 镜像标签 |
+| prod | `docker-compose.prod.yml` | `prod,docker` | false | 启用 | 关闭 | 生产环境，资源限制 + 副本数 |
+
+### 8.2 Dev 环境（本地开发）
+
+```bash
+# 方式一：直接启动（docker-compose.override.yml 自动合并）
+docker compose up -d
+
+# 方式二：显式排除 override（使用原始 docker-compose.yml）
+docker compose -f docker-compose.yml up -d
+
+# 启动时同时开启监控
+docker compose --profile monitoring up -d
+
+# 仅启动基础设施（不启动业务服务）
+docker compose up -d mysql redis kafka zookeeper nacos
+
+# 启动 API Gateway（standalone）
+cd gateway/api-gateway
+java -jar target/api-gateway-2.0.0.jar --spring.profiles.active=dev
+
+# 启动需要的业务服务（IDE 或命令行）
+java -jar services/weather-api/target/weather-api-2.0.0.jar --spring.profiles.active=dev
+
+# 启动 Python 算法引擎
+cd python/algorithm-engine
+uvicorn app.main:app --host 0.0.0.0 --port 9090
+
+# 启动前端
+cd console
+npm run dev  # http://localhost:3000
+```
+
+Dev 环境特性：
+- 本地源码卷挂载（热重载）
+- Java Debug 端口（JDWP :5005）
+- Python Debug 端口（debugpy :5678）
+- 降低 JVM 内存（-Xmx256m）
+- Mock 模式开启
+
+### 8.3 Staging 环境（灰度/预发布）
+
+```bash
+# 使用 staging 配置文件启动
+docker compose -f docker-compose.yml -f docker-compose.staging.yml up -d
+
+# 重新构建并启动
+docker compose -f docker-compose.yml -f docker-compose.staging.yml up -d --build
+
+# 仅重启业务服务（保留基础设施）
+docker compose -f docker-compose.yml -f docker-compose.staging.yml up -d api-gateway platform-api weather-api assimilation-api risk-api observation-api planning-api utm-api algorithm-engine
+
+# 查看服务状态
+docker compose -f docker-compose.yml -f docker-compose.staging.yml ps
+
+# 停止
+docker compose -f docker-compose.yml -f docker-compose.staging.yml down
+```
+
+Staging 环境特性：
+- 使用 `release` 镜像标签
+- 内存限制（Java: 768M, Algorithm Engine: 1024M）
+- Mock 模式关闭
+- RBAC 启用
+- Prometheus / Grafana 全部启用
+- `restart: on-failure`
+
+### 8.4 Prod 环境（生产）
+
+```bash
+# 生产环境部署（必须关闭 Mock）
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+
+# 滚动更新（零停机）
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --no-deps --build api-gateway
+
+# 扩缩容（示例：将 platform-api 扩展到 3 副本）
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --scale platform-api=3
+
+# 验证 Mock 已关闭
+docker compose -f docker-compose.yml -f docker-compose.prod.yml exec platform-api env | grep MOCK
+# 预期: KAFKA_MOCK=false
+
+# 查看服务状态
+docker compose -f docker-compose.yml -f docker-compose.prod.yml ps
+
+# 停止全部服务
+docker compose -f docker-compose.yml -f docker-compose.prod.yml down
+
+# 停止并清除数据卷（慎用）
+docker compose -f docker-compose.yml -f docker-compose.prod.yml down -v
+```
+
+Prod 环境特性：
+- 使用 `latest` 镜像标签
+- 资源限制（CPU + 内存）
+- 副本数配置（api-gateway: 2, algorithm-engine: 2）
+- 日志驱动 `json-file` + 大小限制（100m / 5 files）
+- `restart: always`
+- JVM OOM 自动 HeapDump
+- Mock 模式关闭
+- RBAC 启用
+
+### 8.5 环境变量覆盖
+
+通过 `.env` 文件或环境变量覆盖默认配置：
+
+```bash
+# .env.prod
+MYSQL_ROOT_PASSWORD=<strong_password>
+NACOS_AUTH_TOKEN=<base64_encoded_token_min_32_bytes>
+GF_SECURITY_ADMIN_PASSWORD=<grafana_password>
+SPRING_PROFILES_ACTIVE=prod
+KAFKA_MOCK=false
+SECURITY_RBAC_ENABLED=true
+```
+
+### 8.6 多环境配置文件对照表
+
+| 配置文件 | 触发方式 | 镜像标签 | JVM 内存 | Debug | Mock | 监控 | restart |
+|----------|---------|---------|---------|-------|------|------|---------|
+| `docker-compose.override.yml` | 自动合并 | (build) | 256m | 开启 | true | 可选 | 默认 |
+| `docker-compose.staging.yml` | `-f` 指定 | release | 512m | 关闭 | false | 启用 | on-failure |
+| `docker-compose.prod.yml` | `-f` 指定 | latest | 1024m | 关闭 | false | 启用 | always |
+
+## 9. 常见故障排查
+
+### 9.1 端口被占用
 
 ```powershell
 netstat -ano | findstr :XXXX
 Stop-Process -Id {PID}
 ```
 
-### 6.2 MySQL 连接失败
+### 9.2 MySQL 连接失败
 
 ```bash
 docker exec uav-mysql mysql -uroot -prootpass -e "ALTER USER 'root'@'%' IDENTIFIED BY 'rootpass'; FLUSH PRIVILEGES;"
 ```
 
-### 6.3 Nacos 启动失败
+### 9.3 Nacos 启动失败
 
 - **JWT token 太短**: `NACOS_AUTH_TOKEN` 必须 >= 32 字节 Base64 编码（>= 256 bits）
 - **数据库表缺失**: 执行 `docker/init-db/nacos-schema.sql` 初始化 13 张表
 - **config_gray 迁移失败**: 确认 `config_info_gray` 表已创建
 
-### 6.4 api-gateway 启动失败
+### 9.4 api-gateway 启动失败
 
 Spring Cloud Gateway 与 Spring Boot 4.0 不兼容，必须使用 standalone 构建：
 
@@ -204,32 +531,77 @@ cd gateway/api-gateway
 powershell -ExecutionPolicy Bypass -File build-standalone.ps1 -SkipTests
 ```
 
-### 6.5 Kafka 消息反序列化失败
+### 9.5 Kafka 消息反序列化失败
 
 - 确认 Python 端使用 `_sanitize_value()` 清理 Infinity/NaN 值
 - 确认 Java 端 `AlgorithmResultMessage` 有 `@JsonNaming(SnakeCaseStrategy.class)` 注解
 
-### 6.6 Zookeeper 端口未映射
+### 9.6 Zookeeper 端口未映射
 
 Zookeeper 仅容器内部可达（Kafka 依赖），无需映射到宿主机。如需本地调试，修改 `docker-compose.yml` 添加 `ports: "2181:2181"`。
 
-## 7. 健康检查
+### 9.7 Prometheus 抓取失败
+
+- 确认目标服务已暴露 `/actuator/prometheus` 端点
+- 确认 `management.endpoints.web.exposure.include=prometheus,health` 已配置
+- 检查 Prometheus targets 页面：`http://localhost:19091/targets`
+
+### 9.8 Grafana 数据源连接失败
+
+- 确认 Prometheus 容器健康：`docker compose ps prometheus`
+- 检查 provisioning 文件路径是否正确
+- 手动测试数据源：Grafana -> Configuration -> Data Sources -> Test
+
+### 9.9 前端请求 404
+
+- 确认 API Gateway 正在运行：`curl http://localhost:8258/actuator/health`
+- 确认 Vite 代理配置指向 `http://localhost:8258`
+- 检查请求路径是否匹配 Gateway 路由规则（见 4.6 节）
+
+### 9.10 算法引擎无响应
+
+```bash
+# 检查算法引擎健康状态
+curl http://localhost:9095/health
+
+# 检查 Kafka 连接
+docker compose exec algorithm-engine python -c "
+from app.core.kafka_client import get_kafka_producer
+print('Kafka connection OK')
+"
+
+# 检查 Redis 连接
+docker compose exec algorithm-engine python -c "
+import redis; r = redis.from_url('redis://redis:6379/0'); print(r.ping())
+"
+```
+
+## 10. 健康检查
 
 ```powershell
-# Docker 容器状态
+# Docker 容器状态（16 个容器）
 docker compose ps
 
+# API Gateway
+Invoke-RestMethod http://localhost:8258/actuator/health
+
 # 通过 Gateway 访问算法引擎
-Invoke-RestMethod http://localhost:8258/api/v1/algorithms
+Invoke-RestMethod http://localhost:8258/api/v1/algorithms/list
 
 # Nacos 控制台
 Invoke-WebRequest http://localhost:8950/nacos/
+
+# Prometheus
+Invoke-RestMethod http://localhost:19091/api/v1/targets
+
+# Grafana
+Invoke-WebRequest http://localhost:3001/api/health
 
 # Kafka 消费验证
 docker compose exec kafka kafka-console-consumer --bootstrap-server localhost:9092 --topic uav.algorithm.results --from-beginning --timeout-ms 5000
 ```
 
-## 8. 优雅停机
+## 11. 优雅停机
 
 ```bash
 # 停止全部容器
@@ -237,4 +609,7 @@ docker compose down
 
 # 停止并清除数据卷（慎用）
 docker compose down -v
+
+# 仅停止业务服务（保留基础设施）
+docker compose stop api-gateway platform-api weather-api assimilation-api risk-api observation-api planning-api utm-api algorithm-engine console
 ```

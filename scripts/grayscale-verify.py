@@ -251,9 +251,9 @@ def check_infrastructure(host: str, results: VerifyResult, verbose: bool = False
                     category,
                     f"{service_name} ({host}:{port})",
                     "PASS",
-                    f"端口连通",
+                    "端口连通",
                     duration,
-                    verbose_info=f"socket.connect_ex 返回 0" if verbose else "",
+                    verbose_info="socket.connect_ex 返回 0" if verbose else "",
                 )
             else:
                 results.record(
@@ -660,7 +660,16 @@ def check_gateway_routes(host: str, results: VerifyResult, verbose: bool = False
                     category,
                     f"Gateway -> {service_name} ({path})",
                     "PASS",
-                    f"HTTP 404, 路由转发正常 (端点可能不存在)",
+                    "HTTP 404, 路由转发正常 (端点可能不存在)",
+                    duration,
+                )
+            elif resp.status_code == 403:
+                # 403 表示路由可达但被安全框架拦截（Spring Security默认行为）
+                results.record(
+                    category,
+                    f"Gateway -> {service_name} ({path})",
+                    "PASS",
+                    "HTTP 403, 路由转发正常 (安全拦截，需认证)",
                     duration,
                 )
             elif resp.status_code == 502 or resp.status_code == 503:

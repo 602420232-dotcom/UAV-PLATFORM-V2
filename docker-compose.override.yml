@@ -1,0 +1,194 @@
+# ============================================================================
+# Docker Compose Override - 开发环境（默认）
+# ============================================================================
+# 使用方式（自动加载）：
+#   docker compose up -d
+#
+# 本文件会被 docker compose 自动识别并合并到 docker-compose.yml。
+# 开发环境特性：
+#   - 挂载本地源码卷，支持热重载
+#   - 开启 Java Debug 端口（JDWP :5005）
+#   - 开启 Python Debug 端口（debugpy :5678）
+#   - 降低 JVM 内存限制，适合本地开发
+#   - 开启 Mock 模式
+#   - Prometheus / Grafana 不启动（按需手动开启）
+# ============================================================================
+
+services:
+  # ============================================================
+  # Java 微服务 - 开发环境覆盖
+  # ============================================================
+  api-gateway:
+    volumes:
+      - ./gateway/api-gateway:/app/source
+    ports:
+      - "8258:8088"
+      - "5005:5005"   # JDWP debug port
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev,docker
+      - KAFKA_MOCK=true
+      - JAVA_OPTS=-Xms256m -Xmx512m -XX:+UseG1GC -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
+    deploy:
+      resources:
+        limits:
+          memory: 768M
+        reservations:
+          memory: 256M
+
+  platform-api:
+    volumes:
+      - ./services/platform-api:/app/source
+    ports:
+      - "8251:8081"
+      - "5006:5005"   # JDWP debug port
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev,docker
+      - KAFKA_MOCK=true
+      - SECURITY_RBAC_ENABLED=true
+      - JAVA_OPTS=-Xms128m -Xmx256m -XX:+UseG1GC -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 128M
+
+  weather-api:
+    volumes:
+      - ./services/weather-api:/app/source
+    ports:
+      - "8252:8082"
+      - "5007:5005"
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev,docker
+      - KAFKA_MOCK=true
+      - JAVA_OPTS=-Xms128m -Xmx256m -XX:+UseG1GC -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 128M
+
+  assimilation-api:
+    volumes:
+      - ./services/assimilation-api:/app/source
+    ports:
+      - "8253:8083"
+      - "5008:5005"
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev,docker
+      - KAFKA_MOCK=true
+      - JAVA_OPTS=-Xms128m -Xmx256m -XX:+UseG1GC -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 128M
+
+  risk-api:
+    volumes:
+      - ./services/risk-api:/app/source
+    ports:
+      - "8254:8084"
+      - "5009:5005"
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev,docker
+      - KAFKA_MOCK=true
+      - JAVA_OPTS=-Xms128m -Xmx256m -XX:+UseG1GC -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 128M
+
+  observation-api:
+    volumes:
+      - ./services/observation-api:/app/source
+    ports:
+      - "8255:8085"
+      - "5010:5005"
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev,docker
+      - KAFKA_MOCK=true
+      - JAVA_OPTS=-Xms128m -Xmx256m -XX:+UseG1GC -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 128M
+
+  planning-api:
+    volumes:
+      - ./services/planning-api:/app/source
+    ports:
+      - "8256:8086"
+      - "5011:5005"
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev,docker
+      - KAFKA_MOCK=true
+      - JAVA_OPTS=-Xms128m -Xmx256m -XX:+UseG1GC -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 128M
+
+  utm-api:
+    volumes:
+      - ./services/utm-api:/app/source
+    ports:
+      - "8259:8087"
+      - "5012:5005"
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev,docker
+      - KAFKA_MOCK=true
+      - JAVA_OPTS=-Xms128m -Xmx256m -XX:+UseG1GC -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 128M
+
+  # ============================================================
+  # Python 算法引擎 - 开发环境覆盖
+  # ============================================================
+  algorithm-engine:
+    volumes:
+      - ./python/algorithm-engine:/app
+    ports:
+      - "9095:9090"
+      - "5678:5678"   # debugpy debug port
+    environment:
+      - LOG_LEVEL=DEBUG
+      - PYTHONUNBUFFERED=1
+    command: >
+      sh -c "pip install -e /app[dev] 2>/dev/null;
+             python -m debugpy --listen 0.0.0.0:5678
+             -m uvicorn app.main:app --host 0.0.0.0 --port 9090 --reload"
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 128M
+
+  # ============================================================
+  # 监控服务 - 开发环境默认不启动
+  # ============================================================
+  prometheus:
+    profiles:
+      - monitoring
+
+  grafana:
+    profiles:
+      - monitoring
+
+  alertmanager:
+    profiles:
+      - monitoring

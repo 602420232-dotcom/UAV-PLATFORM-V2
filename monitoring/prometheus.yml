@@ -22,7 +22,7 @@ alerting:
   alertmanagers:
     - static_configs:
         - targets:
-            - 'alertmanager:9093'
+            - 'uav-alertmanager:9093'
 
 # Prometheus 自身监控
 scrape_configs:
@@ -42,7 +42,7 @@ scrape_configs:
     scrape_interval: 15s
     static_configs:
       - targets:
-          - 'api-gateway:8258'
+          - 'uav-gateway:8258'
         labels:
           service: 'api-gateway'
           language: 'java'
@@ -53,7 +53,7 @@ scrape_configs:
     scrape_interval: 15s
     static_configs:
       - targets:
-          - 'platform-api:8251'
+          - 'uav-platform-api:8251'
         labels:
           service: 'platform-api'
           language: 'java'
@@ -64,7 +64,7 @@ scrape_configs:
     scrape_interval: 15s
     static_configs:
       - targets:
-          - 'weather-api:8252'
+          - 'uav-weather-api:8252'
         labels:
           service: 'weather-api'
           language: 'java'
@@ -75,7 +75,7 @@ scrape_configs:
     scrape_interval: 15s
     static_configs:
       - targets:
-          - 'assimilation-api:8253'
+          - 'uav-assimilation-api:8253'
         labels:
           service: 'assimilation-api'
           language: 'java'
@@ -86,7 +86,7 @@ scrape_configs:
     scrape_interval: 15s
     static_configs:
       - targets:
-          - 'risk-api:8254'
+          - 'uav-risk-api:8254'
         labels:
           service: 'risk-api'
           language: 'java'
@@ -97,7 +97,7 @@ scrape_configs:
     scrape_interval: 15s
     static_configs:
       - targets:
-          - 'observation-api:8255'
+          - 'uav-observation-api:8255'
         labels:
           service: 'observation-api'
           language: 'java'
@@ -108,7 +108,7 @@ scrape_configs:
     scrape_interval: 15s
     static_configs:
       - targets:
-          - 'planning-api:8256'
+          - 'uav-planning-api:8256'
         labels:
           service: 'planning-api'
           language: 'java'
@@ -119,7 +119,7 @@ scrape_configs:
     scrape_interval: 15s
     static_configs:
       - targets:
-          - 'utm-api:8259'
+          - 'uav-utm-api:8259'
         labels:
           service: 'utm-api'
           language: 'java'
@@ -134,7 +134,7 @@ scrape_configs:
     scrape_interval: 15s
     static_configs:
       - targets:
-          - 'algorithm-engine:9095'
+          - 'uav-algorithm-engine:9090'
         labels:
           service: 'algorithm-engine'
           language: 'python'
