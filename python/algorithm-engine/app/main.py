@@ -56,12 +56,19 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 def _register_builtin_algorithms() -> None:
     """Register all built-in algorithm adapters with the global registry."""
     from app.adapters.assimilation_adapter import (
+        AdaptiveAssimilatorAdapter,
+        AdaptiveHybridAdapter,
+        AdaptiveVarianceFieldAdapter,
+        BayesianAssimilatorAdapter,
+        CompatibleAssimilatorAdapter,
         EnhancedBayesianAdapter,
         EnKFAdapter,
         FiveDimensionalVarAdapter,
         FourDimensionalVarAdapter,
         HybridAssimilationAdapter,
+        MultiScaleHybridAdapter,
         ThreeDimensionalVarAdapter,
+        VarianceFieldOptimizerAdapter,
     )
     from app.adapters.observation_adapter import (
         AdaptiveObservationAdapter,
@@ -94,6 +101,13 @@ def _register_builtin_algorithms() -> None:
             EnKFAdapter,
             HybridAssimilationAdapter,
             EnhancedBayesianAdapter,
+            AdaptiveHybridAdapter,
+            MultiScaleHybridAdapter,
+            AdaptiveAssimilatorAdapter,
+            VarianceFieldOptimizerAdapter,
+            AdaptiveVarianceFieldAdapter,
+            BayesianAssimilatorAdapter,
+            CompatibleAssimilatorAdapter,
         ]
         + [
             VRPTWAdapter,

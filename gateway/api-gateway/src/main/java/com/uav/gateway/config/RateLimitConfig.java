@@ -62,6 +62,9 @@ public class RateLimitConfig {
 
     /**
      * Get tenant QPS limit with fallback to default
+     *
+     * @param tenantId 租户ID
+     * @return QPS限制值
      */
     public long getTenantQps(String tenantId) {
         return tenantLimits.getOrDefault(tenantId, defaultTenantQps);
@@ -69,6 +72,9 @@ public class RateLimitConfig {
 
     /**
      * Get API key QPS limit with fallback to default
+     *
+     * @param apiKey API密钥
+     * @return QPS限制值
      */
     public long getApiKeyQps(String apiKey) {
         return apiKeyLimits.getOrDefault(apiKey, defaultApiKeyQps);
@@ -76,6 +82,10 @@ public class RateLimitConfig {
 
     /**
      * Get path-specific QPS limit with fallback to tenant default
+     *
+     * @param path 请求路径
+     * @param tenantId 租户ID
+     * @return QPS限制值
      */
     public long getPathLimit(String path, String tenantId) {
         // Check exact path match first
@@ -94,6 +104,9 @@ public class RateLimitConfig {
 
     /**
      * Get WebSocket connection limit with fallback to default
+     *
+     * @param tenantId 租户ID
+     * @return WebSocket连接限制值
      */
     public long getWsConnectionLimit(String tenantId) {
         return wsConnectionLimits.getOrDefault(tenantId, defaultWsConnections);

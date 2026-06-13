@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from fastapi import APIRouter, HTTPException
 
@@ -133,4 +134,51 @@ async def execute_pipeline(request: PipelineExecuteRequest):
             )
         pipeline.add_step(step.algorithm_id)
     result = await pipeline.execute(request.initial_params)
+    return result
+
+
+@router.post("/api/v1/assimilation/smart-select")
+async def smart_select_assimilation(request: dict[str, Any]):
+    """智能同化算法选择：根据任务特征自动推荐最优同化算法。
+
+    请求体示例：
+    {
+        "background_field": [[...]],
+        "observations": [{"position": [x,y], "value": v}, ...],
+        "time_budget_seconds": 30.0,
+        "require_probabilistic": false,
+        "require_risk_aware": false,
+        "gpu_available": false
+    }
+
+    返回：
+    {
+        "algorithm_id": "adaptive_hybrid",
+        "reason": "...",
+        "config_overrides": {...},
+        "decision_explanation": "..."
+    }
+    """
+    from app.core.smart_scheduler import SmartAlgorithmScheduler
+
+    scheduler = SmartAlgorithmScheduler()
+    obs = request.get("observations", [])
+    bg = request.get("background_field", [])
+    grid_shape = None
+    if bg and len(bg) > 0:
+        import numpy as np
+
+        arr = np.array(bg)
+        grid_shape = arr.shape
+
+    result = scheduler.select_algorithm(
+        params=request,
+        grid_shape=grid_shape,
+        observation_count=len(obs),
+        time_budget_seconds=request.get("time_budget_seconds"),
+        require_probabilistic=request.get("require_probabilistic", False),
+        require_risk_aware=request.get("require_risk_aware", False),
+        gpu_available=request.get("gpu_available", False),
+    )
+    result["decision_explanation"] = scheduler.get_decision_explanation()
     return result

@@ -124,7 +124,8 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
 
                     // Add rate limit headers
                     exchange.getResponse().getHeaders().add("X-RateLimit-Limit", String.valueOf(limit));
-                    exchange.getResponse().getHeaders().add("X-RateLimit-Remaining", String.valueOf(Math.max(0, limit - current)));
+                    exchange.getResponse().getHeaders().add("X-RateLimit-Remaining",
+                            String.valueOf(Math.max(0, limit - current)));
                     exchange.getResponse().getHeaders().add("X-RateLimit-Reset", String.valueOf(now + windowMs));
 
                     if (allowed) {
