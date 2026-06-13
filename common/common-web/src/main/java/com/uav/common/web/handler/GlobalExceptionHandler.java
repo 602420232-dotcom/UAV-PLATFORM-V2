@@ -24,6 +24,10 @@ public class GlobalExceptionHandler {
 
     /**
      * 业务异常
+     *
+     * @param e 业务异常
+     * @param request HTTP请求
+     * @return 错误结果
      */
     @ExceptionHandler(BizException.class)
     public Result<Void> handleBizException(BizException e, HttpServletRequest request) {
@@ -33,6 +37,10 @@ public class GlobalExceptionHandler {
 
     /**
      * 方法参数校验异常（@Valid @RequestBody）
+     *
+     * @param e 方法参数校验异常
+     * @param request HTTP请求
+     * @return 错误结果
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public Result<Void> handleMethodArgumentNotValid(MethodArgumentNotValidException e, HttpServletRequest request) {
@@ -45,6 +53,10 @@ public class GlobalExceptionHandler {
 
     /**
      * 绑定异常（@ModelAttribute）
+     *
+     * @param e 绑定异常
+     * @param request HTTP请求
+     * @return 错误结果
      */
     @ExceptionHandler(BindException.class)
     public Result<Void> handleBindException(BindException e, HttpServletRequest request) {
@@ -57,6 +69,10 @@ public class GlobalExceptionHandler {
 
     /**
      * 约束校验异常（@Validated 方法参数）
+     *
+     * @param e 约束校验异常
+     * @param request HTTP请求
+     * @return 错误结果
      */
     @ExceptionHandler(ConstraintViolationException.class)
     public Result<Void> handleConstraintViolation(ConstraintViolationException e, HttpServletRequest request) {
@@ -69,6 +85,10 @@ public class GlobalExceptionHandler {
 
     /**
      * 非法参数异常
+     *
+     * @param e 非法参数异常
+     * @param request HTTP请求
+     * @return 错误结果
      */
     @ExceptionHandler(IllegalArgumentException.class)
     public Result<Void> handleIllegalArgument(IllegalArgumentException e, HttpServletRequest request) {
@@ -78,6 +98,10 @@ public class GlobalExceptionHandler {
 
     /**
      * 其他所有异常
+     *
+     * @param e 异常
+     * @param request HTTP请求
+     * @return 错误结果
      */
     @ExceptionHandler(Exception.class)
     public Result<Void> handleException(Exception e, HttpServletRequest request) {

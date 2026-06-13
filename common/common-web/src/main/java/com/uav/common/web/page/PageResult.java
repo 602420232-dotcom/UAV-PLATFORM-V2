@@ -52,6 +52,11 @@ public class PageResult<T> implements Serializable {
 
     /**
      * 空分页结果
+     *
+     * @param <T> 数据类型
+     * @param pageNum 当前页码
+     * @param pageSize 每页条数
+     * @return 空分页结果
      */
     public static <T> PageResult<T> empty(int pageNum, int pageSize) {
         return new PageResult<>(Collections.emptyList(), 0, pageNum, pageSize);
@@ -59,6 +64,13 @@ public class PageResult<T> implements Serializable {
 
     /**
      * 构建分页结果
+     *
+     * @param <T> 数据类型
+     * @param list 数据列表
+     * @param total 总记录数
+     * @param pageNum 当前页码
+     * @param pageSize 每页条数
+     * @return 分页结果
      */
     public static <T> PageResult<T> of(List<T> list, long total, int pageNum, int pageSize) {
         return new PageResult<>(list, total, pageNum, pageSize);

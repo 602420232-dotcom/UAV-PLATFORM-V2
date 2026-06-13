@@ -14,7 +14,7 @@ services:
       - MYSQL_SERVICE_USER=nacos
       - MYSQL_SERVICE_PASSWORD=nacos
       - MYSQL_SERVICE_DB_PARAM=characterEncoding=utf8&connectTimeout=1000&socketTimeout=3000&autoReconnect=true&useSSL=false&allowPublicKeyRetrieval=true
-      - NACOS_AUTH_TOKEN=SGVsbG9OYWNvcw==
+      - NACOS_AUTH_TOKEN=VUVBVFBMQVRGT1JNX1BBVENIX1NFQ1JFVF9LRVlfMjAyNA==
       - NACOS_AUTH_IDENTITY_KEY=serverIdentity
       - NACOS_AUTH_IDENTITY_VALUE=security
     ports:

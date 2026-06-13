@@ -29,6 +29,8 @@ public class PageQuery implements Serializable {
 
     /**
      * 获取偏移量（用于MyBatis等）
+     *
+     * @return 偏移量
      */
     public int getOffset() {
         return (pageNum - 1) * pageSize;
