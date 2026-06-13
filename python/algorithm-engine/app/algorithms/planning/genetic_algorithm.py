@@ -111,6 +111,7 @@ class GeneticAlgorithmPlanner:
                 logger.debug("第 %d 代: 最优适应度=%.4f", gen, best_fitness)
 
         # 解码最优路径
+        assert best_chromosome is not None
         path = self._decode(best_chromosome, start, goal)
         cost = self._path_cost(path)
 

@@ -169,8 +169,6 @@ class V2XCommunication:
         sender_position = params.get("sender_position", [0.0, 0.0, 0.1])
         receiver_positions = params.get("receiver_positions", [])
         message_size_bytes = params.get("message_size_bytes", 256)
-        _data_rate_mbps = params.get("data_rate_mbps", 6)
-
         sender = np.array(sender_position, dtype=float)
         receivers = []
 

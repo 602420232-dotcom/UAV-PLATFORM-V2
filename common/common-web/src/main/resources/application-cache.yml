@@ -1,0 +1,122 @@
+# ============================================================
+# Redis 多级缓存配置
+# L1: Caffeine 本地缓存（进程内，低延迟）
+# L2: Redis 分布式缓存（跨服务共享，支持TTL和淘汰策略）
+# ============================================================
+
+spring:
+  cache:
+    # 缓存类型：使用Redis作为主缓存提供者，Caffeine作为本地缓存
+    type: redis
+
+    # 缓存名称列表，定义系统中所有缓存组
+    cache-names:
+      - weather_data          # 气象数据缓存
+      - assimilation_result   # 同化结果缓存
+      - risk_assessment       # 风险评估缓存
+      - planning_path         # 航径规划缓存
+
+  # ============================================================
+  # Redis 连接配置
+  # ============================================================
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      database: 0
+      # 连接超时时间（毫秒）
+      timeout: 3000
+      # Lettuce 连接池配置
+      lettuce:
+        pool:
+          # 最大空闲连接数
+          max-idle: 8
+          # 最小空闲连接数
+          min-idle: 2
+          # 最大活动连接数
+          max-active: 16
+          # 获取连接最大等待时间（毫秒），-1表示无限制
+          max-wait: 3000
+        # 关闭连接超时时间（毫秒）
+        shutdown-timeout: 200
+
+# ============================================================
+# Caffeine 本地缓存（L1）配置
+# ============================================================
+caffeine:
+  # 默认缓存配置
+  spec: maximumSize=1000,expireAfterWrite=5m
+
+# ============================================================
+# 自定义多级缓存配置
+# ============================================================
+cache:
+  multi-level:
+    # L1 Caffeine 本地缓存配置
+    l1:
+      # 最大缓存条目数，超过后使用LRU策略淘汰
+      maximum-size: 1000
+      # 写入后过期时间（5分钟）
+      expire-after-write: 5m
+      # 写入后刷新时间（3分钟），在过期前异步刷新缓存
+      refresh-after-write: 3m
+      # 初始容量，减少缓存扩容时的性能抖动
+      initial-capacity: 100
+      # 是否记录缓存统计信息，用于监控命中率
+      record-stats: true
+
+    # L2 Redis 分布式缓存配置
+    l2:
+      # 默认TTL（30分钟）
+      default-ttl: 30m
+      # 空值缓存TTL（5分钟），防止缓存穿透
+      null-value-ttl: 5m
+      # 是否缓存空值，防止恶意请求穿透到数据库
+      cache-null-values: true
+      # 缓存键前缀，用于区分不同服务的缓存
+      key-prefix: "uav:cache:"
+
+  # ============================================================
+  # 缓存组定义（不同业务数据使用不同的缓存策略）
+  # ============================================================
+  groups:
+    # 气象数据缓存组
+    # 气象数据更新频率较高，使用较短的TTL
+    weather_data:
+      l1:
+        maximum-size: 500
+        expire-after-write: 5m
+      l2:
+        ttl: 10m
+      description: "气象观测与预报数据，更新频率较高"
+
+    # 同化结果缓存组
+    # 同化计算开销大，结果有效期适中
+    assimilation_result:
+      l1:
+        maximum-size: 200
+        expire-after-write: 10m
+      l2:
+        ttl: 30m
+      description: "数据同化计算结果，计算开销较大"
+
+    # 风险评估缓存组
+    # 风险评估需要较新的数据，TTL较短
+    risk_assessment:
+      l1:
+        maximum-size: 300
+        expire-after-write: 3m
+      l2:
+        ttl: 5m
+      description: "风险评估结果，时效性要求高"
+
+    # 航径规划缓存组
+    # 航径规划结果在一定时间内有效
+    planning_path:
+      l1:
+        maximum-size: 200
+        expire-after-write: 8m
+      l2:
+        ttl: 15m
+      description: "航径规划结果，规划周期内有效"

@@ -1,7 +1,7 @@
 # UAV Platform V2 - 二期迭代计划
 
 > 最后更新：2026-06-14
-> 状态：**一期已完成，二期正式启动**
+> 状态：**二期算法补齐已完成，102个算法注册**
 
 ---
 
@@ -47,6 +47,37 @@
 - CORS 配置（allowedOrigins -> allowedOriginPatterns）
 - Nacos 数据库初始化（schema 导入 + JWT token 长度）
 - api-gateway Spring Boot 4.0 兼容性（改用 standalone Spring Boot 3.4.5 构建）
+
+---
+
+## 二期算法补齐成果（2026-06-14 完成）
+
+### 总览：102个算法注册（HTML 93组件目标 100%覆盖）
+
+| 类别 | HTML计划 | 当前注册 | 覆盖率 |
+|------|---------|---------|--------|
+| 同化算法 | 13 | 13 | 100% |
+| AI模型 | 21 | 21 | 100% |
+| 规划算法 | 28 | 41 | 100%（+13计划外） |
+| 边云算法 | 20 | 20 | 100% |
+| 边缘SDK | 11 | 11（C++） | 100% |
+| 风险评估 | — | 4 | 计划外 |
+| 观测决策 | — | 3 | 计划外 |
+| **合计** | **93** | **102** | **109%** |
+
+### 新增算法明细
+
+#### 规划算法（+13个，对齐HTML计划）
+CBS、NSGA-II、ConflictDetector、DQN、PPO、ThreeLayerPlanner、RiskAwareA*、RiskAwareRRT*、UncertaintyAwarePlanner、MultiObjectivePlanner、DigitalTwin、KnowledgeGraph、Trajectory4D
+
+#### AI模型（+17个，对齐HTML计划）
+CNNCorrector、ProbabilisticUNet、LSTMTemporalCorrector、XGBoostCorrector、DQNModel、PPOModel、GPRegressionModel、SparseGPModel、GPRiskEstimator、DynamicWeightFusion、PhysicsConstraint、ModelPredictiveController、GPRPathPlanner、RiskCostFunction、MultiUAVConflictResolver、EnsembleKalmanFilterModel、DataPipeline
+
+#### 边云算法（+17个，对齐HTML计划）
+EdgeAIInference、LLMAssistedDecision、SelfOrganizingNetwork、EdgeAggregator、ModelCompressor、SplitLearning、KnowledgeDistillation、EdgeScheduler、EdgeCacheManager、EdgeDataSync、EdgeModelUpdate、EdgeResourceMonitor、EdgeTaskOffload、EdgeSecurity、EdgeFaultTolerance、EdgeBandwidthOptimizer、EdgeAnomalyDetector
+
+#### C++ Edge SDK（+11个组件，完整实现）
+A*路径规划、DWA局部规划、风险评估、飞行控制器、路径平滑（Bezier/Catmull-Rom/Douglas-Peucker）、轨迹修正（PID）、离线缓存、V2X通信客户端、联邦学习客户端、模型推理运行时、配置管理
 
 ---
 

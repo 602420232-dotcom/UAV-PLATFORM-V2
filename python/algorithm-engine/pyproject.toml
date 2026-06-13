@@ -45,6 +45,7 @@ line-length = 120
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "N", "W"]
+ignore = ["N806", "N803"]  # 科学计算中大写字母是标准数学记号 (H, R, X, K, B, U, S 等)
 
 [tool.mypy]
 python_version = "3.11"

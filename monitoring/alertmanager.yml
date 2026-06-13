@@ -1,0 +1,100 @@
+# ============================================================
+# AlertManager 配置 - UAV Platform V2
+# ============================================================
+# 路由策略: 按告警严重级别分组
+# 通知渠道: Webhook (当前阶段), 后续可扩展邮件/钉钉/企业微信
+# ============================================================
+
+global:
+  resolve_timeout: 5m
+  # 默认 SMTP 配置 (后续启用邮件通知时取消注释)
+  # smtp_smarthost: 'smtp.example.com:465'
+  # smtp_from: 'alertmanager@uav-platform.local'
+  # smtp_auth_username: 'alertmanager@uav-platform.local'
+  # smtp_auth_password: '<password>'
+  # smtp_require_tls: true
+
+# 告警模板 (可选)
+# templates:
+#   - '/etc/alertmanager/templates/*.tmpl'
+
+# 路由树
+route:
+  receiver: 'default-webhook'
+  group_by: ['alertname', 'service']
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+
+  # 子路由: 按严重级别分类
+  routes:
+    # 紧急告警 (P0) - 服务宕机
+    - match:
+        severity: critical
+      receiver: 'critical-webhook'
+      group_wait: 10s
+      group_interval: 2m
+      repeat_interval: 1h
+
+    # 警告 (P1) - 高延迟/高错误率
+    - match:
+        severity: warning
+      receiver: 'warning-webhook'
+      group_wait: 30s
+      group_interval: 5m
+      repeat_interval: 2h
+
+    # 通知 (P2) - 资源使用告警
+    - match:
+        severity: info
+      receiver: 'info-webhook'
+      group_wait: 1m
+      group_interval: 10m
+      repeat_interval: 4h
+
+# 抑制规则
+inhibit_rules:
+  # 如果服务宕机，则抑制该服务的其他告警
+  - source_match:
+      alertname: 'ServiceDown'
+      severity: 'critical'
+    target_match_re:
+      service: '.*'
+    equal: ['service']
+
+  # 如果 5xx 错误率告警触发，则抑制响应时间告警
+  - source_match:
+      alertname: 'HighErrorRate'
+      severity: 'critical'
+    target_match:
+      alertname: 'HighResponseTime'
+    equal: ['service']
+
+# 接收器配置
+receivers:
+  - name: 'default-webhook'
+    webhook_configs:
+      - url: 'http://notification-service:8080/alerts/default'
+        send_resolved: true
+
+  - name: 'critical-webhook'
+    webhook_configs:
+      - url: 'http://notification-service:8080/alerts/critical'
+        send_resolved: true
+    # 后续可添加钉钉/企业微信通知
+    # wechat_configs:
+    #   - corp_id: '<corp_id>'
+    #     to_party: '<party_id>'
+    #     agent_id: '<agent_id>'
+    #     api_secret: '<api_secret>'
+    #     send_resolved: true
+
+  - name: 'warning-webhook'
+    webhook_configs:
+      - url: 'http://notification-service:8080/alerts/warning'
+        send_resolved: true
+
+  - name: 'info-webhook'
+    webhook_configs:
+      - url: 'http://notification-service:8080/alerts/info'
+        send_resolved: true

@@ -1042,3 +1042,551 @@ class SpatialPartitionAdapter(PlanningAdapter):
         from app.algorithms.planning.spatial_partition import SpatialPartitionPlanner
 
         return SpatialPartitionPlanner(params).plan(params)
+
+
+# ---------------------------------------------------------------------------
+# Phase 2 新增：HTML重构计划对齐的13个规划算法
+# ---------------------------------------------------------------------------
+
+
+class CBSAdapter(PlanningAdapter):
+    """CBS（冲突基搜索）多智能体路径规划适配器。"""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.set_metadata(
+            AlgorithmMetadata(
+                id="cbs",
+                name="CBS",
+                category="planning",
+                version="1.0.0",
+                description="Conflict-Based Search 多智能体无冲突路径规划",
+                input_schema={
+                    "type": "object",
+                    "required": ["agents", "grid_size"],
+                    "properties": {
+                        "agents": {"type": "array"},
+                        "grid_size": {"type": "array"},
+                        "obstacles": {"type": "array"},
+                        "max_iterations": {"type": "integer"},
+                    },
+                },
+                output_schema={
+                    "type": "object",
+                    "properties": {
+                        "paths": {"type": "array"},
+                        "conflicts": {"type": "array"},
+                        "cost": {"type": "number"},
+                    },
+                },
+            )
+        )
+
+    def execute(self, params: dict[str, Any]) -> dict[str, Any]:
+        from app.algorithms.planning.cbs import ConflictBasedSearch
+
+        return ConflictBasedSearch(params).plan(params)
+
+
+class NSGA2Adapter(PlanningAdapter):
+    """NSGA-II（非支配排序遗传算法II）多目标优化适配器。"""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.set_metadata(
+            AlgorithmMetadata(
+                id="nsga2",
+                name="NSGAII",
+                category="planning",
+                version="1.0.0",
+                description="NSGA-II 非支配排序遗传算法多目标路径优化",
+                input_schema={
+                    "type": "object",
+                    "required": ["start", "goal"],
+                    "properties": {
+                        "start": {"type": "array"},
+                        "goal": {"type": "array"},
+                        "objectives": {"type": "array"},
+                        "population_size": {"type": "integer"},
+                        "max_generations": {"type": "integer"},
+                        "grid_size": {"type": "array"},
+                        "obstacles": {"type": "array"},
+                    },
+                },
+                output_schema={
+                    "type": "object",
+                    "properties": {
+                        "pareto_front": {"type": "array"},
+                        "best_solution": {"type": "object"},
+                        "objectives_values": {"type": "array"},
+                    },
+                },
+            )
+        )
+
+    def execute(self, params: dict[str, Any]) -> dict[str, Any]:
+        from app.algorithms.planning.nsga2 import NSGAII
+
+        return NSGAII(params).optimize(params)
+
+
+class ConflictDetectorAdapter(PlanningAdapter):
+    """ConflictDetector（冲突检测器）适配器。"""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.set_metadata(
+            AlgorithmMetadata(
+                id="conflict_detector",
+                name="ConflictDetector",
+                category="planning",
+                version="1.0.0",
+                description="实时多无人机4D轨迹冲突检测与消解建议",
+                input_schema={
+                    "type": "object",
+                    "required": ["trajectories"],
+                    "properties": {
+                        "trajectories": {"type": "array"},
+                        "safety_distance": {"type": "number"},
+                        "time_horizon": {"type": "number"},
+                    },
+                },
+                output_schema={
+                    "type": "object",
+                    "properties": {
+                        "conflicts": {"type": "array"},
+                        "conflict_free": {"type": "boolean"},
+                        "resolution_suggestions": {"type": "array"},
+                    },
+                },
+            )
+        )
+
+    def execute(self, params: dict[str, Any]) -> dict[str, Any]:
+        from app.algorithms.planning.conflict_detector import ConflictDetector
+
+        return ConflictDetector(params).detect(params)
+
+
+class DQNPlannerAdapter(PlanningAdapter):
+    """DQN（深度Q网络）路径规划适配器。"""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.set_metadata(
+            AlgorithmMetadata(
+                id="dqn_planner",
+                name="DQNPlanner",
+                category="planning",
+                version="1.0.0",
+                description="基于深度Q网络（DQN）的强化学习路径规划",
+                input_schema={
+                    "type": "object",
+                    "required": ["start", "goal"],
+                    "properties": {
+                        "start": {"type": "array"},
+                        "goal": {"type": "array"},
+                        "grid_size": {"type": "array"},
+                        "obstacles": {"type": "array"},
+                        "config": {"type": "object"},
+                    },
+                },
+                output_schema={
+                    "type": "object",
+                    "properties": {
+                        "path": {"type": "array"},
+                        "q_values": {"type": "array"},
+                        "total_reward": {"type": "number"},
+                        "convergence": {"type": "object"},
+                    },
+                },
+            )
+        )
+
+    def execute(self, params: dict[str, Any]) -> dict[str, Any]:
+        from app.algorithms.planning.dqn_planner import DQNPlanner
+
+        return DQNPlanner(params.get("config")).plan(params)
+
+
+class PPOPlannerAdapter(PlanningAdapter):
+    """PPO（近端策略优化）路径规划适配器。"""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.set_metadata(
+            AlgorithmMetadata(
+                id="ppo_planner",
+                name="PPOPlanner",
+                category="planning",
+                version="1.0.0",
+                description="基于近端策略优化（PPO）的强化学习路径规划",
+                input_schema={
+                    "type": "object",
+                    "required": ["start", "goal"],
+                    "properties": {
+                        "start": {"type": "array"},
+                        "goal": {"type": "array"},
+                        "grid_size": {"type": "array"},
+                        "obstacles": {"type": "array"},
+                        "config": {"type": "object"},
+                    },
+                },
+                output_schema={
+                    "type": "object",
+                    "properties": {
+                        "path": {"type": "array"},
+                        "policy_probs": {"type": "array"},
+                        "total_reward": {"type": "number"},
+                        "kl_divergence": {"type": "object"},
+                    },
+                },
+            )
+        )
+
+    def execute(self, params: dict[str, Any]) -> dict[str, Any]:
+        from app.algorithms.planning.ppo_planner import PPOPlanner
+
+        return PPOPlanner(params.get("config")).plan(params)
+
+
+class ThreeLayerPlannerAdapter(PlanningAdapter):
+    """ThreeLayerPlanner（三层规划器）适配器。"""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.set_metadata(
+            AlgorithmMetadata(
+                id="three_layer_planner",
+                name="ThreeLayerPlanner",
+                category="planning",
+                version="1.0.0",
+                description="分层路径规划（战略层/战术层/执行层）",
+                input_schema={
+                    "type": "object",
+                    "required": ["start", "goal"],
+                    "properties": {
+                        "start": {"type": "array"},
+                        "goal": {"type": "array"},
+                        "grid_size": {"type": "array"},
+                        "obstacles": {"type": "array"},
+                        "waypoints": {"type": "array"},
+                        "config": {"type": "object"},
+                    },
+                },
+                output_schema={
+                    "type": "object",
+                    "properties": {
+                        "strategic_plan": {"type": "array"},
+                        "tactical_path": {"type": "array"},
+                        "execution_controls": {"type": "array"},
+                        "layers_output": {"type": "object"},
+                    },
+                },
+            )
+        )
+
+    def execute(self, params: dict[str, Any]) -> dict[str, Any]:
+        from app.algorithms.planning.three_layer_planner import ThreeLayerPlanner
+
+        return ThreeLayerPlanner(params.get("config")).plan(params)
+
+
+class RiskAwareAStarAdapter(PlanningAdapter):
+    """RiskAwareA*（风险感知A*）适配器。"""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.set_metadata(
+            AlgorithmMetadata(
+                id="risk_aware_a_star",
+                name="RiskAwareAStar",
+                category="planning",
+                version="1.0.0",
+                description="风险感知A*路径规划，代价函数融合距离与风险场",
+                input_schema={
+                    "type": "object",
+                    "required": ["start", "goal"],
+                    "properties": {
+                        "start": {"type": "array"},
+                        "goal": {"type": "array"},
+                        "grid_size": {"type": "array"},
+                        "obstacles": {"type": "array"},
+                        "risk_field": {"type": "array"},
+                        "risk_weight": {"type": "number"},
+                    },
+                },
+                output_schema={
+                    "type": "object",
+                    "properties": {
+                        "path": {"type": "array"},
+                        "cost": {"type": "number"},
+                        "risk_exposure": {"type": "number"},
+                        "risk_map": {"type": "array"},
+                    },
+                },
+            )
+        )
+
+    def execute(self, params: dict[str, Any]) -> dict[str, Any]:
+        from app.algorithms.planning.risk_aware_a_star import RiskAwareAStar
+
+        return RiskAwareAStar(params).plan(params)
+
+
+class RiskAwareRRTStarAdapter(PlanningAdapter):
+    """RiskAwareRRT*（风险感知RRT*）适配器。"""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.set_metadata(
+            AlgorithmMetadata(
+                id="risk_aware_rrt_star",
+                name="RiskAwareRRTStar",
+                category="planning",
+                version="1.0.0",
+                description="风险感知RRT*路径规划，节点扩展避开高风险区域",
+                input_schema={
+                    "type": "object",
+                    "required": ["start", "goal"],
+                    "properties": {
+                        "start": {"type": "array"},
+                        "goal": {"type": "array"},
+                        "obstacles": {"type": "array"},
+                        "risk_field": {"type": "array"},
+                        "max_iterations": {"type": "integer"},
+                        "risk_threshold": {"type": "number"},
+                    },
+                },
+                output_schema={
+                    "type": "object",
+                    "properties": {
+                        "path": {"type": "array"},
+                        "cost": {"type": "number"},
+                        "risk_exposure": {"type": "number"},
+                        "tree_size": {"type": "integer"},
+                    },
+                },
+            )
+        )
+
+    def execute(self, params: dict[str, Any]) -> dict[str, Any]:
+        from app.algorithms.planning.risk_aware_rrt_star import RiskAwareRRTStar
+
+        return RiskAwareRRTStar(params).plan(params)
+
+
+class UncertaintyAwarePlannerAdapter(PlanningAdapter):
+    """UncertaintyAwarePlanner（不确定性感知规划器）适配器。"""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.set_metadata(
+            AlgorithmMetadata(
+                id="uncertainty_aware_planner",
+                name="UncertaintyAwarePlanner",
+                category="planning",
+                version="1.0.0",
+                description="不确定性感知路径规划，蒙特卡洛采样评估鲁棒性",
+                input_schema={
+                    "type": "object",
+                    "required": ["start", "goal"],
+                    "properties": {
+                        "start": {"type": "array"},
+                        "goal": {"type": "array"},
+                        "grid_size": {"type": "array"},
+                        "obstacles": {"type": "array"},
+                        "uncertainty_field": {"type": "array"},
+                        "n_samples": {"type": "integer"},
+                        "confidence_level": {"type": "number"},
+                    },
+                },
+                output_schema={
+                    "type": "object",
+                    "properties": {
+                        "robust_path": {"type": "array"},
+                        "candidate_paths": {"type": "array"},
+                        "robustness_score": {"type": "number"},
+                        "uncertainty_analysis": {"type": "object"},
+                    },
+                },
+            )
+        )
+
+    def execute(self, params: dict[str, Any]) -> dict[str, Any]:
+        from app.algorithms.planning.uncertainty_aware_planner import (
+            UncertaintyAwarePlanner,
+        )
+
+        return UncertaintyAwarePlanner(params).plan(params)
+
+
+class MultiObjectivePlannerAdapter(PlanningAdapter):
+    """MultiObjectivePlanner（多目标规划器）适配器。"""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.set_metadata(
+            AlgorithmMetadata(
+                id="multi_objective_planner",
+                name="MultiObjectivePlanner",
+                category="planning",
+                version="1.0.0",
+                description="多目标路径规划，支持加权求和/帕累托/约束优化",
+                input_schema={
+                    "type": "object",
+                    "required": ["start", "goal"],
+                    "properties": {
+                        "start": {"type": "array"},
+                        "goal": {"type": "array"},
+                        "grid_size": {"type": "array"},
+                        "obstacles": {"type": "array"},
+                        "objectives": {"type": "array"},
+                        "mode": {"type": "string"},
+                    },
+                },
+                output_schema={
+                    "type": "object",
+                    "properties": {
+                        "path": {"type": "array"},
+                        "objective_values": {"type": "object"},
+                        "pareto_solutions": {"type": "array"},
+                        "tradeoff_analysis": {"type": "object"},
+                    },
+                },
+            )
+        )
+
+    def execute(self, params: dict[str, Any]) -> dict[str, Any]:
+        from app.algorithms.planning.multi_objective_planner import (
+            MultiObjectivePlanner,
+        )
+
+        return MultiObjectivePlanner(params).plan(params)
+
+
+class DigitalTwinAdapter(PlanningAdapter):
+    """DigitalTwin（数字孪生规划器）适配器。"""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.set_metadata(
+            AlgorithmMetadata(
+                id="digital_twin",
+                name="DigitalTwinPlanner",
+                category="planning",
+                version="1.0.0",
+                description="基于数字孪生的路径规划与飞行仿真",
+                input_schema={
+                    "type": "object",
+                    "required": ["start", "goal"],
+                    "properties": {
+                        "start": {"type": "array"},
+                        "goal": {"type": "array"},
+                        "grid_size": {"type": "array"},
+                        "obstacles": {"type": "array"},
+                        "weather_conditions": {"type": "object"},
+                        "uav_model": {"type": "object"},
+                        "simulation_steps": {"type": "integer"},
+                    },
+                },
+                output_schema={
+                    "type": "object",
+                    "properties": {
+                        "optimized_path": {"type": "array"},
+                        "simulation_results": {"type": "object"},
+                        "performance_metrics": {"type": "object"},
+                        "twin_state": {"type": "object"},
+                    },
+                },
+            )
+        )
+
+    def execute(self, params: dict[str, Any]) -> dict[str, Any]:
+        from app.algorithms.planning.digital_twin import DigitalTwinPlanner
+
+        return DigitalTwinPlanner(params).simulate(params)
+
+
+class KnowledgeGraphAdapter(PlanningAdapter):
+    """KnowledgeGraph（知识图谱规划器）适配器。"""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.set_metadata(
+            AlgorithmMetadata(
+                id="knowledge_graph",
+                name="KnowledgeGraphPlanner",
+                category="planning",
+                version="1.0.0",
+                description="基于知识图谱的路径规划，利用历史数据和空域规则辅助决策",
+                input_schema={
+                    "type": "object",
+                    "required": ["start", "goal"],
+                    "properties": {
+                        "start": {"type": "array"},
+                        "goal": {"type": "array"},
+                        "grid_size": {"type": "array"},
+                        "obstacles": {"type": "array"},
+                        "knowledge_base": {"type": "array"},
+                        "query_context": {"type": "object"},
+                    },
+                },
+                output_schema={
+                    "type": "object",
+                    "properties": {
+                        "path": {"type": "array"},
+                        "reasoning_chain": {"type": "array"},
+                        "applied_rules": {"type": "array"},
+                        "confidence": {"type": "number"},
+                    },
+                },
+            )
+        )
+
+    def execute(self, params: dict[str, Any]) -> dict[str, Any]:
+        from app.algorithms.planning.knowledge_graph import KnowledgeGraphPlanner
+
+        return KnowledgeGraphPlanner(params).plan(params)
+
+
+class Trajectory4DAdapter(PlanningAdapter):
+    """Trajectory4D（四维轨迹规划器）适配器。"""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.set_metadata(
+            AlgorithmMetadata(
+                id="trajectory_4d",
+                name="Trajectory4DPlanner",
+                category="planning",
+                version="1.0.0",
+                description="四维轨迹规划（3D空间+时间），考虑风场与能耗约束",
+                input_schema={
+                    "type": "object",
+                    "required": ["start", "goal"],
+                    "properties": {
+                        "start": {"type": "array"},
+                        "goal": {"type": "array"},
+                        "obstacles": {"type": "array"},
+                        "wind_field": {"type": "array"},
+                        "time_constraints": {"type": "object"},
+                        "uav_params": {"type": "object"},
+                    },
+                },
+                output_schema={
+                    "type": "object",
+                    "properties": {
+                        "trajectory_4d": {"type": "array"},
+                        "energy_consumption": {"type": "number"},
+                        "flight_time": {"type": "number"},
+                        "waypoints_detail": {"type": "array"},
+                    },
+                },
+            )
+        )
+
+    def execute(self, params: dict[str, Any]) -> dict[str, Any]:
+        from app.algorithms.planning.trajectory_4d import Trajectory4DPlanner
+
+        return Trajectory4DPlanner(params).plan(params)

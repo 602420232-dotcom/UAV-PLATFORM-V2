@@ -1,38 +1,141 @@
+# ============================================================
+# Prometheus 配置 - UAV Platform V2
+# ============================================================
+# 采集目标: 8个Java微服务 + 1个Python算法引擎
+# 采集间隔: 15s
+# 当前阶段: 无认证 (后续可添加 basic_auth)
+# ============================================================
+
 global:
   scrape_interval: 15s
   evaluation_interval: 15s
+  external_labels:
+    cluster: 'uav-platform-v2'
+    environment: 'production'
 
+# 告警规则文件
 rule_files:
   - 'alert_rules.yml'
 
+# AlertManager 配置
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - 'alertmanager:9093'
+
+# Prometheus 自身监控
 scrape_configs:
-  - job_name: 'uav-platform'
-    metrics_path: '/actuator/prometheus'
+  - job_name: 'prometheus'
     static_configs:
       - targets:
-          - 'localhost:18081'  # platform-api
-          - 'localhost:18082'  # weather-api
-          - 'localhost:18083'  # assimilation-api
-          - 'localhost:18084'  # risk-api
-          - 'localhost:18085'  # observation-api
-          - 'localhost:18086'  # planning-api
-          - 'localhost:18087'  # utm-api
-          - 'localhost:18080'  # api-gateway
-    basic_auth:
-      username: ${PROMETHEUS_USER:-admin}
-      password: ${PROMETHEUS_PASSWORD:-admin}
+          - 'localhost:9090'
+    metrics_path: '/metrics'
+    scrape_interval: 15s
 
-  - job_name: 'mysql'
-    static_configs:
-      - targets: ['localhost:19104']  # mysqld_exporter
-    scrape_interval: 30s
+  # ==========================================================
+  # Java 微服务 (Spring Boot Actuator + Micrometer)
+  # ==========================================================
 
-  - job_name: 'redis'
+  - job_name: 'api-gateway'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 15s
     static_configs:
-      - targets: ['localhost:19103']  # redis_exporter
-    scrape_interval: 30s
+      - targets:
+          - 'api-gateway:8258'
+        labels:
+          service: 'api-gateway'
+          language: 'java'
+          framework: 'spring-boot'
 
-  - job_name: 'kafka'
+  - job_name: 'platform-api'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 15s
     static_configs:
-      - targets: ['localhost:19092']  # kafka jmx exporter
-    scrape_interval: 30s
+      - targets:
+          - 'platform-api:8251'
+        labels:
+          service: 'platform-api'
+          language: 'java'
+          framework: 'spring-boot'
+
+  - job_name: 'weather-api'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 15s
+    static_configs:
+      - targets:
+          - 'weather-api:8252'
+        labels:
+          service: 'weather-api'
+          language: 'java'
+          framework: 'spring-boot'
+
+  - job_name: 'assimilation-api'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 15s
+    static_configs:
+      - targets:
+          - 'assimilation-api:8253'
+        labels:
+          service: 'assimilation-api'
+          language: 'java'
+          framework: 'spring-boot'
+
+  - job_name: 'risk-api'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 15s
+    static_configs:
+      - targets:
+          - 'risk-api:8254'
+        labels:
+          service: 'risk-api'
+          language: 'java'
+          framework: 'spring-boot'
+
+  - job_name: 'observation-api'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 15s
+    static_configs:
+      - targets:
+          - 'observation-api:8255'
+        labels:
+          service: 'observation-api'
+          language: 'java'
+          framework: 'spring-boot'
+
+  - job_name: 'planning-api'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 15s
+    static_configs:
+      - targets:
+          - 'planning-api:8256'
+        labels:
+          service: 'planning-api'
+          language: 'java'
+          framework: 'spring-boot'
+
+  - job_name: 'utm-api'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 15s
+    static_configs:
+      - targets:
+          - 'utm-api:8259'
+        labels:
+          service: 'utm-api'
+          language: 'java'
+          framework: 'spring-boot'
+
+  # ==========================================================
+  # Python 算法引擎 (FastAPI + Prometheus Client)
+  # ==========================================================
+
+  - job_name: 'algorithm-engine'
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+    static_configs:
+      - targets:
+          - 'algorithm-engine:9095'
+        labels:
+          service: 'algorithm-engine'
+          language: 'python'
+          framework: 'fastapi'

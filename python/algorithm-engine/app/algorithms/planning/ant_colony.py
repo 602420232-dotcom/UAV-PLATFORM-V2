@@ -55,8 +55,10 @@ class AntColonyOptimizer:
         """
         np.random.seed(42)
 
-        start = tuple(params.get("start", (0, 0)))
-        goal = tuple(params.get("goal", (10, 10)))
+        raw_start = params.get("start", (0, 0))
+        raw_goal = params.get("goal", (10, 10))
+        start: tuple[int, int] = (int(raw_start[0]), int(raw_start[1]))
+        goal: tuple[int, int] = (int(raw_goal[0]), int(raw_goal[1]))
         grid_size = tuple(params.get("grid_size", (50, 50)))
         obstacles = set(map(tuple, params.get("obstacles", [])))
 

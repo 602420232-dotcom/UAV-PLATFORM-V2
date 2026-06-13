@@ -13,7 +13,7 @@
 
     <artifactId>common-security</artifactId>
     <name>Common Security</name>
-    <description>公共安全模块：JWT、HMAC、API Key、租户上下文、Spring Security 配置</description>
+    <description>公共安全模块：JWT、HMAC、API Key、租户上下文、RBAC、审计日志、限流、Spring Security 配置</description>
 
     <dependencies>
         <!-- 公共核心模块 -->
@@ -27,6 +27,30 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+
+        <!-- Spring Data JPA（RBAC 实体 + 审计日志持久化） -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+
+        <!-- Spring Data Redis（限流计数器） -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis</artifactId>
+        </dependency>
+
+        <!-- Spring AOP（审计日志切面） -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-aop</artifactId>
+        </dependency>
+
+        <!-- SpEL 表达式解析（审计日志 detail 表达式） -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-expression</artifactId>
         </dependency>
 
         <!-- JJWT -->

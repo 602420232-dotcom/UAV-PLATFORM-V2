@@ -1,125 +1,250 @@
+# ============================================================
+# Prometheus 告警规则 - UAV Platform V2
+# ============================================================
+# 规则类别:
+#   - 服务可用性
+#   - API 性能
+#   - 错误率
+#   - Kafka 消息队列
+#   - 系统资源
+# ============================================================
+
 groups:
-  - name: uav-platform-service-health
-    interval: 15s
+  # ==========================================================
+  # 组 1: 服务可用性告警
+  # ==========================================================
+  - name: service_availability
     rules:
-      # 服务宕机告警：1分钟内无心跳
-      - alert: UAVServiceDown
-        expr: up{job="uav-platform"} == 0
+      # 服务宕机告警 - 连续2次探测失败 (约30s)
+      - alert: ServiceDown
+        expr: up{job=~"api-gateway|platform-api|weather-api|assimilation-api|risk-api|observation-api|planning-api|utm-api|algorithm-engine"} == 0
+        for: 30s
+        labels:
+          severity: critical
+          category: availability
+        annotations:
+          summary: "服务宕机: {{ $labels.job }}"
+          description: "服务 {{ $labels.job }} ({{ $labels.instance }}) 已宕机，连续2次探测失败。"
+          runbook_url: "https://wiki.uav-platform.local/runbook/service-down"
+
+      # Prometheus 自身不可用
+      - alert: PrometheusDown
+        expr: up{job="prometheus"} == 0
         for: 1m
         labels:
           severity: critical
-          service: "{{ $labels.instance }}"
+          category: availability
         annotations:
-          summary: "UAV 服务宕机: {{ $labels.instance }}"
-          description: "服务 {{ $labels.instance }} 已连续 1 分钟未响应健康检查。"
+          summary: "Prometheus 已宕机"
+          description: "Prometheus 实例 {{ $labels.instance }} 不可用，监控数据可能丢失。"
 
-      # HTTP 错误率 > 5%
-      - alert: UAVHighErrorRate
+  # ==========================================================
+  # 组 2: API 性能告警
+  # ==========================================================
+  - name: api_performance
+    rules:
+      # API 响应时间告警 - P99 > 2s
+      - alert: HighResponseTime
+        expr: |
+          histogram_quantile(0.99,
+            sum(rate(http_server_requests_seconds_bucket{job=~"api-gateway|platform-api|weather-api|assimilation-api|risk-api|observation-api|planning-api|utm-api"}[5m])) by (le, job)
+          ) > 2
+        for: 2m
+        labels:
+          severity: warning
+          category: performance
+        annotations:
+          summary: "API 响应时间过高: {{ $labels.job }}"
+          description: "服务 {{ $labels.job }} 的 P99 响应时间超过 2s，当前值: {{ $value | printf \"%.2f\" }}s。"
+          runbook_url: "https://wiki.uav-platform.local/runbook/high-response-time"
+
+      # API 响应时间告警 - P99 > 5s (严重)
+      - alert: CriticalResponseTime
+        expr: |
+          histogram_quantile(0.99,
+            sum(rate(http_server_requests_seconds_bucket{job=~"api-gateway|platform-api|weather-api|assimilation-api|risk-api|observation-api|planning-api|utm-api"}[5m])) by (le, job)
+          ) > 5
+        for: 1m
+        labels:
+          severity: critical
+          category: performance
+        annotations:
+          summary: "API 响应时间严重过高: {{ $labels.job }}"
+          description: "服务 {{ $labels.job }} 的 P99 响应时间超过 5s，当前值: {{ $value | printf \"%.2f\" }}s。"
+
+  # ==========================================================
+  # 组 3: 错误率告警
+  # ==========================================================
+  - name: error_rate
+    rules:
+      # 5xx 错误率告警 - > 5%
+      - alert: HighErrorRate
         expr: |
           (
-            sum(rate(http_server_requests_seconds_count{status=~"5.."}[5m])) by (instance)
+            sum(rate(http_server_requests_seconds_count{job=~"api-gateway|platform-api|weather-api|assimilation-api|risk-api|observation-api|planning-api|utm-api", status=~"5.."}[5m])) by (job)
             /
-            sum(rate(http_server_requests_seconds_count[5m])) by (instance)
+            sum(rate(http_server_requests_seconds_count{job=~"api-gateway|platform-api|weather-api|assimilation-api|risk-api|observation-api|planning-api|utm-api"}[5m])) by (job)
           ) > 0.05
         for: 2m
         labels:
-          severity: warning
-          service: "{{ $labels.instance }}"
+          severity: critical
+          category: error
         annotations:
-          summary: "UAV 服务错误率过高: {{ $labels.instance }}"
-          description: "服务 {{ $labels.instance }} 5xx 错误率超过 5%，持续 2 分钟。"
+          summary: "5xx 错误率过高: {{ $labels.job }}"
+          description: "服务 {{ $labels.job }} 的 5xx 错误率超过 5%，当前值: {{ $value | printf \"%.2f\" }}%。"
+          runbook_url: "https://wiki.uav-platform.local/runbook/high-error-rate"
 
-      # 响应时间 P99 > 3s
-      - alert: UAVHighLatency
-        expr: |
-          histogram_quantile(0.99,
-            sum(rate(http_server_requests_seconds_bucket[5m])) by (le, instance)
-          ) > 3
-        for: 2m
-        labels:
-          severity: warning
-          service: "{{ $labels.instance }}"
-        annotations:
-          summary: "UAV 服务响应延迟过高: {{ $labels.instance }}"
-          description: "服务 {{ $labels.instance }} P99 响应时间超过 3 秒，持续 2 分钟。"
-
-      # JVM 堆内存使用率 > 85%
-      - alert: UAVJvmHeapHigh
+      # 4xx 错误率告警 - > 10%
+      - alert: HighClientErrorRate
         expr: |
           (
-            jvm_memory_used_bytes{area="heap"}
+            sum(rate(http_server_requests_seconds_count{job=~"api-gateway|platform-api|weather-api|assimilation-api|risk-api|observation-api|planning-api|utm-api", status=~"4.."}[5m])) by (job)
             /
-            jvm_memory_max_bytes{area="heap"}
-          ) > 0.85
-        for: 3m
-        labels:
-          severity: warning
-          service: "{{ $labels.instance }}"
-        annotations:
-          summary: "JVM 堆内存使用率过高: {{ $labels.instance }}"
-          description: "服务 {{ $labels.instance }} JVM 堆内存使用率超过 85%，持续 3 分钟。"
-
-      # JVM GC 停顿时间 > 1s/分钟
-      - alert: UAVJvmGcPauseHigh
-        expr: |
-          rate(jvm_gc_pause_seconds_sum[1m]) > 1
-        for: 2m
-        labels:
-          severity: warning
-          service: "{{ $labels.instance }}"
-        annotations:
-          summary: "JVM GC 停顿时间过长: {{ $labels.instance }}"
-          description: "服务 {{ $labels.instance }} GC 停顿时间超过 1 秒/分钟。"
-
-  - name: uav-platform-infrastructure
-    interval: 30s
-    rules:
-      # MySQL 连接数过高
-      - alert: UAVMySQLConnectionsHigh
-        expr: mysql_global_status_threads_connected > 80
-        for: 3m
-        labels:
-          severity: warning
-        annotations:
-          summary: "MySQL 连接数过高"
-          description: "MySQL 当前连接数 {{ $value }}，超过阈值 80。"
-
-      # Redis 内存使用率 > 90%
-      - alert: UAVRedisMemoryHigh
-        expr: |
-          (
-            redis_memory_used_bytes
-            /
-            redis_memory_max_bytes
-          ) > 0.9
-        for: 3m
-        labels:
-          severity: warning
-        annotations:
-          summary: "Redis 内存使用率过高"
-          description: "Redis 内存使用率 {{ $value | humanizePercentage }}，超过阈值 90%。"
-
-      # Kafka 消费者滞后
-      - alert: UAVKafkaConsumerLag
-        expr: kafka_consumer_group_lag > 1000
+            sum(rate(http_server_requests_seconds_count{job=~"api-gateway|platform-api|weather-api|assimilation-api|risk-api|observation-api|planning-api|utm-api"}[5m])) by (job)
+          ) > 0.10
         for: 5m
         labels:
           severity: warning
+          category: error
         annotations:
-          summary: "Kafka 消费者滞后过高"
-          description: "消费者组 lag 超过 1000，持续 5 分钟。"
+          summary: "4xx 错误率过高: {{ $labels.job }}"
+          description: "服务 {{ $labels.job }} 的 4xx 错误率超过 10%，当前值: {{ $value | printf \"%.2f\" }}%。"
 
-  - name: uav-platform-mock-detection
-    interval: 15s
+  # ==========================================================
+  # 组 4: Kafka 消息队列告警
+  # ==========================================================
+  - name: kafka_alerts
     rules:
-      # Mock 模式响应检测（需要 X-Mock Header 配合）
-      - alert: UAVMockModeResponse
-        expr: |
-          sum(rate(http_server_requests_seconds_count{mock="true"}[5m])) by (instance) > 0
+      # Kafka 消费者延迟告警 - lag > 1000
+      - alert: KafkaConsumerLag
+        expr: kafka_consumergroup_lag > 1000
+        for: 2m
+        labels:
+          severity: warning
+          category: kafka
+        annotations:
+          summary: "Kafka 消费者延迟过高: {{ $labels.group }} / {{ $labels.topic }}"
+          description: "消费者组 {{ $labels.group }} 在 topic {{ $labels.topic }} 分区 {{ $labels.partition }} 的延迟超过 1000，当前值: {{ $value }}。"
+          runbook_url: "https://wiki.uav-platform.local/runbook/kafka-consumer-lag"
+
+      # Kafka 消费者延迟严重告警 - lag > 5000
+      - alert: KafkaCriticalConsumerLag
+        expr: kafka_consumergroup_lag > 5000
         for: 1m
         labels:
-          severity: info
-          service: "{{ $labels.instance }}"
+          severity: critical
+          category: kafka
         annotations:
-          summary: "检测到 Mock 模式响应: {{ $labels.instance }}"
-          description: "服务 {{ $labels.instance }} 正在返回 Mock 数据。"
+          summary: "Kafka 消费者延迟严重: {{ $labels.group }} / {{ $labels.topic }}"
+          description: "消费者组 {{ $labels.group }} 在 topic {{ $labels.topic }} 分区 {{ $labels.partition }} 的延迟超过 5000，当前值: {{ $value }}。"
+
+      # Kafka 消费者组停止消费
+      - alert: KafkaConsumerStopped
+        expr: |
+          increase(kafka_consumergroup_lag{topic=~".*"}[5m]) == 0
+          and kafka_consumergroup_lag > 0
+        for: 10m
+        labels:
+          severity: critical
+          category: kafka
+        annotations:
+          summary: "Kafka 消费者停止消费: {{ $labels.group }}"
+          description: "消费者组 {{ $labels.group }} 在 topic {{ $labels.topic }} 上已停止消费超过 10 分钟。"
+
+  # ==========================================================
+  # 组 5: 系统资源告警
+  # ==========================================================
+  - name: system_resources
+    rules:
+      # 内存使用告警 - > 85%
+      - alert: HighMemoryUsage
+        expr: |
+          (
+            container_memory_usage_bytes{container=~"api-gateway|platform-api|weather-api|assimilation-api|risk-api|observation-api|planning-api|utm-api|algorithm-engine"}
+            /
+            container_spec_memory_limit_bytes{container=~"api-gateway|platform-api|weather-api|assimilation-api|risk-api|observation-api|planning-api|utm-api|algorithm-engine"}
+          ) > 0.85
+        for: 5m
+        labels:
+          severity: warning
+          category: resource
+        annotations:
+          summary: "内存使用过高: {{ $labels.name }}"
+          description: "容器 {{ $labels.name }} 的内存使用率超过 85%，当前值: {{ $value | printf \"%.1f\" }}%。"
+          runbook_url: "https://wiki.uav-platform.local/runbook/high-memory-usage"
+
+      # 内存使用严重告警 - > 95%
+      - alert: CriticalMemoryUsage
+        expr: |
+          (
+            container_memory_usage_bytes{container=~"api-gateway|platform-api|weather-api|assimilation-api|risk-api|observation-api|planning-api|utm-api|algorithm-engine"}
+            /
+            container_spec_memory_limit_bytes{container=~"api-gateway|platform-api|weather-api|assimilation-api|risk-api|observation-api|planning-api|utm-api|algorithm-engine"}
+          ) > 0.95
+        for: 2m
+        labels:
+          severity: critical
+          category: resource
+        annotations:
+          summary: "内存使用严重过高: {{ $labels.name }}"
+          description: "容器 {{ $labels.name }} 的内存使用率超过 95%，即将 OOM。"
+
+      # 磁盘使用告警 - > 90%
+      - alert: HighDiskUsage
+        expr: |
+          (
+            container_fs_usage_bytes{container=~"api-gateway|platform-api|weather-api|assimilation-api|risk-api|observation-api|planning-api|utm-api|algorithm-engine"}
+            /
+            container_fs_limit_bytes{container=~"api-gateway|platform-api|weather-api|assimilation-api|risk-api|observation-api|planning-api|utm-api|algorithm-engine"}
+          ) > 0.90
+        for: 5m
+        labels:
+          severity: warning
+          category: resource
+        annotations:
+          summary: "磁盘使用过高: {{ $labels.name }}"
+          description: "容器 {{ $labels.name }} 的磁盘使用率超过 90%，当前值: {{ $value | printf \"%.1f\" }}%。"
+          runbook_url: "https://wiki.uav-platform.local/runbook/high-disk-usage"
+
+      # 磁盘使用严重告警 - > 95%
+      - alert: CriticalDiskUsage
+        expr: |
+          (
+            container_fs_usage_bytes{container=~"api-gateway|platform-api|weather-api|assimilation-api|risk-api|observation-api|planning-api|utm-api|algorithm-engine"}
+            /
+            container_fs_limit_bytes{container=~"api-gateway|platform-api|weather-api|assimilation-api|risk-api|observation-api|planning-api|utm-api|algorithm-engine"}
+          ) > 0.95
+        for: 2m
+        labels:
+          severity: critical
+          category: resource
+        annotations:
+          summary: "磁盘使用严重过高: {{ $labels.name }}"
+          description: "容器 {{ $labels.name }} 的磁盘使用率超过 95%，磁盘空间即将耗尽。"
+
+      # CPU 使用告警 - > 85%
+      - alert: HighCPUUsage
+        expr: |
+          rate(container_cpu_usage_seconds_total{container=~"api-gateway|platform-api|weather-api|assimilation-api|risk-api|observation-api|planning-api|utm-api|algorithm-engine"}[5m])
+          / on (container) container_spec_cpu_quota{container=~"api-gateway|platform-api|weather-api|assimilation-api|risk-api|observation-api|planning-api|utm-api|algorithm-engine"}
+          / on (container) container_spec_cpu_period{container=~"api-gateway|platform-api|weather-api|assimilation-api|risk-api|observation-api|planning-api|utm-api|algorithm-engine"}
+          > 0.85
+        for: 5m
+        labels:
+          severity: warning
+          category: resource
+        annotations:
+          summary: "CPU 使用过高: {{ $labels.name }}"
+          description: "容器 {{ $labels.name }} 的 CPU 使用率超过 85%。"
+
+      # 容器频繁重启
+      - alert: ContainerFrequentRestarts
+        expr: increase(container_restart_count{container=~"api-gateway|platform-api|weather-api|assimilation-api|risk-api|observation-api|planning-api|utm-api|algorithm-engine"}[1h]) > 3
+        for: 5m
+        labels:
+          severity: warning
+          category: resource
+        annotations:
+          summary: "容器频繁重启: {{ $labels.name }}"
+          description: "容器 {{ $labels.name }} 在过去 1 小时内重启超过 3 次。"
+          runbook_url: "https://wiki.uav-platform.local/runbook/container-restarts"

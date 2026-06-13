@@ -3,6 +3,24 @@
 将 edge 目录下的算法注册到引擎中，包括：
 - 联邦学习
 - 模型量化
+- V2X通信
+- 边缘AI推理
+- LLM辅助决策
+- 自组织网络
+- 边缘聚合器
+- 模型压缩器
+- 拆分学习
+- 知识蒸馏
+- 边缘调度器
+- 边缘缓存管理器
+- 边云数据同步
+- 边缘模型更新
+- 边缘资源监控
+- 边缘任务卸载
+- 边缘安全
+- 边缘容错
+- 边缘带宽优化器
+- 边缘异常检测器
 """
 
 from __future__ import annotations
@@ -127,7 +145,9 @@ class V2XCommunicationAdapter(AlgorithmAdapter):
                         "sender_position": {"type": "array"},
                         "receiver_positions": {"type": "array"},
                         "message_size_bytes": {"type": "integer"},
-                        "mode": {"type": "string", "enum": ["broadcast", "unicast", "channel_quality", "network_topology"]},
+                        "mode": {"type": "string",
+                                 "enum": ["broadcast", "unicast",
+                                          "channel_quality", "network_topology"]},
                     },
                 },
                 output_schema={
@@ -153,3 +173,746 @@ class V2XCommunicationAdapter(AlgorithmAdapter):
             return algo.network_topology(params)
         else:
             return algo.broadcast(params)
+
+
+class EdgeAIInferenceAdapter(AlgorithmAdapter):
+    """边缘AI推理适配器。
+
+    在边缘设备上执行轻量级AI模型推理，
+    支持 INT8/FP16 量化推理。
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.set_metadata(
+            AlgorithmMetadata(
+                id="edge_ai_inference",
+                name="EdgeAIInference",
+                category="edge",
+                version="1.0.0",
+                description="边缘设备轻量级AI模型推理，支持INT8/FP16量化推理",
+                input_schema={
+                    "type": "object",
+                    "required": ["input_data"],
+                    "properties": {
+                        "input_data": {"type": "array"},
+                        "precision": {"type": "string", "enum": ["int8", "fp16", "fp32"]},
+                        "batch_size": {"type": "integer"},
+                    },
+                },
+                output_schema={
+                    "type": "object",
+                    "properties": {
+                        "predictions": {"type": "array"},
+                        "inference_time": {"type": "number"},
+                        "memory_usage": {"type": "number"},
+                    },
+                },
+            )
+        )
+
+    def execute(self, params: dict[str, Any]) -> dict[str, Any]:
+        from app.algorithms.edge.edge_ai_inference import EdgeAIInference
+
+        algo = EdgeAIInference(params.get("config"))
+        return algo.infer(params)
+
+
+class LLMAssistedDecisionAdapter(AlgorithmAdapter):
+    """LLM辅助决策适配器。
+
+    大语言模型辅助飞行决策，
+    自然语言任务描述转规划约束。
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.set_metadata(
+            AlgorithmMetadata(
+                id="llm_assisted_decision",
+                name="LLMAssistedDecision",
+                category="edge",
+                version="1.0.0",
+                description="大语言模型辅助飞行决策，自然语言任务描述转规划约束",
+                input_schema={
+                    "type": "object",
+                    "required": ["task_description"],
+                    "properties": {
+                        "task_description": {"type": "string"},
+                        "context": {"type": "object"},
+                        "constraints": {"type": "array"},
+                        "alternatives_count": {"type": "integer"},
+                    },
+                },
+                output_schema={
+                    "type": "object",
+                    "properties": {
+                        "decision": {"type": "object"},
+                        "reasoning": {"type": "string"},
+                        "confidence": {"type": "number"},
+                        "alternatives": {"type": "array"},
+                    },
+                },
+            )
+        )
+
+    def execute(self, params: dict[str, Any]) -> dict[str, Any]:
+        from app.algorithms.edge.llm_assisted_decision import LLMAssistedDecision
+
+        algo = LLMAssistedDecision(params.get("config"))
+        return algo.decide(params)
+
+
+class SelfOrganizingNetworkAdapter(AlgorithmAdapter):
+    """自组织网络适配器。
+
+    边缘设备自组织网络拓扑，
+    动态调整通信链路。
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.set_metadata(
+            AlgorithmMetadata(
+                id="self_organizing_network",
+                name="SelfOrganizingNetwork",
+                category="edge",
+                version="1.0.0",
+                description="边缘设备自组织网络拓扑，动态调整通信链路",
+                input_schema={
+                    "type": "object",
+                    "required": ["nodes"],
+                    "properties": {
+                        "nodes": {"type": "array"},
+                        "signal_range": {"type": "number"},
+                        "interference": {"type": "number"},
+                    },
+                },
+                output_schema={
+                    "type": "object",
+                    "properties": {
+                        "topology": {"type": "object"},
+                        "network_metrics": {"type": "object"},
+                        "connectivity": {"type": "object"},
+                    },
+                },
+            )
+        )
+
+    def execute(self, params: dict[str, Any]) -> dict[str, Any]:
+        from app.algorithms.edge.self_organizing_network import SelfOrganizingNetwork
+
+        algo = SelfOrganizingNetwork(params.get("config"))
+        return algo.organize(params)
+
+
+class EdgeAggregatorAdapter(AlgorithmAdapter):
+    """边缘聚合器适配器。
+
+    边缘数据聚合，多节点数据汇总与压缩。
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.set_metadata(
+            AlgorithmMetadata(
+                id="edge_aggregator",
+                name="EdgeAggregator",
+                category="edge",
+                version="1.0.0",
+                description="边缘数据聚合，多节点数据汇总与压缩",
+                input_schema={
+                    "type": "object",
+                    "required": ["node_data"],
+                    "properties": {
+                        "node_data": {"type": "array"},
+                        "aggregation_method": {"type": "string"},
+                        "compression_enabled": {"type": "boolean"},
+                    },
+                },
+                output_schema={
+                    "type": "object",
+                    "properties": {
+                        "aggregated_data": {"type": "array"},
+                        "compression_ratio": {"type": "number"},
+                        "node_contributions": {"type": "array"},
+                    },
+                },
+            )
+        )
+
+    def execute(self, params: dict[str, Any]) -> dict[str, Any]:
+        from app.algorithms.edge.edge_aggregator import EdgeAggregator
+
+        algo = EdgeAggregator(params.get("config"))
+        return algo.aggregate(params)
+
+
+class ModelCompressorAdapter(AlgorithmAdapter):
+    """模型压缩器适配器。
+
+    AI模型压缩（剪枝/量化/蒸馏），适配边缘部署。
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.set_metadata(
+            AlgorithmMetadata(
+                id="model_compressor",
+                name="ModelCompressor",
+                category="edge",
+                version="1.0.0",
+                description="AI模型压缩（剪枝/量化/蒸馏），适配边缘部署",
+                input_schema={
+                    "type": "object",
+                    "required": ["weights"],
+                    "properties": {
+                        "weights": {"type": "array"},
+                        "compression_method": {"type": "string"},
+                        "target_ratio": {"type": "number"},
+                    },
+                },
+                output_schema={
+                    "type": "object",
+                    "properties": {
+                        "compressed_model": {"type": "array"},
+                        "compression_ratio": {"type": "number"},
+                        "accuracy_retention": {"type": "number"},
+                    },
+                },
+            )
+        )
+
+    def execute(self, params: dict[str, Any]) -> dict[str, Any]:
+        from app.algorithms.edge.model_compressor import ModelCompressor
+
+        algo = ModelCompressor(params.get("config"))
+        return algo.compress(params)
+
+
+class SplitLearningAdapter(AlgorithmAdapter):
+    """拆分学习适配器。
+
+    模型拆分训练，前端在边缘后端在云端。
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.set_metadata(
+            AlgorithmMetadata(
+                id="split_learning",
+                name="SplitLearning",
+                category="edge",
+                version="1.0.0",
+                description="模型拆分训练，前端在边缘后端在云端",
+                input_schema={
+                    "type": "object",
+                    "required": ["data", "labels"],
+                    "properties": {
+                        "data": {"type": "array"},
+                        "labels": {"type": "array"},
+                        "split_layer": {"type": "integer"},
+                        "n_epochs": {"type": "integer"},
+                        "learning_rate": {"type": "number"},
+                    },
+                },
+                output_schema={
+                    "type": "object",
+                    "properties": {
+                        "model_updates": {"type": "object"},
+                        "training_stats": {"type": "object"},
+                        "communication_cost": {"type": "integer"},
+                    },
+                },
+            )
+        )
+
+    def execute(self, params: dict[str, Any]) -> dict[str, Any]:
+        from app.algorithms.edge.split_learning import SplitLearning
+
+        algo = SplitLearning(params.get("config"))
+        return algo.train(params)
+
+
+class KnowledgeDistillationAdapter(AlgorithmAdapter):
+    """知识蒸馏适配器。
+
+    教师模型到学生模型的知识蒸馏。
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.set_metadata(
+            AlgorithmMetadata(
+                id="knowledge_distillation",
+                name="KnowledgeDistillation",
+                category="edge",
+                version="1.0.0",
+                description="教师模型到学生模型的知识蒸馏",
+                input_schema={
+                    "type": "object",
+                    "required": ["teacher_outputs", "data", "labels"],
+                    "properties": {
+                        "teacher_outputs": {"type": "array"},
+                        "data": {"type": "array"},
+                        "labels": {"type": "array"},
+                        "temperature": {"type": "number"},
+                        "alpha": {"type": "number"},
+                        "n_epochs": {"type": "integer"},
+                    },
+                },
+                output_schema={
+                    "type": "object",
+                    "properties": {
+                        "student_model": {"type": "object"},
+                        "distillation_loss": {"type": "number"},
+                        "accuracy_transfer": {"type": "number"},
+                    },
+                },
+            )
+        )
+
+    def execute(self, params: dict[str, Any]) -> dict[str, Any]:
+        from app.algorithms.edge.knowledge_distillation import KnowledgeDistillation
+
+        algo = KnowledgeDistillation(params.get("config"))
+        return algo.distill(params)
+
+
+class EdgeSchedulerAdapter(AlgorithmAdapter):
+    """边缘调度器适配器。
+
+    边缘计算任务调度，负载均衡与资源分配。
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.set_metadata(
+            AlgorithmMetadata(
+                id="edge_scheduler",
+                name="EdgeScheduler",
+                category="edge",
+                version="1.0.0",
+                description="边缘计算任务调度，负载均衡与资源分配",
+                input_schema={
+                    "type": "object",
+                    "required": ["tasks", "nodes"],
+                    "properties": {
+                        "tasks": {"type": "array"},
+                        "nodes": {"type": "array"},
+                        "scheduling_policy": {"type": "string"},
+                    },
+                },
+                output_schema={
+                    "type": "object",
+                    "properties": {
+                        "schedule": {"type": "object"},
+                        "resource_allocation": {"type": "object"},
+                        "utilization": {"type": "object"},
+                    },
+                },
+            )
+        )
+
+    def execute(self, params: dict[str, Any]) -> dict[str, Any]:
+        from app.algorithms.edge.edge_scheduler import EdgeScheduler
+
+        algo = EdgeScheduler(params.get("config"))
+        return algo.schedule(params)
+
+
+class EdgeCacheManagerAdapter(AlgorithmAdapter):
+    """边缘缓存管理器适配器。
+
+    边缘缓存策略管理，LRU/LFU/预测性缓存。
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.set_metadata(
+            AlgorithmMetadata(
+                id="edge_cache_manager",
+                name="EdgeCacheManager",
+                category="edge",
+                version="1.0.0",
+                description="边缘缓存策略管理，LRU/LFU/预测性缓存",
+                input_schema={
+                    "type": "object",
+                    "required": ["operation"],
+                    "properties": {
+                        "operation": {
+                            "type": "string",
+                            "enum": ["get", "put", "evict", "stats", "predictive"],
+                        },
+                        "key": {"type": "string"},
+                        "value": {},
+                        "cache_policy": {"type": "string"},
+                        "max_size": {"type": "integer"},
+                    },
+                },
+                output_schema={
+                    "type": "object",
+                    "properties": {
+                        "cache_status": {"type": "object"},
+                        "hit_rate": {"type": "number"},
+                        "evicted_items": {"type": "array"},
+                    },
+                },
+            )
+        )
+
+    def execute(self, params: dict[str, Any]) -> dict[str, Any]:
+        from app.algorithms.edge.edge_cache_manager import EdgeCacheManager
+
+        algo = EdgeCacheManager(params.get("config"))
+        return algo.manage(params)
+
+
+class EdgeDataSyncAdapter(AlgorithmAdapter):
+    """边云数据同步适配器。
+
+    边缘与云端数据同步，增量同步与冲突解决。
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.set_metadata(
+            AlgorithmMetadata(
+                id="edge_data_sync",
+                name="EdgeDataSync",
+                category="edge",
+                version="1.0.0",
+                description="边缘与云端数据同步，增量同步与冲突解决",
+                input_schema={
+                    "type": "object",
+                    "properties": {
+                        "edge_data": {"type": "object"},
+                        "cloud_data": {"type": "object"},
+                        "sync_mode": {"type": "string"},
+                        "conflict_resolution": {"type": "string"},
+                    },
+                },
+                output_schema={
+                    "type": "object",
+                    "properties": {
+                        "sync_result": {"type": "object"},
+                        "data_volume": {"type": "integer"},
+                        "latency": {"type": "number"},
+                    },
+                },
+            )
+        )
+
+    def execute(self, params: dict[str, Any]) -> dict[str, Any]:
+        from app.algorithms.edge.edge_data_sync import EdgeDataSync
+
+        algo = EdgeDataSync(params.get("config"))
+        return algo.sync(params)
+
+
+class EdgeModelUpdateAdapter(AlgorithmAdapter):
+    """边缘模型更新适配器。
+
+    边缘模型OTA更新，差量更新与回滚。
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.set_metadata(
+            AlgorithmMetadata(
+                id="edge_model_update",
+                name="EdgeModelUpdate",
+                category="edge",
+                version="1.0.0",
+                description="边缘模型OTA更新，差量更新与回滚",
+                input_schema={
+                    "type": "object",
+                    "required": ["new_weights"],
+                    "properties": {
+                        "new_weights": {"type": "array"},
+                        "target_version": {"type": "string"},
+                        "update_strategy": {"type": "string"},
+                        "verify_checksum": {"type": "boolean"},
+                    },
+                },
+                output_schema={
+                    "type": "object",
+                    "properties": {
+                        "update_status": {"type": "string"},
+                        "version_diff": {"type": "object"},
+                        "rollback_info": {"type": "object"},
+                    },
+                },
+            )
+        )
+
+    def execute(self, params: dict[str, Any]) -> dict[str, Any]:
+        from app.algorithms.edge.edge_model_update import EdgeModelUpdate
+
+        algo = EdgeModelUpdate(params.get("config"))
+        return algo.update(params)
+
+
+class EdgeResourceMonitorAdapter(AlgorithmAdapter):
+    """边缘资源监控适配器。
+
+    边缘设备资源监控（CPU/GPU/内存/带宽）。
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.set_metadata(
+            AlgorithmMetadata(
+                id="edge_resource_monitor",
+                name="EdgeResourceMonitor",
+                category="edge",
+                version="1.0.0",
+                description="边缘设备资源监控（CPU/GPU/内存/带宽）",
+                input_schema={
+                    "type": "object",
+                    "properties": {
+                        "resource_types": {"type": "array"},
+                        "alert_thresholds": {"type": "object"},
+                        "simulate": {"type": "boolean"},
+                        "n_samples": {"type": "integer"},
+                    },
+                },
+                output_schema={
+                    "type": "object",
+                    "properties": {
+                        "resource_status": {"type": "object"},
+                        "alerts": {"type": "array"},
+                        "utilization_history": {"type": "object"},
+                    },
+                },
+            )
+        )
+
+    def execute(self, params: dict[str, Any]) -> dict[str, Any]:
+        from app.algorithms.edge.edge_resource_monitor import EdgeResourceMonitor
+
+        algo = EdgeResourceMonitor(params.get("config"))
+        return algo.monitor(params)
+
+
+class EdgeTaskOffloadAdapter(AlgorithmAdapter):
+    """边缘任务卸载适配器。
+
+    计算任务卸载决策，本地vs云端执行选择。
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.set_metadata(
+            AlgorithmMetadata(
+                id="edge_task_offload",
+                name="EdgeTaskOffload",
+                category="edge",
+                version="1.0.0",
+                description="计算任务卸载决策，本地vs云端执行选择",
+                input_schema={
+                    "type": "object",
+                    "required": ["tasks"],
+                    "properties": {
+                        "tasks": {"type": "array"},
+                        "edge_resources": {"type": "object"},
+                        "network_conditions": {"type": "object"},
+                        "offload_policy": {"type": "string"},
+                    },
+                },
+                output_schema={
+                    "type": "object",
+                    "properties": {
+                        "offload_decision": {"type": "array"},
+                        "latency_estimate": {"type": "object"},
+                        "energy_cost": {"type": "object"},
+                    },
+                },
+            )
+        )
+
+    def execute(self, params: dict[str, Any]) -> dict[str, Any]:
+        from app.algorithms.edge.edge_task_offload import EdgeTaskOffload
+
+        algo = EdgeTaskOffload(params.get("config"))
+        return algo.offload(params)
+
+
+class EdgeSecurityAdapter(AlgorithmAdapter):
+    """边缘安全模块适配器。
+
+    边缘设备安全通信，数据加密与认证。
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.set_metadata(
+            AlgorithmMetadata(
+                id="edge_security",
+                name="EdgeSecurity",
+                category="edge",
+                version="1.0.0",
+                description="边缘设备安全通信，数据加密与认证",
+                input_schema={
+                    "type": "object",
+                    "required": ["operation"],
+                    "properties": {
+                        "operation": {
+                            "type": "string",
+                            "enum": ["encrypt", "decrypt", "authenticate", "verify"],
+                        },
+                        "data": {},
+                        "key": {"type": "string"},
+                        "encryption_method": {"type": "string"},
+                        "auth_method": {"type": "string"},
+                    },
+                },
+                output_schema={
+                    "type": "object",
+                    "properties": {
+                        "security_status": {"type": "object"},
+                        "encryption_info": {"type": "object"},
+                        "auth_result": {"type": "object"},
+                    },
+                },
+            )
+        )
+
+    def execute(self, params: dict[str, Any]) -> dict[str, Any]:
+        from app.algorithms.edge.edge_security import EdgeSecurity
+
+        algo = EdgeSecurity(params.get("config"))
+        return algo.secure(params)
+
+
+class EdgeFaultToleranceAdapter(AlgorithmAdapter):
+    """边缘容错适配器。
+
+    边缘设备故障检测与容错，任务迁移与恢复。
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.set_metadata(
+            AlgorithmMetadata(
+                id="edge_fault_tolerance",
+                name="EdgeFaultTolerance",
+                category="edge",
+                version="1.0.0",
+                description="边缘设备故障检测与容错，任务迁移与恢复",
+                input_schema={
+                    "type": "object",
+                    "required": ["operation"],
+                    "properties": {
+                        "operation": {
+                            "type": "string",
+                            "enum": ["detect", "recover", "migrate", "status"],
+                        },
+                        "nodes": {"type": "array"},
+                        "failed_node_id": {"type": "string"},
+                        "target_node_id": {"type": "string"},
+                    },
+                },
+                output_schema={
+                    "type": "object",
+                    "properties": {
+                        "fault_report": {"type": "object"},
+                        "recovery_actions": {"type": "array"},
+                        "availability": {"type": "number"},
+                    },
+                },
+            )
+        )
+
+    def execute(self, params: dict[str, Any]) -> dict[str, Any]:
+        from app.algorithms.edge.edge_fault_tolerance import EdgeFaultTolerance
+
+        algo = EdgeFaultTolerance(params.get("config"))
+        return algo.handle(params)
+
+
+class EdgeBandwidthOptimizerAdapter(AlgorithmAdapter):
+    """边缘带宽优化器适配器。
+
+    边缘通信带宽优化，数据优先级调度与压缩。
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.set_metadata(
+            AlgorithmMetadata(
+                id="edge_bandwidth_optimizer",
+                name="EdgeBandwidthOptimizer",
+                category="edge",
+                version="1.0.0",
+                description="边缘通信带宽优化，数据优先级调度与压缩",
+                input_schema={
+                    "type": "object",
+                    "required": ["data_streams"],
+                    "properties": {
+                        "data_streams": {"type": "array"},
+                        "total_bandwidth": {"type": "number"},
+                        "compression_ratio": {"type": "number"},
+                        "scheduling_algorithm": {"type": "string"},
+                    },
+                },
+                output_schema={
+                    "type": "object",
+                    "properties": {
+                        "bandwidth_allocation": {"type": "object"},
+                        "throughput": {"type": "object"},
+                        "priority_queue": {"type": "array"},
+                    },
+                },
+            )
+        )
+
+    def execute(self, params: dict[str, Any]) -> dict[str, Any]:
+        from app.algorithms.edge.edge_bandwidth_optimizer import EdgeBandwidthOptimizer
+
+        algo = EdgeBandwidthOptimizer(params.get("config"))
+        return algo.optimize(params)
+
+
+class EdgeAnomalyDetectorAdapter(AlgorithmAdapter):
+    """边缘异常检测器适配器。
+
+    边缘设备运行异常检测，基于统计方法。
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.set_metadata(
+            AlgorithmMetadata(
+                id="edge_anomaly_detector",
+                name="EdgeAnomalyDetector",
+                category="edge",
+                version="1.0.0",
+                description="边缘设备运行异常检测，基于统计方法",
+                input_schema={
+                    "type": "object",
+                    "required": ["metrics"],
+                    "properties": {
+                        "metrics": {"type": "object"},
+                        "detection_method": {"type": "string"},
+                        "zscore_threshold": {"type": "number"},
+                        "iqr_factor": {"type": "number"},
+                        "window_size": {"type": "integer"},
+                    },
+                },
+                output_schema={
+                    "type": "object",
+                    "properties": {
+                        "anomalies": {"type": "array"},
+                        "anomaly_scores": {"type": "object"},
+                        "normal_range": {"type": "object"},
+                    },
+                },
+            )
+        )
+
+    def execute(self, params: dict[str, Any]) -> dict[str, Any]:
+        from app.algorithms.edge.edge_anomaly_detector import EdgeAnomalyDetector
+
+        algo = EdgeAnomalyDetector(params.get("config"))
+        return algo.detect(params)

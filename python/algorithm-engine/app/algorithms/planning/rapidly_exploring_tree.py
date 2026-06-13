@@ -51,8 +51,10 @@ class RapidlyExploringTreePlanner:
         """
         np.random.seed(42)
 
-        start = tuple(params.get("start", (0, 0)))
-        goal = tuple(params.get("goal", (10, 10)))
+        _start = params.get("start", (0, 0))
+        start: tuple[float, float] = (float(_start[0]), float(_start[1]))
+        _goal = params.get("goal", (10, 10))
+        goal: tuple[float, float] = (float(_goal[0]), float(_goal[1]))
         grid_size = params.get("grid_size", (50, 50))
         obstacles = set(map(tuple, params.get("obstacles", [])))
 
@@ -93,7 +95,7 @@ class RapidlyExploringTreePlanner:
             if dist < 1e-6:
                 continue
 
-            step = min(self.step_size, dist)
+            step = min(self.step_size, float(dist))
             new_point = nearest + (diff / dist) * step
 
             # 碰撞检查
@@ -144,7 +146,12 @@ class RapidlyExploringTreePlanner:
         point: np.ndarray,
     ) -> int:
         """找到距离point最近的节点索引。"""
-        return int(min(range(len(nodes)), key=lambda i: np.linalg.norm(np.array(nodes[i]) - point)))
+        return int(
+            min(
+                range(len(nodes)),
+                key=lambda i: float(np.linalg.norm(np.array(nodes[i]) - point)),
+            )
+        )
 
     def _check_collision(
         self,
@@ -172,7 +179,7 @@ class RapidlyExploringTreePlanner:
 
     def _extract_path(
         self,
-        idx: int,
+        idx: int | None,
         nodes: list,
         parents: dict,
     ) -> list[list[int]]:

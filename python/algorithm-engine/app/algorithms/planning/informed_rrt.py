@@ -8,7 +8,6 @@ RRT的改进版本，一旦找到初始路径后，利用椭圆采样策略
 from __future__ import annotations
 
 import logging
-import math
 from typing import Any, Optional
 
 import numpy as np
@@ -83,7 +82,7 @@ class InformedRRTPlanner:
         for iteration in range(self.max_iterations):
             # 采样策略：找到解后使用椭圆采样
             if best_goal_idx is not None:
-                rand_point = self._elliptical_sample(start, goal, best_cost)
+                rand_point = self._elliptical_sample(start, goal, float(best_cost))
             elif np.random.rand() < self.goal_bias:
                 rand_point = goal.copy()
             else:
@@ -102,7 +101,7 @@ class InformedRRTPlanner:
             if dist < 1e-6:
                 continue
 
-            step = min(self.step_size, dist)
+            step = min(self.step_size, float(dist))
             new_point = nearest + (diff / dist) * step
 
             # 碰撞检查
@@ -120,22 +119,26 @@ class InformedRRTPlanner:
                 d = np.linalg.norm(nodes[i] - new_point)
                 if d < self.rewire_radius:
                     c = costs[i] + d
-                    if c < best_new_cost and not self._check_line_collision(nodes[i], new_point, obstacles):
+                    if c < best_new_cost and not self._check_line_collision(
+                        nodes[i], new_point, obstacles
+                    ):
                         best_parent = i
                         best_new_cost = c
 
             nodes.append(new_point)
             parents[new_idx] = best_parent
-            costs[new_idx] = best_new_cost
+            costs[new_idx] = float(best_new_cost)
 
             # 重连
             for i in range(len(nodes) - 1):
                 d = np.linalg.norm(nodes[i] - new_point)
                 if d < self.rewire_radius:
                     new_cost = costs[new_idx] + d
-                    if new_cost < costs[i] and not self._check_line_collision(nodes[i], new_point, obstacles):
+                    if new_cost < costs[i] and not self._check_line_collision(
+                        nodes[i], new_point, obstacles
+                    ):
                         parents[i] = new_idx
-                        costs[i] = new_cost
+                        costs[i] = float(new_cost)
 
             # 检查是否到达目标
             if np.linalg.norm(new_point - goal) < self.goal_radius:
@@ -144,7 +147,7 @@ class InformedRRTPlanner:
                     nodes.append(goal.copy())
                     goal_cost = best_new_cost + np.linalg.norm(new_point - goal)
                     parents[goal_idx] = new_idx
-                    costs[goal_idx] = goal_cost
+                    costs[goal_idx] = float(goal_cost)
 
                     if goal_cost < best_cost:
                         best_cost = goal_cost
@@ -178,7 +181,7 @@ class InformedRRTPlanner:
     ) -> np.ndarray:
         """在以c1和c2为焦点的椭圆内采样。"""
         center = (c1 + c2) / 2.0
-        dist_to_center = np.linalg.norm(c2 - c1) / 2.0
+        dist_to_center = float(np.linalg.norm(c2 - c1)) / 2.0
 
         # 椭圆半长轴
         a = best_cost / 2.0
@@ -188,7 +191,7 @@ class InformedRRTPlanner:
             )
 
         # 椭圆半短轴
-        b = np.sqrt(max(a ** 2 - dist_to_center ** 2, 0.0))
+        b = np.sqrt(max(float(a) ** 2 - dist_to_center ** 2, 0.0))
 
         # 在单位圆内均匀采样
         while True:
@@ -213,7 +216,7 @@ class InformedRRTPlanner:
 
     def _find_nearest(self, nodes: list, point: np.ndarray) -> int:
         """找到最近节点索引。"""
-        return int(min(range(len(nodes)), key=lambda i: np.linalg.norm(nodes[i] - point)))
+        return int(min(range(len(nodes)), key=lambda i: float(np.linalg.norm(nodes[i] - point))))
 
     def _check_collision(self, point: np.ndarray, obstacles: set) -> bool:
         """检查点是否在障碍物上。"""
@@ -230,7 +233,7 @@ class InformedRRTPlanner:
                 return True
         return False
 
-    def _extract_path(self, idx: int, nodes: list, parents: dict) -> list[list[int]]:
+    def _extract_path(self, idx: int | None, nodes: list, parents: dict) -> list[list[int]]:
         """提取路径。"""
         path = []
         while idx is not None:

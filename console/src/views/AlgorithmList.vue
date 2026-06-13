@@ -1,24 +1,60 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, computed, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import StatusBadge from '@/components/common/StatusBadge.vue'
-import { formatDateTime } from '@/utils/format'
+import { formatDateTime, formatNumber } from '@/utils/format'
+import { algorithmApi } from '@/api/algorithm'
+import type { Algorithm, AlgorithmCategoryStats } from '@/api/algorithm'
 
-interface Algorithm {
-  id: number
-  name: string
-  type: string
-  version: string
-  status: string
-  description: string
-  registeredAt: string
-  lastRunAt: string | null
-  runCount: number
-  config: string | null
+// 分类选项
+const categoryOptions = [
+  { label: '全部', value: '' },
+  { label: '同化', value: 'assimilation' },
+  { label: '规划', value: 'planning' },
+  { label: 'AI模型', value: 'model_engine' },
+  { label: '边云', value: 'edge' },
+  { label: '风险', value: 'risk' },
+  { label: '观测', value: 'observation' },
+]
+
+// 分类标签颜色映射
+const categoryColorMap: Record<string, string> = {
+  assimilation: '#3498db',
+  planning: '#2ecc71',
+  model_engine: '#e94560',
+  edge: '#f39c12',
+  risk: '#e74c3c',
+  observation: '#9b59b6',
 }
 
+const categoryLabelMap: Record<string, string> = {
+  assimilation: '同化',
+  planning: '规划',
+  model_engine: 'AI模型',
+  edge: '边云',
+  risk: '风险',
+  observation: '观测',
+}
+
+// 列表状态
 const loading = ref(false)
 const algorithms = ref<Algorithm[]>([])
+const total = ref(0)
+const currentPage = ref(1)
+const pageSize = ref(20)
+const selectedCategory = ref('')
+const searchKeyword = ref('')
+
+// 分类统计
+const categoryStats = ref<AlgorithmCategoryStats>({
+  total: 0,
+  assimilation: 0,
+  planning: 0,
+  model_engine: 0,
+  edge: 0,
+  risk: 0,
+  observation: 0,
+})
 
 // 测试运行对话框
 const testDialogVisible = ref(false)
@@ -30,77 +66,71 @@ const testForm = ref({
 const testLoading = ref(false)
 const testResult = ref<string | null>(null)
 
-// 模拟加载算法列表（实际应调用后端 API）
+// 统计卡片数据
+const statsCards = computed(() => [
+  { title: '全部算法', value: categoryStats.value.total, color: '#e94560', icon: 'Cpu' },
+  { title: '同化', value: categoryStats.value.assimilation, color: '#3498db', icon: 'Connection' },
+  { title: '规划', value: categoryStats.value.planning, color: '#2ecc71', icon: 'Guide' },
+  { title: 'AI模型', value: categoryStats.value.model_engine, color: '#e94560', icon: 'MagicStick' },
+  { title: '边云', value: categoryStats.value.edge, color: '#f39c12', icon: 'Cloudy' },
+  { title: '风险', value: categoryStats.value.risk, color: '#e74c3c', icon: 'Warning' },
+  { title: '观测', value: categoryStats.value.observation, color: '#9b59b6', icon: 'View' },
+])
+
 async function loadAlgorithms() {
   loading.value = true
   try {
-    // TODO: 替换为实际 API 调用
-    // const data = await algorithmApi.list()
-    algorithms.value = [
-      {
-        id: 1,
-        name: 'A* 路径规划',
-        type: 'path_planning',
-        version: '1.2.0',
-        status: 'ACTIVE',
-        description: '基于 A* 算法的无人机路径规划，支持三维空间避障',
-        registeredAt: '2025-01-15T10:00:00',
-        lastRunAt: '2025-06-12T08:30:00',
-        runCount: 1523,
-        config: '{"heuristic": "euclidean", "maxIterations": 10000}',
-      },
-      {
-        id: 2,
-        name: 'WRF-3DVAR 数据同化',
-        type: 'assimilation',
-        version: '2.0.1',
-        status: 'ACTIVE',
-        description: '基于 WRF 模型的三维变分数据同化算法',
-        registeredAt: '2025-02-20T14:00:00',
-        lastRunAt: '2025-06-11T16:00:00',
-        runCount: 856,
-        config: '{"outerLoop": 2, "innerLoop": 50}',
-      },
-      {
-        id: 3,
-        name: 'RRT 路径规划',
-        type: 'path_planning',
-        version: '1.0.0',
-        status: 'ACTIVE',
-        description: '快速随机树路径规划算法，适用于复杂障碍物环境',
-        registeredAt: '2025-03-10T09:00:00',
-        lastRunAt: '2025-06-10T11:00:00',
-        runCount: 432,
-        config: '{"maxIterations": 5000, "stepSize": 10}',
-      },
-      {
-        id: 4,
-        name: '综合风险评估模型',
-        type: 'risk_assessment',
-        version: '1.5.0',
-        status: 'ACTIVE',
-        description: '多因子综合风险评估模型，支持气象、地形、空域等多维度评估',
-        registeredAt: '2025-04-01T08:00:00',
-        lastRunAt: '2025-06-12T07:00:00',
-        runCount: 2341,
-        config: '{"factors": ["weather", "terrain", "airspace", "traffic"]}',
-      },
-      {
-        id: 5,
-        name: '观测决策优化',
-        type: 'observation',
-        version: '1.1.0',
-        status: 'DEPRECATED',
-        description: '基于覆盖率和成本优化的观测决策算法（已弃用）',
-        registeredAt: '2025-01-05T10:00:00',
-        lastRunAt: null,
-        runCount: 120,
-        config: null,
-      },
-    ]
+    const data = await algorithmApi.list({
+      category: selectedCategory.value || undefined,
+      keyword: searchKeyword.value || undefined,
+      page: currentPage.value,
+      size: pageSize.value,
+    })
+    // 适配不同返回结构
+    if (Array.isArray(data)) {
+      algorithms.value = data as Algorithm[]
+      total.value = data.length
+    } else if (data && typeof data === 'object') {
+      algorithms.value = (data as { records?: Algorithm[] }).records ?? []
+      total.value = (data as { total?: number }).total ?? 0
+    }
+  } catch {
+    // 错误已在拦截器中处理
   } finally {
     loading.value = false
   }
+}
+
+async function loadCategoryStats() {
+  try {
+    const data = await algorithmApi.getCategoryStats()
+    if (data && typeof data === 'object') {
+      categoryStats.value = data
+    }
+  } catch {
+    // 静默处理，使用默认值
+  }
+}
+
+function handleCategoryChange() {
+  currentPage.value = 1
+  loadAlgorithms()
+}
+
+function handleSearch() {
+  currentPage.value = 1
+  loadAlgorithms()
+}
+
+function handlePageChange(page: number) {
+  currentPage.value = page
+  loadAlgorithms()
+}
+
+function handleSizeChange(size: number) {
+  pageSize.value = size
+  currentPage.value = 1
+  loadAlgorithms()
 }
 
 function handleTest(row: Algorithm) {
@@ -117,22 +147,12 @@ async function runTest() {
   testLoading.value = true
   testResult.value = null
   try {
-    // TODO: 替换为实际 API 调用
-    // const result = await algorithmApi.testRun(testForm.value.algorithmId, JSON.parse(testForm.value.params))
-    await new Promise((resolve) => setTimeout(resolve, 2000))
-    testResult.value = JSON.stringify(
-      {
-        success: true,
-        executionTime: '1.23s',
-        output: {
-          message: '算法测试运行成功',
-          algorithmId: testForm.value.algorithmId,
-          timestamp: new Date().toISOString(),
-        },
-      },
-      null,
-      2
-    )
+    let params: Record<string, unknown> | undefined
+    if (testForm.value.params.trim()) {
+      params = JSON.parse(testForm.value.params)
+    }
+    const result = await algorithmApi.execute(testForm.value.algorithmId, { params })
+    testResult.value = JSON.stringify(result, null, 2)
     ElMessage.success('测试运行完成')
   } catch {
     testResult.value = '测试运行失败'
@@ -143,6 +163,7 @@ async function runTest() {
 
 onMounted(() => {
   loadAlgorithms()
+  loadCategoryStats()
 })
 </script>
 
@@ -152,13 +173,81 @@ onMounted(() => {
       <h2>算法管理</h2>
     </div>
 
+    <!-- 分类统计卡片 -->
+    <div class="stats-row">
+      <div
+        v-for="card in statsCards"
+        :key="card.title"
+        class="stat-card"
+      >
+        <div class="stat-info">
+          <div class="stat-title">{{ card.title }}</div>
+          <div class="stat-value" :style="{ color: card.color }">
+            {{ formatNumber(card.value) }}
+          </div>
+        </div>
+        <div class="stat-icon" :style="{ backgroundColor: card.color + '20' }">
+          <el-icon :size="22" :color="card.color">
+            <component :is="card.icon" />
+          </el-icon>
+        </div>
+      </div>
+    </div>
+
+    <!-- 筛选和搜索 -->
+    <el-card class="filter-card">
+      <div class="filter-row">
+        <div class="filter-left">
+          <el-select
+            v-model="selectedCategory"
+            placeholder="分类筛选"
+            style="width: 140px"
+            @change="handleCategoryChange"
+          >
+            <el-option
+              v-for="opt in categoryOptions"
+              :key="opt.value"
+              :label="opt.label"
+              :value="opt.value"
+            />
+          </el-select>
+          <el-input
+            v-model="searchKeyword"
+            placeholder="搜索算法名称 / ID"
+            clearable
+            style="width: 260px; margin-left: 12px"
+            @keyup.enter="handleSearch"
+            @clear="handleSearch"
+          >
+            <template #prefix>
+              <el-icon><Search /></el-icon>
+            </template>
+          </el-input>
+          <el-button type="primary" style="margin-left: 12px" @click="handleSearch">
+            搜索
+          </el-button>
+        </div>
+        <div class="filter-right">
+          <span class="total-text">共 {{ formatNumber(total) }} 个算法</span>
+        </div>
+      </div>
+    </el-card>
+
+    <!-- 算法列表 -->
     <el-card class="table-card">
       <el-table v-loading="loading" :data="algorithms" stripe style="width: 100%">
-        <el-table-column prop="id" label="ID" width="60" />
-        <el-table-column prop="name" label="算法名称" min-width="150" />
-        <el-table-column prop="type" label="类型" width="120">
+        <el-table-column prop="id" label="ID" width="70" />
+        <el-table-column prop="name" label="算法名称" min-width="180" show-overflow-tooltip />
+        <el-table-column prop="category" label="分类" width="100">
           <template #default="{ row }">
-            <el-tag size="small" effect="plain">{{ row.type }}</el-tag>
+            <el-tag
+              size="small"
+              effect="plain"
+              :color="categoryColorMap[row.category] || '#6c6c80'"
+              style="color: #fff; border: none"
+            >
+              {{ categoryLabelMap[row.category] || row.category }}
+            </el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="version" label="版本" width="80" />
@@ -167,8 +256,12 @@ onMounted(() => {
             <StatusBadge :status="row.status" />
           </template>
         </el-table-column>
-        <el-table-column prop="runCount" label="运行次数" width="100" />
-        <el-table-column prop="lastRunAt" label="最近运行" width="180">
+        <el-table-column prop="runCount" label="运行次数" width="100">
+          <template #default="{ row }">
+            {{ formatNumber(row.runCount) }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="lastRunAt" label="最近运行" width="170">
           <template #default="{ row }">
             {{ row.lastRunAt ? formatDateTime(row.lastRunAt) : '从未运行' }}
           </template>
@@ -188,6 +281,20 @@ onMounted(() => {
           </template>
         </el-table-column>
       </el-table>
+
+      <!-- 分页 -->
+      <div class="pagination-wrapper">
+        <el-pagination
+          v-model:current-page="currentPage"
+          v-model:page-size="pageSize"
+          :total="total"
+          :page-sizes="[10, 20, 50]"
+          layout="total, sizes, prev, pager, next, jumper"
+          background
+          @current-change="handlePageChange"
+          @size-change="handleSizeChange"
+        />
+      </div>
     </el-card>
 
     <!-- 测试运行对话框 -->
@@ -234,10 +341,92 @@ onMounted(() => {
   color: var(--color-text-primary);
 }
 
+/* 统计卡片 */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 12px;
+}
+
+.stat-card {
+  background-color: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: border-color 0.2s;
+}
+
+.stat-card:hover {
+  border-color: var(--color-border-light);
+}
+
+.stat-info {
+  flex: 1;
+}
+
+.stat-title {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  margin-bottom: 6px;
+}
+
+.stat-value {
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.stat-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* 筛选栏 */
+.filter-card {
+  border-radius: 8px;
+}
+
+.filter-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.filter-left {
+  display: flex;
+  align-items: center;
+}
+
+.filter-right {
+  display: flex;
+  align-items: center;
+}
+
+.total-text {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+/* 表格 */
 .table-card {
   border-radius: 8px;
 }
 
+.pagination-wrapper {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 16px;
+}
+
+/* 对话框 */
 .param-label {
   display: block;
   margin-bottom: 8px;
@@ -256,5 +445,17 @@ onMounted(() => {
   overflow-y: auto;
   white-space: pre-wrap;
   word-break: break-all;
+}
+
+@media (max-width: 1400px) {
+  .stats-row {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (max-width: 900px) {
+  .stats-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 </style>

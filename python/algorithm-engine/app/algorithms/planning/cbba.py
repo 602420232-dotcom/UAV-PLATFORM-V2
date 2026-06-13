@@ -52,7 +52,6 @@ class CBBAPlanner:
         """
         np.random.seed(42)
 
-        start = np.array(params.get("start", (0, 0)), dtype=float)
         goal = np.array(params.get("goal", (10, 10)), dtype=float)
         grid_size = params.get("grid_size", (50, 50))
         obstacles = set(map(tuple, params.get("obstacles", [])))

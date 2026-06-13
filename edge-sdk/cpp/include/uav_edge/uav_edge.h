@@ -30,6 +30,21 @@
 // 配置管理
 #include "config.h"
 
+// DWA 局部路径规划器
+#include "dwa_planner.h"
+
+// 飞行控制器
+#include "flight_controller.h"
+
+// 路径平滑器
+#include "path_smoother.h"
+
+// 轨迹修正器
+#include "trajectory_corrector.h"
+
+// 离线缓存
+#include "offline_cache.h"
+
 namespace uav::edge {
 
 // ============================================================================

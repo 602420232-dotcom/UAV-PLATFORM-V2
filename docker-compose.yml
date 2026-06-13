@@ -445,7 +445,7 @@ services:
   # 监控
   # ============================================================
   prometheus:
-    image: prom/prometheus:v2.54.1
+    image: prom/prometheus:v2.50.0
     container_name: uav-prometheus
     ports:
       - "19091:9090"
@@ -456,11 +456,18 @@ services:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.retention.time=7d'
       - '--web.enable-lifecycle'
+      - '--web.enable-admin-api'
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:9090/-/healthy"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     networks:
       - uav-net
 
   grafana:
-    image: grafana/grafana:11.3.0
+    image: grafana/grafana:10.4.0
     container_name: uav-grafana
     ports:
       - "3001:3000"
@@ -468,12 +475,41 @@ services:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin123
       - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-piechart-panel
     volumes:
       - grafana_data:/var/lib/grafana
       - ./monitoring/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
       - ./monitoring/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
     depends_on:
-      - prometheus
+      prometheus:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    networks:
+      - uav-net
+
+  alertmanager:
+    image: prom/alertmanager:v0.27.0
+    container_name: uav-alertmanager
+    ports:
+      - "19093:9093"
+    volumes:
+      - ./monitoring/alertmanager.yml:/etc/alertmanager/alertmanager.yml
+      - alertmanager_data:/alertmanager
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+      - '--web.external-url=http://localhost:19093'
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:9093/-/healthy"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     networks:
       - uav-net
 
@@ -482,6 +518,7 @@ volumes:
   redis_data:
   prometheus_data:
   grafana_data:
+  alertmanager_data:
 
 networks:
   uav-net:

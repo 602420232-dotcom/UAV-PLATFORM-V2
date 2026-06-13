@@ -279,7 +279,6 @@ class FederatedLearner:
         # Top-K 稀疏化：保留绝对值最大的 K 个元素
         flat = update.flatten()
         threshold = np.sort(np.abs(flat))[-k] if k < n_total else 0.0
-        mask = np.abs(flat) >= threshold
 
         # 如果超过 K 个元素等于阈值，随机截断
         indices_above = np.where(np.abs(flat) > threshold)[0]
@@ -295,11 +294,13 @@ class FederatedLearner:
             selected_indices = np.concatenate([indices_above, indices_at])
 
         # 量化
-        max_val = float(np.max(np.abs(flat[selected_indices]))) if len(selected_indices) > 0 else 1.0
+        max_val = (float(np.max(np.abs(flat[selected_indices])))
+                   if len(selected_indices) > 0 else 1.0)
         if max_val == 0:
             max_val = 1.0
         quant_levels = 2 ** (quantize_bits - 1) - 1  # 有符号量化
-        quantized = np.round(flat[selected_indices] / max_val * quant_levels) / quant_levels * max_val
+        scaled = flat[selected_indices] / max_val * quant_levels
+        quantized = np.round(scaled) / quant_levels * max_val
 
         # 构建稀疏表示
         compressed = np.zeros_like(flat)

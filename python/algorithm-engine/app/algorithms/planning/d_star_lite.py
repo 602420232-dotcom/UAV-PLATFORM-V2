@@ -47,8 +47,10 @@ class DStarLitePlanner:
         """
         np.random.seed(42)
 
-        start = tuple(params.get("start", (0, 0)))
-        goal = tuple(params.get("goal", (10, 10)))
+        raw_start = params.get("start", (0, 0))
+        raw_goal = params.get("goal", (10, 10))
+        start: tuple[int, int] = (int(raw_start[0]), int(raw_start[1]))
+        goal: tuple[int, int] = (int(raw_goal[0]), int(raw_goal[1]))
         grid_size = params.get("grid_size", (50, 50))
         obstacles = set(map(tuple, params.get("obstacles", [])))
 
@@ -117,7 +119,9 @@ class DStarLitePlanner:
             # 终止条件：start局部一致
             start_rhs = self._rhs.get(start, float("inf"))
             start_g = self._g.get(start, float("inf"))
-            if start_rhs == start_g and (not self._U or self._top_key() >= self._calculate_key(start)):
+            if start_rhs == start_g and (
+                        not self._U or self._top_key() >= self._calculate_key(start)
+                    ):
                 break
 
         # 提取路径

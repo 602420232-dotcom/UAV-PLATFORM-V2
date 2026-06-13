@@ -45,8 +45,10 @@ class GreedyBestFirstPlanner:
         """
         np.random.seed(42)
 
-        start = tuple(params.get("start", (0, 0)))
-        goal = tuple(params.get("goal", (10, 10)))
+        _start = params.get("start", (0, 0))
+        start: tuple[int, int] = (int(_start[0]), int(_start[1]))
+        _goal = params.get("goal", (10, 10))
+        goal: tuple[int, int] = (int(_goal[0]), int(_goal[1]))
         grid_size = params.get("grid_size", (50, 50))
         obstacles = set(map(tuple, params.get("obstacles", [])))
 

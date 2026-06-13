@@ -112,7 +112,7 @@ class PotentialFieldPlanner:
 
             # 归一化并移动
             direction = f_total / force_mag
-            step_vec = direction * min(self.step_size, dist_to_goal)
+            step_vec = direction * min(self.step_size, float(dist_to_goal))
             new_pos = current + step_vec
 
             # 边界约束

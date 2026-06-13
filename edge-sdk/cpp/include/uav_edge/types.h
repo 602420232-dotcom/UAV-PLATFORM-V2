@@ -7,6 +7,7 @@
 /// @date 2026-06-14
 
 #include <cstdint>
+#include <cmath>
 #include <string>
 #include <vector>
 #include <optional>

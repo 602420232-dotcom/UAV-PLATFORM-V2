@@ -1,0 +1,55 @@
+# ============================================================
+# HikariCP 连接池优化配置
+# 通用配置片段，适用于所有微服务
+# 使用方式：在 application.yml 中通过 spring.profiles.include 引入
+# ============================================================
+
+spring:
+  datasource:
+    hikari:
+      # 连接池中允许的最大连接数
+      # 根据CPU核心数和数据库负载能力设置，建议公式：cores * 2 + effective_spindle_count
+      maximum-pool-size: 20
+
+      # 连接池中维护的最小空闲连接数
+      # 低于此值时HikariCP会尝试补充新连接，建议为maximum-pool-size的1/4~1/2
+      minimum-idle: 5
+
+      # 空闲连接的最大存活时间（毫秒），超过此时间未被使用则被回收
+      # 默认600000ms(10min)，此处设为5min以更及时释放空闲资源
+      idle-timeout: 300000
+
+      # 连接在池中的最大生命周期（毫秒）
+      # 超过此时间的连接将被关闭并替换，建议设置比数据库的wait_timeout小30-60秒
+      # MySQL默认wait_timeout为28800s(8h)，此处设为30min
+      max-lifetime: 1800000
+
+      # 从连接池获取连接的超时时间（毫秒）
+      # 当连接池耗尽时，调用线程将在此时间内等待可用连接
+      # 设置为3000ms(3s)可以快速失败，避免线程长时间阻塞
+      connection-timeout: 3000
+
+      # 连接泄漏检测阈值（毫秒）
+      # 如果一个连接借出后超过此时间未被归还且未被关闭，将记录警告日志
+      # 设置为5000ms(5s)用于开发/测试环境快速发现泄漏，生产环境建议30000-60000ms
+      leak-detection-threshold: 5000
+
+      # 连接在交给应用前进行有效性验证的超时时间（毫秒）
+      # HikariCP使用JDBC4的Connection.isValid()方法进行验证
+      # 设置为1000ms(1s)在保证验证可靠性的同时不显著增加获取连接的延迟
+      validation-timeout: 1000
+
+      # 连接池名称，用于日志和JMX监控中标识此连接池
+      # 建议每个服务使用不同的名称便于排查问题
+      pool-name: ${spring.application.name:hikari-pool}
+
+      # 是否允许通过JMX挂起和恢复连接池
+      # 生产环境建议true以便运维管理
+      allow-pool-suspension: false
+
+      # 连接只读标志，当所有操作都是只读时可以优化数据库访问
+      # 对于读写混合的服务应设为false
+      read-only: false
+
+      # 注册JMX MBean，便于监控连接池状态
+      register-mbeans: true

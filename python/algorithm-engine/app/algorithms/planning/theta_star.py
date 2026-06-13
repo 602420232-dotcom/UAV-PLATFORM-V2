@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import heapq
 import logging
-from typing import Any, Optional
+from typing import Any, Optional, cast
 
 import numpy as np
 
@@ -48,8 +48,8 @@ class ThetaStarPlanner:
         """
         np.random.seed(42)
 
-        start = tuple(params.get("start", (0, 0)))
-        goal = tuple(params.get("goal", (10, 10)))
+        start = cast("tuple[int, int]", tuple(params.get("start", (0, 0))))
+        goal = cast("tuple[int, int]", tuple(params.get("goal", (10, 10))))
         grid_size = params.get("grid_size", (50, 50))
         obstacles = set(map(tuple, params.get("obstacles", [])))
 

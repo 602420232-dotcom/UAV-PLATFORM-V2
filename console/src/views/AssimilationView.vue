@@ -11,11 +11,28 @@ const tasks = ref<AssimilationTask[]>([])
 const selectedResult = ref<AssimilationResult | null>(null)
 const resultDialogVisible = ref(false)
 
+// 同化类型选项（13种同化算法）
+const assimilationTypeOptions = [
+  { label: '3DVAR', value: '3DVAR' },
+  { label: '4DVAR', value: '4DVAR' },
+  { label: '5DVAR', value: '5DVAR' },
+  { label: 'EnKF', value: 'EnKF' },
+  { label: 'Hybrid', value: 'Hybrid' },
+  { label: 'AdaptiveHybrid', value: 'AdaptiveHybrid' },
+  { label: 'MultiScaleHybrid', value: 'MultiScaleHybrid' },
+  { label: 'EnhancedBayesian', value: 'EnhancedBayesian' },
+  { label: 'AdaptiveAssimilator', value: 'AdaptiveAssimilator' },
+  { label: 'VarianceFieldOptimizer', value: 'VarianceFieldOptimizer' },
+  { label: 'AdaptiveVarianceField', value: 'AdaptiveVarianceField' },
+  { label: 'BayesianAssimilator', value: 'BayesianAssimilator' },
+  { label: 'CompatibleAssimilator', value: 'CompatibleAssimilator' },
+]
+
 // 创建任务对话框
 const createDialogVisible = ref(false)
 const createForm = ref({
   type: '3DVAR',
-  algorithm: 'WRF-3DVAR',
+  algorithm: '3DVAR',
   startTime: '',
   endTime: '',
   minLon: 115.0,
@@ -184,19 +201,24 @@ onMounted(() => {
           <el-col :span="12">
             <el-form-item label="同化类型">
               <el-select v-model="createForm.type" style="width: 100%">
-                <el-option label="3DVAR" value="3DVAR" />
-                <el-option label="4DVAR" value="4DVAR" />
-                <el-option label="EnKF" value="EnKF" />
-                <el-option label="Hybrid" value="Hybrid" />
+                <el-option
+                  v-for="opt in assimilationTypeOptions"
+                  :key="opt.value"
+                  :label="opt.label"
+                  :value="opt.value"
+                />
               </el-select>
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="算法">
               <el-select v-model="createForm.algorithm" style="width: 100%">
-                <el-option label="WRF-3DVAR" value="WRF-3DVAR" />
-                <el-option label="WRF-4DVAR" value="WRF-4DVAR" />
-                <el-option label="GFS-EnKF" value="GFS-EnKF" />
+                <el-option
+                  v-for="opt in assimilationTypeOptions"
+                  :key="opt.value"
+                  :label="opt.label"
+                  :value="opt.value"
+                />
               </el-select>
             </el-form-item>
           </el-col>
