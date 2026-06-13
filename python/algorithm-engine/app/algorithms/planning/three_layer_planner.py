@@ -238,10 +238,7 @@ class ThreeLayerPlanner:
 
         # 构建航点序列（包含用户航点）
         coarse_waypoints = [(w[0] // res, w[1] // res) for w in user_waypoints]
-        coarse_waypoints = [
-            self._find_nearest_free(wp, s_rows, s_cols, coarse_obstacles)
-            for wp in coarse_waypoints
-        ]
+        coarse_waypoints = [self._find_nearest_free(wp, s_rows, s_cols, coarse_obstacles) for wp in coarse_waypoints]
 
         # 在航点间依次搜索
         all_coarse_points = [s_start] + coarse_waypoints + [s_goal]

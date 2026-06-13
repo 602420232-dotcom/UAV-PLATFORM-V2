@@ -280,10 +280,7 @@ class NSGAII:
             neighbors = []
             for dx, dy in directions:
                 nx, ny = current[0] + dx, current[1] + dy
-                if (0 <= nx < rows
-                        and 0 <= ny < cols
-                        and (nx, ny) not in obstacles
-                        and (nx, ny) not in visited):
+                if 0 <= nx < rows and 0 <= ny < cols and (nx, ny) not in obstacles and (nx, ny) not in visited:
                     neighbors.append((nx, ny))
 
             if not neighbors:

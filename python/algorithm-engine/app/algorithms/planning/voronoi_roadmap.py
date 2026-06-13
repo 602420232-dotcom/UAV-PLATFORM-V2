@@ -150,10 +150,7 @@ class VoronoiRoadmapPlanner:
             if p1 >= 0 and p2 >= 0:
                 v1 = vor.vertices[p1]
                 v2 = vor.vertices[p2]
-                if (0 <= v1[0] <= rows
-                        and 0 <= v1[1] <= cols
-                        and 0 <= v2[0] <= rows
-                        and 0 <= v2[1] <= cols):
+                if 0 <= v1[0] <= rows and 0 <= v1[1] <= cols and 0 <= v2[0] <= rows and 0 <= v2[1] <= cols:
                     # 找到最近的顶点索引
                     idx1 = self._find_nearest_vertex(vertices, v1)
                     idx2 = self._find_nearest_vertex(vertices, v2)

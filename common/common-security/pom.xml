@@ -35,17 +35,24 @@
             <artifactId>spring-boot-starter-data-jpa</artifactId>
         </dependency>
 
-        <!-- Spring Data Redis（限流计数器） -->
+        <!-- Spring Data Redis（限流计数器）- 使用Spring原生依赖，兼容Boot 4.0.0 -->
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-data-redis</artifactId>
+            <groupId>org.springframework.data</groupId>
+            <artifactId>spring-data-redis</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.lettuce</groupId>
+            <artifactId>lettuce-core</artifactId>
         </dependency>
 
-        <!-- Spring AOP（审计日志切面） -->
+        <!-- Spring AOP（审计日志切面）- 使用Spring原生依赖，兼容Boot 4.0.0 -->
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-aop</artifactId>
-            <version>4.0.0</version>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-aop</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.aspectj</groupId>
+            <artifactId>aspectjweaver</artifactId>
         </dependency>
 
         <!-- SpEL 表达式解析（审计日志 detail 表达式） -->

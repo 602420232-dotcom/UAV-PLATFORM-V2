@@ -139,9 +139,7 @@ class MultiObjectivePlanner:
         open_set: list[tuple[float, tuple[int, int]]] = []
         heapq.heappush(open_set, (0.0, start_grid))
         came_from: dict[tuple[int, int], tuple[int, int]] = {}
-        g_score: dict[tuple[int, int], dict[str, float]] = {
-            start_grid: {obj["name"]: 0.0 for obj in objectives}
-        }
+        g_score: dict[tuple[int, int], dict[str, float]] = {start_grid: {obj["name"]: 0.0 for obj in objectives}}
         g_total: dict[tuple[int, int], float] = {start_grid: 0.0}
 
         while open_set:
@@ -248,9 +246,7 @@ class MultiObjectivePlanner:
         # 从帕累托解集中选择折中解
         if pareto_solutions:
             # 选择距离帕累托前沿中心最近的解
-            obj_arrays = np.array([
-                list(sol["objective_values"].values()) for sol in pareto_solutions
-            ])
+            obj_arrays = np.array([list(sol["objective_values"].values()) for sol in pareto_solutions])
             # 归一化
             mins = obj_arrays.min(axis=0)
             maxs = obj_arrays.max(axis=0)
@@ -303,9 +299,7 @@ class MultiObjectivePlanner:
         heapq.heappush(open_set, (0.0, start_grid))
         came_from: dict[tuple[int, int], tuple[int, int]] = {}
         g_score: dict[tuple[int, int], float] = {start_grid: 0.0}
-        g_multi: dict[tuple[int, int], dict[str, float]] = {
-            start_grid: {obj["name"]: 0.0 for obj in objectives}
-        }
+        g_multi: dict[tuple[int, int], dict[str, float]] = {start_grid: {obj["name"]: 0.0 for obj in objectives}}
 
         while open_set:
             _, current = heapq.heappop(open_set)
@@ -417,10 +411,7 @@ class MultiObjectivePlanner:
         total = float(np.sum(values))
 
         # 各目标占比
-        proportions = {
-            name: float(values[i] / total) if total > 1e-6 else 0.0
-            for i, name in enumerate(names)
-        }
+        proportions = {name: float(values[i] / total) if total > 1e-6 else 0.0 for i, name in enumerate(names)}
 
         # 主导目标
         dominant = names[int(np.argmax(values))] if len(values) > 0 else None
