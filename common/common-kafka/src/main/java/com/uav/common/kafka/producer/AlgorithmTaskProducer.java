@@ -77,6 +77,8 @@ public class AlgorithmTaskProducer {
 
     /**
      * 判断当前是否为模拟模式
+     *
+     * @return 是否为模拟模式
      */
     public boolean isMockMode() {
         return mockMode;

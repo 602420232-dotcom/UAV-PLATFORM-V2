@@ -1,10 +1,52 @@
 # UAV Platform V2 - 二期迭代计划
 
-## 一期回顾
+> 最后更新：2026-06-14
+> 状态：**一期已完成，二期正式启动**
 
-- MVP 一期完成度 95%
-- 已实现：7 个 Java 微服务 + Python 算法引擎 + 20 个算法
-- 已验证：E2E 9/9 测试通过、HMAC 认证、Mock 模式
+---
+
+## 一期成果总结
+
+### 完成度：100%
+
+一期灰度部署全部完成，13 个 Docker 容器全部健康运行，Kafka 全链路打通。
+
+### 部署架构
+
+| 层级 | 服务 | 端口 | 状态 |
+|------|------|------|------|
+| **基础设施** | MySQL 8.0 | 3306 | healthy |
+| | Redis 7 | 6379 | healthy |
+| | Kafka + Zookeeper | 9092 / 2181 | healthy |
+| | Nacos 3.2.0 | 8950 | healthy |
+| **API 网关** | api-gateway (Spring Boot 3.4.5 standalone) | 8258 | healthy |
+| **Java 微服务** | platform-api | 8251 | healthy |
+| | weather-api | 8252 | healthy |
+| | assimilation-api | 8253 | healthy |
+| | risk-api | 8254 | healthy |
+| | observation-api | 8255 | healthy |
+| | planning-api | 8256 | healthy |
+| | utm-api | 8259 | healthy |
+| **算法引擎** | algorithm-engine (Python/FastAPI) | 9095 | healthy |
+
+### 一期关键验证结果
+
+- **Kafka 全链路**：Python -> Kafka -> 3 个 Java Consumer 全部正确反序列化和处理
+- **API 网关**：Spring Cloud Gateway 路由转发正常，限流过滤器生效
+- **Nacos 注册中心**：v3.2.0 + MySQL 持久化，控制台可访问
+- **算法引擎**：20 个算法注册，A* 路径规划端到端验证通过
+- **HMAC 认证**：API Key 签名验证正常
+- **Docker 编排**：健康检查 + 自动重启全部就绪
+
+### 一期修复的问题（15+项）
+
+- 端口冲突（platform-api / weather-api）
+- 环境变量缺失（Kafka bootstrap servers）
+- JSON 序列化（snake_case / camelCase 不匹配）
+- 非标准浮点值（Infinity / NaN 导致 Java 反序列化失败）
+- CORS 配置（allowedOrigins -> allowedOriginPatterns）
+- Nacos 数据库初始化（schema 导入 + JWT token 长度）
+- api-gateway Spring Boot 4.0 兼容性（改用 standalone Spring Boot 3.4.5 构建）
 
 ---
 
@@ -36,7 +78,7 @@
 - 在现有 3D-VAR 基础上扩展为 5D-VAR（含时间维与多源观测）
 - 优化背景误差协方差矩阵估计（Hybrid B / NMC 方法）
 - 支持流依赖背景误差（Flow-dependent B）
-- 增量分析与循环同化（ Cycling ）
+- 增量分析与循环同化（Cycling）
 
 ### 5. 观测优化策略（自适应观测网络设计）
 
@@ -82,8 +124,8 @@
 - RBAC 权限模型设计与实现
   - 角色：管理员 / 操作员 / 观察者 / 外部系统
   - 资源级权限控制
-- API 限流（基于 Redis + 令牌桶算法）
-  - 全局限流 + 用户级限流
+- API 限流增强（api-gateway 已实现基础限流，需扩展）
+  - 全局限流 + 用户级限流 + 接口级限流
 - 审计日志
   - 操作日志记录与查询
   - 关键操作（飞行计划审批 / 系统配置变更）留痕
@@ -104,55 +146,71 @@
 
 ### M1（第 1-2 周）：GPR + 联邦学习算法实现
 
-| 任务 | 负责模块 | 交付物 |
-|------|----------|--------|
-| GPR 不确定性量化算法 | algorithm-engine | `gpr_uncertainty_quantification` 算法 |
-| 联邦学习框架搭建 | algorithm-engine | 联邦学习调度器 + FedAvg 聚合 |
-| assimilation-api GPR 集成 | assimilation-api | GPR 后处理 API 端点 |
-| 单元测试 + 集成测试 | 全模块 | 测试覆盖率 >= 80% |
+| 任务 | 负责模块 | 交付物 | 状态 |
+|------|----------|--------|------|
+| GPR 不确定性量化算法 | algorithm-engine | `gpr_uncertainty_quantification` 算法 | 待开始 |
+| 联邦学习框架搭建 | algorithm-engine | 联邦学习调度器 + FedAvg 聚合 | 待开始 |
+| assimilation-api GPR 集成 | assimilation-api | GPR 后处理 API 端点 | 待开始 |
+| 单元测试 + 集成测试 | 全模块 | 测试覆盖率 >= 80% | 待开始 |
 
 ### M2（第 3-4 周）：前端控制台 + 监控完善
 
-| 任务 | 负责模块 | 交付物 |
-|------|----------|--------|
-| 气象数据可视化页面 | console | 风场 / 温度场 ECharts 组件 |
-| 同化任务管理页面 | console | 任务列表 / 详情 / 结果预览 |
-| 风险评估仪表盘 | console | 风险等级分布 / 历史趋势 |
-| Grafana Dashboard 模板 | monitoring | 4 套 Dashboard JSON |
-| Prometheus 告警规则 | monitoring | AlertManager 配置 |
+| 任务 | 负责模块 | 交付物 | 状态 |
+|------|----------|--------|------|
+| 气象数据可视化页面 | console | 风场 / 温度场 ECharts 组件 | 待开始 |
+| 同化任务管理页面 | console | 任务列表 / 详情 / 结果预览 | 待开始 |
+| 风险评估仪表盘 | console | 风险等级分布 / 历史趋势 | 待开始 |
+| Grafana Dashboard 模板 | monitoring | 4 套 Dashboard JSON | 待开始 |
+| Prometheus 告警规则 | monitoring | AlertManager 配置 | 待开始 |
 
 ### M3（第 5-6 周）：性能优化 + 安全增强
 
-| 任务 | 负责模块 | 交付物 |
-|------|----------|--------|
-| 连接池与缓存优化 | 全 Java 服务 | HikariCP / Redis 配置调优 |
-| Kafka 批量处理优化 | common-kafka | 批量消费 / 发送配置 |
-| RBAC 权限模型 | common-security | 权限框架 + 数据库表 |
-| API 限流 | api-gateway | 令牌桶限流过滤器 |
-| 审计日志 | platform-api | 操作日志模块 |
-| 模型量化评估 | algorithm-engine | 量化报告 + ONNX Runtime 集成 |
+| 任务 | 负责模块 | 交付物 | 状态 |
+|------|----------|--------|------|
+| 连接池与缓存优化 | 全 Java 服务 | HikariCP / Redis 配置调优 | 待开始 |
+| Kafka 批量处理优化 | common-kafka | 批量消费 / 发送配置 | 待开始 |
+| RBAC 权限模型 | common-security | 权限框架 + 数据库表 | 待开始 |
+| API 限流增强 | api-gateway | 多维度限流过滤器 | 待开始 |
+| 审计日志 | platform-api | 操作日志模块 | 待开始 |
+| 模型量化评估 | algorithm-engine | 量化报告 + ONNX Runtime 集成 | 待开始 |
 
 ### M4（第 7-8 周）：CI/CD + 全量发布
 
-| 任务 | 负责模块 | 交付物 |
-|------|----------|--------|
-| GitHub Actions 完善 | .github/workflows | CI/CD Pipeline |
-| 5D-VAR 算法实现 | algorithm-engine | 5D-VAR 同化算法 |
-| 观测优化策略 | algorithm-engine | 自适应观测设计算法 |
-| 灰度环境全链路验证 | scripts | grayscale-verify.py 自动化 |
-| 全量发布与文档 | 全模块 | 部署文档 / 运维手册更新 |
+| 任务 | 负责模块 | 交付物 | 状态 |
+|------|----------|--------|------|
+| GitHub Actions 完善 | .github/workflows | CI/CD Pipeline | 待开始 |
+| 5D-VAR 算法实现 | algorithm-engine | 5D-VAR 同化算法 | 待开始 |
+| 观测优化策略 | algorithm-engine | 自适应观测设计算法 | 待开始 |
+| 灰度环境全链路验证 | scripts | grayscale-verify.py 自动化 | 待开始 |
+| 全量发布与文档 | 全模块 | 部署文档 / 运维手册更新 | 待开始 |
+
+---
+
+## 技术栈版本锁定
+
+| 组件 | 版本 | 备注 |
+|------|------|------|
+| Java 业务服务 | Spring Boot 4.0.0 | 7 个微服务 |
+| api-gateway | Spring Boot 3.4.5 (standalone) | 独立构建，绕过 Boot 4.0 兼容性问题 |
+| Spring Cloud Gateway | 4.1.0 | 与 Boot 3.4.5 配套 |
+| Python 算法引擎 | FastAPI + Python 3.12 | 20 个算法 |
+| Nacos | 3.2.0 | MySQL 持久化，JWT 认证 |
+| Kafka | Confluent 7.8.0 | 全链路消息（Java <-> Python） |
+| MySQL | 8.0 | 7 个业务库 + nacos 库 |
+| Redis | 7 | 缓存 + 限流 |
+| Docker | Docker Compose | 13 个容器编排 |
 
 ---
 
 ## 风险与依赖
 
-| 风险项 | 影响 | 缓解措施 |
-|--------|------|----------|
-| 5D-VAR 算法复杂度高 | M4 延期 | 提前在 M1 启动预研 |
-| 联邦学习通信开销 | 边缘设备性能瓶颈 | 通信压缩 + 异步聚合 |
-| 前端人力不足 | M2 延期 | 优先核心页面，次要页面后续迭代 |
-| Docker 灰度环境稳定性 | 验证不可靠 | 完善 healthcheck + 自动重启 |
-| Kafka 消息积压 | 全链路延迟 | 批量消费 + 动态分区扩展 |
+| 风险项 | 影响 | 缓解措施 | 状态 |
+|--------|------|----------|------|
+| 5D-VAR 算法复杂度高 | M4 延期 | 提前在 M1 启动预研 | 待评估 |
+| 联邦学习通信开销 | 边缘设备性能瓶颈 | 通信压缩 + 异步聚合 | 待评估 |
+| 前端人力不足 | M2 延期 | 优先核心页面，次要页面后续迭代 | 待评估 |
+| api-gateway Boot 版本分裂 | 维护成本增加 | 等待 Spring Cloud Gateway 5.x 支持 Boot 4.0 | 已知 |
+| Kafka 消息积压 | 全链路延迟 | 批量消费 + 动态分区扩展 | 待评估 |
 
 ---
 
