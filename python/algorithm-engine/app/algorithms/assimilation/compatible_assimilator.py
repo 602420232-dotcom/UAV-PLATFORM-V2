@@ -160,7 +160,7 @@ class CompatibleAssimilator:
 
         return constrained
 
-    def _run_enkf(self, xb, H, y_obs, m):  # noqa: N806
+    def _run_enkf(self, xb, H, y_obs, m):  # noqa: N803, N806
         """运行 EnKF 集合卡尔曼滤波分析。"""
         np.random.seed(42)
         n_ens = self.ensemble_size

@@ -132,7 +132,7 @@ class VarianceFieldOptimizer:
             "num_observations": m,
         }
 
-    def _run_analysis_with_variance(self, xb, H, y_obs, sigma_b_field, m):  # noqa: N806
+    def _run_analysis_with_variance(self, xb, H, y_obs, sigma_b_field, m):  # noqa: N803, N806
         """使用给定的方差场运行变分分析。"""
         x = xb.copy()
         lr = 0.01

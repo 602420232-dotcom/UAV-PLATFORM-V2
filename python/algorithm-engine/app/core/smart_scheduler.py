@@ -112,11 +112,10 @@ class SmartAlgorithmScheduler:
             - ``config_overrides`` (dict): 建议传递给算法的额外配置覆盖
         """
         # 重置决策记录
-        self._last_decision: list[dict[str, str]] = []
+        self._last_decision = []
 
         # ---- 从 params 中提取辅助信息 ----
         has_risk_field = "risk_field" in params or "risk_cost" in params
-        has_risk_cost_param = "risk_cost" in params
 
         # ---- 计算网格总元素数 ----
         grid_total = self._compute_grid_total(grid_shape)
@@ -143,7 +142,8 @@ class SmartAlgorithmScheduler:
         # 规则 2: 大网格 + GPU -> 4DVAR-GPU（回退到 4DVAR）
         if grid_total is not None and grid_total > _LARGE_GRID_THRESHOLD ** 2:
             if gpu_available:
-                self._record("large_grid_gpu", "命中", f"网格 {grid_total} > {_LARGE_GRID_THRESHOLD}^2 且 GPU 可用")
+                self._record("large_grid_gpu", "命中",
+                             f"网格 {grid_total} > {_LARGE_GRID_THRESHOLD}^2 且 GPU 可用")
                 return self._make_result(
                     algorithm_id=ALGORITHM_4DVAR_GPU,
                     reason=(
@@ -188,7 +188,8 @@ class SmartAlgorithmScheduler:
                     algorithm_id=ALGORITHM_ENKF,
                     reason=(
                         f"观测数量充足（{observation_count} > {_MANY_OBSERVATIONS_THRESHOLD}），"
-                        f"且时间预算{'无限制' if time_budget_seconds is None else f'{time_budget_seconds}s'}"
+                        f"且时间预算"
+                        f"{'无限制' if time_budget_seconds is None else f'{time_budget_seconds}s'}"
                         f"{'>' if time_budget_seconds else '>='}{_ENKF_TIME_BUDGET_SECONDS}s，"
                         f"选择 EnKF（集合卡尔曼滤波）以充分利用观测信息"
                     ),
@@ -204,7 +205,8 @@ class SmartAlgorithmScheduler:
                     f"但时间预算 {time_budget_seconds}s 不够",
                 )
         else:
-            self._record("many_obs_enkf", "未命中", f"观测数 {observation_count} 未超过 {_MANY_OBSERVATIONS_THRESHOLD}")
+            self._record("many_obs_enkf", "未命中",
+                         f"观测数 {observation_count} 未超过 {_MANY_OBSERVATIONS_THRESHOLD}")
 
         # 规则 4: 中等观测量 -> Hybrid
         if observation_count is not None and observation_count > _MODERATE_OBSERVATIONS_THRESHOLD:
@@ -224,7 +226,8 @@ class SmartAlgorithmScheduler:
                     "hybrid_weight": 0.5,
                 },
             )
-        self._record("moderate_obs_hybrid", "未命中", f"观测数 {observation_count} 未超过 {_MODERATE_OBSERVATIONS_THRESHOLD}")
+        self._record("moderate_obs_hybrid", "未命中",
+                     f"观测数 {observation_count} 未超过 {_MODERATE_OBSERVATIONS_THRESHOLD}")
 
         # 规则 5: 少量观测 + 紧迫时间 -> 3DVAR
         if (

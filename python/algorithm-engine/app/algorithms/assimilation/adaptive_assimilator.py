@@ -54,7 +54,6 @@ class AdaptiveAssimilator:
             background = background.reshape(1)
 
         shape = background.shape
-        n = background.size
         xb = background.flatten()
 
         # 构建观测算子
@@ -127,7 +126,7 @@ class AdaptiveAssimilator:
 
         return float(np.mean(diffs))
 
-    def _run_3dvar(self, xb, H, y_obs):  # noqa: N806
+    def _run_3dvar(self, xb, H, y_obs):  # noqa: N803, N806
         """运行 3D-VAR 变分分析。"""
         x = xb.copy()
         lr = 0.01
@@ -141,7 +140,7 @@ class AdaptiveAssimilator:
             x = x - lr * grad
         return x
 
-    def _run_enkf(self, xb, H, y_obs, m):  # noqa: N806
+    def _run_enkf(self, xb, H, y_obs, m):  # noqa: N803, N806
         """运行 EnKF 集合卡尔曼滤波分析。"""
         np.random.seed(42)
         n_ens = self.ensemble_size

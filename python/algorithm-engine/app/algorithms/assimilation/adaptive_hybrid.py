@@ -54,7 +54,6 @@ class AdaptiveHybridAssimilation:
         if background.ndim == 0:
             background = background.reshape(1)
 
-        n = background.size
         xb = background.flatten()
         shape = background.shape
 
@@ -107,21 +106,21 @@ class AdaptiveHybridAssimilation:
             "num_observations": m,
         }
 
-    def _run_3dvar(self, xb, H, y_obs):  # noqa: N806
+    def _run_3dvar(self, xb, H, y_obs):  # noqa: N803, N806
         """运行 3D-VAR 变分分析。"""
         x = xb.copy()
         lr = 0.01
         for _ in range(self.max_iterations):
             dx = x - xb
             grad_b = dx / (self.sigma_b ** 2)
-            Hx = H @ x  # noqa: N806
+            Hx = H @ x  # noqa: N803, N806
             dy = Hx - y_obs
             grad_o = H.T @ (dy / self.observation_error_scale ** 2)
             grad = grad_b + grad_o
             x = x - lr * grad
         return x
 
-    def _run_enkf(self, xb, H, y_obs, m):  # noqa: N806
+    def _run_enkf(self, xb, H, y_obs, m):  # noqa: N803, N806
         """运行 EnKF 集合卡尔曼滤波分析。"""
         np.random.seed(42)
         n_ens = self.ensemble_size

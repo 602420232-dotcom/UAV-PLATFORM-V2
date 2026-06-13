@@ -12,7 +12,6 @@ import logging
 from typing import Any, Optional
 
 import numpy as np
-from scipy.stats import norm
 
 logger = logging.getLogger(__name__)
 
@@ -105,7 +104,8 @@ class BayesianAssimilator:
                     local_dist = distances[mask]
 
                     # 距离权重（越近权重越大）
-                    weights = np.exp(-0.5 * (local_dist / max(self.influence_radius * 0.5, 1e-6)) ** 2)
+                    scale = max(self.influence_radius * 0.5, 1e-6)
+                    weights = np.exp(-0.5 * (local_dist / scale) ** 2)
                     weights = weights / max(weights.sum(), 1e-10)
 
                     # 加权观测值

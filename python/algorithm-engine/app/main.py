@@ -77,11 +77,32 @@ def _register_builtin_algorithms() -> None:
     )
     from app.adapters.planning_adapter import (
         AStarAdapter,
+        AntColonyAdapter,
+        BidirectionalAStarAdapter,
+        CBBAAdapter,
         DERRTStarAdapter,
         DijkstraAdapter,
+        DStarLiteAdapter,
         DWAAdapter,
+        GeneticAlgorithmAdapter,
+        GreedyBestFirstAdapter,
+        InformedRRTAdapter,
+        JumpPointSearchAdapter,
+        LazyThetaStarAdapter,
+        LPAStarAdapter,
+        MarketBasedAdapter,
         MPCAdapter,
+        OrbitalDecompositionAdapter,
+        ParticleSwarmAdapter,
+        PotentialFieldAdapter,
+        RapidlyExploringTreeAdapter,
         RRTStarAdapter,
+        SimulatedAnnealingAdapter,
+        SpatialPartitionAdapter,
+        TabuSearchAdapter,
+        ThetaStarAdapter,
+        VisibilityGraphAdapter,
+        VoronoiRoadmapAdapter,
         VRPTWAdapter,
     )
     from app.adapters.risk_adapter import (
@@ -89,6 +110,17 @@ def _register_builtin_algorithms() -> None:
         CompositeRiskAdapter,
         TerrainRiskAdapter,
         WeatherRiskAdapter,
+    )
+    from app.adapters.model_engine_adapter import (
+        BayesianNNAdapter,
+        GPRUncertaintyAdapter,
+        LSTMPredictorAdapter,
+        UNetWeatherPredictorAdapter,
+    )
+    from app.adapters.edge_adapter import (
+        FederatedLearningAdapter,
+        ModelQuantizationAdapter,
+        V2XCommunicationAdapter,
     )
 
     registry = get_registry()
@@ -117,9 +149,37 @@ def _register_builtin_algorithms() -> None:
             AStarAdapter,
             DijkstraAdapter,
             RRTStarAdapter,
+            AntColonyAdapter,
+            ParticleSwarmAdapter,
+            GeneticAlgorithmAdapter,
+            SimulatedAnnealingAdapter,
+            TabuSearchAdapter,
+            GreedyBestFirstAdapter,
+            BidirectionalAStarAdapter,
+            JumpPointSearchAdapter,
+            ThetaStarAdapter,
+            LazyThetaStarAdapter,
+            DStarLiteAdapter,
+            LPAStarAdapter,
+            PotentialFieldAdapter,
+            VoronoiRoadmapAdapter,
+            VisibilityGraphAdapter,
+            RapidlyExploringTreeAdapter,
+            InformedRRTAdapter,
+            CBBAAdapter,
+            OrbitalDecompositionAdapter,
+            MarketBasedAdapter,
+            SpatialPartitionAdapter,
         ]
         + [WeatherRiskAdapter, TerrainRiskAdapter, AirspaceRiskAdapter, CompositeRiskAdapter]
         + [InformationGainAdapter, AdaptiveObservationAdapter, SensorSchedulingAdapter]
+        + [
+            GPRUncertaintyAdapter,
+            BayesianNNAdapter,
+            LSTMPredictorAdapter,
+            UNetWeatherPredictorAdapter,
+        ]
+        + [FederatedLearningAdapter, ModelQuantizationAdapter, V2XCommunicationAdapter]
     )
 
     for cls in all_adapters:
