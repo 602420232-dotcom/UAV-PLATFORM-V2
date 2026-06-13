@@ -41,9 +41,6 @@ jobs:
   build-java:
     name: Java Build (${{ matrix.module }})
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: uav-platform-v2
     strategy:
       matrix:
         module:
@@ -102,9 +99,6 @@ jobs:
   build-python:
     name: Python Lint & Type Check
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: uav-platform-v2
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -140,9 +134,6 @@ jobs:
   build-frontend:
     name: Frontend Build
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: uav-platform-v2/console
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -155,25 +146,28 @@ jobs:
       - name: Cache npm dependencies
         uses: actions/cache@v4
         with:
-          path: uav-platform-v2/console/node_modules
-          key: npm-${{ runner.os }}-${{ hashFiles('uav-platform-v2/console/package-lock.json') }}
+          path: console/node_modules
+          key: npm-${{ runner.os }}-${{ hashFiles('console/package-lock.json') }}
           restore-keys: |
             npm-${{ runner.os }}-
 
       - name: Install dependencies
+        working-directory: console
         run: npm ci
 
       - name: Lint
+        working-directory: console
         run: npm run lint
 
       - name: Build
+        working-directory: console
         run: npm run build
 
       - name: Upload dist artifacts
         uses: actions/upload-artifact@v4
         with:
           name: frontend-dist
-          path: uav-platform-v2/console/dist
+          path: console/dist
           retention-days: 3
 
   # ============================================================
@@ -218,9 +212,6 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build-java, build-python, build-frontend]
     if: ${{ !inputs.skip_tests }}
-    defaults:
-      run:
-        working-directory: uav-platform-v2
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -334,8 +325,8 @@ jobs:
       - name: Extract service JAR
         if: matrix.service != 'algorithm-engine'
         run: |
-          mkdir -p uav-platform-v2/services/${{ matrix.service }}/target
-          find target-artifacts -name "${{ matrix.service }}*.jar" ! -name "*-original.jar" -exec cp {} uav-platform-v2/services/${{ matrix.service }}/target/ \;
+          mkdir -p services/${{ matrix.service }}/target
+          find target-artifacts -name "${{ matrix.service }}*.jar" ! -name "*-original.jar" -exec cp {} services/${{ matrix.service }}/target/ \;
 
       - name: Extract metadata
         id: meta
@@ -350,7 +341,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ${{ matrix.service == 'algorithm-engine' && 'uav-platform-v2/python/algorithm-engine/Dockerfile' || 'uav-platform-v2/Dockerfile.jre' }}
+          file: ${{ matrix.service == 'algorithm-engine' && 'python/algorithm-engine/Dockerfile' || 'Dockerfile.jre' }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
@@ -358,7 +349,7 @@ jobs:
           cache-to: type=gha,mode=max
           build-args: |
             ${{ matrix.service != 'algorithm-engine' && format('SERVICE_NAME={0}', matrix.service) || '' }}
-            ${{ matrix.service != 'algorithm-engine' && format('JAR_FILE=uav-platform-v2/{0}/target/{0}-2.0.0.jar', matrix.service == 'api-gateway' && 'gateway/api-gateway' || format('services/{0}', matrix.service)) || '' }}
+            ${{ matrix.service != 'algorithm-engine' && format('JAR_FILE={0}/target/{0}-2.0.0.jar', matrix.service == 'api-gateway' && 'gateway/api-gateway' || format('services/{0}', matrix.service)) || '' }}
 
   # ============================================================
   # Job 6b: 前端 Docker 镜像构建
@@ -389,7 +380,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: frontend-dist
-          path: uav-platform-v2/console/dist
+          path: console/dist
 
       - name: Extract metadata
         id: meta
@@ -403,8 +394,8 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
-          context: ./uav-platform-v2/console
-          file: uav-platform-v2/console/Dockerfile
+          context: ./console
+          file: console/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

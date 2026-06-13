@@ -163,6 +163,7 @@ class SmartAlgorithmScheduler:
                     "large_grid_gpu",
                     "部分命中",
                     f"网格 {grid_total} > {_LARGE_GRID_THRESHOLD}^2 但 GPU 不可用，回退到 4DVAR",
+                    selected_algorithm=ALGORITHM_4DVAR,
                 )
                 return self._make_result(
                     algorithm_id=ALGORITHM_4DVAR,
@@ -185,6 +186,7 @@ class SmartAlgorithmScheduler:
                     "many_obs_enkf",
                     "命中",
                     f"观测数 {observation_count} > {_MANY_OBSERVATIONS_THRESHOLD}，时间预算充足",
+                    selected_algorithm=ALGORITHM_ENKF,
                 )
                 return self._make_result(
                     algorithm_id=ALGORITHM_ENKF,
@@ -216,6 +218,7 @@ class SmartAlgorithmScheduler:
                 "moderate_obs_hybrid",
                 "命中",
                 f"观测数 {observation_count} > {_MODERATE_OBSERVATIONS_THRESHOLD}",
+                selected_algorithm=ALGORITHM_HYBRID,
             )
             return self._make_result(
                 algorithm_id=ALGORITHM_HYBRID,
@@ -243,6 +246,7 @@ class SmartAlgorithmScheduler:
                 "命中",
                 f"观测数 {observation_count} <= {_MODERATE_OBSERVATIONS_THRESHOLD}，"
                 f"时间预算 {time_budget_seconds}s < {_FAST_TIME_BUDGET_SECONDS}s",
+                selected_algorithm=ALGORITHM_3DVAR,
             )
             return self._make_result(
                 algorithm_id=ALGORITHM_3DVAR,
@@ -259,7 +263,8 @@ class SmartAlgorithmScheduler:
 
         # 规则 6: 需要概率输出 -> EnKF + adaptive_variance_field
         if require_probabilistic:
-            self._record("probabilistic", "命中", "需要概率性输出")
+            self._record("probabilistic", "命中", "需要概率性输出",
+                         selected_algorithm=ALGORITHM_ENKF)
             return self._make_result(
                 algorithm_id=ALGORITHM_ENKF,
                 reason=(
@@ -274,7 +279,8 @@ class SmartAlgorithmScheduler:
         self._record("probabilistic", "未命中", "不需要概率性输出")
 
         # 规则 7: 默认 -> adaptive_hybrid
-        self._record("default", "命中", "所有特定规则均未命中，使用默认策略")
+        self._record("default", "命中", "所有特定规则均未命中，使用默认策略",
+                     selected_algorithm=ALGORITHM_ADAPTIVE_HYBRID)
         return self._make_result(
             algorithm_id=ALGORITHM_ADAPTIVE_HYBRID,
             reason=(
