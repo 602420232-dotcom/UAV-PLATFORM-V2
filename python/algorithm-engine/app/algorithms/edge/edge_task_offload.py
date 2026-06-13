@@ -119,18 +119,18 @@ class EdgeTaskOffload:
 
             meets_deadline = actual_latency <= deadline_ms
 
-            offload_decision.append({
-                "task_id": task_id,
-                "decision": decision,
-                "local_latency_ms": round(local_latency, 2),
-                "cloud_latency_ms": round(cloud_latency, 2),
-                "actual_latency_ms": round(actual_latency, 2),
-                "energy_cost": round(
-                    local_energy if decision == "local" else cloud_energy, 4
-                ),
-                "meets_deadline": meets_deadline,
-                "deadline_ms": deadline_ms,
-            })
+            offload_decision.append(
+                {
+                    "task_id": task_id,
+                    "decision": decision,
+                    "local_latency_ms": round(local_latency, 2),
+                    "cloud_latency_ms": round(cloud_latency, 2),
+                    "actual_latency_ms": round(actual_latency, 2),
+                    "energy_cost": round(local_energy if decision == "local" else cloud_energy, 4),
+                    "meets_deadline": meets_deadline,
+                    "deadline_ms": deadline_ms,
+                }
+            )
 
         t_end = _time.perf_counter()
         decision_time = (t_end - t_start) * 1000
@@ -141,12 +141,12 @@ class EdgeTaskOffload:
         return {
             "offload_decision": offload_decision,
             "latency_estimate": {
-                "avg_latency_ms": round(
-                    float(np.mean([d["actual_latency_ms"] for d in offload_decision])), 2
-                ) if offload_decision else 0.0,
-                "max_latency_ms": round(
-                    max(d["actual_latency_ms"] for d in offload_decision), 2
-                ) if offload_decision else 0.0,
+                "avg_latency_ms": round(float(np.mean([d["actual_latency_ms"] for d in offload_decision])), 2)
+                if offload_decision
+                else 0.0,
+                "max_latency_ms": round(max(d["actual_latency_ms"] for d in offload_decision), 2)
+                if offload_decision
+                else 0.0,
             },
             "energy_cost": {
                 "total_energy": round(total_energy, 4),

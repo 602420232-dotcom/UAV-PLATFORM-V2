@@ -154,9 +154,7 @@ class CNNCorrector:
             for ci in range(x.shape[2]):
                 for i in range(kh):
                     for j in range(kw):
-                        output[:, :, co] += (
-                            padded[i : i + h, j : j + w, ci] * kernel[i, j, ci, co]
-                        )
+                        output[:, :, co] += padded[i : i + h, j : j + w, ci] * kernel[i, j, ci, co]
             output[:, :, co] += bias[co]
         return output
 

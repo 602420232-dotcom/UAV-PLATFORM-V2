@@ -61,8 +61,10 @@ class GeneticAlgorithmPlanner:
 
         logger.info(
             "遗传算法规划: 起点=%s, 终点=%s, 种群=%d, 代数=%d",
-            tuple(start.astype(int)), tuple(goal.astype(int)),
-            self.population_size, self.max_generations,
+            tuple(start.astype(int)),
+            tuple(goal.astype(int)),
+            self.population_size,
+            self.max_generations,
         )
 
         rows, cols = grid_size
@@ -70,18 +72,17 @@ class GeneticAlgorithmPlanner:
 
         # 初始化种群
         population = np.random.rand(self.population_size, chrom_length)
-        population[:, 0::2] *= (rows - 1)
-        population[:, 1::2] *= (cols - 1)
+        population[:, 0::2] *= rows - 1
+        population[:, 1::2] *= cols - 1
 
         best_chromosome = None
         best_fitness = float("inf")
 
         for gen in range(self.max_generations):
             # 评估适应度
-            fitness = np.array([
-                self._evaluate(population[i], start, goal, obstacles)
-                for i in range(self.population_size)
-            ])
+            fitness = np.array(
+                [self._evaluate(population[i], start, goal, obstacles) for i in range(self.population_size)]
+            )
 
             # 记录最优个体
             best_idx = np.argmin(fitness)
@@ -99,10 +100,9 @@ class GeneticAlgorithmPlanner:
             offspring = self._mutation(offspring, rows, cols)
 
             # 精英保留
-            worst_idx = np.argmax([
-                self._evaluate(offspring[i], start, goal, obstacles)
-                for i in range(self.population_size)
-            ])
+            worst_idx = np.argmax(
+                [self._evaluate(offspring[i], start, goal, obstacles) for i in range(self.population_size)]
+            )
             offspring[worst_idx] = best_chromosome
 
             population = offspring
@@ -134,18 +134,16 @@ class GeneticAlgorithmPlanner:
         full_path = np.vstack([start, waypoints, goal])
 
         diffs = np.diff(full_path, axis=0)
-        segment_lengths = np.sqrt(np.sum(diffs ** 2, axis=1))
+        segment_lengths = np.sqrt(np.sum(diffs**2, axis=1))
         path_length = np.sum(segment_lengths)
 
         # 平滑度惩罚（路径转角）
         smoothness = 0.0
         for i in range(1, len(diffs)):
             if np.linalg.norm(diffs[i]) > 1e-6 and np.linalg.norm(diffs[i - 1]) > 1e-6:
-                cos_angle = np.dot(diffs[i], diffs[i - 1]) / (
-                    np.linalg.norm(diffs[i]) * np.linalg.norm(diffs[i - 1])
-                )
+                cos_angle = np.dot(diffs[i], diffs[i - 1]) / (np.linalg.norm(diffs[i]) * np.linalg.norm(diffs[i - 1]))
                 cos_angle = np.clip(cos_angle, -1.0, 1.0)
-                smoothness += (1.0 - cos_angle)
+                smoothness += 1.0 - cos_angle
 
         # 障碍物惩罚
         obstacle_penalty = 0.0
@@ -157,13 +155,17 @@ class GeneticAlgorithmPlanner:
         return path_length + smoothness * 2.0 + obstacle_penalty
 
     def _selection(
-        self, population: np.ndarray, fitness: np.ndarray,
+        self,
+        population: np.ndarray,
+        fitness: np.ndarray,
     ) -> np.ndarray:
         """锦标赛选择。"""
         selected = np.zeros_like(population)
         for i in range(self.population_size):
             candidates = np.random.choice(
-                self.population_size, self.tournament_size, replace=False,
+                self.population_size,
+                self.tournament_size,
+                replace=False,
             )
             winner = candidates[np.argmin(fitness[candidates])]
             selected[i] = population[winner].copy()
@@ -182,7 +184,10 @@ class GeneticAlgorithmPlanner:
         return offspring
 
     def _mutation(
-        self, population: np.ndarray, rows: int, cols: int,
+        self,
+        population: np.ndarray,
+        rows: int,
+        cols: int,
     ) -> np.ndarray:
         """高斯变异操作。"""
         for i in range(self.population_size):
@@ -196,7 +201,10 @@ class GeneticAlgorithmPlanner:
         return population
 
     def _decode(
-        self, chromosome: np.ndarray, start: np.ndarray, goal: np.ndarray,
+        self,
+        chromosome: np.ndarray,
+        start: np.ndarray,
+        goal: np.ndarray,
     ) -> list[np.ndarray]:
         """解码染色体为路径。"""
         waypoints = chromosome.reshape(-1, 2)

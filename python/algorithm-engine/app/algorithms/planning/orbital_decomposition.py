@@ -64,7 +64,9 @@ class OrbitalDecompositionPlanner:
 
         logger.info(
             "轨道分解规划: UAV数=%d, 中心=%s, 轨道类型=%s",
-            self.num_uavs, tuple(center.astype(int)), self.orbit_type,
+            self.num_uavs,
+            tuple(center.astype(int)),
+            self.orbit_type,
         )
 
         # 生成轨道
@@ -80,7 +82,11 @@ class OrbitalDecompositionPlanner:
                     radius = max_radius
 
                 orbit_points = self._generate_concentric_orbit(
-                    center, radius, obstacles, rows, cols,
+                    center,
+                    radius,
+                    obstacles,
+                    rows,
+                    cols,
                 )
                 orbits.append(orbit_points)
                 orbit_costs.append(self._orbit_cost(orbit_points))
@@ -89,7 +95,10 @@ class OrbitalDecompositionPlanner:
             for uav in range(self.num_uavs):
                 y_offset = self.orbit_spacing * uav + self.orbit_spacing
                 orbit_points = self._generate_parallel_orbit(
-                    y_offset, obstacles, rows, cols,
+                    y_offset,
+                    obstacles,
+                    rows,
+                    cols,
                 )
                 orbits.append(orbit_points)
                 orbit_costs.append(self._orbit_cost(orbit_points))
@@ -119,7 +128,8 @@ class OrbitalDecompositionPlanner:
 
         logger.info(
             "轨道分解完成: 主路径代价=%.2f, 轨道数=%d",
-            total_cost, len(orbits),
+            total_cost,
+            len(orbits),
         )
         return {
             "path": full_path,
@@ -144,8 +154,7 @@ class OrbitalDecompositionPlanner:
             x = center[0] + radius * np.cos(angle)
             y = center[1] + radius * np.sin(angle)
             ix, iy = int(round(x)), int(round(y))
-            if (0 <= ix < rows and 0 <= iy < cols
-                    and (ix, iy) not in obstacles):
+            if 0 <= ix < rows and 0 <= iy < cols and (ix, iy) not in obstacles:
                 points.append([ix, iy])
         return points
 
@@ -172,9 +181,7 @@ class OrbitalDecompositionPlanner:
             return 0.0
         cost = 0.0
         for i in range(len(orbit) - 1):
-            cost += float(np.linalg.norm(
-                np.array(orbit[i + 1]) - np.array(orbit[i])
-            ))
+            cost += float(np.linalg.norm(np.array(orbit[i + 1]) - np.array(orbit[i])))
         return cost
 
     def _path_cost_from_points(self, path: list[list[int]]) -> float:
@@ -183,7 +190,5 @@ class OrbitalDecompositionPlanner:
             return 0.0
         cost = 0.0
         for i in range(len(path) - 1):
-            cost += float(np.linalg.norm(
-                np.array(path[i + 1]) - np.array(path[i])
-            ))
+            cost += float(np.linalg.norm(np.array(path[i + 1]) - np.array(path[i])))
         return cost

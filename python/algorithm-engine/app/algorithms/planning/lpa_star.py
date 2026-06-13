@@ -55,7 +55,9 @@ class LPAStarPlanner:
 
         logger.info(
             "LPA*规划: 起点=%s, 终点=%s, 网格=%s",
-            start, goal, grid_size,
+            start,
+            goal,
+            grid_size,
         )
 
         rows, cols = grid_size
@@ -124,7 +126,8 @@ class LPAStarPlanner:
 
         logger.info(
             "LPA*完成: 代价=%.2f, 探索节点=%d",
-            cost, nodes_explored,
+            cost,
+            nodes_explored,
         )
         return {
             "path": path,
@@ -178,16 +181,14 @@ class LPAStarPlanner:
     def _get_neighbors(self, pos: tuple[int, int]) -> list[tuple[int, int]]:
         """获取可行邻居节点。"""
         if self.allow_diagonal:
-            directions = [(-1, 0), (1, 0), (0, -1), (0, 1),
-                          (-1, -1), (-1, 1), (1, -1), (1, 1)]
+            directions = [(-1, 0), (1, 0), (0, -1), (0, 1), (-1, -1), (-1, 1), (1, -1), (1, 1)]
         else:
             directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
 
         neighbors = []
         for dx, dy in directions:
             nx, ny = pos[0] + dx, pos[1] + dy
-            if (0 <= nx < self._rows and 0 <= ny < self._cols
-                    and (nx, ny) not in self._obstacles):
+            if 0 <= nx < self._rows and 0 <= ny < self._cols and (nx, ny) not in self._obstacles:
                 neighbors.append((nx, ny))
         return neighbors
 

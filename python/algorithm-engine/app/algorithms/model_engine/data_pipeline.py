@@ -61,28 +61,34 @@ class DataPipeline:
         stage_name = self.stage_names.get(pipeline_stage, "unknown")
         logger.info(
             "开始数据处理: 阶段=%d (%s)",
-            pipeline_stage, stage_name,
+            pipeline_stage,
+            stage_name,
         )
 
         if pipeline_stage == 1:
             output_data, quality_report = self._quality_control(
-                input_data, config,
+                input_data,
+                config,
             )
         elif pipeline_stage == 2:
             output_data, quality_report = self._vertical_interpolation(
-                input_data, config,
+                input_data,
+                config,
             )
         elif pipeline_stage == 3:
             output_data, quality_report = self._horizontal_regrid(
-                input_data, config,
+                input_data,
+                config,
             )
         elif pipeline_stage == 4:
             output_data, quality_report = self._temporal_aggregation(
-                input_data, config,
+                input_data,
+                config,
             )
         elif pipeline_stage == 5:
             output_data, quality_report = self._format_conversion(
-                input_data, config,
+                input_data,
+                config,
             )
         else:
             logger.warning("未知管道阶段 %d，返回原始数据", pipeline_stage)
@@ -90,7 +96,9 @@ class DataPipeline:
             quality_report = {"status": "unknown_stage", "warnings": []}
 
         processing_stats = self._compute_processing_stats(
-            input_data, output_data, pipeline_stage,
+            input_data,
+            output_data,
+            pipeline_stage,
         )
 
         logger.info(
@@ -188,11 +196,7 @@ class DataPipeline:
 
         在不同气压/高度层之间进行插值，支持线性和对数插值。
         """
-        data = (
-            np.asarray(input_data, dtype=float)
-            if input_data is not None
-            else np.zeros((10, 50, 50))
-        )
+        data = np.asarray(input_data, dtype=float) if input_data is not None else np.zeros((10, 50, 50))
 
         if data.ndim < 3:
             data = np.expand_dims(data, axis=0)
@@ -283,7 +287,10 @@ class DataPipeline:
             output_list = []
             for c in range(n_channels):
                 resized = self._resize_2d(
-                    data[c], int(src_h * scale_h), int(src_w * scale_w), method,
+                    data[c],
+                    int(src_h * scale_h),
+                    int(src_w * scale_w),
+                    method,
                 )
                 output_list.append(resized)
             output = np.stack(output_list, axis=0)
@@ -310,11 +317,7 @@ class DataPipeline:
 
         对时间序列数据进行降采样和统计聚合。
         """
-        data = (
-            np.asarray(input_data, dtype=float)
-            if input_data is not None
-            else np.zeros((24, 50, 50))
-        )
+        data = np.asarray(input_data, dtype=float) if input_data is not None else np.zeros((24, 50, 50))
 
         if data.ndim < 3:
             data = np.expand_dims(data, axis=0)
@@ -477,7 +480,9 @@ class DataPipeline:
                 valid = np.where(~nans)[0]
                 if len(valid) > 0:
                     result[nans] = np.interp(
-                        np.where(nans)[0], valid, result[valid],
+                        np.where(nans)[0],
+                        valid,
+                        result[valid],
                     )
         else:
             flat = result.flatten()
@@ -486,7 +491,9 @@ class DataPipeline:
                 valid = np.where(~nans)[0]
                 if len(valid) > 0:
                     flat[nans] = np.interp(
-                        np.where(nans)[0], valid, flat[valid],
+                        np.where(nans)[0],
+                        valid,
+                        flat[valid],
                     )
                 result = flat.reshape(result.shape)
         return result
@@ -525,11 +532,13 @@ class DataPipeline:
         if method == "nearest":
             row_indices = np.clip(
                 (np.arange(target_h) * src_h / target_h).astype(int),
-                0, src_h - 1,
+                0,
+                src_h - 1,
             )
             col_indices = np.clip(
                 (np.arange(target_w) * src_w / target_w).astype(int),
-                0, src_w - 1,
+                0,
+                src_w - 1,
             )
             return data[np.ix_(row_indices, col_indices)]
 

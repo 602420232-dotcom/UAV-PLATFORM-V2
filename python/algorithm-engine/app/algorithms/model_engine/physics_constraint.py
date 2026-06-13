@@ -56,19 +56,31 @@ class PhysicsConstraint:
 
         if constraint_type == "mass":
             constrained_field = self._apply_mass_conservation(
-                predicted_field, reference_field, violation_report, correction_stats,
+                predicted_field,
+                reference_field,
+                violation_report,
+                correction_stats,
             )
         elif constraint_type == "energy":
             constrained_field = self._apply_energy_conservation(
-                predicted_field, reference_field, violation_report, correction_stats,
+                predicted_field,
+                reference_field,
+                violation_report,
+                correction_stats,
             )
         elif constraint_type == "thermodynamic":
             constrained_field = self._apply_thermodynamic_consistency(
-                predicted_field, reference_field, violation_report, correction_stats,
+                predicted_field,
+                reference_field,
+                violation_report,
+                correction_stats,
             )
         elif constraint_type == "momentum":
             constrained_field = self._apply_momentum_conservation(
-                predicted_field, reference_field, violation_report, correction_stats,
+                predicted_field,
+                reference_field,
+                violation_report,
+                correction_stats,
             )
         else:
             logger.warning("未知约束类型 '%s'，返回原始场", constraint_type)
@@ -154,8 +166,8 @@ class PhysicsConstraint:
         Returns:
             约束后的场.
         """
-        predicted_energy = np.sum(field ** 2)
-        reference_energy = np.sum(reference ** 2)
+        predicted_energy = np.sum(field**2)
+        reference_energy = np.sum(reference**2)
         violation = abs(predicted_energy - reference_energy) / (abs(reference_energy) + 1e-10)
 
         violation_report["constraint_type"] = "energy"
@@ -208,9 +220,11 @@ class PhysicsConstraint:
         if reference.size > 1:
             ref_grad_x = np.diff(reference, axis=0) if reference.shape[0] > 1 else np.array([0.0])
             ref_grad_y = np.diff(reference, axis=1) if reference.shape[1] > 1 else np.array([0.0])
-            max_grad = max(np.max(np.abs(ref_grad_x)) if ref_grad_x.size > 0 else 0.0,
-                           np.max(np.abs(ref_grad_y)) if ref_grad_y.size > 0 else 0.0,
-                           1e-10)
+            max_grad = max(
+                np.max(np.abs(ref_grad_x)) if ref_grad_x.size > 0 else 0.0,
+                np.max(np.abs(ref_grad_y)) if ref_grad_y.size > 0 else 0.0,
+                1e-10,
+            )
 
             n_grad_violations = 0
             for iteration in range(self.max_iterations):
@@ -251,7 +265,7 @@ class PhysicsConstraint:
 
         correction_stats["method"] = "projection_relaxation"
         correction_stats["iterations"] = min(
-            iteration + 1 if 'iteration' in dir() else 1,
+            iteration + 1 if "iteration" in dir() else 1,
             self.max_iterations,
         )
 
@@ -280,7 +294,7 @@ class PhysicsConstraint:
         # 使用空间坐标作为权重
         h, w = field.shape
         y_coords, x_coords = np.mgrid[0:h, 0:w]
-        weight = np.sqrt(x_coords ** 2 + y_coords ** 2).astype(float) + 1.0
+        weight = np.sqrt(x_coords**2 + y_coords**2).astype(float) + 1.0
 
         predicted_momentum = np.sum(field * weight)
         reference_momentum = np.sum(reference * weight)
@@ -294,7 +308,7 @@ class PhysicsConstraint:
 
         # 加权修正以满足动量守恒
         momentum_deficit = reference_momentum - predicted_momentum
-        weight_sum = np.sum(weight ** 2)
+        weight_sum = np.sum(weight**2)
         if weight_sum > 1e-10:
             constrained = field + (momentum_deficit / weight_sum) * weight
         else:

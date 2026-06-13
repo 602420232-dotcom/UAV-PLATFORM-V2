@@ -62,13 +62,17 @@ class EnsembleKalmanFilterModel:
 
         n_members, n_state = background_ensemble.shape
         logger.info(
-            "开始EnKF分析: 集合成员数=%d, 状态维度=%d, 观测数=%d, "
-            "膨胀系数=%.3f",
-            n_members, n_state, len(observations), inflation,
+            "开始EnKF分析: 集合成员数=%d, 状态维度=%d, 观测数=%d, 膨胀系数=%.3f",
+            n_members,
+            n_state,
+            len(observations),
+            inflation,
         )
 
         H = self._get_observation_operator(
-            observation_operator, len(observations), n_state,
+            observation_operator,
+            len(observations),
+            n_state,
         )
 
         xb_mean = background_ensemble.mean(axis=0)
@@ -91,8 +95,13 @@ class EnsembleKalmanFilterModel:
         HPb_ht_R = HPb_ht + R
 
         try:
-            Kalman_gain = Pb_h @ H.T @ np.linalg.solve(
-                HPb_ht_R, np.eye(HPb_ht_R.shape[0]),
+            Kalman_gain = (
+                Pb_h
+                @ H.T
+                @ np.linalg.solve(
+                    HPb_ht_R,
+                    np.eye(HPb_ht_R.shape[0]),
+                )
             )
         except np.linalg.LinAlgError:
             logger.warning("矩阵求解失败，使用伪逆")
@@ -100,22 +109,21 @@ class EnsembleKalmanFilterModel:
 
         analysis_ensemble = np.zeros_like(background_ensemble_inflated)
         for i in range(n_members):
-            analysis_ensemble[i] = (
-                background_ensemble_inflated[i]
-                + Kalman_gain @ (observations - HXb[i])
-            )
+            analysis_ensemble[i] = background_ensemble_inflated[i] + Kalman_gain @ (observations - HXb[i])
 
         xa_mean = analysis_ensemble.mean(axis=0)
         Xa_prime = analysis_ensemble - xa_mean
-        spread = np.sqrt(np.mean(Xa_prime ** 2, axis=0))
+        spread = np.sqrt(np.mean(Xa_prime**2, axis=0))
 
         innovation_stats = self._compute_innovation_stats(
-            innovation, HPb_ht_R,
+            innovation,
+            HPb_ht_R,
         )
 
         logger.info(
             "EnKF分析完成: 分析均值范数=%.4f, 平均离散度=%.6f",
-            float(np.linalg.norm(xa_mean)), float(np.mean(spread)),
+            float(np.linalg.norm(xa_mean)),
+            float(np.mean(spread)),
         )
 
         return {

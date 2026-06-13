@@ -73,7 +73,10 @@ class MultiObjectivePlanner:
 
         logger.info(
             "多目标规划: 起点=%s, 终点=%s, 模式=%s, 目标数=%d",
-            start, goal, mode, len(objectives),
+            start,
+            goal,
+            mode,
+            len(objectives),
         )
 
         start_grid = self._world_to_grid(start, rows, cols)
@@ -81,20 +84,40 @@ class MultiObjectivePlanner:
 
         if mode == "weighted_sum":
             result = self._plan_weighted_sum(
-                start_grid, goal_grid, rows, cols, obstacles, objectives,
+                start_grid,
+                goal_grid,
+                rows,
+                cols,
+                obstacles,
+                objectives,
             )
         elif mode == "pareto":
             result = self._plan_pareto(
-                start_grid, goal_grid, rows, cols, obstacles, objectives,
+                start_grid,
+                goal_grid,
+                rows,
+                cols,
+                obstacles,
+                objectives,
             )
         elif mode == "constrained":
             result = self._plan_constrained(
-                start_grid, goal_grid, rows, cols, obstacles, objectives,
+                start_grid,
+                goal_grid,
+                rows,
+                cols,
+                obstacles,
+                objectives,
             )
         else:
             logger.warning("未知优化模式: %s，回退到加权求和", mode)
             result = self._plan_weighted_sum(
-                start_grid, goal_grid, rows, cols, obstacles, objectives,
+                start_grid,
+                goal_grid,
+                rows,
+                cols,
+                obstacles,
+                objectives,
             )
 
         # 权衡分析
@@ -140,7 +163,11 @@ class MultiObjectivePlanner:
                 total_step = 0.0
                 for obj in objectives:
                     step_cost = self._compute_objective_cost(
-                        current, neighbor, obj, rows, cols,
+                        current,
+                        neighbor,
+                        obj,
+                        rows,
+                        cols,
                     )
                     new_obj_values[obj["name"]] = g_score[current][obj["name"]] + step_cost
                     total_step += obj.get("weight", 1.0) * step_cost
@@ -151,9 +178,7 @@ class MultiObjectivePlanner:
                     came_from[neighbor] = current
                     g_score[neighbor] = new_obj_values
                     g_total[neighbor] = tentative_total
-                    h = float(
-                        abs(neighbor[0] - goal_grid[0]) + abs(neighbor[1] - goal_grid[1])
-                    )
+                    h = float(abs(neighbor[0] - goal_grid[0]) + abs(neighbor[1] - goal_grid[1]))
                     f_score = tentative_total + h
                     heapq.heappush(open_set, (f_score, neighbor))
 
@@ -179,7 +204,12 @@ class MultiObjectivePlanner:
 
         if n_weights < 2:
             return self._plan_weighted_sum(
-                start_grid, goal_grid, rows, cols, obstacles, objectives,
+                start_grid,
+                goal_grid,
+                rows,
+                cols,
+                obstacles,
+                objectives,
             )
 
         # 生成不同的权重组合
@@ -188,23 +218,32 @@ class MultiObjectivePlanner:
         for weights in weight_combinations:
             weighted_objectives = []
             for i, obj in enumerate(objectives):
-                weighted_objectives.append({
-                    "name": obj["name"],
-                    "weight": weights[i],
-                    "function": obj.get("function", "distance"),
-                })
+                weighted_objectives.append(
+                    {
+                        "name": obj["name"],
+                        "weight": weights[i],
+                        "function": obj.get("function", "distance"),
+                    }
+                )
 
             result = self._plan_weighted_sum(
-                start_grid, goal_grid, rows, cols, obstacles, weighted_objectives,
+                start_grid,
+                goal_grid,
+                rows,
+                cols,
+                obstacles,
+                weighted_objectives,
             )
 
             if result["path"]:
-                pareto_solutions.append({
-                    "path": result["path"],
-                    "objective_values": result["objective_values"],
-                    "weights": weights,
-                    "cost": result["cost"],
-                })
+                pareto_solutions.append(
+                    {
+                        "path": result["path"],
+                        "objective_values": result["objective_values"],
+                        "weights": weights,
+                        "cost": result["cost"],
+                    }
+                )
 
         # 从帕累托解集中选择折中解
         if pareto_solutions:
@@ -248,8 +287,10 @@ class MultiObjectivePlanner:
         """约束优化模式：以第一个目标为主目标，其余为约束。"""
         if not objectives:
             return {
-                "path": [], "objective_values": {},
-                "cost": float("inf"), "pareto_solutions": [],
+                "path": [],
+                "objective_values": {},
+                "cost": float("inf"),
+                "pareto_solutions": [],
             }
 
         # 主目标
@@ -280,7 +321,11 @@ class MultiObjectivePlanner:
 
             for neighbor in self._get_neighbors(current, rows, cols, obstacles):
                 step_cost = self._compute_objective_cost(
-                    current, neighbor, primary, rows, cols,
+                    current,
+                    neighbor,
+                    primary,
+                    rows,
+                    cols,
                 )
                 tentative_g = g_score[current] + step_cost
 
@@ -289,7 +334,11 @@ class MultiObjectivePlanner:
                 new_multi = {}
                 for obj in objectives:
                     cost = self._compute_objective_cost(
-                        current, neighbor, obj, rows, cols,
+                        current,
+                        neighbor,
+                        obj,
+                        rows,
+                        cols,
                     )
                     new_multi[obj["name"]] = g_multi[current][obj["name"]] + cost
                     # 约束检查（阈值设为网格对角线长度）
@@ -304,9 +353,7 @@ class MultiObjectivePlanner:
                     came_from[neighbor] = current
                     g_score[neighbor] = tentative_g
                     g_multi[neighbor] = new_multi
-                    h = float(
-                        abs(neighbor[0] - goal_grid[0]) + abs(neighbor[1] - goal_grid[1])
-                    )
+                    h = float(abs(neighbor[0] - goal_grid[0]) + abs(neighbor[1] - goal_grid[1]))
                     f_score = tentative_g + h
                     heapq.heappush(open_set, (f_score, neighbor))
 
@@ -344,7 +391,9 @@ class MultiObjectivePlanner:
             return 1.0
 
     def _generate_weight_combinations(
-        self, n_objectives: int, n: int = 20,
+        self,
+        n_objectives: int,
+        n: int = 20,
     ) -> list[list[float]]:
         """生成权重组合（均匀分布在单纯形上）。"""
         combinations = []
@@ -354,7 +403,9 @@ class MultiObjectivePlanner:
         return combinations
 
     def _analyze_tradeoffs(
-        self, result: dict[str, Any], objectives: list[dict],
+        self,
+        result: dict[str, Any],
+        objectives: list[dict],
     ) -> dict[str, Any]:
         """分析目标间的权衡关系。"""
         obj_values = result.get("objective_values", {})
@@ -382,7 +433,10 @@ class MultiObjectivePlanner:
         }
 
     def _world_to_grid(
-        self, pos: list, rows: int, cols: int,
+        self,
+        pos: list,
+        rows: int,
+        cols: int,
     ) -> tuple[int, int]:
         """世界坐标转网格坐标。"""
         gx = int(pos[0] + rows / 2)
@@ -390,7 +444,10 @@ class MultiObjectivePlanner:
         return (max(0, min(gx, rows - 1)), max(0, min(gy, cols - 1)))
 
     def _grid_to_world(
-        self, pos: tuple[int, int], rows: int, cols: int,
+        self,
+        pos: tuple[int, int],
+        rows: int,
+        cols: int,
     ) -> list[int]:
         """网格坐标转世界坐标。"""
         return [pos[0] - rows // 2, pos[1] - cols // 2]

@@ -124,13 +124,11 @@ class SmartAlgorithmScheduler:
 
         # 规则 1: 风险感知 -> 5DVAR
         if require_risk_aware and has_risk_field:
-            self._record("risk_aware", "命中", "需要风险场 + 存在 risk_field 参数",
-                         selected_algorithm=ALGORITHM_5DVAR)
+            self._record("risk_aware", "命中", "需要风险场 + 存在 risk_field 参数", selected_algorithm=ALGORITHM_5DVAR)
             return self._make_result(
                 algorithm_id=ALGORITHM_5DVAR,
                 reason=(
-                    "任务需要风险感知能力，且输入参数中包含 risk_field / risk_cost，"
-                    "选择 5D-VAR（含风险代价项 J_risk）"
+                    "任务需要风险感知能力，且输入参数中包含 risk_field / risk_cost，选择 5D-VAR（含风险代价项 J_risk）"
                 ),
                 config_overrides={
                     "enable_risk_cost": True,
@@ -141,11 +139,14 @@ class SmartAlgorithmScheduler:
         self._record("risk_aware", "未命中", "不需要风险感知 或 缺少 risk_field 参数")
 
         # 规则 2: 大网格 + GPU -> 4DVAR-GPU（回退到 4DVAR）
-        if grid_total is not None and grid_total > _LARGE_GRID_THRESHOLD ** 2:
+        if grid_total is not None and grid_total > _LARGE_GRID_THRESHOLD**2:
             if gpu_available:
-                self._record("large_grid_gpu", "命中",
-                             f"网格 {grid_total} > {_LARGE_GRID_THRESHOLD}^2 且 GPU 可用",
-                             selected_algorithm=ALGORITHM_4DVAR_GPU)
+                self._record(
+                    "large_grid_gpu",
+                    "命中",
+                    f"网格 {grid_total} > {_LARGE_GRID_THRESHOLD}^2 且 GPU 可用",
+                    selected_algorithm=ALGORITHM_4DVAR_GPU,
+                )
                 return self._make_result(
                     algorithm_id=ALGORITHM_4DVAR_GPU,
                     reason=(
@@ -209,8 +210,7 @@ class SmartAlgorithmScheduler:
                     f"但时间预算 {time_budget_seconds}s 不够",
                 )
         else:
-            self._record("many_obs_enkf", "未命中",
-                         f"观测数 {observation_count} 未超过 {_MANY_OBSERVATIONS_THRESHOLD}")
+            self._record("many_obs_enkf", "未命中", f"观测数 {observation_count} 未超过 {_MANY_OBSERVATIONS_THRESHOLD}")
 
         # 规则 4: 中等观测量 -> Hybrid
         if observation_count is not None and observation_count > _MODERATE_OBSERVATIONS_THRESHOLD:
@@ -231,8 +231,9 @@ class SmartAlgorithmScheduler:
                     "hybrid_weight": 0.5,
                 },
             )
-        self._record("moderate_obs_hybrid", "未命中",
-                     f"观测数 {observation_count} 未超过 {_MODERATE_OBSERVATIONS_THRESHOLD}")
+        self._record(
+            "moderate_obs_hybrid", "未命中", f"观测数 {observation_count} 未超过 {_MODERATE_OBSERVATIONS_THRESHOLD}"
+        )
 
         # 规则 5: 少量观测 + 紧迫时间 -> 3DVAR
         if (
@@ -263,13 +264,11 @@ class SmartAlgorithmScheduler:
 
         # 规则 6: 需要概率输出 -> EnKF + adaptive_variance_field
         if require_probabilistic:
-            self._record("probabilistic", "命中", "需要概率性输出",
-                         selected_algorithm=ALGORITHM_ENKF)
+            self._record("probabilistic", "命中", "需要概率性输出", selected_algorithm=ALGORITHM_ENKF)
             return self._make_result(
                 algorithm_id=ALGORITHM_ENKF,
                 reason=(
-                    "任务需要概率性输出（集合/方差场），"
-                    "选择 EnKF 并启用 adaptive_variance_field 以提供不确定性量化"
+                    "任务需要概率性输出（集合/方差场），选择 EnKF 并启用 adaptive_variance_field 以提供不确定性量化"
                 ),
                 config_overrides={
                     "enable_adaptive_variance": True,
@@ -279,14 +278,12 @@ class SmartAlgorithmScheduler:
         self._record("probabilistic", "未命中", "不需要概率性输出")
 
         # 规则 7: 默认 -> adaptive_hybrid
-        self._record("default", "命中", "所有特定规则均未命中，使用默认策略",
-                     selected_algorithm=ALGORITHM_ADAPTIVE_HYBRID)
+        self._record(
+            "default", "命中", "所有特定规则均未命中，使用默认策略", selected_algorithm=ALGORITHM_ADAPTIVE_HYBRID
+        )
         return self._make_result(
             algorithm_id=ALGORITHM_ADAPTIVE_HYBRID,
-            reason=(
-                "未匹配到特定决策规则，使用自适应混合同化（Adaptive Hybrid）"
-                "作为默认策略，兼顾计算效率与分析质量"
-            ),
+            reason=("未匹配到特定决策规则，使用自适应混合同化（Adaptive Hybrid）作为默认策略，兼顾计算效率与分析质量"),
             config_overrides={
                 "ensemble_size": observation_count if observation_count else 20,
                 "hybrid_weight": "adaptive",

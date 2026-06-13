@@ -73,7 +73,7 @@ class VarianceFieldOptimizer:
         )
 
         # ---- 初始化方差场（均匀方差）----
-        variance_field = np.ones(n) * self.sigma_b ** 2
+        variance_field = np.ones(n) * self.sigma_b**2
 
         # ---- 迭代优化方差场 ----
         scale_history = []
@@ -92,12 +92,12 @@ class VarianceFieldOptimizer:
             analysis_increment = Hxa - Hxb  # H(xa) - H(xb)
 
             # Desroziers 诊断：E[d^2] ≈ sigma_b^2 + R，E[d * incr] ≈ sigma_b^2
-            innovation_var = float(np.mean(innovation ** 2))
+            innovation_var = float(np.mean(innovation**2))
             cross_term = float(np.mean(innovation * analysis_increment))
 
             # 计算缩放因子
             if cross_term > 1e-10:
-                current_scale = cross_term / (self.sigma_b ** 2)
+                current_scale = cross_term / (self.sigma_b**2)
             else:
                 current_scale = 1.0
 
@@ -139,10 +139,10 @@ class VarianceFieldOptimizer:
         for _ in range(self.max_var_iterations):
             dx = x - xb
             # 使用逐点方差而非均匀方差
-            grad_b = dx / (sigma_b_field ** 2)
+            grad_b = dx / (sigma_b_field**2)
             Hx = H @ x  # noqa: N806
             dy = Hx - y_obs
-            grad_o = H.T @ (dy / self.observation_error_scale ** 2)
+            grad_o = H.T @ (dy / self.observation_error_scale**2)
             grad = grad_b + grad_o
             x = x - lr * grad
         return x

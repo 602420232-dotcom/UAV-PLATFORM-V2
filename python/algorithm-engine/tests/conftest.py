@@ -19,6 +19,7 @@ if str(_project_root) not in sys.path:
 # Standard test parameters for path planning algorithms
 # ---------------------------------------------------------------------------
 
+
 @pytest.fixture
 def start() -> list[int]:
     """Standard start position for path planning tests."""
@@ -58,6 +59,7 @@ def planning_params(start, goal, grid_size, obstacles) -> dict[str, Any]:
 # Standard test parameters for assimilation algorithms
 # ---------------------------------------------------------------------------
 
+
 @pytest.fixture
 def grid_shape() -> tuple[int, int, int]:
     """Standard 3D grid shape for assimilation tests."""
@@ -93,8 +95,10 @@ def assimilation_params(background_field, sample_observations) -> dict[str, Any]
 # Smart scheduler fixtures
 # ---------------------------------------------------------------------------
 
+
 @pytest.fixture
 def scheduler():
     """Fresh SmartAlgorithmScheduler instance for each test."""
     from app.core.smart_scheduler import SmartAlgorithmScheduler
+
     return SmartAlgorithmScheduler()

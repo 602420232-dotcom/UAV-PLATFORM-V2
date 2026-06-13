@@ -71,7 +71,9 @@ class ConflictDetector:
 
         logger.info(
             "冲突检测: UAV数=%d, 安全距离=%.1fm, 时间范围=%.1fs",
-            len(trajectories), safety_dist, time_horizon,
+            len(trajectories),
+            safety_dist,
+            time_horizon,
         )
 
         # 对每条轨迹进行插值，生成均匀时间步长的4D轨迹
@@ -87,7 +89,8 @@ class ConflictDetector:
         for i in range(n):
             for j in range(i + 1, n):
                 pair_conflicts = self._detect_pair_conflicts(
-                    interpolated[i], interpolated[j],
+                    interpolated[i],
+                    interpolated[j],
                     trajectories[i].get("uav_id", f"UAV_{i}"),
                     trajectories[j].get("uav_id", f"UAV_{j}"),
                     safety_dist,
@@ -103,7 +106,8 @@ class ConflictDetector:
             logger.info("冲突检测完成: 无冲突")
         else:
             logger.warning(
-                "冲突检测完成: 发现 %d 个冲突", len(conflicts),
+                "冲突检测完成: 发现 %d 个冲突",
+                len(conflicts),
             )
 
         return {
@@ -113,7 +117,9 @@ class ConflictDetector:
         }
 
     def _interpolate_trajectory(
-        self, traj: dict, time_horizon: float,
+        self,
+        traj: dict,
+        time_horizon: float,
     ) -> dict[str, Any]:
         """对轨迹进行线性插值，生成均匀时间步长的4D轨迹。
 
@@ -156,7 +162,9 @@ class ConflictDetector:
         interp_positions = np.zeros((len(interp_times), 3), dtype=np.float64)
         for dim in range(3):
             interp_positions[:, dim] = np.interp(
-                interp_times, ts_array, wp_array[:, dim],
+                interp_times,
+                ts_array,
+                wp_array[:, dim],
             )
 
         return {
@@ -227,34 +235,45 @@ class ConflictDetector:
             if dist_3d < safety_dist:
                 # 判断冲突类型
                 conflict_type = self._classify_conflict(
-                    sampled_a, sampled_b, k, float(dist_3d), safety_dist,
+                    sampled_a,
+                    sampled_b,
+                    k,
+                    float(dist_3d),
+                    safety_dist,
                 )
 
-                conflict_point = (
-                    (sampled_a[k] + sampled_b[k]) / 2.0
-                ).tolist()
+                conflict_point = ((sampled_a[k] + sampled_b[k]) / 2.0).tolist()
 
-                conflicts.append({
-                    "type": conflict_type,
-                    "uav_a": uav_a_id,
-                    "uav_b": uav_b_id,
-                    "time": float(t),
-                    "position": [round(v, 2) for v in conflict_point],
-                    "distance": round(float(dist_3d), 2),
-                    "severity": self._assess_severity(float(dist_3d), safety_dist),
-                })
+                conflicts.append(
+                    {
+                        "type": conflict_type,
+                        "uav_a": uav_a_id,
+                        "uav_b": uav_b_id,
+                        "time": float(t),
+                        "position": [round(v, 2) for v in conflict_point],
+                        "distance": round(float(dist_3d), 2),
+                        "severity": self._assess_severity(float(dist_3d), safety_dist),
+                    }
+                )
 
         # 检测交叉冲突（轨迹交叉但时间接近）
         crossing_conflicts = self._detect_crossing_conflicts(
-            sampled_a, sampled_b, common_times,
-            uav_a_id, uav_b_id, safety_dist,
+            sampled_a,
+            sampled_b,
+            common_times,
+            uav_a_id,
+            uav_b_id,
+            safety_dist,
         )
         conflicts.extend(crossing_conflicts)
 
         if conflicts:
             logger.debug(
                 "冲突检测: %s vs %s, 最近距离=%.2fm, 冲突数=%d",
-                uav_a_id, uav_b_id, min_dist, len(conflicts),
+                uav_a_id,
+                uav_b_id,
+                min_dist,
+                len(conflicts),
             )
 
         return conflicts
@@ -361,7 +380,10 @@ class ConflictDetector:
             for j in range(len(pos_b) - 1):
                 # 线段最近点
                 closest = self._segment_closest_point(
-                    pos_a[i], pos_a[i + 1], pos_b[j], pos_b[j + 1],
+                    pos_a[i],
+                    pos_a[i + 1],
+                    pos_b[j],
+                    pos_b[j + 1],
                 )
 
                 if closest["distance"] < safety_dist:
@@ -370,17 +392,20 @@ class ConflictDetector:
                     if time_diff < time_threshold:
                         # 检查是否已被proximity检测捕获
                         conflict_point = closest["midpoint"].tolist()
-                        crossing_conflicts.append({
-                            "type": "crossing",
-                            "uav_a": uav_a_id,
-                            "uav_b": uav_b_id,
-                            "time": float((common_times[i] + common_times[j]) / 2),
-                            "position": [round(v, 2) for v in conflict_point],
-                            "distance": round(float(closest["distance"]), 2),
-                            "severity": self._assess_severity(
-                                closest["distance"], safety_dist,
-                            ),
-                        })
+                        crossing_conflicts.append(
+                            {
+                                "type": "crossing",
+                                "uav_a": uav_a_id,
+                                "uav_b": uav_b_id,
+                                "time": float((common_times[i] + common_times[j]) / 2),
+                                "position": [round(v, 2) for v in conflict_point],
+                                "distance": round(float(closest["distance"]), 2),
+                                "severity": self._assess_severity(
+                                    closest["distance"],
+                                    safety_dist,
+                                ),
+                            }
+                        )
 
         # 去重：如果同一对UAV在同一时间段已有proximity冲突，跳过crossing
         if len(crossing_conflicts) > 10:
@@ -391,8 +416,10 @@ class ConflictDetector:
 
     def _segment_closest_point(
         self,
-        p1: np.ndarray, p2: np.ndarray,
-        p3: np.ndarray, p4: np.ndarray,
+        p1: np.ndarray,
+        p2: np.ndarray,
+        p3: np.ndarray,
+        p4: np.ndarray,
     ) -> dict[str, Any]:
         """计算两条线段之间的最近点。
 
@@ -448,7 +475,8 @@ class ConflictDetector:
         return {"distance": distance, "midpoint": midpoint}
 
     def _generate_suggestions(
-        self, conflicts: list[dict[str, Any]],
+        self,
+        conflicts: list[dict[str, Any]],
     ) -> list[dict[str, Any]]:
         """生成冲突消解建议。
 
@@ -477,11 +505,7 @@ class ConflictDetector:
             # 找到最严重的冲突
             most_severe = min(
                 pair_conflicts,
-                key=lambda c: (
-                    0 if c["severity"] == "critical"
-                    else 1 if c["severity"] == "warning"
-                    else 2,
-                ),
+                key=lambda c: (0 if c["severity"] == "critical" else 1 if c["severity"] == "warning" else 2,),
             )
 
             conflict_type = most_severe["type"]

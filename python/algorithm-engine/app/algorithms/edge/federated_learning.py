@@ -154,9 +154,7 @@ class FederatedLearner:
         # 计算时间衰减权重：w_i = decay_factor^((t_max - t_i) / tau)
         # tau 为归一化时间尺度，避免衰减过快
         tau = max(time_span, 1.0)
-        decay_weights = np.array([
-            decay_factor ** ((t_max - ts) / tau) for ts in timestamps
-        ])
+        decay_weights = np.array([decay_factor ** ((t_max - ts) / tau) for ts in timestamps])
         decay_weights /= decay_weights.sum()  # 归一化
 
         # 加权聚合
@@ -294,8 +292,7 @@ class FederatedLearner:
             selected_indices = np.concatenate([indices_above, indices_at])
 
         # 量化
-        max_val = (float(np.max(np.abs(flat[selected_indices])))
-                   if len(selected_indices) > 0 else 1.0)
+        max_val = float(np.max(np.abs(flat[selected_indices]))) if len(selected_indices) > 0 else 1.0
         if max_val == 0:
             max_val = 1.0
         quant_levels = 2 ** (quantize_bits - 1) - 1  # 有符号量化

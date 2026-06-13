@@ -75,7 +75,7 @@ class CBBAPlanner:
         # UAV起点
         uav_starts_input = params.get("uav_starts", [])
         if uav_starts_input and len(uav_starts_input) >= self.num_uavs:
-            uav_starts = [np.array(s[:2], dtype=float) for s in uav_starts_input[:self.num_uavs]]
+            uav_starts = [np.array(s[:2], dtype=float) for s in uav_starts_input[: self.num_uavs]]
         else:
             rows, cols = grid_size
             uav_starts = []
@@ -86,7 +86,9 @@ class CBBAPlanner:
 
         logger.info(
             "CBBA规划: UAV数=%d, 任务数=%d, 最大迭代=%d",
-            self.num_uavs, len(tasks), self.max_iterations,
+            self.num_uavs,
+            len(tasks),
+            self.max_iterations,
         )
 
         num_tasks = len(tasks)
@@ -97,9 +99,7 @@ class CBBAPlanner:
         # 任务出价（哪个UAV以什么代价竞标该任务）
         bids: dict[int, tuple[int, float]] = {}  # task_idx -> (uav_idx, bid_value)
         # 每架UAV的路径
-        uav_paths: list[list[np.ndarray]] = [
-            [uav_starts[i].copy()] for i in range(self.num_uavs)
-        ]
+        uav_paths: list[list[np.ndarray]] = [[uav_starts[i].copy()] for i in range(self.num_uavs)]
         # 每架UAV的路径代价
         uav_costs: list[float] = [0.0] * self.num_uavs
 
@@ -116,7 +116,8 @@ class CBBAPlanner:
 
                     # 计算将此任务插入当前路径的最佳位置及其增量代价
                     best_insert_cost, best_pos = self._best_insertion(
-                        uav_paths[uav], tasks[task_idx],
+                        uav_paths[uav],
+                        tasks[task_idx],
                     )
                     bid_value = -best_insert_cost  # 最大化价值（最小化代价）
 
@@ -141,11 +142,7 @@ class CBBAPlanner:
                             bundles[uav].remove(task_idx)
                             # 从路径中移除
                             uav_paths[uav] = [
-                                p for p in uav_paths[uav]
-                                if not any(
-                                    np.allclose(p, tasks[task_idx])
-                                    for _ in [1]
-                                )
+                                p for p in uav_paths[uav] if not any(np.allclose(p, tasks[task_idx]) for _ in [1])
                             ]
                             # 重建路径
                             uav_paths[uav] = [uav_starts[uav].copy()]
@@ -175,7 +172,9 @@ class CBBAPlanner:
 
         logger.info(
             "CBBA完成: 总代价=%.2f, 迭代=%d, 分配任务=%d",
-            total_cost, self.max_iterations, sum(len(b) for b in bundles),
+            total_cost,
+            self.max_iterations,
+            sum(len(b) for b in bundles),
         )
         return {
             "path": [[int(round(p[0])), int(round(p[1]))] for p in main_path],

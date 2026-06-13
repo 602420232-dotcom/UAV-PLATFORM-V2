@@ -166,7 +166,7 @@ class ModelPredictiveController:
             state = trajectory[t]
             control = control_sequence[t]
             # 添加轻微非线性（饱和效应）
-            nonlinear = -0.01 * state ** 3
+            nonlinear = -0.01 * state**3
             next_state = A @ state + B @ control + nonlinear
             trajectory[t + 1] = next_state
 
@@ -194,20 +194,20 @@ class ModelPredictiveController:
 
         # 状态跟踪代价
         state_errors = trajectory[1:] - target_state[np.newaxis, :]
-        state_cost = np.sum(state_errors ** 2)
+        state_cost = np.sum(state_errors**2)
 
         # 控制代价（惩罚过大的控制量）
-        control_cost = 0.1 * np.sum(control_sequence ** 2)
+        control_cost = 0.1 * np.sum(control_sequence**2)
 
         # 控制平滑性代价（惩罚控制量的剧烈变化）
         if horizon > 1:
             control_diff = np.diff(control_sequence, axis=0)
-            smoothness_cost = 0.5 * np.sum(control_diff ** 2)
+            smoothness_cost = 0.5 * np.sum(control_diff**2)
         else:
             smoothness_cost = 0.0
 
         # 终端代价（加大终端状态的惩罚）
         terminal_error = trajectory[-1] - target_state
-        terminal_cost = 10.0 * np.sum(terminal_error ** 2)
+        terminal_cost = 10.0 * np.sum(terminal_error**2)
 
         return float(state_cost + control_cost + smoothness_cost + terminal_cost)

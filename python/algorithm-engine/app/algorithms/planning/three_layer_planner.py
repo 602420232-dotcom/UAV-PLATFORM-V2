@@ -39,31 +39,44 @@ class ThreeLayerPlanner:
     def __init__(self, config: Optional[dict[str, Any]] = None):
         self.config = config or {}
         self.strategic_resolution: int = self.config.get(
-            "strategic_resolution", 5,
+            "strategic_resolution",
+            5,
         )
         self.strategic_smoothing: float = self.config.get(
-            "strategic_smoothing", 0.3,
+            "strategic_smoothing",
+            0.3,
         )
         self.tactical_method: str = self.config.get(
-            "tactical_method", "astar",
+            "tactical_method",
+            "astar",
         )
         self.tactical_smoothing: int = self.config.get(
-            "tactical_smoothing", 3,
+            "tactical_smoothing",
+            3,
         )
         self.execution_horizon: int = self.config.get(
-            "execution_horizon", 5,
+            "execution_horizon",
+            5,
         )
         self.execution_step_size: int = self.config.get(
-            "execution_step_size", 1,
+            "execution_step_size",
+            1,
         )
         self.execution_safety_margin: int = self.config.get(
-            "execution_safety_margin", 2,
+            "execution_safety_margin",
+            2,
         )
 
         # 8方向移动
         self.directions = [
-            (-1, 0), (1, 0), (0, -1), (0, 1),
-            (-1, -1), (-1, 1), (1, -1), (1, 1),
+            (-1, 0),
+            (1, 0),
+            (0, -1),
+            (0, 1),
+            (-1, -1),
+            (-1, 1),
+            (1, -1),
+            (1, 1),
         ]
 
     def plan(self, params: dict[str, Any]) -> dict[str, Any]:
@@ -92,43 +105,58 @@ class ThreeLayerPlanner:
         goal: tuple[int, int] = (int(raw_goal[0]), int(raw_goal[1]))
         grid_size = tuple(params.get("grid_size", (50, 50)))
         obstacles = set(map(tuple, params.get("obstacles", [])))
-        user_waypoints = [
-            (int(w[0]), int(w[1]))
-            for w in params.get("waypoints", [])
-        ]
+        user_waypoints = [(int(w[0]), int(w[1])) for w in params.get("waypoints", [])]
 
         logger.info(
             "三层规划: 起点=%s, 终点=%s, 网格=%s, 障碍物=%d, 用户航点=%d",
-            start, goal, grid_size, len(obstacles), len(user_waypoints),
+            start,
+            goal,
+            grid_size,
+            len(obstacles),
+            len(user_waypoints),
         )
 
         rows, cols = grid_size
 
         # ===== 战略层：生成全局航点序列 =====
         strategic_plan, strategic_output = self._strategic_layer(
-            start, goal, rows, cols, obstacles, user_waypoints,
+            start,
+            goal,
+            rows,
+            cols,
+            obstacles,
+            user_waypoints,
         )
         logger.info(
             "战略层完成: 航点数=%d, 距离=%.2f",
-            len(strategic_plan), strategic_output["total_distance"],
+            len(strategic_plan),
+            strategic_output["total_distance"],
         )
 
         # ===== 战术层：航点间路径规划 =====
         tactical_path, tactical_output = self._tactical_layer(
-            strategic_plan, rows, cols, obstacles,
+            strategic_plan,
+            rows,
+            cols,
+            obstacles,
         )
         logger.info(
             "战术层完成: 路径点数=%d, 代价=%.2f",
-            len(tactical_path), tactical_output["total_cost"],
+            len(tactical_path),
+            tactical_output["total_cost"],
         )
 
         # ===== 执行层：局部避障与控制指令 =====
         execution_controls, execution_output = self._execution_layer(
-            tactical_path, rows, cols, obstacles,
+            tactical_path,
+            rows,
+            cols,
+            obstacles,
         )
         logger.info(
             "执行层完成: 控制指令数=%d, 避障次数=%d",
-            len(execution_controls), execution_output["avoidance_count"],
+            len(execution_controls),
+            execution_output["avoidance_count"],
         )
 
         # 汇总各层输出
@@ -140,7 +168,9 @@ class ThreeLayerPlanner:
 
         logger.info(
             "三层规划完成: 战略航点=%d, 战术路径=%d, 控制指令=%d",
-            len(strategic_plan), len(tactical_path), len(execution_controls),
+            len(strategic_plan),
+            len(tactical_path),
+            len(execution_controls),
         )
 
         return {
@@ -194,16 +224,20 @@ class ThreeLayerPlanner:
 
         # 确保起终点不在障碍物中
         s_start = self._find_nearest_free(
-            s_start, s_rows, s_cols, coarse_obstacles,
+            s_start,
+            s_rows,
+            s_cols,
+            coarse_obstacles,
         )
         s_goal = self._find_nearest_free(
-            s_goal, s_rows, s_cols, coarse_obstacles,
+            s_goal,
+            s_rows,
+            s_cols,
+            coarse_obstacles,
         )
 
         # 构建航点序列（包含用户航点）
-        coarse_waypoints = [
-            (w[0] // res, w[1] // res) for w in user_waypoints
-        ]
+        coarse_waypoints = [(w[0] // res, w[1] // res) for w in user_waypoints]
         coarse_waypoints = [
             self._find_nearest_free(wp, s_rows, s_cols, coarse_obstacles)
             for wp in coarse_waypoints
@@ -215,8 +249,11 @@ class ThreeLayerPlanner:
 
         for i in range(len(all_coarse_points) - 1):
             segment = self._coarse_astar(
-                all_coarse_points[i], all_coarse_points[i + 1],
-                s_rows, s_cols, coarse_obstacles,
+                all_coarse_points[i],
+                all_coarse_points[i + 1],
+                s_rows,
+                s_cols,
+                coarse_obstacles,
             )
             if segment:
                 # 避免重复添加连接点
@@ -230,13 +267,12 @@ class ThreeLayerPlanner:
 
         # 降采样航点（每隔几个点取一个关键航点）
         strategic_waypoints = self._downsample_path(
-            coarse_path, min_interval=max(2, len(coarse_path) // 10),
+            coarse_path,
+            min_interval=max(2, len(coarse_path) // 10),
         )
 
         # 转换回原始分辨率
-        strategic_plan = [
-            [int(p[0] * res), int(p[1] * res)] for p in strategic_waypoints
-        ]
+        strategic_plan = [[int(p[0] * res), int(p[1] * res)] for p in strategic_waypoints]
 
         # 确保起点和终点精确
         strategic_plan[0] = [start[0], start[1]]
@@ -247,7 +283,7 @@ class ThreeLayerPlanner:
         for i in range(len(strategic_plan) - 1):
             dx = strategic_plan[i + 1][0] - strategic_plan[i][0]
             dy = strategic_plan[i + 1][1] - strategic_plan[i][1]
-            total_distance += np.sqrt(dx ** 2 + dy ** 2)
+            total_distance += np.sqrt(dx**2 + dy**2)
 
         strategic_output = {
             "coarse_grid_size": (s_rows, s_cols),
@@ -347,8 +383,7 @@ class ThreeLayerPlanner:
             for dx in range(-r, r + 1):
                 for dy in range(-r, r + 1):
                     nx, ny = pos[0] + dx, pos[1] + dy
-                    if (0 <= nx < rows and 0 <= ny < cols
-                            and (nx, ny) not in obstacles):
+                    if 0 <= nx < rows and 0 <= ny < cols and (nx, ny) not in obstacles:
                         return (nx, ny)
 
         return (min(pos[0], rows - 1), min(pos[1], cols - 1))
@@ -385,8 +420,7 @@ class ThreeLayerPlanner:
                 result.append(path[i])
             # 按间隔采样
             elif len(result) == 0 or (
-                abs(path[i][0] - result[-1][0])
-                + abs(path[i][1] - result[-1][1]) >= min_interval
+                abs(path[i][0] - result[-1][0]) + abs(path[i][1] - result[-1][1]) >= min_interval
             ):
                 result.append(path[i])
 
@@ -425,7 +459,11 @@ class ThreeLayerPlanner:
             wp_goal = (strategic_plan[i + 1][0], strategic_plan[i + 1][1])
 
             segment = self._tactical_astar(
-                wp_start, wp_goal, rows, cols, obstacles,
+                wp_start,
+                wp_goal,
+                rows,
+                cols,
+                obstacles,
             )
 
             if segment:
@@ -435,7 +473,8 @@ class ThreeLayerPlanner:
 
                 # 避免重复添加连接点
                 if full_path and segment[0] == (
-                    full_path[-1][0], full_path[-1][1],
+                    full_path[-1][0],
+                    full_path[-1][1],
                 ):
                     full_path.extend(
                         [[p[0], p[1]] for p in segment[1:]],
@@ -578,7 +617,11 @@ class ThreeLayerPlanner:
                 best_j = i + 1
                 for j in range(len(smoothed) - 1, i + 1, -1):
                     if self._line_of_sight(
-                        smoothed[i], smoothed[j], obstacles, rows, cols,
+                        smoothed[i],
+                        smoothed[j],
+                        obstacles,
+                        rows,
+                        cols,
                     ):
                         best_j = j
                         break
@@ -651,20 +694,28 @@ class ThreeLayerPlanner:
 
         smoothness = 0.0
         for i in range(1, len(path) - 1):
-            v1 = np.array([
-                path[i][0] - path[i - 1][0],
-                path[i][1] - path[i - 1][1],
-            ], dtype=float)
-            v2 = np.array([
-                path[i + 1][0] - path[i][0],
-                path[i + 1][1] - path[i][1],
-            ], dtype=float)
+            v1 = np.array(
+                [
+                    path[i][0] - path[i - 1][0],
+                    path[i][1] - path[i - 1][1],
+                ],
+                dtype=float,
+            )
+            v2 = np.array(
+                [
+                    path[i + 1][0] - path[i][0],
+                    path[i + 1][1] - path[i][1],
+                ],
+                dtype=float,
+            )
 
             n1 = np.linalg.norm(v1)
             n2 = np.linalg.norm(v2)
             if n1 > 1e-6 and n2 > 1e-6:
                 cos_angle = np.clip(
-                    np.dot(v1, v2) / (n1 * n2), -1.0, 1.0,
+                    np.dot(v1, v2) / (n1 * n2),
+                    -1.0,
+                    1.0,
                 )
                 smoothness += 1.0 - cos_angle
 
@@ -711,7 +762,7 @@ class ThreeLayerPlanner:
             # 计算期望方向
             dx = next_wp[0] - current[0]
             dy = next_wp[1] - current[1]
-            dist = np.sqrt(dx ** 2 + dy ** 2)
+            dist = np.sqrt(dx**2 + dy**2)
 
             if dist < 1e-6:
                 continue
@@ -722,7 +773,10 @@ class ThreeLayerPlanner:
 
             # 检测局部障碍物
             local_obstacles = self._detect_local_obstacles(
-                current, obstacles, rows, cols,
+                current,
+                obstacles,
+                rows,
+                cols,
             )
 
             # 计算避障偏移
@@ -733,16 +787,16 @@ class ThreeLayerPlanner:
                 needs_avoidance = True
                 avoidance_count += 1
                 avoidance_offset = self._compute_avoidance_offset(
-                    current, local_obstacles, direction,
+                    current,
+                    local_obstacles,
+                    direction,
                 )
 
             # 应用避障偏移后的实际方向
             actual_direction = np.array(direction) + np.array(avoidance_offset)
             actual_norm = np.linalg.norm(actual_direction)
             if actual_norm > 1e-6:
-                actual_direction = (
-                    actual_direction / actual_norm
-                ).tolist()
+                actual_direction = (actual_direction / actual_norm).tolist()
             else:
                 actual_direction = direction
 
@@ -753,9 +807,7 @@ class ThreeLayerPlanner:
                 "direction": [round(d, 4) for d in actual_direction],
                 "speed": round(speed, 4),
                 "avoidance": needs_avoidance,
-                "avoidance_offset": [
-                    round(a, 4) for a in avoidance_offset
-                ],
+                "avoidance_offset": [round(a, 4) for a in avoidance_offset],
                 "local_obstacle_count": len(local_obstacles),
                 "step_index": i,
             }
@@ -831,7 +883,7 @@ class ThreeLayerPlanner:
                 continue
 
             # 排斥力（与距离平方成反比）
-            repulsion = margin / (dist ** 2 + 0.1)
+            repulsion = margin / (dist**2 + 0.1)
 
             # 排斥方向（从障碍物指向当前位置）
             rx = (position[0] - ox) / dist
@@ -841,7 +893,7 @@ class ThreeLayerPlanner:
             offset_y += ry * repulsion
 
         # 限制偏移幅度
-        offset_norm = np.sqrt(offset_x ** 2 + offset_y ** 2)
+        offset_norm = np.sqrt(offset_x**2 + offset_y**2)
         max_offset = 0.5
         if offset_norm > max_offset:
             offset_x = offset_x / offset_norm * max_offset

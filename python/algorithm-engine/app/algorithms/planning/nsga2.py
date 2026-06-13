@@ -74,24 +74,37 @@ class NSGAII:
 
         logger.info(
             "NSGA-II优化: 起点=%s, 终点=%s, 目标=%s, 种群=%d, 代数=%d",
-            start, goal, objectives, pop_size, max_gen,
+            start,
+            goal,
+            objectives,
+            pop_size,
+            max_gen,
         )
 
         rows, cols = grid_size
-        directions = [(-1, 0), (1, 0), (0, -1), (0, 1),
-                      (-1, -1), (-1, 1), (1, -1), (1, 1)]
+        directions = [(-1, 0), (1, 0), (0, -1), (0, 1), (-1, -1), (-1, 1), (1, -1), (1, 1)]
 
         # 风险区域（模拟：障碍物附近的格子风险值较高）
         risk_map = self._build_risk_map(rows, cols, obstacles)
 
         # 初始化种群
         population = self._initialize_population(
-            start, goal, rows, cols, obstacles, directions, pop_size,
+            start,
+            goal,
+            rows,
+            cols,
+            obstacles,
+            directions,
+            pop_size,
         )
 
         # 评估初始种群
         obj_values = self._evaluate_population(
-            population, objectives, risk_map, start, goal,
+            population,
+            objectives,
+            risk_map,
+            start,
+            goal,
         )
 
         for gen in range(max_gen):
@@ -103,38 +116,56 @@ class NSGAII:
 
             # 锦标赛选择
             selected_indices = self._tournament_selection(
-                fronts, crowding, pop_size,
+                fronts,
+                crowding,
+                pop_size,
             )
 
             # 交叉与变异生成子代
             offspring = self._create_offspring(
-                population, selected_indices, rows, cols,
-                obstacles, directions, start, goal,
+                population,
+                selected_indices,
+                rows,
+                cols,
+                obstacles,
+                directions,
+                start,
+                goal,
             )
 
             # 合并父代和子代
             combined_pop = population + offspring
             combined_obj = self._evaluate_population(
-                combined_pop, objectives, risk_map, start, goal,
+                combined_pop,
+                objectives,
+                risk_map,
+                start,
+                goal,
             )
 
             # 非支配排序 + 拥挤度选择
             combined_fronts = self._fast_non_dominated_sort(combined_obj)
             combined_crowding = self._crowding_distance(
-                combined_fronts, combined_obj,
+                combined_fronts,
+                combined_obj,
             )
 
             # 选择下一代
             population, obj_values = self._select_next_generation(
-                combined_pop, combined_obj,
-                combined_fronts, combined_crowding, pop_size,
+                combined_pop,
+                combined_obj,
+                combined_fronts,
+                combined_crowding,
+                pop_size,
             )
 
             if gen % 20 == 0:
                 front0_size = len(combined_fronts[0]) if combined_fronts else 0
                 logger.debug(
                     "NSGA-II代 %d: 第一前沿大小=%d, 种群=%d",
-                    gen, front0_size, len(population),
+                    gen,
+                    front0_size,
+                    len(population),
                 )
 
         # 提取Pareto前沿
@@ -149,7 +180,8 @@ class NSGAII:
 
         logger.info(
             "NSGA-II优化完成: Pareto前沿解数=%d, 推荐解目标值=%s",
-            len(pareto_front), pareto_obj[best_idx],
+            len(pareto_front),
+            pareto_obj[best_idx],
         )
 
         return {
@@ -159,7 +191,10 @@ class NSGAII:
         }
 
     def _build_risk_map(
-        self, rows: int, cols: int, obstacles: set,
+        self,
+        rows: int,
+        cols: int,
+        obstacles: set,
     ) -> np.ndarray:
         """构建风险地图。
 
@@ -202,7 +237,12 @@ class NSGAII:
 
         for _ in range(pop_size):
             path = self._generate_random_path(
-                start, goal, rows, cols, obstacles, directions,
+                start,
+                goal,
+                rows,
+                cols,
+                obstacles,
+                directions,
             )
             if path:
                 population.append(path)
@@ -240,7 +280,8 @@ class NSGAII:
             neighbors = []
             for dx, dy in directions:
                 nx, ny = current[0] + dx, current[1] + dy
-                if (0 <= nx < rows and 0 <= ny < cols
+                if (0 <= nx < rows
+                        and 0 <= ny < cols
                         and (nx, ny) not in obstacles
                         and (nx, ny) not in visited):
                     neighbors.append((nx, ny))
@@ -314,7 +355,7 @@ class NSGAII:
         for i in range(len(path) - 1):
             dx = abs(path[i + 1][0] - path[i][0])
             dy = abs(path[i + 1][1] - path[i][1])
-            dist += (1.414 if dx + dy == 2 else 1.0)
+            dist += 1.414 if dx + dy == 2 else 1.0
         return dist
 
     def _calc_risk(self, path: list, risk_map: np.ndarray) -> float:
@@ -350,7 +391,8 @@ class NSGAII:
         return energy
 
     def _fast_non_dominated_sort(
-        self, obj_values: list[list[float]],
+        self,
+        obj_values: list[list[float]],
     ) -> list[list[int]]:
         """快速非支配排序。
 
@@ -397,7 +439,9 @@ class NSGAII:
         return fronts
 
     def _dominates(
-        self, a: list[float], b: list[float],
+        self,
+        a: list[float],
+        b: list[float],
     ) -> bool:
         """判断解a是否支配解b。
 
@@ -445,17 +489,13 @@ class NSGAII:
                 crowding[sorted_front[0]] = float("inf")
                 crowding[sorted_front[-1]] = float("inf")
 
-                obj_range = (
-                    obj_values[sorted_front[-1]][m]
-                    - obj_values[sorted_front[0]][m]
-                )
+                obj_range = obj_values[sorted_front[-1]][m] - obj_values[sorted_front[0]][m]
                 if obj_range < 1e-12:
                     continue
 
                 for k in range(1, len(sorted_front) - 1):
                     crowding[sorted_front[k]] += (
-                        obj_values[sorted_front[k + 1]][m]
-                        - obj_values[sorted_front[k - 1]][m]
+                        obj_values[sorted_front[k + 1]][m] - obj_values[sorted_front[k - 1]][m]
                     ) / obj_range
 
         return crowding
@@ -488,10 +528,7 @@ class NSGAII:
         indices = list(range(n))
 
         for _ in range(pop_size):
-            candidates = [
-                indices[np.random.randint(n)]
-                for _ in range(self.tournament_size)
-            ]
+            candidates = [indices[np.random.randint(n)] for _ in range(self.tournament_size)]
             winner = min(
                 candidates,
                 key=lambda i: (rank_map.get(i, float("inf")), -crowding[i]),
@@ -547,7 +584,9 @@ class NSGAII:
         return offspring
 
     def _crossover(
-        self, parent1: list, parent2: list,
+        self,
+        parent1: list,
+        parent2: list,
     ) -> tuple[list, list]:
         """路径交叉操作。
 
@@ -580,8 +619,8 @@ class NSGAII:
                 cp2 = i
                 break
 
-        child1 = parent1[:cp1 + 1] + parent2[cp2 + 1:]
-        child2 = parent2[:cp2 + 1] + parent1[cp1 + 1:]
+        child1 = parent1[: cp1 + 1] + parent2[cp2 + 1 :]
+        child2 = parent2[: cp2 + 1] + parent1[cp1 + 1 :]
 
         return child1, child2
 
@@ -646,7 +685,8 @@ class NSGAII:
                 # 按拥挤度排序，取前若干个
                 remaining = pop_size - len(new_pop)
                 sorted_front = sorted(
-                    front, key=lambda i: -crowding[i],
+                    front,
+                    key=lambda i: -crowding[i],
                 )
                 for idx in sorted_front[:remaining]:
                     new_pop.append(population[idx])
@@ -656,7 +696,8 @@ class NSGAII:
         return new_pop, new_obj
 
     def _select_best_solution(
-        self, pareto_obj: list[list[float]],
+        self,
+        pareto_obj: list[list[float]],
     ) -> int:
         """从Pareto前沿中选择推荐解。
 

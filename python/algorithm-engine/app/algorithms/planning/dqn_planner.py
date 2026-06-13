@@ -56,13 +56,20 @@ class DQNPlanner:
         self.epsilon_decay: float = self.config.get("epsilon_decay", 0.995)
         self.num_episodes: int = self.config.get("num_episodes", 200)
         self.max_steps_per_episode: int = self.config.get(
-            "max_steps_per_episode", 200,
+            "max_steps_per_episode",
+            200,
         )
 
         # 动作空间：8方向移动
         self.actions = [
-            (-1, 0), (1, 0), (0, -1), (0, 1),
-            (-1, -1), (-1, 1), (1, -1), (1, 1),
+            (-1, 0),
+            (1, 0),
+            (0, -1),
+            (0, 1),
+            (-1, -1),
+            (-1, 1),
+            (1, -1),
+            (1, 1),
         ]
         self.num_actions = len(self.actions)
 
@@ -94,7 +101,11 @@ class DQNPlanner:
 
         logger.info(
             "DQN规划: 起点=%s, 终点=%s, 网格=%s, 障碍物=%d, 回合=%d",
-            start, goal, grid_size, len(obstacles), self.num_episodes,
+            start,
+            goal,
+            grid_size,
+            len(obstacles),
+            self.num_episodes,
         )
 
         rows, cols = grid_size
@@ -115,8 +126,7 @@ class DQNPlanner:
 
         for episode in range(self.num_episodes):
             state = np.array(
-                [start[0] / rows, start[1] / cols,
-                 goal[0] / rows, goal[1] / cols],
+                [start[0] / rows, start[1] / cols, goal[0] / rows, goal[1] / cols],
                 dtype=np.float64,
             )
             path_trace = [list(start)]
@@ -158,8 +168,7 @@ class DQNPlanner:
                     reward += (old_dist - new_dist) * 0.5
 
                 next_state = np.array(
-                    [next_x / rows, next_y / cols,
-                     goal[0] / rows, goal[1] / cols],
+                    [next_x / rows, next_y / cols, goal[0] / rows, goal[1] / cols],
                     dtype=np.float64,
                 )
 
@@ -180,7 +189,9 @@ class DQNPlanner:
                 # 从回放缓冲区采样训练
                 if len(replay_buffer) >= self.batch_size:
                     q_weights = self._train_step(
-                        replay_buffer, q_weights, target_weights,
+                        replay_buffer,
+                        q_weights,
+                        target_weights,
                     )
 
                 # 更新目标网络
@@ -201,24 +212,37 @@ class DQNPlanner:
                 avg_reward = np.mean(episode_rewards[-50:]) if episode_rewards else 0
                 logger.debug(
                     "回合 %d: 总奖励=%.2f, 平均奖励=%.2f, epsilon=%.4f",
-                    episode, total_reward, avg_reward, epsilon,
+                    episode,
+                    total_reward,
+                    avg_reward,
+                    epsilon,
                 )
 
         # 使用训练好的网络提取最终路径
         final_path = self._extract_path(
-            q_weights, start, goal, rows, cols, obstacles,
+            q_weights,
+            start,
+            goal,
+            rows,
+            cols,
+            obstacles,
         )
         if len(final_path) > len(best_path):
             final_path = best_path
 
         # 计算最终路径的Q值分布
         q_value_distribution = self._compute_q_distribution(
-            q_weights, final_path, rows, cols,
+            q_weights,
+            final_path,
+            rows,
+            cols,
         )
 
         # 计算最终路径总奖励
         final_reward = self._evaluate_path_reward(
-            final_path, goal, obstacles,
+            final_path,
+            goal,
+            obstacles,
         )
 
         # 收敛信息
@@ -237,7 +261,9 @@ class DQNPlanner:
 
         logger.info(
             "DQN规划完成: 路径长度=%d, 总奖励=%.2f, 平均奖励(后50)=%.2f",
-            len(final_path), final_reward, convergence["avg_reward_last_50"],
+            len(final_path),
+            final_reward,
+            convergence["avg_reward_last_50"],
         )
 
         return {
@@ -280,7 +306,9 @@ class DQNPlanner:
         return weights
 
     def _forward(
-        self, x: np.ndarray, weights: list[np.ndarray],
+        self,
+        x: np.ndarray,
+        weights: list[np.ndarray],
     ) -> np.ndarray:
         """网络前向传播。
 
@@ -324,7 +352,9 @@ class DQNPlanner:
             更新后的Q网络权重。
         """
         indices = np.random.choice(
-            len(replay_buffer), self.batch_size, replace=False,
+            len(replay_buffer),
+            self.batch_size,
+            replace=False,
         )
         batch = [replay_buffer[i] for i in indices]
 
@@ -345,7 +375,10 @@ class DQNPlanner:
             # 计算梯度并更新权重（简化版梯度下降）
             td_error = target_q - q_values
             new_weights = self._update_weights(
-                new_weights, state, td_error, action_idx,
+                new_weights,
+                state,
+                td_error,
+                action_idx,
             )
 
         return new_weights
@@ -443,8 +476,7 @@ class DQNPlanner:
                 break
 
             state = np.array(
-                [current[0] / rows, current[1] / cols,
-                 goal[0] / rows, goal[1] / cols],
+                [current[0] / rows, current[1] / cols, goal[0] / rows, goal[1] / cols],
                 dtype=np.float64,
             )
             q_vals = self._forward(state, weights)
@@ -460,7 +492,8 @@ class DQNPlanner:
 
                 if ((nx, ny) not in obstacles
                         and (nx, ny) not in visited
-                        and 0 <= nx < rows and 0 <= ny < cols):
+                        and 0 <= nx < rows
+                        and 0 <= ny < cols):
                     current = (nx, ny)
                     path.append([nx, ny])
                     visited.add(current)
@@ -496,8 +529,7 @@ class DQNPlanner:
         q_values = []
         for point in path:
             state = np.array(
-                [point[0] / rows, point[1] / cols,
-                 point[0] / rows, point[1] / cols],
+                [point[0] / rows, point[1] / cols, point[0] / rows, point[1] / cols],
                 dtype=np.float64,
             )
             q_vals = self._forward(state, weights)

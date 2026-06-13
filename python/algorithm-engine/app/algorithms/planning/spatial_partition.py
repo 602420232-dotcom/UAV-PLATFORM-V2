@@ -61,19 +61,21 @@ class SpatialPartitionPlanner:
 
         logger.info(
             "空间分区规划: UAV数=%d, 网格=%s, 分区方法=%s",
-            self.num_uavs, grid_size, self.partition_method,
+            self.num_uavs,
+            grid_size,
+            self.partition_method,
         )
 
         # UAV起点和目标
         uav_starts_input = params.get("uav_starts", [])
         if uav_starts_input and len(uav_starts_input) >= self.num_uavs:
-            uav_starts = [np.array(s[:2], dtype=float) for s in uav_starts_input[:self.num_uavs]]
+            uav_starts = [np.array(s[:2], dtype=float) for s in uav_starts_input[: self.num_uavs]]
         else:
             uav_starts = [start.copy() for _ in range(self.num_uavs)]
 
         uav_goals_input = params.get("uav_goals", [])
         if uav_goals_input and len(uav_goals_input) >= self.num_uavs:
-            uav_goals = [np.array(g[:2], dtype=float) for g in uav_goals_input[:self.num_uavs]]
+            uav_goals = [np.array(g[:2], dtype=float) for g in uav_goals_input[: self.num_uavs]]
         else:
             uav_goals = [goal.copy() for _ in range(self.num_uavs)]
 
@@ -96,7 +98,12 @@ class SpatialPartitionPlanner:
 
             # 在区域内执行路径规划
             path = self._plan_in_region(
-                uav_start, uav_goal, region, obstacles, rows, cols,
+                uav_start,
+                uav_goal,
+                region,
+                obstacles,
+                rows,
+                cols,
             )
             uav_paths[uav] = path
             cost = self._path_cost(path)
@@ -123,7 +130,8 @@ class SpatialPartitionPlanner:
 
         logger.info(
             "空间分区完成: 总代价=%.2f, 分区数=%d",
-            total_cost, self.num_uavs,
+            total_cost,
+            self.num_uavs,
         )
         return {
             "path": main_path,
@@ -193,10 +201,12 @@ class SpatialPartitionPlanner:
     ) -> np.ndarray:
         """将点限制在区域内。"""
         x_min, y_min, x_max, y_max = region
-        return np.array([
-            np.clip(point[0], x_min, x_max),
-            np.clip(point[1], y_min, y_max),
-        ])
+        return np.array(
+            [
+                np.clip(point[0], x_min, x_max),
+                np.clip(point[1], y_min, y_max),
+            ]
+        )
 
     def _plan_in_region(
         self,
@@ -227,8 +237,7 @@ class SpatialPartitionPlanner:
         came_from: dict[tuple[int, int], tuple[int, int]] = {}
         g_score: dict[tuple[int, int], float] = {start_grid: 0.0}
 
-        directions = [(-1, 0), (1, 0), (0, -1), (0, 1),
-                      (-1, -1), (-1, 1), (1, -1), (1, 1)]
+        directions = [(-1, 0), (1, 0), (0, -1), (0, 1), (-1, -1), (-1, 1), (1, -1), (1, 1)]
 
         while open_set:
             _, current = heapq.heappop(open_set)
@@ -277,7 +286,5 @@ class SpatialPartitionPlanner:
             return 0.0
         cost = 0.0
         for i in range(len(path) - 1):
-            cost += float(np.linalg.norm(
-                np.array(path[i + 1]) - np.array(path[i])
-            ))
+            cost += float(np.linalg.norm(np.array(path[i + 1]) - np.array(path[i])))
         return cost

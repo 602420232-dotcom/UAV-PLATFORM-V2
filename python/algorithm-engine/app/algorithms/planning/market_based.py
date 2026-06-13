@@ -78,7 +78,7 @@ class MarketBasedPlanner:
         # UAV起点
         uav_starts_input = params.get("uav_starts", [])
         if uav_starts_input and len(uav_starts_input) >= self.num_uavs:
-            uav_starts = [np.array(s[:2], dtype=float) for s in uav_starts_input[:self.num_uavs]]
+            uav_starts = [np.array(s[:2], dtype=float) for s in uav_starts_input[: self.num_uavs]]
         else:
             uav_starts = []
             for i in range(self.num_uavs):
@@ -88,7 +88,9 @@ class MarketBasedPlanner:
 
         logger.info(
             "市场拍卖规划: UAV数=%d, 任务数=%d, 最大轮数=%d",
-            self.num_uavs, len(tasks), self.max_rounds,
+            self.num_uavs,
+            len(tasks),
+            self.max_rounds,
         )
 
         num_tasks = len(tasks)
@@ -169,7 +171,10 @@ class MarketBasedPlanner:
 
         logger.info(
             "市场拍卖完成: 总代价=%.2f, 分配任务=%d/%d, 轮数=%d",
-            total_cost, len(assignment), num_tasks, self.max_rounds,
+            total_cost,
+            len(assignment),
+            num_tasks,
+            self.max_rounds,
         )
         return {
             "path": main_path,
@@ -183,7 +188,5 @@ class MarketBasedPlanner:
             return 0.0
         cost = 0.0
         for i in range(len(path) - 1):
-            cost += float(np.linalg.norm(
-                np.array(path[i + 1]) - np.array(path[i])
-            ))
+            cost += float(np.linalg.norm(np.array(path[i + 1]) - np.array(path[i])))
         return cost

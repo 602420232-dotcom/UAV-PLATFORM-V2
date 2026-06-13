@@ -80,13 +80,12 @@ class AdaptiveVarianceField:
         flow_dependent_variance = np.var(ensemble, axis=0)
 
         # ---- 气候学方差（使用背景场的全局统计）----
-        climatology_variance = np.ones(n) * self.sigma_b ** 2
+        climatology_variance = np.ones(n) * self.sigma_b**2
 
         # ---- 混合方差场 ----
         blended_variance = (
-            (1.0 - self.climatology_weight) * flow_dependent_variance
-            + self.climatology_weight * climatology_variance
-        )
+            1.0 - self.climatology_weight
+        ) * flow_dependent_variance + self.climatology_weight * climatology_variance
 
         # ---- 空间局部化平滑 ----
         blended_variance_field = blended_variance.reshape(shape)
@@ -97,9 +96,7 @@ class AdaptiveVarianceField:
         localized_variance_flat = np.maximum(localized_variance_flat, 1e-6)
 
         # ---- 使用优化后的方差场执行同化 ----
-        x_analysis = self._run_analysis_with_variance(
-            xb, H, y_obs, np.sqrt(localized_variance_flat), m
-        )
+        x_analysis = self._run_analysis_with_variance(xb, H, y_obs, np.sqrt(localized_variance_flat), m)
 
         analysis = x_analysis.reshape(shape)
 
@@ -154,10 +151,10 @@ class AdaptiveVarianceField:
         lr = 0.01
         for _ in range(self.max_iterations):
             dx = x - xb
-            grad_b = dx / (sigma_b_field ** 2)
+            grad_b = dx / (sigma_b_field**2)
             Hx = H @ x  # noqa: N806
             dy = Hx - y_obs
-            grad_o = H.T @ (dy / self.observation_error_scale ** 2)
+            grad_o = H.T @ (dy / self.observation_error_scale**2)
             grad = grad_b + grad_o
             x = x - lr * grad
         return x

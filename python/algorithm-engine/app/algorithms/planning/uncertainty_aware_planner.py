@@ -77,7 +77,10 @@ class UncertaintyAwarePlanner:
 
         logger.info(
             "不确定性感知规划: 起点=%s, 终点=%s, 采样数=%d, 置信水平=%.2f",
-            start, goal, n_samples, confidence_level,
+            start,
+            goal,
+            n_samples,
+            confidence_level,
         )
 
         start_grid = self._world_to_grid(start, rows, cols)
@@ -91,13 +94,19 @@ class UncertaintyAwarePlanner:
         for sample_idx in range(n_samples):
             # 根据不确定性场生成扰动后的风险场景
             perturbed_field = self._sample_scenario(
-                uncertainty_field, rows, cols,
+                uncertainty_field,
+                rows,
+                cols,
             )
 
             # 在扰动场景下执行A*规划
             path, cost = self._plan_on_scenario(
-                start_grid, goal_grid, rows, cols,
-                obstacles, perturbed_field,
+                start_grid,
+                goal_grid,
+                rows,
+                cols,
+                obstacles,
+                perturbed_field,
             )
 
             if path:
@@ -105,7 +114,10 @@ class UncertaintyAwarePlanner:
                 candidate_costs.append(cost)
                 # 记录路径上各点的风险值
                 risk_profile = self._get_path_risk_profile(
-                    path, perturbed_field, rows, cols,
+                    path,
+                    perturbed_field,
+                    rows,
+                    cols,
                 )
                 sample_risk_profiles.append(risk_profile)
 
@@ -126,7 +138,11 @@ class UncertaintyAwarePlanner:
 
         # 评估每条候选路径的鲁棒性
         robustness_scores = self._evaluate_robustness(
-            candidate_paths, uncertainty_field, rows, cols, n_samples,
+            candidate_paths,
+            uncertainty_field,
+            rows,
+            cols,
+            n_samples,
         )
 
         # 选择鲁棒性最优的路径
@@ -150,7 +166,8 @@ class UncertaintyAwarePlanner:
 
         logger.info(
             "不确定性感知规划完成: 鲁棒性=%.4f, 候选路径数=%d",
-            robustness_scores[best_idx], len(candidate_paths),
+            robustness_scores[best_idx],
+            len(candidate_paths),
         )
 
         return {
@@ -161,7 +178,10 @@ class UncertaintyAwarePlanner:
         }
 
     def _world_to_grid(
-        self, pos: list, rows: int, cols: int,
+        self,
+        pos: list,
+        rows: int,
+        cols: int,
     ) -> tuple[int, int]:
         """世界坐标转网格坐标。"""
         gx = int(pos[0] + rows / 2)
@@ -169,7 +189,10 @@ class UncertaintyAwarePlanner:
         return (max(0, min(gx, rows - 1)), max(0, min(gy, cols - 1)))
 
     def _grid_to_world(
-        self, pos: tuple[int, int], rows: int, cols: int,
+        self,
+        pos: tuple[int, int],
+        rows: int,
+        cols: int,
     ) -> list[int]:
         """网格坐标转世界坐标。"""
         return [pos[0] - rows // 2, pos[1] - cols // 2]

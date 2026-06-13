@@ -110,10 +110,10 @@ class MultiScaleHybridAssimilation:
         lr = 0.01
         for _ in range(self.max_iterations):
             dx = x - xb
-            grad_b = dx / (self.sigma_b ** 2)
+            grad_b = dx / (self.sigma_b**2)
             Hx = H @ x  # noqa: N803, N806
             dy = Hx - y_obs
-            grad_o = H.T @ (dy / self.observation_error_scale ** 2)
+            grad_o = H.T @ (dy / self.observation_error_scale**2)
             grad = grad_b + grad_o
             x = x - lr * grad
         return x
@@ -135,7 +135,7 @@ class MultiScaleHybridAssimilation:
 
         HX = H @ X_pert.T  # noqa: N806
         HPHT = (HX @ HX.T) / (n_ens - 1)  # noqa: N806
-        R = np.eye(m) * self.observation_error_scale ** 2  # noqa: N806
+        R = np.eye(m) * self.observation_error_scale**2  # noqa: N806
         HPHT_plus_R = HPHT + R  # noqa: N806
 
         try:

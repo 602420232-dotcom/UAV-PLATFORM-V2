@@ -10,11 +10,13 @@ import pytest
 
 class DummyAlgorithm:
     """Dummy algorithm class for testing registration."""
+
     pass
 
 
 class AnotherAlgorithm:
     """Another dummy algorithm class for testing."""
+
     pass
 
 
@@ -25,6 +27,7 @@ class TestAlgorithmRegistry:
     def registry(self):
         """Fresh registry instance for each test."""
         from app.core.registry import AlgorithmRegistry
+
         return AlgorithmRegistry()
 
     def test_register_single_algorithm(self, registry):

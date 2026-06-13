@@ -150,7 +150,7 @@ class GPRegressionModel:
     ) -> np.ndarray:
         """RBF（径向基函数）核."""
         dists = cdist(x1, x2, metric="sqeuclidean")
-        return signal_variance * np.exp(-0.5 * dists / length_scale ** 2)
+        return signal_variance * np.exp(-0.5 * dists / length_scale**2)
 
     @staticmethod
     def _matern_kernel(
@@ -180,7 +180,7 @@ class GPRegressionModel:
             return signal_variance * (1.0 + scaled_dists) * np.exp(-scaled_dists)
         elif nu == 2.5:
             t = np.sqrt(5.0) * dists / length_scale
-            return signal_variance * (1.0 + t + t ** 2 / 3.0) * np.exp(-t)
+            return signal_variance * (1.0 + t + t**2 / 3.0) * np.exp(-t)
         else:
             return signal_variance * (1.0 + scaled_dists) * np.exp(-scaled_dists)
 

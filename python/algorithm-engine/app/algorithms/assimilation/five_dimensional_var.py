@@ -135,7 +135,9 @@ class FiveDimensionalVAR:
 
         # 构建多时间窗口的观测算子
         y_obs_all, H_all, R_inv_all = self._build_multi_time_obs_operator(  # noqa: N806
-            x, observations, background.shape,
+            x,
+            observations,
+            background.shape,
         )
 
         # 构建简化的时间传播算子（单位矩阵 + 小扰动，模拟M_t）
@@ -178,18 +180,13 @@ class FiveDimensionalVAR:
 
                 # 计算梯度
                 grad_b = B_inv_sqrt.T @ (B_inv_sqrt @ dx)
-                grad_param = (
-                    self.ai_param_weight * 2.0 * (x - ai_correction.flatten())
-                )
+                grad_param = self.ai_param_weight * 2.0 * (x - ai_correction.flatten())
                 grad = grad_b + grad_o + grad_param
 
                 # 梯度下降更新
                 x = x - self.learning_rate * grad
 
-                if (
-                    len(cost_history) > 1
-                    and abs(cost_history[-2] - cost_history[-1]) < self.tolerance
-                ):
+                if len(cost_history) > 1 and abs(cost_history[-2] - cost_history[-1]) < self.tolerance:
                     logger.info("5D-VAR 外循环%d 内迭代%d 收敛", outer_iter, i)
                     break
 
@@ -197,7 +194,11 @@ class FiveDimensionalVAR:
 
         # 计算诊断统计
         diagnostics = self._compute_diagnostics(
-            xb, x, observations, background.shape, cost_history,
+            xb,
+            x,
+            observations,
+            background.shape,
+            cost_history,
         )
 
         return {
@@ -239,7 +240,9 @@ class FiveDimensionalVAR:
 
         logger.info(
             "开始循环同化: 共%d个时间窗口, 窗口大小=%d, 重叠=%d",
-            n_windows, self.cycling_window, self.cycling_overlap,
+            n_windows,
+            self.cycling_window,
+            self.cycling_overlap,
         )
 
         current_background = background.copy()
@@ -250,20 +253,25 @@ class FiveDimensionalVAR:
             window_obs = time_windows.get(cycle_idx, [])
             if not window_obs:
                 logger.info("时间窗口 %d 无观测，跳过", cycle_idx)
-                cycle_results.append({
-                    "cycle": cycle_idx,
-                    "n_observations": 0,
-                    "skipped": True,
-                })
+                cycle_results.append(
+                    {
+                        "cycle": cycle_idx,
+                        "n_observations": 0,
+                        "skipped": True,
+                    }
+                )
                 # 简单时间传播（背景场微调）
                 current_background = self._propagate_background(
-                    current_background, cycle_idx,
+                    current_background,
+                    cycle_idx,
                 )
                 continue
 
             logger.info(
                 "循环 %d/%d: 同化 %d 个观测",
-                cycle_idx + 1, n_windows, len(window_obs),
+                cycle_idx + 1,
+                n_windows,
+                len(window_obs),
             )
 
             cycle_params = {
@@ -295,12 +303,8 @@ class FiveDimensionalVAR:
             "grid_shape": list(background.shape),
             "diagnostics": {
                 "n_cycles_completed": n_windows,
-                "total_observations_assimilated": sum(
-                    r.get("n_observations", 0) for r in cycle_results
-                ),
-                "cycles_converged": sum(
-                    1 for r in cycle_results if r.get("converged", False)
-                ),
+                "total_observations_assimilated": sum(r.get("n_observations", 0) for r in cycle_results),
+                "cycles_converged": sum(1 for r in cycle_results if r.get("converged", False)),
             },
         }
 
@@ -340,10 +344,10 @@ class FiveDimensionalVAR:
                 B_nmc_sqrt = perturbations.T / np.sqrt(n_members - 1)  # noqa: N806
                 B_nmc = B_nmc_sqrt @ B_nmc_sqrt.T  # noqa: N806
             else:
-                B_nmc = np.eye(n) * self.sigma_b ** 2  # noqa: N806
+                B_nmc = np.eye(n) * self.sigma_b**2  # noqa: N806
         else:
             # 无NMC集合时使用默认对角矩阵
-            B_nmc = np.eye(n) * self.sigma_b ** 2  # noqa: N806
+            B_nmc = np.eye(n) * self.sigma_b**2  # noqa: N806
 
         # 气候态部分: 基于气候态方差的对角矩阵
         climatology_field = params.get("climatology_field", None)
@@ -352,7 +356,7 @@ class FiveDimensionalVAR:
             clim_var = np.maximum(clim_var, 1e-10)
             B_clim = np.diag(clim_var)  # noqa: N806
         else:
-            B_clim = np.eye(n) * self.sigma_b ** 2  # noqa: N806
+            B_clim = np.eye(n) * self.sigma_b**2  # noqa: N806
 
         # 混合
         alpha = self.hybrid_alpha
@@ -365,11 +369,7 @@ class FiveDimensionalVAR:
         try:
             eigenvalues, eigenvectors = np.linalg.eigh(B_hybrid)
             eigenvalues = np.maximum(eigenvalues, 1e-10)
-            B_inv_sqrt = (
-                eigenvectors
-                @ np.diag(1.0 / np.sqrt(eigenvalues))
-                @ eigenvectors.T
-            )  # noqa: N806
+            B_inv_sqrt = eigenvectors @ np.diag(1.0 / np.sqrt(eigenvalues)) @ eigenvectors.T  # noqa: N806
         except np.linalg.LinAlgError:
             logger.warning("B矩阵特征分解失败，使用对角近似")
             B_inv_sqrt = np.eye(n) / self.sigma_b  # noqa: N806
@@ -456,10 +456,10 @@ class FiveDimensionalVAR:
         if n_obs == 0:
             return np.zeros((0, 0))
 
-        R = np.eye(n_obs) * self.observation_error_scale ** 2  # noqa: N806
+        R = np.eye(n_obs) * self.observation_error_scale**2  # noqa: N806
         for j, obs in enumerate(observations):
             obs_err = obs.get("error", self.observation_error_scale)
-            R[j, j] = max(obs_err ** 2, 1e-10)  # noqa: N806
+            R[j, j] = max(obs_err**2, 1e-10)  # noqa: N806
 
         try:
             R_inv = np.linalg.inv(R)  # noqa: N806
@@ -525,7 +525,7 @@ class FiveDimensionalVAR:
         increment_norm = float(np.linalg.norm(increment))
         increment_max = float(np.max(np.abs(increment)))
         increment_mean = float(np.mean(increment))
-        increment_rms = float(np.sqrt(np.mean(increment ** 2)))
+        increment_rms = float(np.sqrt(np.mean(increment**2)))
 
         # 分析场统计
         analysis_field = xa.reshape(shape)
@@ -542,13 +542,11 @@ class FiveDimensionalVAR:
             residuals_analysis = Hxa - y_obs
             residuals_background = Hxb - y_obs
 
-            rmse_analysis = float(np.sqrt(np.mean(residuals_analysis ** 2)))
-            rmse_background = float(np.sqrt(np.mean(residuals_background ** 2)))
+            rmse_analysis = float(np.sqrt(np.mean(residuals_analysis**2)))
+            rmse_background = float(np.sqrt(np.mean(residuals_background**2)))
             bias_analysis = float(np.mean(residuals_analysis))
             bias_background = float(np.mean(residuals_background))
-            improvement_ratio = (
-                (rmse_background - rmse_analysis) / max(rmse_background, 1e-10)
-            )
+            improvement_ratio = (rmse_background - rmse_analysis) / max(rmse_background, 1e-10)
         else:
             rmse_analysis = 0.0
             rmse_background = 0.0
@@ -559,9 +557,7 @@ class FiveDimensionalVAR:
         # 代价函数收敛信息
         cost_reduction = 0.0
         if len(cost_history) >= 2:
-            cost_reduction = (
-                (cost_history[0] - cost_history[-1]) / max(cost_history[0], 1e-10)
-            )
+            cost_reduction = (cost_history[0] - cost_history[-1]) / max(cost_history[0], 1e-10)
 
         return {
             "increment": {

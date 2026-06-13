@@ -51,8 +51,7 @@ class V2XCommunication:
         self.snr_threshold_db = 5.0
 
         logger.info(
-            "V2X 通信模块初始化完成: channel_model=%s, freq=%.1f GHz, "
-            "tx_power=%.1f dBm, bandwidth=%.1f MHz",
+            "V2X 通信模块初始化完成: channel_model=%s, freq=%.1f GHz, tx_power=%.1f dBm, bandwidth=%.1f MHz",
             self.channel_model,
             self.frequency_ghz,
             self.tx_power_dbm,
@@ -93,9 +92,7 @@ class V2XCommunication:
         # 计算热噪声功率
         noise_figure_linear = 10 ** (self.noise_figure_db / 10)
         bandwidth_hz = self.bandwidth_mhz * 1e6
-        noise_power_w = (
-            self.boltzmann_constant * self.noise_temperature * bandwidth_hz * noise_figure_linear
-        )
+        noise_power_w = self.boltzmann_constant * self.noise_temperature * bandwidth_hz * noise_figure_linear
         noise_power_dbm = 10 * math.log10(noise_power_w * 1000)
 
         snr = rx_power - noise_power_dbm
@@ -183,14 +180,16 @@ class V2XCommunication:
             # 根据丢包率随机决定是否成功接收
             received = np.random.rand() > packet_loss
 
-            receivers.append({
-                "position": rx_pos,
-                "distance_km": round(distance_km, 6),
-                "snr": round(snr, 2),
-                "packet_loss": round(packet_loss, 4),
-                "latency_ms": round(latency_ms, 3),
-                "received": bool(received),
-            })
+            receivers.append(
+                {
+                    "position": rx_pos,
+                    "distance_km": round(distance_km, 6),
+                    "snr": round(snr, 2),
+                    "packet_loss": round(packet_loss, 4),
+                    "latency_ms": round(latency_ms, 3),
+                    "received": bool(received),
+                }
+            )
 
         n_received = sum(1 for r in receivers if r["received"])
 
@@ -302,17 +301,15 @@ class V2XCommunication:
             else:
                 quality_level = "unavailable"
 
-            quality_map.append({
-                "position": pos,
-                "snr": round(snr, 2),
-                "quality_level": quality_level,
-            })
+            quality_map.append(
+                {
+                    "position": pos,
+                    "snr": round(snr, 2),
+                    "quality_level": quality_level,
+                }
+            )
 
-        avg_snr = (
-            round(float(np.mean([q["snr"] for q in quality_map])), 2)
-            if quality_map
-            else 0.0
-        )
+        avg_snr = round(float(np.mean([q["snr"] for q in quality_map])), 2) if quality_map else 0.0
 
         return {
             "quality_map": quality_map,
@@ -352,10 +349,12 @@ class V2XCommunication:
 
         nodes = []
         for i in range(node_count):
-            nodes.append({
-                "id": i,
-                "position": positions[i].tolist(),
-            })
+            nodes.append(
+                {
+                    "id": i,
+                    "position": positions[i].tolist(),
+                }
+            )
 
         # 建立连接（基于通信范围和 SNR 阈值）
         edges = []
@@ -367,12 +366,14 @@ class V2XCommunication:
                 if distance_km <= connection_range:
                     snr = self._compute_snr(distance_km)
                     if snr >= self.snr_threshold_db:
-                        edges.append({
-                            "source": i,
-                            "target": j,
-                            "distance_km": round(distance_km, 6),
-                            "snr": round(snr, 2),
-                        })
+                        edges.append(
+                            {
+                                "source": i,
+                                "target": j,
+                                "distance_km": round(distance_km, 6),
+                                "snr": round(snr, 2),
+                            }
+                        )
                         adjacency[i].append(j)
                         adjacency[j].append(i)
 

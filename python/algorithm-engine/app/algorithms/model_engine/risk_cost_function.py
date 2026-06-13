@@ -29,13 +29,17 @@ class RiskCostFunction:
             "airspace": self.config.get("airspace_weight", 0.25),
             "energy": self.config.get("energy_weight", 0.2),
         }
-        self.risk_thresholds = self.config.get("risk_thresholds", {
-            "low": 0.3,
-            "medium": 0.6,
-            "high": 0.8,
-        })
+        self.risk_thresholds = self.config.get(
+            "risk_thresholds",
+            {
+                "low": 0.3,
+                "medium": 0.6,
+                "high": 0.8,
+            },
+        )
         self.critical_threshold = self.config.get(
-            "critical_threshold", 0.7,
+            "critical_threshold",
+            0.7,
         )
 
     def evaluate(self, params: dict[str, Any]) -> dict[str, Any]:
@@ -66,7 +70,8 @@ class RiskCostFunction:
         n_points = len(path)
         logger.info(
             "开始风险代价评估: 路径点数=%d, 权重=%s",
-            n_points, weights,
+            n_points,
+            weights,
         )
 
         weather_cost = self._evaluate_weather_risk(path, risk_fields)
@@ -90,12 +95,16 @@ class RiskCostFunction:
 
         risk_level = self._classify_risk_level(total_cost)
         critical_segments = self._identify_critical_segments(
-            path, risk_fields, weights,
+            path,
+            risk_fields,
+            weights,
         )
 
         logger.info(
             "风险评估完成: 总代价=%.4f, 风险等级=%s, 高风险段数=%d",
-            total_cost, risk_level, len(critical_segments),
+            total_cost,
+            risk_level,
+            len(critical_segments),
         )
 
         return {

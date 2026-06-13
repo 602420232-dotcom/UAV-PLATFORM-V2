@@ -64,12 +64,14 @@ class AntColonyOptimizer:
 
         logger.info(
             "蚁群优化规划: 起点=%s, 终点=%s, 网格=%s, 障碍物=%d",
-            start, goal, grid_size, len(obstacles),
+            start,
+            goal,
+            grid_size,
+            len(obstacles),
         )
 
         rows, cols = grid_size
-        directions = [(-1, 0), (1, 0), (0, -1), (0, 1),
-                      (-1, -1), (-1, 1), (1, -1), (1, 1)]
+        directions = [(-1, 0), (1, 0), (0, -1), (0, 1), (-1, -1), (-1, 1), (1, -1), (1, 1)]
 
         # 初始化信息素矩阵
         pheromone = np.ones((rows, cols)) * 0.1
@@ -83,8 +85,13 @@ class AntColonyOptimizer:
 
             for ant in range(self.num_ants):
                 path = self._construct_path(
-                    start, goal, rows, cols, obstacles,
-                    pheromone, directions,
+                    start,
+                    goal,
+                    rows,
+                    cols,
+                    obstacles,
+                    pheromone,
+                    directions,
                 )
                 if path and path[-1] == goal:
                     cost = self._path_cost(path, directions)
@@ -95,7 +102,7 @@ class AntColonyOptimizer:
                         best_path = [[int(p[0]), int(p[1])] for p in path]
 
             # 更新信息素
-            pheromone *= (1.0 - self.evaporation_rate)
+            pheromone *= 1.0 - self.evaporation_rate
 
             for path, cost in zip(all_paths, all_costs):
                 deposit = self.q / cost
@@ -105,7 +112,9 @@ class AntColonyOptimizer:
             if iteration % 20 == 0:
                 logger.debug(
                     "迭代 %d: 最优代价=%.2f, 找到路径的蚂蚁=%d",
-                    iteration, best_cost, len(all_paths),
+                    iteration,
+                    best_cost,
+                    len(all_paths),
                 )
 
         if not best_path:
@@ -142,9 +151,7 @@ class AntColonyOptimizer:
             neighbors = []
             for dx, dy in directions:
                 nx, ny = current[0] + dx, current[1] + dy
-                if (0 <= nx < rows and 0 <= ny < cols
-                        and (nx, ny) not in obstacles
-                        and (nx, ny) not in visited):
+                if 0 <= nx < rows and 0 <= ny < cols and (nx, ny) not in obstacles and (nx, ny) not in visited:
                     neighbors.append((nx, ny))
 
             if not neighbors:
@@ -156,7 +163,7 @@ class AntColonyOptimizer:
                 dist_to_goal = abs(nb[0] - goal[0]) + abs(nb[1] - goal[1])
                 heuristic = 1.0 / (dist_to_goal + 1.0)
                 tau = pheromone[nb[0], nb[1]] ** self.alpha
-                eta = heuristic ** self.beta
+                eta = heuristic**self.beta
                 probabilities.append(tau * eta)
 
             total = sum(probabilities)
@@ -177,5 +184,5 @@ class AntColonyOptimizer:
         for i in range(len(path) - 1):
             dx = abs(path[i + 1][0] - path[i][0])
             dy = abs(path[i + 1][1] - path[i][1])
-            cost += (1.414 if dx + dy == 2 else 1.0)
+            cost += 1.414 if dx + dy == 2 else 1.0
         return cost

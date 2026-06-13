@@ -36,6 +36,9 @@ struct GridCoord {
     bool operator==(const GridCoord& other) const noexcept {
         return gx == other.gx && gy == other.gy;
     }
+    bool operator!=(const GridCoord& other) const noexcept {
+        return !(*this == other);
+    }
 };
 
 /// 栅格坐标哈希函数
@@ -93,7 +96,6 @@ bool is_collision(
     for (const auto& obs : obstacles) {
         double dx = p.x - obs.position.x;
         double dy = p.y - obs.position.y;
-        double dz = p.z - obs.position.z;
         double dist_2d = std::sqrt(dx * dx + dy * dy);
         double safe_radius = obs.radius + safety_margin;
 

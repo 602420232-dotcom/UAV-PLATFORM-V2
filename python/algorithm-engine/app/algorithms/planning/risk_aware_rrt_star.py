@@ -74,7 +74,10 @@ class RiskAwareRRTStar:
 
         logger.info(
             "风险感知RRT*规划: 起点=%s, 终点=%s, 迭代=%d, 风险阈值=%.2f",
-            start, goal, max_iterations, risk_threshold,
+            start,
+            goal,
+            max_iterations,
+            risk_threshold,
         )
 
         nodes = [start]
@@ -127,7 +130,8 @@ class RiskAwareRRTStar:
             # 选择最优父节点（考虑风险代价）
             best_parent = nearest_idx
             best_cost = costs[nearest_idx] + self._distance(
-                nodes[nearest_idx], tuple(new_point),
+                nodes[nearest_idx],
+                tuple(new_point),
             )
             if risk_field is not None:
                 best_cost += self._get_risk_at(tuple(new_point), risk_field)
@@ -139,7 +143,9 @@ class RiskAwareRRTStar:
                     if risk_field is not None:
                         c += self._get_risk_at(tuple(new_point), risk_field)
                     if c < best_cost and not self._check_line_collision(
-                        nodes[i], tuple(new_point), obstacles,
+                        nodes[i],
+                        tuple(new_point),
+                        obstacles,
                     ):
                         best_parent = i
                         best_cost = c
@@ -155,7 +161,9 @@ class RiskAwareRRTStar:
                     if risk_field is not None:
                         new_cost += self._get_risk_at(nodes[i], risk_field) * 0.1
                     if new_cost < costs[i] and not self._check_line_collision(
-                        nodes[i], tuple(new_point), obstacles,
+                        nodes[i],
+                        tuple(new_point),
+                        obstacles,
                     ):
                         parents[i] = new_idx
                         costs[i] = new_cost
@@ -166,7 +174,9 @@ class RiskAwareRRTStar:
                 risk_exposure = self._compute_risk_exposure(path, risk_field)
                 logger.info(
                     "风险感知RRT*完成: 代价=%.2f, 风险暴露=%.4f, 树大小=%d",
-                    best_cost, risk_exposure, len(nodes),
+                    best_cost,
+                    risk_exposure,
+                    len(nodes),
                 )
                 return {
                     "path": path,
@@ -205,7 +215,10 @@ class RiskAwareRRTStar:
         return False
 
     def _check_line_collision(
-        self, p1: tuple, p2: tuple, obstacles: list,
+        self,
+        p1: tuple,
+        p2: tuple,
+        obstacles: list,
     ) -> bool:
         """检测线段是否与障碍物碰撞。"""
         for t in np.linspace(0, 1, 10):
@@ -229,7 +242,9 @@ class RiskAwareRRTStar:
         return path
 
     def _compute_risk_exposure(
-        self, path: list, risk_field: np.ndarray | None,
+        self,
+        path: list,
+        risk_field: np.ndarray | None,
     ) -> float:
         """计算路径的平均风险暴露值。"""
         if risk_field is None or not path:

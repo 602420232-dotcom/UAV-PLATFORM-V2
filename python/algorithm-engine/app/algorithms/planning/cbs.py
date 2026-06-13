@@ -65,21 +65,24 @@ class ConflictBasedSearch:
 
         logger.info(
             "CBS规划: 智能体数=%d, 网格=%s, 障碍物=%d",
-            len(agents), grid_size, len(obstacles),
+            len(agents),
+            grid_size,
+            len(obstacles),
         )
 
         rows, cols = grid_size
-        directions = [(-1, 0), (1, 0), (0, -1), (0, 1),
-                      (-1, -1), (-1, 1), (1, -1), (1, 1)]
+        directions = [(-1, 0), (1, 0), (0, -1), (0, 1), (-1, -1), (-1, 1), (1, -1), (1, 1)]
 
         # 初始约束：每个智能体无约束
-        initial_constraints: list[dict[int, list]] = [
-            {} for _ in agents
-        ]
+        initial_constraints: list[dict[int, list]] = [{} for _ in agents]
 
         # 为每个智能体规划初始路径
         initial_solution = self._find_initial_solution(
-            agents, rows, cols, obstacles, directions,
+            agents,
+            rows,
+            cols,
+            obstacles,
+            directions,
         )
 
         if initial_solution is None:
@@ -106,7 +109,8 @@ class ConflictBasedSearch:
             if not current_conflicts:
                 logger.info(
                     "CBS规划完成: 无冲突解, 总代价=%.2f, 迭代=%d",
-                    current_cost, iteration,
+                    current_cost,
+                    iteration,
                 )
                 return {
                     "paths": current_paths,
@@ -129,16 +133,21 @@ class ConflictBasedSearch:
                 new_constraints = [dict(c) for c in current_constraints]
                 if constrained_agent not in new_constraints[constrained_agent]:
                     new_constraints[constrained_agent][constrained_agent] = []
-                new_constraints[constrained_agent][constrained_agent].append({
-                    "time": conflict_time,
-                    "position": conflict_pos,
-                })
+                new_constraints[constrained_agent][constrained_agent].append(
+                    {
+                        "time": conflict_time,
+                        "position": conflict_pos,
+                    }
+                )
 
                 # 重新规划受约束智能体的路径
                 new_path = self._low_level_search(
                     agents[constrained_agent]["start"],
                     agents[constrained_agent]["goal"],
-                    rows, cols, obstacles, directions,
+                    rows,
+                    cols,
+                    obstacles,
+                    directions,
                     new_constraints[constrained_agent].get(constrained_agent, []),
                 )
 
@@ -157,12 +166,15 @@ class ConflictBasedSearch:
             if iteration % 10 == 0:
                 logger.debug(
                     "CBS迭代 %d: 开放节点=%d, 已解决冲突=%d",
-                    iteration, len(open_list), len(resolved_conflicts),
+                    iteration,
+                    len(open_list),
+                    len(resolved_conflicts),
                 )
 
         logger.warning(
             "CBS规划达到迭代上限: 迭代=%d, 已解决冲突=%d",
-            iteration, len(resolved_conflicts),
+            iteration,
+            len(resolved_conflicts),
         )
 
         # 返回当前最优解
@@ -208,7 +220,13 @@ class ConflictBasedSearch:
 
             all_obstacles = obstacles | dynamic_obstacles
             path = self._low_level_search(
-                start, goal, rows, cols, all_obstacles, directions, [],
+                start,
+                goal,
+                rows,
+                cols,
+                all_obstacles,
+                directions,
+                [],
             )
 
             if path is None:
@@ -355,26 +373,34 @@ class ConflictBasedSearch:
 
                     # 顶点冲突
                     if pos_a[0] == pos_b[0] and pos_a[1] == pos_b[1]:
-                        conflicts.append({
-                            "type": "vertex",
-                            "agent_a": i,
-                            "agent_b": j,
-                            "time": t,
-                            "position": [pos_a[0], pos_a[1]],
-                        })
+                        conflicts.append(
+                            {
+                                "type": "vertex",
+                                "agent_a": i,
+                                "agent_b": j,
+                                "time": t,
+                                "position": [pos_a[0], pos_a[1]],
+                            }
+                        )
 
                     # 跟随冲突（交换位置）
                     if t > 0:
                         prev_a = path_a[min(t - 1, len(path_a) - 1)]
                         prev_b = path_b[min(t - 1, len(path_b) - 1)]
-                        if (pos_a[0] == prev_b[0] and pos_a[1] == prev_b[1]
-                                and pos_b[0] == prev_a[0] and pos_b[1] == prev_a[1]):
-                            conflicts.append({
-                                "type": "swap",
-                                "agent_a": i,
-                                "agent_b": j,
-                                "time": t,
-                                "position": [pos_a[0], pos_a[1]],
-                            })
+                        if (
+                            pos_a[0] == prev_b[0]
+                            and pos_a[1] == prev_b[1]
+                            and pos_b[0] == prev_a[0]
+                            and pos_b[1] == prev_a[1]
+                        ):
+                            conflicts.append(
+                                {
+                                    "type": "swap",
+                                    "agent_a": i,
+                                    "agent_b": j,
+                                    "time": t,
+                                    "position": [pos_a[0], pos_a[1]],
+                                }
+                            )
 
         return conflicts

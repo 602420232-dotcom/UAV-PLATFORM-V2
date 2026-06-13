@@ -50,7 +50,8 @@ class AdaptiveObservationDesign:
         self.time_step: float = self.config.get("time_step", 10.0)
         # 不确定性增长速率
         self.uncertainty_growth_rate: float = self.config.get(
-            "uncertainty_growth_rate", 0.05,
+            "uncertainty_growth_rate",
+            0.05,
         )
         # 空间分辨率
         self.resolution: float = self.config.get("resolution", 1.0)
@@ -83,7 +84,8 @@ class AdaptiveObservationDesign:
 
         logger.info(
             "开始自适应观测设计: 网格=%s, 预算=%d",
-            uncertainty_field.shape, budget,
+            uncertainty_field.shape,
+            budget,
         )
 
         # 1. 构建背景误差协方差矩阵
@@ -91,12 +93,16 @@ class AdaptiveObservationDesign:
 
         # 2. 计算Fisher信息矩阵
         fisher_info = self._compute_fisher_information(
-            uncertainty_field, available_positions,
+            uncertainty_field,
+            available_positions,
         )
 
         # 3. 基于信息熵的观测站位优化
         optimal_positions = self._optimize_positions_entropy(
-            uncertainty_field, B, budget, available_positions,
+            uncertainty_field,
+            B,
+            budget,
+            available_positions,
         )
 
         # 4. 自适应观测时间窗口
@@ -104,12 +110,16 @@ class AdaptiveObservationDesign:
 
         # 5. 生成动态观测计划
         observation_plan = self._generate_observation_plan(
-            optimal_positions, time_windows, params,
+            optimal_positions,
+            time_windows,
+            params,
         )
 
         # 6. 计算预期信息增益
         expected_gain = self._compute_expected_information_gain(
-            uncertainty_field, optimal_positions, B,
+            uncertainty_field,
+            optimal_positions,
+            B,
         )
 
         return {
@@ -162,7 +172,7 @@ class AdaptiveObservationDesign:
 
         # 高斯相关函数
         L = self.correlation_length
-        correlation = np.exp(-dist_matrix ** 2 / (2 * L ** 2))
+        correlation = np.exp(-(dist_matrix**2) / (2 * L**2))
 
         # 构建协方差矩阵
         B = np.outer(sigma, sigma) * correlation  # noqa: N806
@@ -215,7 +225,7 @@ class AdaptiveObservationDesign:
                 H[j, idx] = 1.0  # noqa: N806
 
         # 构建观测误差协方差 R
-        R = np.eye(n_obs) * self.obs_error_std ** 2  # noqa: N806
+        R = np.eye(n_obs) * self.obs_error_std**2  # noqa: N806
 
         # Fisher信息矩阵: I_F = H^T R^{-1} H
         try:
@@ -272,7 +282,8 @@ class AdaptiveObservationDesign:
 
         logger.info(
             "贪心优化: %d个候选位置, 预算=%d",
-            n_candidates, budget,
+            n_candidates,
+            budget,
         )
 
         # 贪心选择
@@ -289,7 +300,11 @@ class AdaptiveObservationDesign:
 
                 # 计算添加此位置后的信息增益
                 gain = self._compute_marginal_gain(
-                    B, selected, pos, shape, n_state,
+                    B,
+                    selected,
+                    pos,
+                    shape,
+                    n_state,
                 )
 
                 if gain > best_gain:
@@ -299,16 +314,20 @@ class AdaptiveObservationDesign:
             if best_idx >= 0 and best_gain > 1e-10:
                 pos = candidates[best_idx]
                 flat_idx = self._position_to_index(pos, shape)
-                selected.append({
-                    "position": pos,
-                    "flat_index": int(flat_idx),
-                    "uncertainty": float(uncertainty_field[tuple(pos)]),
-                    "marginal_gain": float(best_gain),
-                })
+                selected.append(
+                    {
+                        "position": pos,
+                        "flat_index": int(flat_idx),
+                        "uncertainty": float(uncertainty_field[tuple(pos)]),
+                        "marginal_gain": float(best_gain),
+                    }
+                )
                 selected_indices.add(best_idx)
                 logger.debug(
                     "步骤 %d: 选择位置 %s, 边际增益=%.6f",
-                    step + 1, pos, best_gain,
+                    step + 1,
+                    pos,
+                    best_gain,
                 )
             else:
                 logger.info("信息增益饱和，提前终止")
@@ -343,7 +362,7 @@ class AdaptiveObservationDesign:
             H[n_selected - 1, cand_idx] = 1.0  # noqa: N806
 
         # 观测误差协方差
-        R = np.eye(n_selected) * self.obs_error_std ** 2  # noqa: N806
+        R = np.eye(n_selected) * self.obs_error_std**2  # noqa: N806
 
         # 分析误差协方差: B_a = (B^{-1} + H^T R^{-1} H)^{-1}
         try:
@@ -361,7 +380,7 @@ class AdaptiveObservationDesign:
                 gain = 0.5 * (np.trace(B) - np.trace(Ba))
         except np.linalg.LinAlgError:
             # 矩阵不可逆时使用简化估计
-            gain = float(np.sum(B[cand_idx, cand_idx])) / (self.obs_error_std ** 2)
+            gain = float(np.sum(B[cand_idx, cand_idx])) / (self.obs_error_std**2)
 
         return max(float(gain), 0.0)
 
@@ -406,17 +425,20 @@ class AdaptiveObservationDesign:
             # 观测优先级
             priority = min(1.0, normalized_uncertainty * 1.5)
 
-            time_windows.append({
-                "time_slot": t,
-                "start_time": t * self.time_step,
-                "end_time": (t + 1) * self.time_step,
-                "adaptive_interval": float(adaptive_interval),
-                "priority": float(priority),
-                "expected_uncertainty": float(effective_uncertainty),
-                "recommended_n_observations": max(
-                    1, int(self.budget * priority / n_slots),
-                ),
-            })
+            time_windows.append(
+                {
+                    "time_slot": t,
+                    "start_time": t * self.time_step,
+                    "end_time": (t + 1) * self.time_step,
+                    "adaptive_interval": float(adaptive_interval),
+                    "priority": float(priority),
+                    "expected_uncertainty": float(effective_uncertainty),
+                    "recommended_n_observations": max(
+                        1,
+                        int(self.budget * priority / n_slots),
+                    ),
+                }
+            )
 
         return time_windows
 
@@ -458,32 +480,35 @@ class AdaptiveObservationDesign:
                 pos_info = sorted_positions[i]
                 task_id += 1
 
-                observation_plan.append({
-                    "task_id": task_id,
-                    "time_slot": tw["time_slot"],
-                    "scheduled_time": tw["start_time"],
-                    "position": pos_info["position"],
-                    "priority": float(priority),
-                    "expected_uncertainty_reduction": float(
-                        pos_info.get("marginal_gain", 0),
-                    ),
-                    "sensor_type": "uav_observer",
-                    "estimated_duration": float(
-                        self._estimate_observation_duration(
-                            pos_info["position"], optimal_positions, max_speed,
+                observation_plan.append(
+                    {
+                        "task_id": task_id,
+                        "time_slot": tw["time_slot"],
+                        "scheduled_time": tw["start_time"],
+                        "position": pos_info["position"],
+                        "priority": float(priority),
+                        "expected_uncertainty_reduction": float(
+                            pos_info.get("marginal_gain", 0),
                         ),
-                    ),
-                    "feasible": True,
-                })
+                        "sensor_type": "uav_observer",
+                        "estimated_duration": float(
+                            self._estimate_observation_duration(
+                                pos_info["position"],
+                                optimal_positions,
+                                max_speed,
+                            ),
+                        ),
+                        "feasible": True,
+                    }
+                )
 
         # 检查可行性并标记不可行任务
-        total_flight_time = sum(
-            t["estimated_duration"] for t in observation_plan
-        )
+        total_flight_time = sum(t["estimated_duration"] for t in observation_plan)
         if total_flight_time > max_flight_time:
             logger.warning(
                 "总飞行时间 %.1fs 超过最大续航 %.1fs，需要裁剪任务",
-                total_flight_time, max_flight_time,
+                total_flight_time,
+                max_flight_time,
             )
             # 按优先级排序，保留高优先级任务
             observation_plan.sort(key=lambda t: t["priority"], reverse=True)
@@ -513,16 +538,12 @@ class AdaptiveObservationDesign:
             # 估算到最近已选位置的转移距离
             min_dist = float("inf")
             for p in all_positions:
-                d = sum(
-                    (a - b) ** 2 for a, b in zip(position, p["position"])
-                ) ** 0.5
+                d = sum((a - b) ** 2 for a, b in zip(position, p["position"])) ** 0.5
                 if d < min_dist:
                     min_dist = d
             transfer_distance = min_dist * self.resolution
 
-        transfer_time = (
-            transfer_distance / max_speed if max_speed > 0 else 0
-        )
+        transfer_time = transfer_distance / max_speed if max_speed > 0 else 0
         return observation_time + transfer_time
 
     # ================================================================
@@ -561,7 +582,7 @@ class AdaptiveObservationDesign:
                 H[i, idx] = 1.0  # noqa: N806
 
         # 观测误差协方差
-        R = np.eye(n_obs) * self.obs_error_std ** 2  # noqa: N806
+        R = np.eye(n_obs) * self.obs_error_std**2  # noqa: N806
 
         # 计算分析误差协方差
         try:
@@ -583,20 +604,14 @@ class AdaptiveObservationDesign:
                 posterior_entropy += 0.5 * logdet_Ba
 
             total_gain = max(prior_entropy - posterior_entropy, 0.0)
-            relative_gain = (
-                total_gain / prior_entropy if prior_entropy > 1e-10 else 0.0
-            )
+            relative_gain = total_gain / prior_entropy if prior_entropy > 1e-10 else 0.0
             entropy_reduction_pct = relative_gain * 100.0
 
             # 各位置贡献的边际增益
-            marginal_gains = [
-                float(p.get("marginal_gain", 0)) for p in optimal_positions
-            ]
+            marginal_gains = [float(p.get("marginal_gain", 0)) for p in optimal_positions]
 
         except np.linalg.LinAlgError:
-            total_gain = sum(
-                float(p.get("marginal_gain", 0)) for p in optimal_positions
-            )
+            total_gain = sum(float(p.get("marginal_gain", 0)) for p in optimal_positions)
             relative_gain = 0.0
             entropy_reduction_pct = 0.0
             marginal_gains = []
@@ -629,7 +644,7 @@ class AdaptiveObservationDesign:
     def _compute_distance_matrix(positions: np.ndarray) -> np.ndarray:
         """计算位置之间的欧氏距离矩阵."""
         diff = positions[:, np.newaxis, :] - positions[np.newaxis, :, :]
-        return np.sqrt(np.sum(diff ** 2, axis=2))
+        return np.sqrt(np.sum(diff**2, axis=2))
 
     @staticmethod
     def _position_to_index(pos: list[int], shape: tuple[int, ...]) -> int:

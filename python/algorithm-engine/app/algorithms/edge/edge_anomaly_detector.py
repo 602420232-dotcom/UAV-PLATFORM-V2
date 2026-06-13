@@ -116,10 +116,10 @@ class EdgeAnomalyDetector:
                 if len(values) >= window_size:
                     window = np.ones(window_size) / window_size
                     moving_avg = np.convolve(values, window, mode="valid")
-                    residuals = np.abs(values[window_size - 1:] - moving_avg)
+                    residuals = np.abs(values[window_size - 1 :] - moving_avg)
                     residual_std = float(np.std(residuals)) if len(residuals) > 1 else 1.0
                     if residual_std > 0:
-                        scores[window_size - 1:] = residuals / residual_std
+                        scores[window_size - 1 :] = residuals / residual_std
                     anomaly_indices = np.where(scores > zscore_threshold)[0].tolist()
 
                 mean = float(np.mean(values))
@@ -174,14 +174,16 @@ class EdgeAnomalyDetector:
 
             # 记录异常
             for idx in anomaly_indices:
-                all_anomalies.append({
-                    "metric": metric_name,
-                    "index": int(idx),
-                    "timestamp": timestamps[idx] if idx < len(timestamps) else None,
-                    "value": round(float(values[idx]), 4),
-                    "score": round(float(scores[idx]), 4),
-                    "method": detection_method,
-                })
+                all_anomalies.append(
+                    {
+                        "metric": metric_name,
+                        "index": int(idx),
+                        "timestamp": timestamps[idx] if idx < len(timestamps) else None,
+                        "value": round(float(values[idx]), 4),
+                        "score": round(float(scores[idx]), 4),
+                        "method": detection_method,
+                    }
+                )
 
             all_scores[metric_name] = scores.tolist()
             normal_ranges[metric_name] = normal_range

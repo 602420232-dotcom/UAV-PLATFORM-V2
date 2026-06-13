@@ -17,16 +17,16 @@ logger = logging.getLogger(__name__)
 class RapidlyExploringTreePlanner:
     """基础RRT路径规划器。
 
-    从起点开始构建随机树，每次迭代采样随机点并向最近节点
-   扩展固定步长。当树到达目标附近时提取路径。
-    不保证最优性，但适用于复杂环境和高维空间。
+     从起点开始构建随机树，每次迭代采样随机点并向最近节点
+    扩展固定步长。当树到达目标附近时提取路径。
+     不保证最优性，但适用于复杂环境和高维空间。
 
-    Args:
-        config: 配置字典，支持以下参数：
-            - max_iterations: 最大迭代次数，默认2000
-            - step_size: 扩展步长，默认1.0
-            - goal_bias: 目标采样概率，默认0.1
-            - goal_radius: 到达目标的距离阈值，默认1.5
+     Args:
+         config: 配置字典，支持以下参数：
+             - max_iterations: 最大迭代次数，默认2000
+             - step_size: 扩展步长，默认1.0
+             - goal_bias: 目标采样概率，默认0.1
+             - goal_radius: 到达目标的距离阈值，默认1.5
     """
 
     def __init__(self, config: Optional[dict[str, Any]] = None):
@@ -60,7 +60,9 @@ class RapidlyExploringTreePlanner:
 
         logger.info(
             "RRT规划: 起点=%s, 终点=%s, 最大迭代=%d",
-            start, goal, self.max_iterations,
+            start,
+            goal,
+            self.max_iterations,
         )
 
         rows, cols = grid_size
@@ -80,10 +82,12 @@ class RapidlyExploringTreePlanner:
             if np.random.rand() < self.goal_bias:
                 rand_point = np.array(goal, dtype=float)
             else:
-                rand_point = np.array([
-                    np.random.uniform(x_min, x_max),
-                    np.random.uniform(y_min, y_max),
-                ])
+                rand_point = np.array(
+                    [
+                        np.random.uniform(x_min, x_max),
+                        np.random.uniform(y_min, y_max),
+                    ]
+                )
 
             # 找到最近节点
             nearest_idx = self._find_nearest(nodes, rand_point)
@@ -123,7 +127,9 @@ class RapidlyExploringTreePlanner:
                     cost = self._compute_cost(path)
                     logger.info(
                         "RRT完成: 代价=%.2f, 迭代=%d, 树节点=%d",
-                        cost, iteration + 1, len(nodes),
+                        cost,
+                        iteration + 1,
+                        len(nodes),
                     )
                     return {
                         "path": path,
@@ -195,7 +201,5 @@ class RapidlyExploringTreePlanner:
         """计算路径代价。"""
         cost = 0.0
         for i in range(len(path) - 1):
-            cost += float(np.linalg.norm(
-                np.array(path[i + 1]) - np.array(path[i])
-            ))
+            cost += float(np.linalg.norm(np.array(path[i + 1]) - np.array(path[i])))
         return cost

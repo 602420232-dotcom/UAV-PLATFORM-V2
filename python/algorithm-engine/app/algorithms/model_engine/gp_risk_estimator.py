@@ -55,8 +55,7 @@ class GPRiskEstimator:
 
         # 使用 GP 回归估计风险概率
         K = (  # noqa: N806
-            self._rbf_kernel(location_data, location_data)
-            + self.noise_variance * np.eye(n_train)
+            self._rbf_kernel(location_data, location_data) + self.noise_variance * np.eye(n_train)
         )
         K_s = self._rbf_kernel(location_data, query_locations)  # noqa: N806
         K_ss = self._rbf_kernel(query_locations, query_locations)  # noqa: N806
@@ -111,7 +110,7 @@ class GPRiskEstimator:
             RBF 核矩阵.
         """
         dists = cdist(x1, x2, metric="sqeuclidean")
-        return self.signal_variance * np.exp(-0.5 * dists / self.length_scale ** 2)
+        return self.signal_variance * np.exp(-0.5 * dists / self.length_scale**2)
 
     @staticmethod
     def _generate_risk_map(

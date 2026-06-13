@@ -54,7 +54,9 @@ class GreedyBestFirstPlanner:
 
         logger.info(
             "贪心最佳优先搜索: 起点=%s, 终点=%s, 网格=%s",
-            start, goal, grid_size,
+            start,
+            goal,
+            grid_size,
         )
 
         rows, cols = grid_size
@@ -85,7 +87,8 @@ class GreedyBestFirstPlanner:
                 cost = self._compute_cost(path)
                 logger.info(
                     "贪心最佳优先搜索完成: 代价=%.2f, 探索节点=%d",
-                    cost, nodes_explored,
+                    cost,
+                    nodes_explored,
                 )
                 return {
                     "path": path,
@@ -120,16 +123,14 @@ class GreedyBestFirstPlanner:
     ) -> list[tuple[int, int]]:
         """获取可行邻居节点。"""
         if self.allow_diagonal:
-            directions = [(-1, 0), (1, 0), (0, -1), (0, 1),
-                          (-1, -1), (-1, 1), (1, -1), (1, 1)]
+            directions = [(-1, 0), (1, 0), (0, -1), (0, 1), (-1, -1), (-1, 1), (1, -1), (1, 1)]
         else:
             directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
 
         neighbors = []
         for dx, dy in directions:
             nx, ny = pos[0] + dx, pos[1] + dy
-            if (0 <= nx < rows and 0 <= ny < cols
-                    and (nx, ny) not in obstacles):
+            if 0 <= nx < rows and 0 <= ny < cols and (nx, ny) not in obstacles:
                 neighbors.append((nx, ny))
         return neighbors
 
@@ -152,5 +153,5 @@ class GreedyBestFirstPlanner:
         for i in range(len(path) - 1):
             dx = abs(path[i + 1][0] - path[i][0])
             dy = abs(path[i + 1][1] - path[i][1])
-            cost += (1.414 if dx + dy == 2 else 1.0)
+            cost += 1.414 if dx + dy == 2 else 1.0
         return cost

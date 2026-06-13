@@ -85,7 +85,7 @@ class SparseGPModel:
             # 计算近似均值: K_sm @ K_mm^{-1} @ K_mm @ K_mm^{-1} @ K_nm^T @ y
             # 简化: K_sm @ K_mm^{-1} @ (K_nm^T @ y)
             A = np.linalg.solve(L_mm, K_nm.T)  # (m, n)
-            A = np.linalg.solve(L_mm.T, A)     # (m, n)
+            A = np.linalg.solve(L_mm.T, A)  # (m, n)
             mean = K_sm @ np.linalg.solve(K_mm_reg, K_nm.T @ train_y)
 
             # 计算近似方差
@@ -94,21 +94,17 @@ class SparseGPModel:
             #   @ (K_nn + sigma^2 I)^{-1} @ K_nm @ K_mm^{-1} @ K_ms
             # 使用 FITC 近似简化
             B = np.linalg.solve(L_mm, K_sm.T)  # (m, n_test)
-            B = np.linalg.solve(L_mm.T, B)     # (m, n_test)
+            B = np.linalg.solve(L_mm.T, B)  # (m, n_test)
             proj_cov = K_ss - K_sm @ B  # (n_test, n_test)
 
             # 添加数据项贡献
-            diag_Knn = np.diag(
-                self._compute_kernel(
-                    train_x, train_x, kernel_type, length_scale, signal_variance
-                )
-            )
+            diag_Knn = np.diag(self._compute_kernel(train_x, train_x, kernel_type, length_scale, signal_variance))
             diag_Qnn = np.sum(K_nm * A.T, axis=1)  # 投影方差
             sigma2 = self.noise_variance
             Lambda_inv = 1.0 / (diag_Knn - diag_Qnn + sigma2 + 1e-8)  # (n,)
             C = A * Lambda_inv[np.newaxis, :]  # (m, n)
             D = np.linalg.solve(L_mm, C @ K_nm.T)  # (m, m)
-            D = np.linalg.solve(L_mm.T, D)          # (m, m)
+            D = np.linalg.solve(L_mm.T, D)  # (m, m)
 
             var = np.diag(proj_cov) + np.sum(K_sm * np.linalg.solve(K_mm_reg, D @ K_sm.T).T, axis=1)
             var = np.maximum(var, 1e-10)
@@ -120,8 +116,8 @@ class SparseGPModel:
         std = np.sqrt(var)
 
         # 计算节省比: 完整 GP 为 O(n^3)，稀疏 GP 为 O(nm^2)
-        full_cost = n_train ** 3
-        sparse_cost = n_train * n_inducing ** 2
+        full_cost = n_train**3
+        sparse_cost = n_train * n_inducing**2
         computational_saving = 1.0 - (sparse_cost / max(full_cost, 1))
 
         return {
@@ -189,7 +185,7 @@ class SparseGPModel:
         """
         if kernel_type == "rbf":
             dists = cdist(x1, x2, metric="sqeuclidean")
-            return signal_variance * np.exp(-0.5 * dists / length_scale ** 2)
+            return signal_variance * np.exp(-0.5 * dists / length_scale**2)
         elif kernel_type == "matern":
             dists = cdist(x1, x2, metric="euclidean")
             scaled = np.sqrt(3.0) * dists / length_scale
@@ -199,4 +195,4 @@ class SparseGPModel:
         else:
             logger.warning("未知核函数类型 '%s'，回退到 RBF", kernel_type)
             dists = cdist(x1, x2, metric="sqeuclidean")
-            return signal_variance * np.exp(-0.5 * dists / length_scale ** 2)
+            return signal_variance * np.exp(-0.5 * dists / length_scale**2)

@@ -86,7 +86,10 @@ class DigitalTwinPlanner:
 
         logger.info(
             "数字孪生规划: 起点=%s, 终点=%s, 风速=%.1f, 仿真步数=%d",
-            start, goal, wind_speed, simulation_steps,
+            start,
+            goal,
+            wind_speed,
+            simulation_steps,
         )
 
         start_grid = self._world_to_grid(start, rows, cols)
@@ -94,7 +97,11 @@ class DigitalTwinPlanner:
 
         # 初始路径规划（A*）
         initial_path = self._plan_initial_path(
-            start_grid, goal_grid, rows, cols, obstacles,
+            start_grid,
+            goal_grid,
+            rows,
+            cols,
+            obstacles,
         )
 
         if not initial_path:
@@ -114,7 +121,10 @@ class DigitalTwinPlanner:
         for round_idx in range(self.optimization_rounds):
             # 在数字孪生环境中仿真当前路径
             sim_result = self._simulate_flight(
-                optimized_path, weather, uav_model, simulation_steps,
+                optimized_path,
+                weather,
+                uav_model,
+                simulation_steps,
             )
             all_simulation_results.append(sim_result)
 
@@ -126,17 +136,25 @@ class DigitalTwinPlanner:
 
             # 根据仿真反馈优化路径
             optimized_path = self._optimize_path(
-                optimized_path, sim_result, obstacles, rows, cols,
+                optimized_path,
+                sim_result,
+                obstacles,
+                rows,
+                cols,
             )
 
             logger.debug(
                 "优化轮次 %d: 综合评分=%.4f",
-                round_idx + 1, metrics["overall_score"],
+                round_idx + 1,
+                metrics["overall_score"],
             )
 
         # 最终仿真验证
         final_sim = self._simulate_flight(
-            optimized_path, weather, uav_model, simulation_steps,
+            optimized_path,
+            weather,
+            uav_model,
+            simulation_steps,
         )
         final_metrics = self._compute_performance_metrics(final_sim, uav_model)
 
@@ -176,7 +194,10 @@ class DigitalTwinPlanner:
         }
 
     def _world_to_grid(
-        self, pos: list, rows: int, cols: int,
+        self,
+        pos: list,
+        rows: int,
+        cols: int,
     ) -> tuple[int, int]:
         """世界坐标转网格坐标。"""
         gx = int(pos[0] + rows / 2)
@@ -184,7 +205,10 @@ class DigitalTwinPlanner:
         return (max(0, min(gx, rows - 1)), max(0, min(gy, cols - 1)))
 
     def _grid_to_world(
-        self, pos: tuple[int, int], rows: int, cols: int,
+        self,
+        pos: tuple[int, int],
+        rows: int,
+        cols: int,
     ) -> list[int]:
         """网格坐标转世界坐标。"""
         return [pos[0] - rows // 2, pos[1] - cols // 2]
@@ -262,10 +286,12 @@ class DigitalTwinPlanner:
         max_speed = uav_model.get("max_speed", 15.0)
         wind_speed = weather.get("wind_speed", 5.0)
         wind_dir_rad = np.radians(weather.get("wind_direction", 0.0))
-        wind_vector = np.array([
-            wind_speed * np.cos(wind_dir_rad),
-            wind_speed * np.sin(wind_dir_rad),
-        ])
+        wind_vector = np.array(
+            [
+                wind_speed * np.cos(wind_dir_rad),
+                wind_speed * np.sin(wind_dir_rad),
+            ]
+        )
 
         trajectory = []
         position = np.array(path[0], dtype=float)
@@ -304,12 +330,14 @@ class DigitalTwinPlanner:
             # 更新位置
             position = position + actual_vel * self.dt
 
-            trajectory.append({
-                "step": step,
-                "position": position.tolist(),
-                "velocity": actual_vel.tolist(),
-                "waypoint_idx": waypoint_idx,
-            })
+            trajectory.append(
+                {
+                    "step": step,
+                    "position": position.tolist(),
+                    "velocity": actual_vel.tolist(),
+                    "waypoint_idx": waypoint_idx,
+                }
+            )
             velocities.append(float(np.linalg.norm(actual_vel)))
             accelerations.append(0.0)
 
@@ -356,14 +384,13 @@ class DigitalTwinPlanner:
 
         # 总距离
         positions = [np.array(t["position"]) for t in trajectory]
-        distances = [np.linalg.norm(positions[i + 1] - positions[i])
-                     for i in range(len(positions) - 1)]
+        distances = [np.linalg.norm(positions[i + 1] - positions[i]) for i in range(len(positions) - 1)]
         total_distance = float(np.sum(distances)) if distances else 0.0
 
         # 能耗估算（简化模型）
         speeds = [np.linalg.norm(np.array(t["velocity"])) for t in trajectory]
         mean_speed = float(np.mean(speeds)) if speeds else 0.0
-        energy = mass * mean_speed ** 2 * flight_time * 0.001  # 简化能耗模型
+        energy = mass * mean_speed**2 * flight_time * 0.001  # 简化能耗模型
         battery_used = (energy / battery_capacity) * 100
         battery_remaining = max(0.0, 100.0 - battery_used)
 

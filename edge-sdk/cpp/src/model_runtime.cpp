@@ -9,6 +9,7 @@
 #include <chrono>
 #include <algorithm>
 #include <numeric>
+#include <random>
 #include <sstream>
 #include <cstring>
 
@@ -30,8 +31,6 @@ struct ONNXRuntime::Impl {
 // ============================================================================
 // ONNXRuntime 构造/析构/移动
 // ============================================================================
-
-ONNXRuntime::ONNXRuntime() = default;
 
 ONNXRuntime::~ONNXRuntime() {
     unload_model();

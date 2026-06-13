@@ -79,7 +79,10 @@ class XGBoostCorrector:
 
         logger.info(
             "XGBoost修正器: 样本数=%d, 特征数=%d, 树数量=%d, 最大深度=%d",
-            n_samples, n_features, self.n_estimators, self.max_depth,
+            n_samples,
+            n_features,
+            self.n_estimators,
+            self.max_depth,
         )
 
         # 初始化特征重要性
@@ -133,7 +136,7 @@ class XGBoostCorrector:
             "std": float(np.std(final_residuals)),
             "min": float(np.min(final_residuals)),
             "max": float(np.max(final_residuals)),
-            "rmse": float(np.sqrt(np.mean(final_residuals ** 2))),
+            "rmse": float(np.sqrt(np.mean(final_residuals**2))),
             "mae": float(np.mean(np.abs(final_residuals))),
         }
 
@@ -177,11 +180,7 @@ class XGBoostCorrector:
         n_samples = len(gradients)
 
         # 叶子节点条件
-        if (
-            depth >= self.max_depth
-            or n_samples < self.min_samples_split
-            or n_samples <= 1
-        ):
+        if depth >= self.max_depth or n_samples < self.min_samples_split or n_samples <= 1:
             # 计算叶子最优值: -sum(G) / (sum(H) + lambda)
             leaf_value = -np.sum(gradients) / (np.sum(hessians) + self.reg_lambda)
             return {"leaf": True, "value": leaf_value}
@@ -190,7 +189,9 @@ class XGBoostCorrector:
         n_features = x.shape[1]
         if self.max_features and self.max_features < n_features:
             feature_indices = np.random.choice(
-                n_features, self.max_features, replace=False,
+                n_features,
+                self.max_features,
+                replace=False,
             )
         else:
             feature_indices = np.arange(n_features)
@@ -224,9 +225,9 @@ class XGBoostCorrector:
 
                 # 计算增益
                 gain = (
-                    (G_left ** 2) / (H_left + self.reg_lambda)
-                    + (G_right ** 2) / (H_right + self.reg_lambda)
-                    - (G_total ** 2) / (H_total + self.reg_lambda)
+                    (G_left**2) / (H_left + self.reg_lambda)
+                    + (G_right**2) / (H_right + self.reg_lambda)
+                    - (G_total**2) / (H_total + self.reg_lambda)
                 )
 
                 if gain > best_gain:
@@ -252,10 +253,16 @@ class XGBoostCorrector:
             "threshold": float(best_threshold),
             "gain": float(best_gain),
             "left": self._build_tree(
-                x[left_mask], gradients[left_mask], hessians[left_mask], depth + 1,
+                x[left_mask],
+                gradients[left_mask],
+                hessians[left_mask],
+                depth + 1,
             ),
             "right": self._build_tree(
-                x[right_mask], gradients[right_mask], hessians[right_mask], depth + 1,
+                x[right_mask],
+                gradients[right_mask],
+                hessians[right_mask],
+                depth + 1,
             ),
         }
 

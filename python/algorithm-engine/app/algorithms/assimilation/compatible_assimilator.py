@@ -100,8 +100,7 @@ class CompatibleAssimilator:
 
         # ---- 第四步：混合原始分析和约束后分析 ----
         x_compatible = (
-            self.compatibility_weight * (xb + constrained_increment)
-            + (1.0 - self.compatibility_weight) * x_enkf
+            self.compatibility_weight * (xb + constrained_increment) + (1.0 - self.compatibility_weight) * x_enkf
         )
 
         analysis = x_compatible.reshape(shape)
@@ -177,7 +176,7 @@ class CompatibleAssimilator:
 
         HX = H @ X_pert.T  # noqa: N806
         HPHT = (HX @ HX.T) / (n_ens - 1)  # noqa: N806
-        R = np.eye(m) * self.observation_error_scale ** 2  # noqa: N806
+        R = np.eye(m) * self.observation_error_scale**2  # noqa: N806
         HPHT_plus_R = HPHT + R  # noqa: N806
 
         try:

@@ -62,7 +62,9 @@ class PotentialFieldPlanner:
 
         logger.info(
             "人工势场法规划: 起点=%s, 终点=%s, 障碍物=%d",
-            tuple(start.astype(int)), tuple(goal.astype(int)), len(obstacles),
+            tuple(start.astype(int)),
+            tuple(goal.astype(int)),
+            len(obstacles),
         )
 
         rows, cols = grid_size
@@ -79,7 +81,8 @@ class PotentialFieldPlanner:
                 total_cost += dist_to_goal
                 logger.info(
                     "人工势场法完成: 到达目标, 步数=%d, 代价=%.2f",
-                    step + 1, total_cost,
+                    step + 1,
+                    total_cost,
                 )
                 return {
                     "path": [[int(round(p[0])), int(round(p[1]))] for p in path],
@@ -97,7 +100,7 @@ class PotentialFieldPlanner:
                 dist = np.linalg.norm(diff)
                 if dist < self.d0 and dist > 1e-6:
                     # 斥力大小与距离成反比
-                    magnitude = self.k_rep * (1.0 / dist - 1.0 / self.d0) * (1.0 / dist ** 2)
+                    magnitude = self.k_rep * (1.0 / dist - 1.0 / self.d0) * (1.0 / dist**2)
                     f_rep += magnitude * diff / dist
 
             # 合力
@@ -126,7 +129,10 @@ class PotentialFieldPlanner:
             if step % 100 == 0:
                 logger.debug(
                     "步 %d: 位置=%s, 到目标距离=%.2f, 合力=%.4f",
-                    step, tuple(current.astype(int)), dist_to_goal, force_mag,
+                    step,
+                    tuple(current.astype(int)),
+                    dist_to_goal,
+                    force_mag,
                 )
 
         logger.warning(

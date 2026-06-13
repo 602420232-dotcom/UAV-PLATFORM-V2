@@ -56,7 +56,9 @@ class VoronoiRoadmapPlanner:
 
         logger.info(
             "Voronoi图规划: 起点=%s, 终点=%s, 障碍物=%d",
-            tuple(start.astype(int)), tuple(goal.astype(int)), len(obstacles),
+            tuple(start.astype(int)),
+            tuple(goal.astype(int)),
+            len(obstacles),
         )
 
         rows, cols = grid_size
@@ -71,10 +73,14 @@ class VoronoiRoadmapPlanner:
         obs_array = np.array(obstacles)
 
         # 添加边界点确保Voronoi图覆盖整个空间
-        boundary_points = np.array([
-            [-10, -10], [rows + 10, -10],
-            [-10, cols + 10], [rows + 10, cols + 10],
-        ])
+        boundary_points = np.array(
+            [
+                [-10, -10],
+                [rows + 10, -10],
+                [-10, cols + 10],
+                [rows + 10, cols + 10],
+            ]
+        )
         all_points = np.vstack([obs_array, boundary_points])
 
         try:
@@ -144,8 +150,10 @@ class VoronoiRoadmapPlanner:
             if p1 >= 0 and p2 >= 0:
                 v1 = vor.vertices[p1]
                 v2 = vor.vertices[p2]
-                if (0 <= v1[0] <= rows and 0 <= v1[1] <= cols
-                        and 0 <= v2[0] <= rows and 0 <= v2[1] <= cols):
+                if (0 <= v1[0] <= rows
+                        and 0 <= v1[1] <= cols
+                        and 0 <= v2[0] <= rows
+                        and 0 <= v2[1] <= cols):
                     # 找到最近的顶点索引
                     idx1 = self._find_nearest_vertex(vertices, v1)
                     idx2 = self._find_nearest_vertex(vertices, v2)
@@ -157,7 +165,7 @@ class VoronoiRoadmapPlanner:
         # 连接起点和终点到最近的多个顶点
         for special_idx in [start_idx, goal_idx]:
             dists = np.linalg.norm(vertices - vertices[special_idx], axis=1)
-            nearest_indices = np.argsort(dists)[1:self.buffer_points + 1]
+            nearest_indices = np.argsort(dists)[1 : self.buffer_points + 1]
             for ni in nearest_indices:
                 dist = float(dists[ni])
                 edges[special_idx].append((int(ni), dist))
@@ -214,4 +222,4 @@ class VoronoiRoadmapPlanner:
         if len(points) < 2:
             return 0.0
         diffs = np.diff(points, axis=0)
-        return float(np.sum(np.sqrt(np.sum(diffs ** 2, axis=1))))
+        return float(np.sum(np.sqrt(np.sum(diffs**2, axis=1))))

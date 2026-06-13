@@ -129,6 +129,7 @@ class ModelQuantizationAdapter(AlgorithmAdapter):
 
 class V2XCommunicationAdapter(AlgorithmAdapter):
     """V2X 通信模拟适配器。"""
+
     def __init__(self) -> None:
         super().__init__()
         self.set_metadata(
@@ -145,9 +146,10 @@ class V2XCommunicationAdapter(AlgorithmAdapter):
                         "sender_position": {"type": "array"},
                         "receiver_positions": {"type": "array"},
                         "message_size_bytes": {"type": "integer"},
-                        "mode": {"type": "string",
-                                 "enum": ["broadcast", "unicast",
-                                          "channel_quality", "network_topology"]},
+                        "mode": {
+                            "type": "string",
+                            "enum": ["broadcast", "unicast", "channel_quality", "network_topology"],
+                        },
                     },
                 },
                 output_schema={
@@ -163,6 +165,7 @@ class V2XCommunicationAdapter(AlgorithmAdapter):
 
     def execute(self, params: dict[str, Any]) -> dict[str, Any]:
         from app.algorithms.edge.v2x_communication import V2XCommunication
+
         algo = V2XCommunication(params.get("config"))
         mode = params.get("mode", "broadcast")
         if mode == "unicast":

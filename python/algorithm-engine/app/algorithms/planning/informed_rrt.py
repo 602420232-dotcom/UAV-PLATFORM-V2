@@ -60,7 +60,9 @@ class InformedRRTPlanner:
 
         logger.info(
             "Informed RRT规划: 起点=%s, 终点=%s, 最大迭代=%d",
-            tuple(start.astype(int)), tuple(goal.astype(int)), self.max_iterations,
+            tuple(start.astype(int)),
+            tuple(goal.astype(int)),
+            self.max_iterations,
         )
 
         rows, cols = grid_size
@@ -86,10 +88,12 @@ class InformedRRTPlanner:
             elif np.random.rand() < self.goal_bias:
                 rand_point = goal.copy()
             else:
-                rand_point = np.array([
-                    np.random.uniform(x_min, x_max),
-                    np.random.uniform(y_min, y_max),
-                ])
+                rand_point = np.array(
+                    [
+                        np.random.uniform(x_min, x_max),
+                        np.random.uniform(y_min, y_max),
+                    ]
+                )
 
             # 找最近节点
             nearest_idx = self._find_nearest(nodes, rand_point)
@@ -119,9 +123,7 @@ class InformedRRTPlanner:
                 d = np.linalg.norm(nodes[i] - new_point)
                 if d < self.rewire_radius:
                     c = costs[i] + d
-                    if c < best_new_cost and not self._check_line_collision(
-                        nodes[i], new_point, obstacles
-                    ):
+                    if c < best_new_cost and not self._check_line_collision(nodes[i], new_point, obstacles):
                         best_parent = i
                         best_new_cost = c
 
@@ -134,9 +136,7 @@ class InformedRRTPlanner:
                 d = np.linalg.norm(nodes[i] - new_point)
                 if d < self.rewire_radius:
                     new_cost = costs[new_idx] + d
-                    if new_cost < costs[i] and not self._check_line_collision(
-                        nodes[i], new_point, obstacles
-                    ):
+                    if new_cost < costs[i] and not self._check_line_collision(nodes[i], new_point, obstacles):
                         parents[i] = new_idx
                         costs[i] = float(new_cost)
 
@@ -164,7 +164,9 @@ class InformedRRTPlanner:
         path = self._extract_path(best_goal_idx, nodes, parents)
         logger.info(
             "Informed RRT完成: 代价=%.2f, 迭代=%d, 树节点=%d",
-            best_cost, self.max_iterations, len(nodes),
+            best_cost,
+            self.max_iterations,
+            len(nodes),
         )
         return {
             "path": path,
@@ -187,17 +189,19 @@ class InformedRRTPlanner:
         a = best_cost / 2.0
         if a < dist_to_center:
             return np.random.uniform(
-                min(c1[0], c2[0]) - 5, max(c1[0], c2[0]) + 5, size=2,
+                min(c1[0], c2[0]) - 5,
+                max(c1[0], c2[0]) + 5,
+                size=2,
             )
 
         # 椭圆半短轴
-        b = np.sqrt(max(float(a) ** 2 - dist_to_center ** 2, 0.0))
+        b = np.sqrt(max(float(a) ** 2 - dist_to_center**2, 0.0))
 
         # 在单位圆内均匀采样
         while True:
             x = np.random.uniform(-1, 1)
             y = np.random.uniform(-1, 1)
-            if x ** 2 + y ** 2 <= 1.0:
+            if x**2 + y**2 <= 1.0:
                 break
 
         # 旋转到椭圆坐标系

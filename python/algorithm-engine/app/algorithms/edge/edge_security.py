@@ -93,10 +93,7 @@ class EdgeSecurity:
 
             encryption_info = {
                 "method": encryption_method,
-                "encrypted_data": (
-                    encrypted_hex[:64] + "..." if len(encrypted_hex) > 64
-                    else encrypted_hex
-                ),
+                "encrypted_data": (encrypted_hex[:64] + "..." if len(encrypted_hex) > 64 else encrypted_hex),
                 "data_length": len(data_str),
                 "n_blocks": n_blocks,
                 "key_length": self.key_length,
@@ -107,9 +104,9 @@ class EdgeSecurity:
         elif operation == "decrypt":
             # 模拟数据解密
             encrypted_data = params.get("encrypted_data", "")
-            decrypted = hashlib.sha256(
-                (str(encrypted_data) + key).encode()
-            ).hexdigest()[:len(str(data))] if data else ""
+            decrypted = (
+                hashlib.sha256((str(encrypted_data) + key).encode()).hexdigest()[: len(str(data))] if data else ""
+            )
             encryption_info = {
                 "method": encryption_method,
                 "decrypted_preview": decrypted[:32] if decrypted else "",
@@ -121,9 +118,7 @@ class EdgeSecurity:
             # 模拟身份认证
             if auth_method == "hmac":
                 message = str(data)
-                hmac_value = hashlib.sha256(
-                    (key + message).encode()
-                ).hexdigest()
+                hmac_value = hashlib.sha256((key + message).encode()).hexdigest()
                 auth_result = {
                     "method": "hmac",
                     "hmac": hmac_value,
@@ -131,9 +126,7 @@ class EdgeSecurity:
                     "message_length": len(message),
                 }
             elif auth_method == "certificate":
-                cert_fingerprint = hashlib.sha256(
-                    (str(data) + key + "cert").encode()
-                ).hexdigest()
+                cert_fingerprint = hashlib.sha256((str(data) + key + "cert").encode()).hexdigest()
                 auth_result = {
                     "method": "certificate",
                     "fingerprint": cert_fingerprint,
@@ -141,9 +134,7 @@ class EdgeSecurity:
                     "cert_valid": True,
                 }
             elif auth_method == "token":
-                token = hashlib.sha256(
-                    (key + str(_time.time())).encode()
-                ).hexdigest()[:32]
+                token = hashlib.sha256((key + str(_time.time())).encode()).hexdigest()[:32]
                 auth_result = {
                     "method": "token",
                     "token": token,
@@ -153,9 +144,7 @@ class EdgeSecurity:
             else:
                 auth_result = {"method": auth_method, "authenticated": False}
 
-            security_status["authentication"] = (
-                "success" if auth_result.get("authenticated") else "failed"
-            )
+            security_status["authentication"] = "success" if auth_result.get("authenticated") else "failed"
 
         elif operation == "verify":
             # 模拟完整性验证

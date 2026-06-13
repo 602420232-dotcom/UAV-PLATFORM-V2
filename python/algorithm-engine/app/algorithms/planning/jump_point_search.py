@@ -59,7 +59,9 @@ class JumpPointSearchPlanner:
 
         logger.info(
             "跳点搜索: 起点=%s, 终点=%s, 网格=%s",
-            start, goal, grid_size,
+            start,
+            goal,
+            grid_size,
         )
 
         rows, cols = grid_size
@@ -90,7 +92,8 @@ class JumpPointSearchPlanner:
                 cost = g_score[current]
                 logger.info(
                     "跳点搜索完成: 代价=%.2f, 探索节点=%d",
-                    cost, nodes_explored,
+                    cost,
+                    nodes_explored,
                 )
                 return {
                     "path": path,
@@ -139,8 +142,7 @@ class JumpPointSearchPlanner:
         # 对角移动的特殊处理
         if abs(dx) + abs(dy) == 2:
             # 检查是否有强制邻居（对角方向两侧被阻挡）
-            if (self._is_blocked((nx, ny), (dx, 0))
-                    or self._is_blocked((nx, ny), (0, dy))):
+            if self._is_blocked((nx, ny), (dx, 0)) or self._is_blocked((nx, ny), (0, dy)):
                 return (nx, ny)
 
             # 递归检查正交方向
@@ -151,12 +153,10 @@ class JumpPointSearchPlanner:
         else:
             # 正交移动：检查是否有强制邻居
             if dx != 0:
-                if (self._is_blocked((nx, ny), (dx, -1))
-                        or self._is_blocked((nx, ny), (dx, 1))):
+                if self._is_blocked((nx, ny), (dx, -1)) or self._is_blocked((nx, ny), (dx, 1)):
                     return (nx, ny)
             else:
-                if (self._is_blocked((nx, ny), (-1, dy))
-                        or self._is_blocked((nx, ny), (1, dy))):
+                if self._is_blocked((nx, ny), (-1, dy)) or self._is_blocked((nx, ny), (1, dy)):
                     return (nx, ny)
 
         # 继续跳转

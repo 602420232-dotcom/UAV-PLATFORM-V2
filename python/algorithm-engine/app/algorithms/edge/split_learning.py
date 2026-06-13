@@ -95,8 +95,7 @@ class SplitLearning:
             predictions = 1.0 / (1.0 + np.exp(-logits))  # Sigmoid
 
             # 计算损失
-            loss = float(-np.mean(y * np.log(predictions + 1e-8)
-                                  + (1 - y) * np.log(1 - predictions + 1e-8)))
+            loss = float(-np.mean(y * np.log(predictions + 1e-8) + (1 - y) * np.log(1 - predictions + 1e-8)))
 
             # 后端反向传播
             grad_logits = predictions - y
@@ -119,11 +118,13 @@ class SplitLearning:
             front_bias -= learning_rate * grad_front_b
 
             accuracy = float(np.mean((predictions > 0.5).astype(int) == y.astype(int)))
-            history.append({
-                "epoch": epoch + 1,
-                "loss": round(loss, 6),
-                "accuracy": round(accuracy, 4),
-            })
+            history.append(
+                {
+                    "epoch": epoch + 1,
+                    "loss": round(loss, 6),
+                    "accuracy": round(accuracy, 4),
+                }
+            )
 
         t_end = _time.perf_counter()
         training_time = (t_end - t_start) * 1000

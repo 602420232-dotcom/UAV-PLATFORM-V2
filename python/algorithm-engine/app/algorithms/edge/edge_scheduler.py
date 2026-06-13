@@ -92,9 +92,7 @@ class EdgeScheduler:
                 # 贪心：选择剩余资源最多的节点
                 best_node = max(
                     node_ids,
-                    key=lambda nid: (
-                        node_states[nid]["cpu_capacity"] - node_states[nid]["cpu_used"]
-                    ),
+                    key=lambda nid: (node_states[nid]["cpu_capacity"] - node_states[nid]["cpu_used"]),
                 )
             elif scheduling_policy == "round_robin":
                 # 轮转
@@ -104,10 +102,7 @@ class EdgeScheduler:
                 # 最少负载
                 best_node = min(
                     node_ids,
-                    key=lambda nid: (
-                        node_states[nid]["cpu_used"]
-                        / max(node_states[nid]["cpu_capacity"], 1)
-                    ),
+                    key=lambda nid: (node_states[nid]["cpu_used"] / max(node_states[nid]["cpu_capacity"], 1)),
                 )
             elif scheduling_policy == "priority":
                 # 优先级匹配：高优先级任务分配给负载低的节点
@@ -131,11 +126,13 @@ class EdgeScheduler:
 
                 if best_node not in resource_allocation:
                     resource_allocation[best_node] = []
-                resource_allocation[best_node].append({
-                    "task_id": task_id,
-                    "cpu_allocated": cpu_req,
-                    "memory_allocated": mem_req,
-                })
+                resource_allocation[best_node].append(
+                    {
+                        "task_id": task_id,
+                        "cpu_allocated": cpu_req,
+                        "memory_allocated": mem_req,
+                    }
+                )
             else:
                 schedule[task_id] = "unassigned"
 

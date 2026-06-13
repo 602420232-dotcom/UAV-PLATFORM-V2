@@ -116,9 +116,7 @@ class EdgeBandwidthOptimizer:
 
         elif scheduling_algorithm == "deadline":
             # 截止时间调度：紧急任务优先
-            sorted_by_deadline = sorted(
-                data_streams, key=lambda s: s.get("deadline_ms", float("inf"))
-            )
+            sorted_by_deadline = sorted(data_streams, key=lambda s: s.get("deadline_ms", float("inf")))
             remaining_bw = total_bandwidth
             for stream in sorted_by_deadline:
                 sid = stream["id"]
@@ -137,13 +135,15 @@ class EdgeBandwidthOptimizer:
         for stream in sorted_streams:
             sid = stream["id"]
             alloc = bandwidth_allocation.get(sid, {})
-            priority_queue.append({
-                "stream_id": sid,
-                "priority": stream.get("priority", 0),
-                "allocated_mbps": alloc.get("allocated_mbps", 0.0),
-                "size_mb": stream.get("compressed_size_mb", 0.0),
-                "deadline_ms": stream.get("deadline_ms", float("inf")),
-            })
+            priority_queue.append(
+                {
+                    "stream_id": sid,
+                    "priority": stream.get("priority", 0),
+                    "allocated_mbps": alloc.get("allocated_mbps", 0.0),
+                    "size_mb": stream.get("compressed_size_mb", 0.0),
+                    "deadline_ms": stream.get("deadline_ms", float("inf")),
+                }
+            )
 
         # 吞吐量计算
         utilization = allocated_bandwidth / max(total_bandwidth, 1)

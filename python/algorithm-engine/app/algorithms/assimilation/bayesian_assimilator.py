@@ -70,10 +70,10 @@ class BayesianAssimilator:
         # ---- 先验参数 ----
         prior_mean = xb.copy()
         prior_sigma = self.background_error_scale / max(self.prior_confidence, 1e-6)
-        prior_var = prior_sigma ** 2
+        prior_var = prior_sigma**2
 
         # ---- 似然参数 ----
-        likelihood_var = self.likelihood_sigma ** 2
+        likelihood_var = self.likelihood_sigma**2
 
         # ---- 对每个网格点应用贝叶斯更新 ----
         posterior_mean = prior_mean.copy()
@@ -115,14 +115,10 @@ class BayesianAssimilator:
                     effective_likelihood_var = likelihood_var / max(weights.sum(), 1e-10)
 
                     # 贝叶斯更新
-                    posterior_var[idx] = (
-                        prior_var * effective_likelihood_var
-                        / (prior_var + effective_likelihood_var)
+                    posterior_var[idx] = prior_var * effective_likelihood_var / (prior_var + effective_likelihood_var)
+                    posterior_mean[idx] = (effective_likelihood_var * prior_mean[idx] + prior_var * y_eff) / (
+                        prior_var + effective_likelihood_var
                     )
-                    posterior_mean[idx] = (
-                        effective_likelihood_var * prior_mean[idx]
-                        + prior_var * y_eff
-                    ) / (prior_var + effective_likelihood_var)
 
         analysis = posterior_mean.reshape(shape)
         posterior_std = np.sqrt(posterior_var).reshape(shape)

@@ -107,7 +107,10 @@ class Trajectory4DPlanner:
 
         logger.info(
             "4D轨迹规划: 起点=%s, 终点=%s, 巡航速度=%.1f, 风速=%.1f",
-            start_3d, goal_3d, cruise_speed, wind_base_speed,
+            start_3d,
+            goal_3d,
+            cruise_speed,
+            wind_base_speed,
         )
 
         # 2D路径规划（A*）
@@ -120,7 +123,11 @@ class Trajectory4DPlanner:
         goal_grid = self._world_to_grid(goal_3d[:2], grid_size[0], grid_size[1])
 
         path_2d = self._plan_2d_path(
-            start_grid, goal_grid, grid_size[0], grid_size[1], obstacle_set,
+            start_grid,
+            goal_grid,
+            grid_size[0],
+            grid_size[1],
+            obstacle_set,
         )
 
         if not path_2d:
@@ -134,19 +141,31 @@ class Trajectory4DPlanner:
 
         # 3D路径生成（高度规划）
         path_3d = self._plan_altitude(
-            path_2d, start_3d[2], goal_3d[2], obstacles,
+            path_2d,
+            start_3d[2],
+            goal_3d[2],
+            obstacles,
         )
 
         # 4D轨迹生成（时间分配）
         trajectory_4d = self._assign_time(
-            path_3d, cruise_speed, max_speed, wind_base_speed,
-            wind_dir_rad, gust_factor, earliest_arrival,
+            path_3d,
+            cruise_speed,
+            max_speed,
+            wind_base_speed,
+            wind_dir_rad,
+            gust_factor,
+            earliest_arrival,
         )
 
         # 计算能耗
         energy_consumption = self._compute_energy(
-            trajectory_4d, mass, power_consumption, wind_base_speed,
-            wind_dir_rad, gust_factor,
+            trajectory_4d,
+            mass,
+            power_consumption,
+            wind_base_speed,
+            wind_dir_rad,
+            gust_factor,
         )
 
         # 计算飞行时间
@@ -156,12 +175,17 @@ class Trajectory4DPlanner:
 
         # 生成航点详情
         waypoints_detail = self._generate_waypoint_details(
-            trajectory_4d, wind_base_speed, wind_dir_rad, gust_factor,
+            trajectory_4d,
+            wind_base_speed,
+            wind_dir_rad,
+            gust_factor,
         )
 
         logger.info(
             "4D轨迹规划完成: 飞行时间=%.2fs, 能耗=%.2fWh, 航点数=%d",
-            flight_time, energy_consumption, len(trajectory_4d),
+            flight_time,
+            energy_consumption,
+            len(trajectory_4d),
         )
 
         return {
@@ -172,7 +196,10 @@ class Trajectory4DPlanner:
         }
 
     def _world_to_grid(
-        self, pos: list, rows: int, cols: int,
+        self,
+        pos: list,
+        rows: int,
+        cols: int,
     ) -> tuple[int, int]:
         """世界坐标转网格坐标。"""
         gx = int(pos[0] + rows / 2)
@@ -180,7 +207,10 @@ class Trajectory4DPlanner:
         return (max(0, min(gx, rows - 1)), max(0, min(gy, cols - 1)))
 
     def _grid_to_world(
-        self, pos: tuple[int, int], rows: int, cols: int,
+        self,
+        pos: tuple[int, int],
+        rows: int,
+        cols: int,
     ) -> list[float]:
         """网格坐标转世界坐标。"""
         return [float(pos[0] - rows // 2), float(pos[1] - cols // 2)]
@@ -329,7 +359,7 @@ class Trajectory4DPlanner:
             dx = point[0] - prev[0]
             dy = point[1] - prev[1]
             dz = point[2] - prev[2]
-            segment_dist = np.sqrt(dx ** 2 + dy ** 2 + dz ** 2)
+            segment_dist = np.sqrt(dx**2 + dy**2 + dz**2)
 
             # 计算飞行方向
             if segment_dist > 1e-6:
@@ -349,12 +379,14 @@ class Trajectory4DPlanner:
             segment_time = segment_dist / effective_speed
             current_time += segment_time
 
-            trajectory.append([
-                round(point[0], 4),
-                round(point[1], 4),
-                round(point[2], 4),
-                round(current_time, 4),
-            ])
+            trajectory.append(
+                [
+                    round(point[0], 4),
+                    round(point[1], 4),
+                    round(point[2], 4),
+                    round(current_time, 4),
+                ]
+            )
 
         return trajectory
 
@@ -386,7 +418,7 @@ class Trajectory4DPlanner:
             dx = curr[0] - prev[0]
             dy = curr[1] - prev[1]
             dz = curr[2] - prev[2]
-            dist = np.sqrt(dx ** 2 + dy ** 2 + dz ** 2)
+            dist = np.sqrt(dx**2 + dy**2 + dz**2)
             speed = dist / dt if dt > 0 else 0.0
 
             # 风的影响
@@ -434,7 +466,7 @@ class Trajectory4DPlanner:
                     dx = x - prev[0]
                     dy = y - prev[1]
                     dz = z - prev[2]
-                    dist = np.sqrt(dx ** 2 + dy ** 2 + dz ** 2)
+                    dist = np.sqrt(dx**2 + dy**2 + dz**2)
                     speed = dist / dt
                     heading = float(np.degrees(np.arctan2(dy, dx))) % 360
                     vertical_speed = dz / dt

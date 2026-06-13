@@ -59,7 +59,9 @@ class TabuSearchPlanner:
 
         logger.info(
             "禁忌搜索规划: 起点=%s, 终点=%s, 禁忌长度=%d",
-            tuple(start.astype(int)), tuple(goal.astype(int)), self.tabu_tenure,
+            tuple(start.astype(int)),
+            tuple(goal.astype(int)),
+            self.tabu_tenure,
         )
 
         rows, cols = grid_size
@@ -131,7 +133,10 @@ class TabuSearchPlanner:
             if iteration % 50 == 0:
                 logger.debug(
                     "迭代 %d: 当前代价=%.2f, 最优代价=%.2f, 禁忌表长度=%d",
-                    iteration, current_cost, best_cost, len(tabu_list),
+                    iteration,
+                    current_cost,
+                    best_cost,
+                    len(tabu_list),
                 )
 
         full_path = [start] + [wp.copy() for wp in best_path] + [goal]
@@ -154,7 +159,7 @@ class TabuSearchPlanner:
         """评估路径代价。"""
         full_path = np.vstack([start, waypoints, goal])
         diffs = np.diff(full_path, axis=0)
-        segment_lengths = np.sqrt(np.sum(diffs ** 2, axis=1))
+        segment_lengths = np.sqrt(np.sum(diffs**2, axis=1))
         path_length = np.sum(segment_lengths)
 
         obstacle_penalty = 0.0

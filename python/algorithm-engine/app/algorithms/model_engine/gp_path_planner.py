@@ -25,7 +25,8 @@ class GPRPathPlanner:
     def __init__(self, config: Optional[dict[str, Any]] = None):
         self.config = config or {}
         self.default_uncertainty_weight = self.config.get(
-            "uncertainty_weight", 0.5,
+            "uncertainty_weight",
+            0.5,
         )
         self.default_grid_size = self.config.get("grid_size", 50)
         self.diagonal_cost = self.config.get("diagonal_cost", 1.414)
@@ -64,21 +65,28 @@ class GPRPathPlanner:
             dtype=float,
         )
         uncertainty_weight = params.get(
-            "uncertainty_weight", self.default_uncertainty_weight,
+            "uncertainty_weight",
+            self.default_uncertainty_weight,
         )
 
         logger.info(
-            "开始GP路径规划: start=%s, goal=%s, grid_size=%d, "
-            "uncertainty_weight=%.2f",
-            start, goal, grid_size, uncertainty_weight,
+            "开始GP路径规划: start=%s, goal=%s, grid_size=%d, uncertainty_weight=%.2f",
+            start,
+            goal,
+            grid_size,
+            uncertainty_weight,
         )
 
         start_cell = tuple(np.clip(start.astype(int), 0, grid_size - 1))
         goal_cell = tuple(np.clip(goal.astype(int), 0, grid_size - 1))
 
         path = self._a_star_search(
-            start_cell, goal_cell, gp_mean, gp_variance,
-            uncertainty_weight, grid_size,
+            start_cell,
+            goal_cell,
+            gp_mean,
+            gp_variance,
+            uncertainty_weight,
+            grid_size,
         )
 
         if path is None:
@@ -86,10 +94,14 @@ class GPRPathPlanner:
             path = self._straight_line_path(start_cell, goal_cell)
 
         cost = self._compute_path_cost(
-            path, gp_mean, gp_variance, uncertainty_weight,
+            path,
+            gp_mean,
+            gp_variance,
+            uncertainty_weight,
         )
         uncertainty_along_path = self._extract_uncertainty(
-            path, gp_variance,
+            path,
+            gp_variance,
         )
         safety_margin = self._compute_safety_margin(
             uncertainty_along_path,
@@ -97,7 +109,9 @@ class GPRPathPlanner:
 
         logger.info(
             "路径规划完成: 路径长度=%d, 总代价=%.4f, 安全裕度=%.4f",
-            len(path), cost, safety_margin,
+            len(path),
+            cost,
+            safety_margin,
         )
 
         return {
@@ -127,8 +141,14 @@ class GPRPathPlanner:
         g_score: dict[tuple[int, int], float] = {start: 0.0}
 
         neighbors_8 = [
-            (-1, 0), (1, 0), (0, -1), (0, 1),
-            (-1, -1), (-1, 1), (1, -1), (1, 1),
+            (-1, 0),
+            (1, 0),
+            (0, -1),
+            (0, 1),
+            (-1, -1),
+            (-1, 1),
+            (1, -1),
+            (1, 1),
         ]
 
         iterations = 0

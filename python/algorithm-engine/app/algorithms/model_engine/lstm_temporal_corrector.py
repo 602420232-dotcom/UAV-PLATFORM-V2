@@ -89,16 +89,14 @@ class LSTMTemporalCorrector:
 
         # 初始化权重
         seq_len = input_sequence.shape[0]
-        feature_dim = int(
-            input_sequence.shape[1]
-            if input_sequence.ndim == 2
-            else np.prod(input_sequence.shape[1:])
-        )
+        feature_dim = int(input_sequence.shape[1] if input_sequence.ndim == 2 else np.prod(input_sequence.shape[1:]))
         self._initialize_weights(feature_dim)
 
         logger.info(
             "LSTM时序修正: 序列长度=%d, 特征维度=%d, 预测长度=%d",
-            seq_len, feature_dim, pred_length,
+            seq_len,
+            feature_dim,
+            pred_length,
         )
 
         # 将3D/4D输入展平为2D (T, features)
@@ -179,7 +177,7 @@ class LSTMTemporalCorrector:
             corrected.append(input_seq[-1] + correction)
         corrected_sequence = np.array(corrected)
 
-        rmse = float(np.sqrt(np.mean(bias ** 2)))
+        rmse = float(np.sqrt(np.mean(bias**2)))
         skill = max(0.0, 1.0 - rmse / max(float(np.std(obs_seq)), 1e-10))
 
         return {
@@ -206,12 +204,14 @@ class LSTMTemporalCorrector:
             in_size = input_dim if layer == 0 else self.hidden_size
             # LSTM门控权重: 输入门、遗忘门、输出门、候选状态
             scale = 0.1
-            self._lstm_weights.append({
-                "W_ih": np.random.randn(4 * self.hidden_size, in_size) * scale,
-                "b_ih": np.zeros(4 * self.hidden_size),
-                "W_hh": np.random.randn(4 * self.hidden_size, self.hidden_size) * scale,
-                "b_hh": np.zeros(4 * self.hidden_size),
-            })
+            self._lstm_weights.append(
+                {
+                    "W_ih": np.random.randn(4 * self.hidden_size, in_size) * scale,
+                    "b_ih": np.zeros(4 * self.hidden_size),
+                    "W_hh": np.random.randn(4 * self.hidden_size, self.hidden_size) * scale,
+                    "b_hh": np.zeros(4 * self.hidden_size),
+                }
+            )
 
         # 全连接输出层
         self._fc_weights = [
@@ -237,17 +237,14 @@ class LSTMTemporalCorrector:
 
         outputs = []
         for t in range(seq_len):
-            inp = x[t:t + 1]  # (1, features)
+            inp = x[t : t + 1]  # (1, features)
             for layer in range(self.num_layers):
                 weights = self._lstm_weights[layer]
-                gates = (
-                    inp @ weights["W_ih"].T + weights["b_ih"]
-                    + h[layer] @ weights["W_hh"].T + weights["b_hh"]
-                )
-                i_gate = self._sigmoid(gates[:, :self.hidden_size])
-                f_gate = self._sigmoid(gates[:, self.hidden_size:2 * self.hidden_size])
-                o_gate = self._sigmoid(gates[:, 2 * self.hidden_size:3 * self.hidden_size])
-                g_gate = np.tanh(gates[:, 3 * self.hidden_size:])
+                gates = inp @ weights["W_ih"].T + weights["b_ih"] + h[layer] @ weights["W_hh"].T + weights["b_hh"]
+                i_gate = self._sigmoid(gates[:, : self.hidden_size])
+                f_gate = self._sigmoid(gates[:, self.hidden_size : 2 * self.hidden_size])
+                o_gate = self._sigmoid(gates[:, 2 * self.hidden_size : 3 * self.hidden_size])
+                g_gate = np.tanh(gates[:, 3 * self.hidden_size :])
                 c[layer] = f_gate * c[layer] + i_gate * g_gate
                 h[layer] = o_gate * np.tanh(c[layer])
                 inp = h[layer]

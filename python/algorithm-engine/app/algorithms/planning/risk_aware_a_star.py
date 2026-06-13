@@ -74,7 +74,10 @@ class RiskAwareAStar:
 
         logger.info(
             "风险感知A*规划: 起点=%s, 终点=%s, 网格=%s, 风险权重=%.2f",
-            start, goal, grid_size, risk_weight,
+            start,
+            goal,
+            grid_size,
+            risk_weight,
         )
 
         start_grid = self._world_to_grid(start, rows, cols)
@@ -92,12 +95,16 @@ class RiskAwareAStar:
             if current == goal_grid:
                 path = self._reconstruct_path(came_from, current, rows, cols)
                 risk_exposure, risk_map = self._compute_risk_exposure(
-                    path, risk_field, rows, cols,
+                    path,
+                    risk_field,
+                    rows,
+                    cols,
                 )
                 total_cost = g_score[current]
                 logger.info(
                     "风险感知A*完成: 代价=%.2f, 风险暴露=%.4f",
-                    total_cost, risk_exposure,
+                    total_cost,
+                    risk_exposure,
                 )
                 return {
                     "path": path,
@@ -120,9 +127,11 @@ class RiskAwareAStar:
                     came_from[neighbor] = current
                     g_score[neighbor] = tentative_g
                     h = self._heuristic(neighbor, goal_grid)
-                    risk_h = float(
-                        risk_field[goal_grid[0], goal_grid[1]]
-                    ) if 0 <= goal_grid[0] < rows and 0 <= goal_grid[1] < cols else 0.0
+                    risk_h = (
+                        float(risk_field[goal_grid[0], goal_grid[1]])
+                        if 0 <= goal_grid[0] < rows and 0 <= goal_grid[1] < cols
+                        else 0.0
+                    )
                     f_score = tentative_g + h + risk_weight * risk_h
                     heapq.heappush(open_set, (f_score, neighbor))
 
@@ -135,7 +144,10 @@ class RiskAwareAStar:
         }
 
     def _world_to_grid(
-        self, pos: list, rows: int, cols: int,
+        self,
+        pos: list,
+        rows: int,
+        cols: int,
     ) -> tuple[int, int]:
         """世界坐标转网格坐标。"""
         gx = int(pos[0] + rows / 2)
@@ -143,7 +155,10 @@ class RiskAwareAStar:
         return (max(0, min(gx, rows - 1)), max(0, min(gy, cols - 1)))
 
     def _grid_to_world(
-        self, pos: tuple[int, int], rows: int, cols: int,
+        self,
+        pos: tuple[int, int],
+        rows: int,
+        cols: int,
     ) -> list[int]:
         """网格坐标转世界坐标。"""
         return [pos[0] - rows // 2, pos[1] - cols // 2]

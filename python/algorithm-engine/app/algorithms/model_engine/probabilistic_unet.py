@@ -80,7 +80,12 @@ class ProbabilisticUNet:
 
         logger.info(
             "概率U-Net降尺度: 输入(%d, %d, %d) -> 输出(%d, %d), 采样数=%d",
-            in_h, in_w, in_c, out_h, out_w, n_samples,
+            in_h,
+            in_w,
+            in_c,
+            out_h,
+            out_w,
+            n_samples,
         )
 
         # 初始化权重
@@ -135,7 +140,7 @@ class ProbabilisticUNet:
         # 编码器权重（每层: 卷积核 + 偏置）
         ch = in_channels
         for d in range(self.depth):
-            out_ch = self.base_channels * (2 ** d)
+            out_ch = self.base_channels * (2**d)
             k = 3
             w = np.random.randn(k, k, ch, out_ch) * 0.1
             b = np.zeros(out_ch)
@@ -144,7 +149,7 @@ class ProbabilisticUNet:
 
         # 解码器权重
         for d in range(self.depth - 1, -1, -1):
-            out_ch = self.base_channels * (2 ** d) if d > 0 else in_channels
+            out_ch = self.base_channels * (2**d) if d > 0 else in_channels
             in_ch = self.base_channels * (2 ** (d + 1))
             k = 3
             w = np.random.randn(k, k, in_ch + ch, out_ch) * 0.1
@@ -260,10 +265,7 @@ class ProbabilisticUNet:
             for ci in range(x.shape[2]):
                 for ii in range(kh):
                     for jj in range(kw):
-                        output[:, :, co] += (
-                            padded[ii : ii + h, jj : jj + w, ci]
-                            * kernel[ii, jj, ci, co]
-                        )
+                        output[:, :, co] += padded[ii : ii + h, jj : jj + w, ci] * kernel[ii, jj, ci, co]
             output[:, :, co] += bias[co]
         return output
 

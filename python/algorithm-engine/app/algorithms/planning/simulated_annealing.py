@@ -59,7 +59,8 @@ class SimulatedAnnealingPlanner:
 
         logger.info(
             "模拟退火规划: 起点=%s, 终点=%s, 初始温度=%.1f",
-            tuple(start.astype(int)), tuple(goal.astype(int)),
+            tuple(start.astype(int)),
+            tuple(goal.astype(int)),
             self.initial_temperature,
         )
 
@@ -104,7 +105,10 @@ class SimulatedAnnealingPlanner:
             if iteration % 50 == 0:
                 logger.debug(
                     "迭代 %d: 温度=%.4f, 当前代价=%.2f, 最优代价=%.2f",
-                    iteration, temperature, current_cost, best_cost,
+                    iteration,
+                    temperature,
+                    current_cost,
+                    best_cost,
                 )
 
         # 构建最终路径
@@ -128,7 +132,7 @@ class SimulatedAnnealingPlanner:
         """评估路径代价。"""
         full_path = np.vstack([start, waypoints, goal])
         diffs = np.diff(full_path, axis=0)
-        segment_lengths = np.sqrt(np.sum(diffs ** 2, axis=1))
+        segment_lengths = np.sqrt(np.sum(diffs**2, axis=1))
         path_length = np.sum(segment_lengths)
 
         obstacle_penalty = 0.0

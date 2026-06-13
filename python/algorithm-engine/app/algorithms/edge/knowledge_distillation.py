@@ -95,26 +95,31 @@ class KnowledgeDistillation:
             # 蒸馏损失：KL散度（软标签）
             teacher_soft = self._softmax(teacher_logits / temperature)
             student_soft = self._softmax(student_logits / temperature)
-            distill_loss = float(np.mean(
-                -np.sum(teacher_soft * np.log(student_soft + 1e-8), axis=1
-                        ) * temperature * temperature
-            ))
+            distill_loss = float(
+                np.mean(
+                    -np.sum(teacher_soft * np.log(student_soft + 1e-8), axis=1)
+                    * temperature * temperature
+                )
+            )
 
             # 硬标签损失：交叉熵
             student_probs = self._softmax(student_logits)
-            hard_loss = float(-np.mean(
-                np.sum(
-                    np.eye(n_classes)[y.astype(int)] * np.log(student_probs + 1e-8),
-                    axis=1,
+            hard_loss = float(
+                -np.mean(
+                    np.sum(
+                        np.eye(n_classes)[y.astype(int)] * np.log(student_probs + 1e-8),
+                        axis=1,
+                    )
                 )
-            ))
+            )
 
             # 总损失
             total_loss = alpha * distill_loss + (1 - alpha) * hard_loss
 
             # 反向传播（简化梯度计算）
-            grad_logits = (alpha * (student_soft - teacher_soft) +
-                           (1 - alpha) * (student_probs - np.eye(n_classes)[y.astype(int)]))
+            grad_logits = alpha * (student_soft - teacher_soft) + (1 - alpha) * (
+                student_probs - np.eye(n_classes)[y.astype(int)]
+            )
             grad_logits /= n_samples
 
             grad_w2 = hidden.T @ grad_logits
@@ -131,13 +136,15 @@ class KnowledgeDistillation:
             b1 -= learning_rate * grad_b1
 
             accuracy = float(np.mean(np.argmax(student_logits, axis=1) == y.astype(int)))
-            history.append({
-                "epoch": epoch + 1,
-                "total_loss": round(total_loss, 6),
-                "distill_loss": round(distill_loss, 6),
-                "hard_loss": round(hard_loss, 6),
-                "accuracy": round(accuracy, 4),
-            })
+            history.append(
+                {
+                    "epoch": epoch + 1,
+                    "total_loss": round(total_loss, 6),
+                    "distill_loss": round(distill_loss, 6),
+                    "hard_loss": round(hard_loss, 6),
+                    "accuracy": round(accuracy, 4),
+                }
+            )
 
         t_end = _time.perf_counter()
         distill_time = (t_end - t_start) * 1000

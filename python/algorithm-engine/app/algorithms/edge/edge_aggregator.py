@@ -86,12 +86,14 @@ class EdgeAggregator:
         for i, (nid, arr) in enumerate(zip(node_ids, aligned)):
             correlation = float(np.corrcoef(arr, aggregated)[0, 1]) if len(arr) > 1 else 1.0
             deviation = float(np.mean(np.abs(arr - aggregated)))
-            node_contributions.append({
-                "node_id": nid,
-                "correlation": round(correlation, 4),
-                "mean_deviation": round(deviation, 6),
-                "data_points": len(arr),
-            })
+            node_contributions.append(
+                {
+                    "node_id": nid,
+                    "correlation": round(correlation, 4),
+                    "mean_deviation": round(deviation, 6),
+                    "data_points": len(arr),
+                }
+            )
 
         # 压缩
         original_size = sum(arr.nbytes for arr in data_arrays)

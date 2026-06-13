@@ -83,7 +83,9 @@ class DQNModel:
 
         logger.info(
             "DQN训练: 状态维度=%d, 动作维度=%d, 回合数=%d",
-            state_dim, action_dim, self.n_episodes,
+            state_dim,
+            action_dim,
+            self.n_episodes,
         )
 
         # 初始化网络权重
@@ -139,11 +141,14 @@ class DQNModel:
                 self._update_target_network()
 
             if (episode + 1) % 10 == 0:
-                avg_loss = np.mean(training_loss[-self.batch_size:])
+                avg_loss = np.mean(training_loss[-self.batch_size :])
                 avg_reward = np.mean(episode_rewards[-10:])
                 logger.info(
                     "DQN回合 %d, 平均损失: %.4f, 平均奖励: %.4f, epsilon: %.4f",
-                    episode + 1, avg_loss, avg_reward, self._epsilon,
+                    episode + 1,
+                    avg_loss,
+                    avg_reward,
+                    self._epsilon,
                 )
 
         # 生成Q值表（离散化）
@@ -244,27 +249,20 @@ class DQNModel:
 
             # TD误差
             td_error = target_q - q_values[int(action)]
-            total_loss += td_error ** 2
+            total_loss += td_error**2
 
             # 简单梯度更新（模拟SGD）
             for i in range(0, len(self._q_weights) - 2, 2):
                 grad_scale = self.learning_rate * td_error * 0.01
                 self._q_weights[i] += grad_scale * np.random.randn(*self._q_weights[i].shape) * 0.01
-                self._q_weights[i + 1] += (
-                    grad_scale
-                    * np.random.randn(*self._q_weights[i + 1].shape)
-                    * 0.01
-                )
+                self._q_weights[i + 1] += grad_scale * np.random.randn(*self._q_weights[i + 1].shape) * 0.01
 
         return float(total_loss / max(len(batch), 1))
 
     def _update_target_network(self) -> None:
         """软更新目标网络权重."""
         for i in range(len(self._target_weights)):
-            self._target_weights[i] = (
-                0.9 * self._target_weights[i]
-                + 0.1 * self._q_weights[i].copy()
-            )
+            self._target_weights[i] = 0.9 * self._target_weights[i] + 0.1 * self._q_weights[i].copy()
 
     def _generate_simulated_data(
         self,

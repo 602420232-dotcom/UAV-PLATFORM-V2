@@ -56,14 +56,21 @@ class PPOPlanner:
         self.max_grad_norm: float = self.config.get("max_grad_norm", 0.5)
         self.num_episodes: int = self.config.get("num_episodes", 200)
         self.max_steps_per_episode: int = self.config.get(
-            "max_steps_per_episode", 200,
+            "max_steps_per_episode",
+            200,
         )
         self.mini_batch_size: int = self.config.get("mini_batch_size", 64)
 
         # 动作空间：8方向移动
         self.actions = [
-            (-1, 0), (1, 0), (0, -1), (0, 1),
-            (-1, -1), (-1, 1), (1, -1), (1, 1),
+            (-1, 0),
+            (1, 0),
+            (0, -1),
+            (0, 1),
+            (-1, -1),
+            (-1, 1),
+            (1, -1),
+            (1, 1),
         ]
         self.num_actions = len(self.actions)
 
@@ -95,7 +102,11 @@ class PPOPlanner:
 
         logger.info(
             "PPO规划: 起点=%s, 终点=%s, 网格=%s, 障碍物=%d, 回合=%d",
-            start, goal, grid_size, len(obstacles), self.num_episodes,
+            start,
+            goal,
+            grid_size,
+            len(obstacles),
+            self.num_episodes,
         )
 
         rows, cols = grid_size
@@ -113,7 +124,12 @@ class PPOPlanner:
         for episode in range(self.num_episodes):
             # 收集轨迹数据
             trajectory = self._collect_trajectory(
-                policy_weights, start, goal, rows, cols, obstacles,
+                policy_weights,
+                start,
+                goal,
+                rows,
+                cols,
+                obstacles,
             )
 
             if not trajectory:
@@ -126,9 +142,7 @@ class PPOPlanner:
 
             # 标准化优势
             if len(advantages) > 1:
-                advantages = (advantages - np.mean(advantages)) / (
-                    np.std(advantages) + 1e-8
-                )
+                advantages = (advantages - np.mean(advantages)) / (np.std(advantages) + 1e-8)
 
             # PPO更新
             old_policy_probs = []
@@ -153,19 +167,26 @@ class PPOPlanner:
 
                     # 计算KL散度
                     kl = self._compute_kl_divergence(
-                        batch_states, batch_old_probs, policy_weights,
+                        batch_states,
+                        batch_old_probs,
+                        policy_weights,
                     )
                     episode_kl += kl
 
                     # 更新策略网络
                     policy_weights = self._update_policy(
-                        policy_weights, batch_states, batch_actions,
-                        batch_advantages, batch_old_probs,
+                        policy_weights,
+                        batch_states,
+                        batch_actions,
+                        batch_advantages,
+                        batch_old_probs,
                     )
 
                     # 更新价值网络
                     value_weights = self._update_value(
-                        value_weights, batch_states, batch_returns,
+                        value_weights,
+                        batch_states,
+                        batch_returns,
                     )
 
             episode_kl /= max(1, self.ppo_epochs)
@@ -176,7 +197,10 @@ class PPOPlanner:
 
             # 记录最优路径
             path_trace = self._trajectory_to_path(
-                trajectory, start, rows, cols,
+                trajectory,
+                start,
+                rows,
+                cols,
             )
             if total_reward > best_reward and len(path_trace) > 1:
                 best_reward = total_reward
@@ -186,24 +210,37 @@ class PPOPlanner:
                 avg_reward = np.mean(episode_rewards[-50:]) if episode_rewards else 0
                 logger.debug(
                     "回合 %d: 总奖励=%.2f, 平均奖励=%.2f, KL=%.6f",
-                    episode, total_reward, avg_reward, episode_kl,
+                    episode,
+                    total_reward,
+                    avg_reward,
+                    episode_kl,
                 )
 
         # 使用训练好的策略网络提取最终路径
         final_path = self._extract_policy_path(
-            policy_weights, start, goal, rows, cols, obstacles,
+            policy_weights,
+            start,
+            goal,
+            rows,
+            cols,
+            obstacles,
         )
         if len(final_path) <= 1 and best_path:
             final_path = best_path
 
         # 计算路径上各点的策略概率
         policy_probs = self._compute_policy_distribution(
-            policy_weights, final_path, rows, cols,
+            policy_weights,
+            final_path,
+            rows,
+            cols,
         )
 
         # 计算最终路径总奖励
         final_reward = self._evaluate_path_reward(
-            final_path, goal, obstacles,
+            final_path,
+            goal,
+            obstacles,
         )
 
         # KL散度信息
@@ -216,7 +253,9 @@ class PPOPlanner:
 
         logger.info(
             "PPO规划完成: 路径长度=%d, 总奖励=%.2f, 平均KL=%.6f",
-            len(final_path), final_reward, kl_divergence["mean_kl"],
+            len(final_path),
+            final_reward,
+            kl_divergence["mean_kl"],
         )
 
         return {
@@ -227,7 +266,9 @@ class PPOPlanner:
         }
 
     def _init_network(
-        self, input_dim: int, output_dim: int = 1,
+        self,
+        input_dim: int,
+        output_dim: int = 1,
     ) -> list[np.ndarray]:
         """初始化网络权重和偏置。
 
@@ -262,7 +303,9 @@ class PPOPlanner:
         return weights
 
     def _policy_forward(
-        self, x: np.ndarray, weights: list[np.ndarray],
+        self,
+        x: np.ndarray,
+        weights: list[np.ndarray],
     ) -> np.ndarray:
         """策略网络前向传播，输出动作概率分布。
 
@@ -291,7 +334,9 @@ class PPOPlanner:
         return probs
 
     def _value_forward(
-        self, x: np.ndarray, weights: list[np.ndarray],
+        self,
+        x: np.ndarray,
+        weights: list[np.ndarray],
     ) -> float:
         """价值网络前向传播，输出状态价值估计。
 
@@ -342,8 +387,7 @@ class PPOPlanner:
 
         for _ in range(self.max_steps_per_episode):
             state = np.array(
-                [pos_x / rows, pos_y / cols,
-                 goal[0] / rows, goal[1] / cols],
+                [pos_x / rows, pos_y / cols, goal[0] / rows, goal[1] / cols],
                 dtype=np.float64,
             )
 
@@ -371,8 +415,7 @@ class PPOPlanner:
                 reward += (old_dist - new_dist) * 0.5
 
             next_state = np.array(
-                [next_x / rows, next_y / cols,
-                 goal[0] / rows, goal[1] / cols],
+                [next_x / rows, next_y / cols, goal[0] / rows, goal[1] / cols],
                 dtype=np.float64,
             )
 
@@ -479,8 +522,7 @@ class PPOPlanner:
             # PPO裁剪目标
             adv = advantages[i]
             surrogate1 = ratio * adv
-            surrogate2 = np.clip(ratio, 1.0 - self.clip_ratio,
-                                 1.0 + self.clip_ratio) * adv
+            surrogate2 = np.clip(ratio, 1.0 - self.clip_ratio, 1.0 + self.clip_ratio) * adv
             policy_loss = -np.minimum(surrogate1, surrogate2)
 
             # 熵正则化
@@ -490,7 +532,10 @@ class PPOPlanner:
             # 简化梯度更新
             grad_direction = -policy_loss
             new_weights = self._policy_gradient_step(
-                new_weights, state, grad_direction, action_idx,
+                new_weights,
+                state,
+                grad_direction,
+                action_idx,
             )
 
         return new_weights
@@ -546,7 +591,7 @@ class PPOPlanner:
             grad_b = grad.copy()
 
             # 梯度裁剪
-            grad_norm = np.sqrt(np.sum(grad_w ** 2) + np.sum(grad_b ** 2))
+            grad_norm = np.sqrt(np.sum(grad_w**2) + np.sum(grad_b**2))
             if grad_norm > self.max_grad_norm:
                 scale = self.max_grad_norm / (grad_norm + 1e-8)
                 grad_w *= scale
@@ -587,7 +632,9 @@ class PPOPlanner:
 
             # 简化梯度更新
             new_weights = self._value_gradient_step(
-                new_weights, state, error,
+                new_weights,
+                state,
+                error,
             )
 
         return new_weights
@@ -702,8 +749,7 @@ class PPOPlanner:
                 break
 
             state = np.array(
-                [current[0] / rows, current[1] / cols,
-                 goal[0] / rows, goal[1] / cols],
+                [current[0] / rows, current[1] / cols, goal[0] / rows, goal[1] / cols],
                 dtype=np.float64,
             )
             probs = self._policy_forward(state, policy_weights)
@@ -717,9 +763,7 @@ class PPOPlanner:
                 nx = int(np.clip(current[0] + dx, 0, rows - 1))
                 ny = int(np.clip(current[1] + dy, 0, cols - 1))
 
-                if ((nx, ny) not in obstacles
-                        and (nx, ny) not in visited
-                        and 0 <= nx < rows and 0 <= ny < cols):
+                if (nx, ny) not in obstacles and (nx, ny) not in visited and 0 <= nx < rows and 0 <= ny < cols:
                     current = (nx, ny)
                     path.append([nx, ny])
                     visited.add(current)
@@ -755,8 +799,7 @@ class PPOPlanner:
         policy_probs = []
         for point in path:
             state = np.array(
-                [point[0] / rows, point[1] / cols,
-                 point[0] / rows, point[1] / cols],
+                [point[0] / rows, point[1] / cols, point[0] / rows, point[1] / cols],
                 dtype=np.float64,
             )
             probs = self._policy_forward(state, policy_weights)

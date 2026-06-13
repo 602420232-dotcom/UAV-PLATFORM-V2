@@ -56,7 +56,9 @@ class VisibilityGraphPlanner:
 
         logger.info(
             "可见性图规划: 起点=%s, 终点=%s, 障碍物=%d",
-            tuple(start.astype(int)), tuple(goal.astype(int)), len(obstacles),
+            tuple(start.astype(int)),
+            tuple(goal.astype(int)),
+            len(obstacles),
         )
 
         rows, cols = grid_size
@@ -172,4 +174,4 @@ class VisibilityGraphPlanner:
         if len(points) < 2:
             return 0.0
         diffs = np.diff(points, axis=0)
-        return float(np.sum(np.sqrt(np.sum(diffs ** 2, axis=1))))
+        return float(np.sum(np.sqrt(np.sum(diffs**2, axis=1))))

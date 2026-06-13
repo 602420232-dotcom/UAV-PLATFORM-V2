@@ -85,7 +85,10 @@ class PPOModel:
 
         logger.info(
             "PPO训练: 状态维度=%d, 动作维度=%d, 回合数=%d, PPO轮数=%d",
-            state_dim, action_dim, self.n_episodes, self.ppo_epochs,
+            state_dim,
+            action_dim,
+            self.n_episodes,
+            self.ppo_epochs,
         )
 
         # 初始化网络权重
@@ -96,7 +99,9 @@ class PPOModel:
             trajectories = list(training_data)
         else:
             trajectories = self._generate_simulated_data(
-                state_dim, action_dim, n_transitions=500,
+                state_dim,
+                action_dim,
+                n_transitions=500,
             )
 
         training_stats: dict[str, list[float]] = {
@@ -112,7 +117,9 @@ class PPOModel:
         for episode in range(self.n_episodes):
             # 收集轨迹数据
             states, actions, rewards, dones = self._collect_trajectories(
-                trajectories, state_dim, action_dim,
+                trajectories,
+                state_dim,
+                action_dim,
             )
 
             # 计算回报和GAE优势
@@ -137,14 +144,12 @@ class PPOModel:
 
                     # 策略损失（PPO裁剪）
                     new_probs = self._get_action_probs(
-                        mb_states, self._policy_weights, action_dim,
+                        mb_states,
+                        self._policy_weights,
+                        action_dim,
                     )
-                    new_action_probs = new_probs[
-                        np.arange(len(mb_actions)), mb_actions
-                    ]
-                    old_action_probs = mb_old_probs[
-                        np.arange(len(mb_actions)), mb_actions
-                    ]
+                    new_action_probs = new_probs[np.arange(len(mb_actions)), mb_actions]
+                    old_action_probs = mb_old_probs[np.arange(len(mb_actions)), mb_actions]
 
                     ratio = new_action_probs / np.maximum(old_action_probs, 1e-8)
                     clipped_ratio = np.clip(
@@ -169,19 +174,17 @@ class PPOModel:
                     value_loss = np.mean((values - mb_returns) ** 2)
 
                     # 总损失
-                    total_loss = (
-                        policy_loss
-                        + self.value_coef * value_loss
-                        - self.entropy_coef * entropy
-                    )
+                    total_loss = policy_loss + self.value_coef * value_loss - self.entropy_coef * entropy
 
                     # KL散度
-                    kl = float(np.mean(
-                        old_action_probs * np.log(
-                            np.maximum(old_action_probs, 1e-8)
-                            / np.maximum(new_action_probs, 1e-8),
+                    kl = float(
+                        np.mean(
+                            old_action_probs
+                            * np.log(
+                                np.maximum(old_action_probs, 1e-8) / np.maximum(new_action_probs, 1e-8),
+                            )
                         )
-                    ))
+                    )
 
                     # 模拟梯度更新
                     self._update_weights(total_loss)
@@ -192,19 +195,17 @@ class PPOModel:
                     training_stats["total_loss"].append(float(total_loss))
                     kl_history.append(kl)
 
-            episode_reward = (
-                float(np.sum(rewards[:20]))
-                if len(rewards) >= 20
-                else float(np.sum(rewards))
-            )
+            episode_reward = float(np.sum(rewards[:20])) if len(rewards) >= 20 else float(np.sum(rewards))
             training_stats["episode_reward"].append(episode_reward)
 
             if (episode + 1) % 10 == 0:
                 avg_reward = np.mean(training_stats["episode_reward"][-10:])
-                avg_kl = np.mean(kl_history[-self.ppo_epochs:]) if kl_history else 0.0
+                avg_kl = np.mean(kl_history[-self.ppo_epochs :]) if kl_history else 0.0
                 logger.info(
                     "PPO回合 %d, 平均奖励: %.4f, 平均KL散度: %.6f",
-                    episode + 1, avg_reward, avg_kl,
+                    episode + 1,
+                    avg_reward,
+                    avg_kl,
                 )
 
         return {
@@ -353,10 +354,7 @@ class PPOModel:
                 next_value = self._forward_value(next_s, self._value_weights)
 
             delta = rewards[t] + self.gamma * next_value * (1.0 - dones[t]) - value
-            last_advantage = (
-                delta
-                + self.gamma * self.gae_lambda * (1.0 - dones[t]) * last_advantage
-            )
+            last_advantage = delta + self.gamma * self.gae_lambda * (1.0 - dones[t]) * last_advantage
             advantages[t] = last_advantage
             returns[t] = advantages[t] + value
 
@@ -437,9 +435,7 @@ class PPOModel:
         for _ in range(n_transitions):
             action = np.random.randint(0, action_dim)
             reward = float(np.random.randn() * 0.5)
-            next_state = (
-                np.array(state) + np.random.randn(state_dim) * 0.1
-            ).tolist()
+            next_state = (np.array(state) + np.random.randn(state_dim) * 0.1).tolist()
             done = float(np.random.rand() < 0.05)
             trajectories.append((state, action, reward, done))
             state = next_state

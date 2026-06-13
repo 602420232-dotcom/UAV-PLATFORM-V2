@@ -90,23 +90,27 @@ class EdgeFaultTolerance:
 
             # 对故障节点生成恢复建议
             for nid in failed_nodes:
-                recovery_actions.append({
-                    "action": "restart",
-                    "target_node": nid,
-                    "priority": "high",
-                    "reason": "heartbeat_timeout",
-                })
+                recovery_actions.append(
+                    {
+                        "action": "restart",
+                        "target_node": nid,
+                        "priority": "high",
+                        "reason": "heartbeat_timeout",
+                    }
+                )
 
         elif operation == "recover":
             # 故障恢复
             node = next((n for n in nodes if n["id"] == failed_node_id), None)
             if node:
-                recovery_actions.append({
-                    "action": "restart",
-                    "target_node": failed_node_id,
-                    "status": "initiated",
-                    "max_retries": self.max_retries,
-                })
+                recovery_actions.append(
+                    {
+                        "action": "restart",
+                        "target_node": failed_node_id,
+                        "status": "initiated",
+                        "max_retries": self.max_retries,
+                    }
+                )
                 # 模拟恢复
                 retry_count = 0
                 recovered = False
@@ -129,12 +133,14 @@ class EdgeFaultTolerance:
                 else:
                     self.node_status[failed_node_id] = "failed"
                     recovery_actions[-1]["status"] = "failed"
-                    recovery_actions.append({
-                        "action": "task_migration",
-                        "target_node": failed_node_id,
-                        "status": "recommended",
-                        "reason": "recovery_failed",
-                    })
+                    recovery_actions.append(
+                        {
+                            "action": "task_migration",
+                            "target_node": failed_node_id,
+                            "status": "recommended",
+                            "reason": "recovery_failed",
+                        }
+                    )
 
         elif operation == "migrate":
             # 任务迁移
@@ -152,15 +158,17 @@ class EdgeFaultTolerance:
                         migrated_tasks.append(task["id"])
                         target_load += task.get("resource_required", 1)
 
-                recovery_actions.append({
-                    "action": "task_migration",
-                    "from_node": failed_node_id,
-                    "to_node": target_node_id,
-                    "migrated_tasks": migrated_tasks,
-                    "n_migrated": len(migrated_tasks),
-                    "n_total": len(tasks),
-                    "status": "completed" if migrated_tasks else "no_tasks_migrated",
-                })
+                recovery_actions.append(
+                    {
+                        "action": "task_migration",
+                        "from_node": failed_node_id,
+                        "to_node": target_node_id,
+                        "migrated_tasks": migrated_tasks,
+                        "n_migrated": len(migrated_tasks),
+                        "n_total": len(tasks),
+                        "status": "completed" if migrated_tasks else "no_tasks_migrated",
+                    }
+                )
 
             fault_report = {
                 "source_node": failed_node_id,

@@ -11,6 +11,7 @@ import pytest
 # A* algorithm
 # ---------------------------------------------------------------------------
 
+
 class TestAStar:
     """Tests for A* path planning algorithm."""
 
@@ -58,6 +59,7 @@ class TestAStar:
 # Dijkstra algorithm
 # ---------------------------------------------------------------------------
 
+
 class TestDijkstra:
     """Tests for Dijkstra shortest path algorithm."""
 
@@ -103,6 +105,7 @@ class TestDijkstra:
 # RRT* algorithm
 # ---------------------------------------------------------------------------
 
+
 class TestRRTStar:
     """Tests for RRT* optimal path planning algorithm."""
 
@@ -134,6 +137,7 @@ class TestRRTStar:
 # ---------------------------------------------------------------------------
 # 3D-VAR assimilation algorithm
 # ---------------------------------------------------------------------------
+
 
 class TestThreeDimensionalVAR:
     """Tests for 3D-VAR data assimilation algorithm."""
