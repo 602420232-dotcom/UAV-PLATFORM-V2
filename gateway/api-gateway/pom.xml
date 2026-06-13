@@ -17,7 +17,7 @@
     <packaging>jar</packaging>
 
     <properties>
-        <spring-cloud-gateway.version>4.1.0</spring-cloud-gateway.version>
+        <spring-cloud-gateway.version>4.3.5</spring-cloud-gateway.version>
     </properties>
 
     <dependencies>

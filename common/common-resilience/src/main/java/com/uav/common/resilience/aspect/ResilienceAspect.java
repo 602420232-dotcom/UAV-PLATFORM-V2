@@ -48,7 +48,8 @@ public class ResilienceAspect {
                                 .slowCallRateThreshold(annotation.slowCallRateThreshold())
                                 .slowCallDurationThreshold(Duration.ofMillis(annotation.slowCallDurationThreshold()))
                                 .waitDurationInOpenState(Duration.ofMillis(annotation.waitDurationInOpenState()))
-                                .permittedNumberOfCallsInHalfOpenState(annotation.permittedNumberOfCallsInHalfOpenState())
+                                .permittedNumberOfCallsInHalfOpenState(
+                                        annotation.permittedNumberOfCallsInHalfOpenState())
                                 .slidingWindowSize(annotation.slidingWindowSize())
                                 .build()));
 

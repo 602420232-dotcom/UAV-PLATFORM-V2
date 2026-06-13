@@ -106,20 +106,21 @@ services:
   api-gateway:
     build:
       context: .
-      dockerfile: gateway/api-gateway/Dockerfile
+      dockerfile: Dockerfile.jre
+      args:
+        SERVICE_NAME: api-gateway
+        JAR_FILE: gateway/api-gateway/target/api-gateway-2.0.0.jar
     container_name: uav-gateway
     ports:
       - "8258:8088"
     environment:
-      - NACOS_SERVER_ADDR=nacos:8848
+      - SPRING_PROFILES_ACTIVE=docker
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - SPRING_DATA_REDIS_HOST=redis
       - SPRING_DATA_REDIS_PORT=6379
       - JAVA_OPTS=-Xms512m -Xmx1024m -XX:+UseG1GC
     depends_on:
-      nacos:
-        condition: service_started
       redis:
         condition: service_healthy
     healthcheck:

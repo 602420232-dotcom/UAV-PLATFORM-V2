@@ -14,15 +14,31 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface WithRateLimit {
 
-    /** 限流器名称 */
+    /**
+     * 限流器名称
+     *
+     * @return 限流器名称
+     */
     String name() default "";
 
-    /** 限流等级 */
+    /**
+     * 限流等级
+     *
+     * @return 限流等级
+     */
     RateLimitTier tier() default RateLimitTier.DEFAULT;
 
-    /** 周期内限制次数（覆盖tier默认值） */
+    /**
+     * 周期内限制次数（覆盖tier默认值）
+     *
+     * @return 限制次数
+     */
     int limitForPeriod() default -1;
 
-    /** 刷新周期毫秒（覆盖tier默认值） */
+    /**
+     * 刷新周期毫秒（覆盖tier默认值）
+     *
+     * @return 刷新周期毫秒
+     */
     int limitRefreshPeriodMs() default -1;
 }

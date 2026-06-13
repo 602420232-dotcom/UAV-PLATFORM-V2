@@ -39,9 +39,6 @@ COPY --from=builder /build/dist /usr/share/nginx/html
 # 复制 Nginx 配置
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# 复制 SPA 路由支持文件
-COPY --from=builder /build/public /usr/share/nginx/public
-
 # 暴露端口
 EXPOSE 80
 

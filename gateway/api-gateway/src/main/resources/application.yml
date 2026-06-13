@@ -1,5 +1,5 @@
 server:
-  port: 18080
+  port: 8088
 
 spring:
   application:
@@ -99,6 +99,95 @@ spring:
         max-active: 50
         max-idle: 20
         min-idle: 5
+
+---
+# Docker profile: explicit Docker service name routes (no Nacos discovery)
+spring:
+  config:
+    activate:
+      on-profile: docker
+  cloud:
+    nacos:
+      discovery:
+        enabled: false
+    gateway:
+      discovery:
+        locator:
+          enabled: false
+      routes:
+        # Platform API
+        - id: platform-api
+          uri: http://platform-api:8081
+          predicates:
+            - Path=/api/v1/tenants/**, /api/v2/tenants/**, /api/v1/api-keys/**, /api/v2/api-keys/**, /api/v1/usage/**, /api/v2/usage/**, /api/v1/platform/**, /api/v2/platform/**
+          filters:
+            - StripPrefix=0
+            - name: Retry
+              args:
+                retries: 3
+                statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+
+        # UTM API
+        - id: utm-api
+          uri: http://utm-api:8087
+          predicates:
+            - Path=/api/v1/utm/**, /api/v2/utm/**, /api/v1/flight/**, /api/v2/flight/**
+          filters:
+            - StripPrefix=0
+
+        # Weather API
+        - id: weather-api
+          uri: http://weather-api:8082
+          predicates:
+            - Path=/api/v1/weather/**, /api/v2/weather/**
+          filters:
+            - StripPrefix=0
+
+        # Assimilation API
+        - id: assimilation-api
+          uri: http://assimilation-api:8083
+          predicates:
+            - Path=/api/v1/assimilation/**, /api/v2/assimilation/**
+          filters:
+            - StripPrefix=0
+
+        # Risk API
+        - id: risk-api
+          uri: http://risk-api:8084
+          predicates:
+            - Path=/api/v1/risk/**, /api/v2/risk/**
+          filters:
+            - StripPrefix=0
+
+        # Observation API
+        - id: observation-api
+          uri: http://observation-api:8085
+          predicates:
+            - Path=/api/v1/observation/**, /api/v2/observation/**
+          filters:
+            - StripPrefix=0
+
+        # Planning API
+        - id: planning-api
+          uri: http://planning-api:8086
+          predicates:
+            - Path=/api/v1/planning/**, /api/v2/planning/**
+          filters:
+            - StripPrefix=0
+
+        # Algorithm Engine (Python)
+        - id: algorithm-engine
+          uri: http://algorithm-engine:9090
+          predicates:
+            - Path=/api/v1/algorithms/**, /api/v2/algorithms/**, /api/v1/tasks/**, /api/v2/tasks/**
+          filters:
+            - StripPrefix=0
+
+        # Actuator routes (direct access)
+        - id: actuator
+          uri: http://localhost:${server.port}
+          predicates:
+            - Path=/actuator/**
 
 ---
 # Local E2E profile: explicit localhost routes (no Nacos discovery)
