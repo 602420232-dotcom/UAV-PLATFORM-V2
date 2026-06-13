@@ -2,6 +2,7 @@
 
 TODO: Full implementation requires PyTorch. Skeleton with numpy fallback.
 """
+
 from __future__ import annotations
 
 import logging
@@ -28,8 +29,7 @@ class BayesianNN:
         self._weights: list = []
 
     def _initialize_weights(self) -> None:
-        layers = [self.input_dim, self.hidden_dim,
-                  self.hidden_dim, self.output_dim]
+        layers = [self.input_dim, self.hidden_dim, self.hidden_dim, self.output_dim]
         weights: list = []
         for i in range(len(layers) - 1):
             w = np.random.randn(layers[i], layers[i + 1]) * 0.1
@@ -56,9 +56,7 @@ class BayesianNN:
                 h = h @ w + b
                 if i < len(weights) - 2:
                     h = np.maximum(0, h)
-                    mask = (
-                        np.random.rand(*h.shape) > self.dropout_rate
-                    ).astype(float)
+                    mask = (np.random.rand(*h.shape) > self.dropout_rate).astype(float)
                     h = h * mask / (1 - self.dropout_rate)
             predictions.append(h)
 

@@ -56,9 +56,9 @@ class FourDimensionalVAR:
             y_obs, H = self._build_observation_operator(x, slot_obs, background.shape)  # noqa: N806
             Hx = H @ x  # noqa: N806
             residual = Hx - y_obs
-            dx = H.T @ (residual / (self.observation_error_scale ** 2 + 1e-10))
+            dx = H.T @ (residual / (self.observation_error_scale**2 + 1e-10))
             x = x - 0.1 * dx
-            cost = 0.5 * np.sum(residual ** 2) / self.observation_error_scale ** 2
+            cost = 0.5 * np.sum(residual**2) / self.observation_error_scale**2
             cost_history.append(float(cost))
 
         analysis = x.reshape(background.shape)

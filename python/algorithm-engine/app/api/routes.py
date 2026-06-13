@@ -129,10 +129,7 @@ async def execute_pipeline(request: PipelineExecuteRequest):
         if step.algorithm_id not in registry:
             raise HTTPException(
                 status_code=404,
-                detail=(
-                    f"Pipeline step algorithm "
-                    f"'{step.algorithm_id}' not registered"
-                ),
+                detail=(f"Pipeline step algorithm '{step.algorithm_id}' not registered"),
             )
         pipeline.add_step(step.algorithm_id)
     result = await pipeline.execute(request.initial_params)

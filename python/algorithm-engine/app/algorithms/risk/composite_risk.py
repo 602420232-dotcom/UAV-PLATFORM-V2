@@ -2,6 +2,7 @@
 
 TODO: Migrate full implementation from data-assimilation-platform risk_assessment module.
 """
+
 from __future__ import annotations
 
 import logging
@@ -21,6 +22,7 @@ class CompositeRiskAssessor:
         from app.algorithms.risk.airspace_risk import AirspaceRiskAssessor
         from app.algorithms.risk.terrain_risk import TerrainRiskAssessor
         from app.algorithms.risk.weather_risk import WeatherRiskAssessor
+
         weather = WeatherRiskAssessor(self.params).assess()
         terrain = TerrainRiskAssessor(self.params).assess()
         airspace = AirspaceRiskAssessor(self.params).assess()

@@ -46,13 +46,13 @@ class EnhancedBayesianAssimilation:
         cost_history = []
         for i in range(self.max_iterations):
             dx = x - xb
-            J_b = 0.5 * np.sum(dx ** 2) / (self.sigma_b ** 2)  # noqa: N806
+            J_b = 0.5 * np.sum(dx**2) / (self.sigma_b**2)  # noqa: N806
             Hx = H @ x  # noqa: N806
             residual = Hx - y_obs
-            J_o = 0.5 * np.sum(residual ** 2) / (self.observation_error_scale ** 2)  # noqa: N806
+            J_o = 0.5 * np.sum(residual**2) / (self.observation_error_scale**2)  # noqa: N806
             total_cost = J_b + J_o
             cost_history.append(float(total_cost))
-            grad = dx / (self.sigma_b ** 2) + H.T @ (residual / (self.observation_error_scale ** 2))
+            grad = dx / (self.sigma_b**2) + H.T @ (residual / (self.observation_error_scale**2))
             x = x - 0.01 * grad
             if len(cost_history) > 1 and abs(cost_history[-2] - cost_history[-1]) < self.tolerance:
                 break
@@ -61,6 +61,7 @@ class EnhancedBayesianAssimilation:
         if use_ml:
             residual_field = (x - xb).reshape(background.shape)
             from scipy.ndimage import gaussian_filter
+
             correction = gaussian_filter(residual_field.astype(float), sigma=0.5) * 0.1
             for _ in range(self.ml_iterations - 1):
                 residual_field = residual_field - correction

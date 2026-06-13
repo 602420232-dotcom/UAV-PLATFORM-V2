@@ -56,10 +56,10 @@ class FiveDimensionalVAR:
         J_b = J_o = J_risk = J_param = 0.0  # noqa: N806
         for i in range(self.max_iterations):
             dx = x - xb
-            J_b = 0.5 * np.sum(dx ** 2) / (self.sigma_b ** 2)  # noqa: N806
+            J_b = 0.5 * np.sum(dx**2) / (self.sigma_b**2)  # noqa: N806
             Hx = H @ x  # noqa: N806
             residual = Hx - y_obs
-            J_o = 0.5 * np.sum(residual ** 2) / (self.observation_error_scale ** 2)  # noqa: N806
+            J_o = 0.5 * np.sum(residual**2) / (self.observation_error_scale**2)  # noqa: N806
             field = x.reshape(background.shape)
             smoothed = gaussian_filter(field.astype(float), sigma=1.0)
             J_risk = risk_weight * np.var(smoothed)  # noqa: N806
@@ -69,8 +69,8 @@ class FiveDimensionalVAR:
             total_cost = J_b + J_o + J_risk + J_param
             cost_history.append(float(total_cost))
 
-            grad_b = dx / (self.sigma_b ** 2)
-            grad_o = H.T @ (residual / (self.observation_error_scale ** 2))
+            grad_b = dx / (self.sigma_b**2)
+            grad_o = H.T @ (residual / (self.observation_error_scale**2))
             grad_param = self.ai_param_weight * 2.0 * (x - ai_correction.flatten())
             grad = grad_b + grad_o + grad_param
             x = x - 0.01 * grad

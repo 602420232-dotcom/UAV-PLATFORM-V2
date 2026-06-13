@@ -54,7 +54,7 @@ class EnKF:
 
         HX = H @ X_pert.T  # noqa: N806
         HPHT = (HX @ HX.T) / (n_ens - 1)  # noqa: N806
-        R = np.eye(m) * self.observation_error_scale ** 2  # noqa: N806
+        R = np.eye(m) * self.observation_error_scale**2  # noqa: N806
         HPHT_plus_R = HPHT + R  # noqa: N806
 
         try:

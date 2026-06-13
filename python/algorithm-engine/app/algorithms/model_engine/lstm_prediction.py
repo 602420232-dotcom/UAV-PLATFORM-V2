@@ -2,6 +2,7 @@
 
 TODO: Full implementation requires PyTorch. Skeleton with numpy fallback.
 """
+
 from __future__ import annotations
 
 import logging

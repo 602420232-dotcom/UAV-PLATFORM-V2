@@ -1,4 +1,5 @@
 """Built-in algorithm adapters."""
+
 from app.adapters.assimilation_adapter import (
     AssimilationAdapter,
     EnhancedBayesianAdapter,
@@ -33,13 +34,28 @@ from app.adapters.risk_adapter import (
 )
 
 __all__ = [
-    "AssimilationAdapter", "ThreeDimensionalVarAdapter", "FourDimensionalVarAdapter",
-    "FiveDimensionalVarAdapter", "EnKFAdapter", "HybridAssimilationAdapter",
+    "AssimilationAdapter",
+    "ThreeDimensionalVarAdapter",
+    "FourDimensionalVarAdapter",
+    "FiveDimensionalVarAdapter",
+    "EnKFAdapter",
+    "HybridAssimilationAdapter",
     "EnhancedBayesianAdapter",
-    "PlanningAdapter", "VRPTWAdapter", "DERRTStarAdapter", "DWAAdapter",
-    "MPCAdapter", "AStarAdapter", "DijkstraAdapter", "RRTStarAdapter",
-    "RiskAdapter", "WeatherRiskAdapter", "TerrainRiskAdapter",
-    "AirspaceRiskAdapter", "CompositeRiskAdapter",
-    "ObservationAdapter", "InformationGainAdapter",
-    "AdaptiveObservationAdapter", "SensorSchedulingAdapter",
+    "PlanningAdapter",
+    "VRPTWAdapter",
+    "DERRTStarAdapter",
+    "DWAAdapter",
+    "MPCAdapter",
+    "AStarAdapter",
+    "DijkstraAdapter",
+    "RRTStarAdapter",
+    "RiskAdapter",
+    "WeatherRiskAdapter",
+    "TerrainRiskAdapter",
+    "AirspaceRiskAdapter",
+    "CompositeRiskAdapter",
+    "ObservationAdapter",
+    "InformationGainAdapter",
+    "AdaptiveObservationAdapter",
+    "SensorSchedulingAdapter",
 ]

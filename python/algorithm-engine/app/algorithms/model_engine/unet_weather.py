@@ -5,6 +5,7 @@ Migrated from: model-engine/unet_downscaler/model.py
 Original: UNetDownscaler for 3km->1km super-resolution.
 Skeleton implementation (full model requires PyTorch).
 """
+
 from __future__ import annotations
 
 import logging
@@ -40,11 +41,11 @@ class UNetWeatherPredictor:
         )
         if not self._model_loaded:
             logger.info(
-                "U-Net model not loaded, "
-                "using bilinear interpolation fallback",
+                "U-Net model not loaded, using bilinear interpolation fallback",
             )
             output = self._bilinear_upsample(
-                input_field, self.scale_factor,
+                input_field,
+                self.scale_factor,
             )
         else:
             output = self._forward(input_field)
@@ -57,10 +58,13 @@ class UNetWeatherPredictor:
         }
 
     def _bilinear_upsample(
-        self, field: NDArray[np.float64], scale: int,
+        self,
+        field: NDArray[np.float64],
+        scale: int,
     ) -> NDArray[np.float64]:
         """Fallback: simple bilinear upsampling."""
         from scipy.ndimage import zoom
+
         if field.ndim == 3:
             channels = field.shape[2]
             upsampled: list[NDArray[np.float64]] = []

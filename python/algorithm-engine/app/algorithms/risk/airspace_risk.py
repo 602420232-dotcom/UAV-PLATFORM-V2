@@ -2,6 +2,7 @@
 
 TODO: Migrate full implementation.
 """
+
 from __future__ import annotations
 
 import logging
@@ -24,11 +25,13 @@ class AirspaceRiskAssessor:
         for zone in airspace_zones:
             zone_type = zone.get("type", "unrestricted")
             if zone_type in ("restricted", "prohibited", "danger"):
-                conflicts.append({
-                    "zone_id": zone.get("id"),
-                    "type": zone_type,
-                    "severity": "high" if zone_type == "prohibited" else "medium",
-                })
+                conflicts.append(
+                    {
+                        "zone_id": zone.get("id"),
+                        "type": zone_type,
+                        "severity": "high" if zone_type == "prohibited" else "medium",
+                    }
+                )
                 risk_score = min(1.0, risk_score + 0.3)
         risk_level = "low" if risk_score < 0.3 else "medium" if risk_score < 0.6 else "high"
         return {

@@ -2,6 +2,7 @@
 
 TODO: Migrate full implementation from data-assimilation-platform risk_assessment module.
 """
+
 from __future__ import annotations
 
 import logging

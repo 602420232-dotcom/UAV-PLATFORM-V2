@@ -3,6 +3,7 @@
 TODO: Migrate full implementation from
     path-planning-service/planners/informed_rrt_star.py.
 """
+
 from __future__ import annotations
 
 import logging
@@ -57,9 +58,7 @@ class DERRTStarPlanner:
             direction = rand_arr - nearest
             dist = float(np.linalg.norm(direction))
             if dist > 0:
-                new_point = nearest + (
-                    direction / dist * min(self.step_size, dist)
-                )
+                new_point = nearest + (direction / dist * min(self.step_size, dist))
             else:
                 continue
             new_point_tuple = tuple(new_point)
@@ -78,16 +77,14 @@ class DERRTStarPlanner:
                     np.linalg.norm(np.array(node) - new_point),
                 )
                 if c < best_cost and not self._check_line_collision(
-                    node, new_point_tuple,
+                    node,
+                    new_point_tuple,
                 ):
                     best_parent = i
                     best_cost = c
             parents[new_idx] = best_parent
             costs[new_idx] = best_cost
-            if (
-                float(np.linalg.norm(new_point - np.array(self.goal)))
-                < self.goal_radius
-            ):
+            if float(np.linalg.norm(new_point - np.array(self.goal))) < self.goal_radius:
                 path = self._extract_path(new_idx, nodes, parents)
                 return {
                     "path": path,
@@ -103,11 +100,14 @@ class DERRTStarPlanner:
     def _check_collision(self, point):
         for obs in self.obstacles:
             r = obs[2] if len(obs) > 2 else 1.0
-            if float(
-                np.linalg.norm(
-                    np.array(point) - np.array([obs[0], obs[1]]),
-                ),
-            ) < r:
+            if (
+                float(
+                    np.linalg.norm(
+                        np.array(point) - np.array([obs[0], obs[1]]),
+                    ),
+                )
+                < r
+            ):
                 return True
         return False
 

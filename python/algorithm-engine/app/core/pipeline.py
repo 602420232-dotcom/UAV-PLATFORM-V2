@@ -80,15 +80,19 @@ class Pipeline:
             # Check condition
             condition_fn = self._conditions.get(step_cfg.algorithm_id)
             if condition_fn and not condition_fn(context):
-                steps_results.append(StepResult(
-                    step_index=idx,
-                    algorithm_id=step_cfg.algorithm_id,
-                    input_params={},
-                    skipped=True,
-                    elapsed_seconds=0.0,
-                ))
-                logger.info("Pipeline '%s': step %d (%s) skipped by condition",
-                            self.name, idx, step_cfg.algorithm_id)
+                steps_results.append(
+                    StepResult(
+                        step_index=idx,
+                        algorithm_id=step_cfg.algorithm_id,
+                        input_params={},
+                        skipped=True,
+                        elapsed_seconds=0.0,
+                    )
+                )
+                logger.info(
+                    "Pipeline '%s': step %d (%s) skipped by condition",
+                    self.name, idx, step_cfg.algorithm_id
+                )
                 continue
 
             # Transform params
@@ -98,13 +102,15 @@ class Pipeline:
             # Execute
             algo_cls = registry.get(step_cfg.algorithm_id)
             if algo_cls is None:
-                steps_results.append(StepResult(
-                    step_index=idx,
-                    algorithm_id=step_cfg.algorithm_id,
-                    input_params=step_params,
-                    error=f"Algorithm not registered: {step_cfg.algorithm_id}",
-                    elapsed_seconds=time.monotonic() - step_start,
-                ))
+                steps_results.append(
+                    StepResult(
+                        step_index=idx,
+                        algorithm_id=step_cfg.algorithm_id,
+                        input_params=step_params,
+                        error=f"Algorithm not registered: {step_cfg.algorithm_id}",
+                        elapsed_seconds=time.monotonic() - step_start,
+                    )
+                )
                 success = False
                 break
 
@@ -112,21 +118,25 @@ class Pipeline:
                 adapter = algo_cls()
                 output = adapter.execute(step_params)
                 context.update(output if isinstance(output, dict) else {"result": output})
-                steps_results.append(StepResult(
-                    step_index=idx,
-                    algorithm_id=step_cfg.algorithm_id,
-                    input_params=step_params,
-                    output=output,
-                    elapsed_seconds=time.monotonic() - step_start,
-                ))
+                steps_results.append(
+                    StepResult(
+                        step_index=idx,
+                        algorithm_id=step_cfg.algorithm_id,
+                        input_params=step_params,
+                        output=output,
+                        elapsed_seconds=time.monotonic() - step_start,
+                    )
+                )
             except Exception as exc:
-                steps_results.append(StepResult(
-                    step_index=idx,
-                    algorithm_id=step_cfg.algorithm_id,
-                    input_params=step_params,
-                    error=str(exc),
-                    elapsed_seconds=time.monotonic() - step_start,
-                ))
+                steps_results.append(
+                    StepResult(
+                        step_index=idx,
+                        algorithm_id=step_cfg.algorithm_id,
+                        input_params=step_params,
+                        error=str(exc),
+                        elapsed_seconds=time.monotonic() - step_start,
+                    )
+                )
                 success = False
                 logger.exception("Pipeline '%s': step %d failed", self.name, idx)
                 break

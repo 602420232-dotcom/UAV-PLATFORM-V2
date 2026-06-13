@@ -57,12 +57,14 @@ class ThreeDimensionalVAR:
         xb = background.flatten()
 
         y_obs, H = self._build_observation_operator(  # noqa: N806
-            xb, observations, background.shape,
+            xb,
+            observations,
+            background.shape,
         )
 
         def cost_gradient(x):
             dx = x - xb
-            grad_b = dx / (self.sigma_b ** 2)
+            grad_b = dx / (self.sigma_b**2)
             Hx = H @ x  # noqa: N806
             dy = Hx - y_obs
             grad_o = H.T @ (dy / self.observation_error_scale**2)
@@ -73,7 +75,7 @@ class ThreeDimensionalVAR:
         cost_history = []
         for i in range(self.max_iterations):
             grad = cost_gradient(x)
-            cost = 0.5 * np.dot(x - xb, (x - xb) / (self.sigma_b ** 2))
+            cost = 0.5 * np.dot(x - xb, (x - xb) / (self.sigma_b**2))
             cost += 0.5 * np.sum(((H @ x - y_obs) / self.observation_error_scale) ** 2)
             cost_history.append(float(cost))
             x = x - lr * grad

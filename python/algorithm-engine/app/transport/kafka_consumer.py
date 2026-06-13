@@ -55,8 +55,7 @@ class KafkaResultConsumer:
         await consumer.start()
         self._consumer = consumer
         logger.info(
-            "KafkaResultConsumer started "
-            "(servers=%s, topic=%s, group=%s)",
+            "KafkaResultConsumer started (servers=%s, topic=%s, group=%s)",
             self._bootstrap_servers,
             self._topic,
             self._group_id,
@@ -77,7 +76,8 @@ class KafkaResultConsumer:
             data: dict[str, Any] = raw if isinstance(raw, dict) else {}
             logger.debug(
                 "Received result: task_id=%s, status=%s",
-                data.get("task_id"), data.get("status"),
+                data.get("task_id"),
+                data.get("status"),
             )
             for handler in self._handlers:
                 try:

@@ -5,6 +5,7 @@ Migrated from: edge-cloud-coordinator/ (edge_ai_inference concepts)
 Supports INT8 and FP16 quantization.
 TODO: Full implementation requires PyTorch/TensorRT.
 """
+
 from __future__ import annotations
 
 import logging
@@ -53,7 +54,8 @@ class ModelQuantizer:
             zero_point = int(-w_min / scale)
             quantized = np.clip(
                 np.round(original_weights / scale + zero_point),
-                0, 255,
+                0,
+                255,
             ).astype(np.uint8)
         elif q_type == "fp16":
             quantized = original_weights.astype(np.float16)

@@ -86,12 +86,20 @@ def _register_builtin_algorithms() -> None:
     registry = get_registry()
 
     all_adapters = (
-        [ThreeDimensionalVarAdapter, FourDimensionalVarAdapter, FiveDimensionalVarAdapter,
-         EnKFAdapter, HybridAssimilationAdapter, EnhancedBayesianAdapter] +
-        [VRPTWAdapter, DERRTStarAdapter, DWAAdapter, MPCAdapter,
-         AStarAdapter, DijkstraAdapter, RRTStarAdapter] +
-        [WeatherRiskAdapter, TerrainRiskAdapter, AirspaceRiskAdapter, CompositeRiskAdapter] +
-        [InformationGainAdapter, AdaptiveObservationAdapter, SensorSchedulingAdapter]
+        [
+            ThreeDimensionalVarAdapter,
+            FourDimensionalVarAdapter,
+            FiveDimensionalVarAdapter,
+            EnKFAdapter,
+            HybridAssimilationAdapter,
+            EnhancedBayesianAdapter,
+        ]
+        + [
+            VRPTWAdapter, DERRTStarAdapter, DWAAdapter, MPCAdapter,
+            AStarAdapter, DijkstraAdapter, RRTStarAdapter,
+        ]
+        + [WeatherRiskAdapter, TerrainRiskAdapter, AirspaceRiskAdapter, CompositeRiskAdapter]
+        + [InformationGainAdapter, AdaptiveObservationAdapter, SensorSchedulingAdapter]
     )
 
     for cls in all_adapters:

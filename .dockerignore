@@ -10,11 +10,12 @@
 .project
 .classpath
 
-# Build artifacts
-**/target
-**/*.class
-**/*.jar
-**/*.war
+# Build artifacts (keep JAR files for Docker builds)
+**/target/classes
+**/target/generated-sources
+**/target/maven-archiver
+**/target/maven-status
+**/target/test-classes
 
 # Python cache
 __pycache__

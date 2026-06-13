@@ -36,8 +36,7 @@ except ImportError:
     sys.exit(1)
 
 try:
-    from kafka import KafkaAdminClient, KafkaConsumer, KafkaProducer
-    from kafka.admin import NewTopic
+    from kafka import KafkaAdminClient, KafkaConsumer
 except ImportError:
     print("ERROR: 请先安装 kafka-python 库: pip install kafka-python")
     sys.exit(1)
@@ -298,7 +297,7 @@ def check_kafka_topics(host: str, results: VerifyResult) -> None:
 
         # 检查 uav.algorithm.tasks
         if TOPIC_TASKS in topics:
-            topic_info = topics[TOPIC_TASKS]
+            topic_info = topics[TOPIC_TASKS]  # type: ignore[reportCallIssue, reportArgumentType]
             partitions = len(topic_info) if isinstance(topic_info, dict) else "N/A"
             results.record(category, f"Topic: {TOPIC_TASKS}", "PASS",
                            f"已创建, 分区数: {partitions}")
@@ -308,7 +307,7 @@ def check_kafka_topics(host: str, results: VerifyResult) -> None:
 
         # 检查 uav.algorithm.results
         if TOPIC_RESULTS in topics:
-            topic_info = topics[TOPIC_RESULTS]
+            topic_info = topics[TOPIC_RESULTS]  # type: ignore[reportCallIssue, reportArgumentType]
             partitions = len(topic_info) if isinstance(topic_info, dict) else "N/A"
             results.record(category, f"Topic: {TOPIC_RESULTS}", "PASS",
                            f"已创建, 分区数: {partitions}")

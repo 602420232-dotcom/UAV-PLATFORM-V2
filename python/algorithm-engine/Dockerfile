@@ -5,29 +5,14 @@
 # 以及 VRPTW/DE-RRT*/DWA/MPC 等路径规划算法
 # ============================================================
 
-# Stage 1: 依赖安装
-FROM python:3.11-slim AS builder
-
-WORKDIR /build
-
-# 安装编译依赖
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends gcc g++ gfortran libopenblas-dev && \
-    rm -rf /var/lib/apt/lists/*
-
-# 先复制依赖文件以利用 Docker 缓存层
-COPY requirements.txt .
-RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
-
-# Stage 2: 运行时镜像
 FROM python:3.11-slim
 
 LABEL maintainer="UAV Platform Team"
 LABEL description="UAV Platform V2 - Algorithm Engine (Python)"
 
-# 安装运行时依赖
+# 安装运行时依赖（curl 用于健康检查）
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends curl libopenblas-dev && \
+    apt-get install -y --no-install-recommends curl && \
     rm -rf /var/lib/apt/lists/*
 
 # 设置时区
@@ -39,8 +24,9 @@ RUN groupadd -r uav && useradd -r -g uav -d /app -s /sbin/nologin uav
 
 WORKDIR /app
 
-# 从构建阶段复制已安装的 Python 包
-COPY --from=builder /install /usr/local
+# 先复制依赖文件以利用 Docker 缓存层
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
 # 复制应用代码
 COPY . .

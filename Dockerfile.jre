@@ -1,0 +1,34 @@
+# ============================================================
+# Pre-built JAR Dockerfile (lightweight)
+# ============================================================
+# Usage: docker build --build-arg JAR_FILE=path/to/app.jar --build-arg SERVICE_NAME=xxx .
+# ============================================================
+FROM eclipse-temurin:21-jre-alpine
+
+LABEL maintainer="UAV Platform Team"
+LABEL description="UAV Platform V2 - ${SERVICE_NAME}"
+
+RUN apk add --no-cache curl tzdata && \
+    cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
+    echo "Asia/Shanghai" > /etc/timezone && \
+    apk del tzdata
+
+RUN addgroup -S uav && adduser -S uav -G uav
+
+WORKDIR /app
+
+ARG JAR_FILE=app.jar
+COPY ${JAR_FILE} app.jar
+
+RUN chown -R uav:uav /app
+
+USER uav
+
+ENV JAVA_OPTS="-Xms256m -Xmx512m -XX:+UseG1GC -XX:+UseContainerSupport -Djava.security.egd=file:/dev/./urandom"
+
+EXPOSE 8080
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -sf http://localhost:8080/actuator/health || exit 1
+
+ENTRYPOINT ["sh", "-c", "java ${JAVA_OPTS} -jar app.jar"]

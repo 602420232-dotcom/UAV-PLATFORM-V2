@@ -90,11 +90,7 @@ class AlgorithmRegistry:
 
     def list_by_category(self, category: str) -> list[AlgorithmMetadata]:
         """Return metadata for all algorithms in *category*."""
-        return [
-            e.to_metadata()
-            for e in self._entries.values()
-            if e.category == category
-        ]
+        return [e.to_metadata() for e in self._entries.values() if e.category == category]
 
     def list_all(self) -> list[AlgorithmMetadata]:
         """Return metadata for every registered algorithm."""

@@ -88,14 +88,22 @@ class TaskScheduler:
         )
         self._tasks[task_id] = status
         await self._save_task(task_id, status.model_dump())
-        await self._priority_queue.put((-priority, task_id, {
-            "algorithm_id": algorithm_id,
-            "params": params,
-            "callback_topic": callback_topic,
-        }))
+        await self._priority_queue.put(
+            (
+                -priority,
+                task_id,
+                {
+                    "algorithm_id": algorithm_id,
+                    "params": params,
+                    "callback_topic": callback_topic,
+                },
+            )
+        )
         logger.info(
             "Task submitted: %s (algorithm=%s, priority=%d)",
-            task_id, algorithm_id, priority,
+            task_id,
+            algorithm_id,
+            priority,
         )
         return task_id
 
@@ -169,6 +177,7 @@ class TaskScheduler:
             await self._save_task(task_id, status.model_dump())
             try:
                 from app.core.registry import get_registry
+
                 registry = get_registry()
                 algo_cls = registry.get(payload["algorithm_id"])
                 if algo_cls is None:
@@ -241,6 +250,7 @@ class TaskScheduler:
             return self._kafka_producer
         try:
             from app.transport.kafka_producer import KafkaTaskProducer
+
             producer = KafkaTaskProducer(
                 bootstrap_servers=self._kafka_bootstrap_servers,
             )
@@ -250,8 +260,7 @@ class TaskScheduler:
             return self._kafka_producer
         except Exception as exc:
             logger.warning(
-                "Failed to initialize Kafka producer, "
-                "falling back to Redis-only mode: %s",
+                "Failed to initialize Kafka producer, falling back to Redis-only mode: %s",
                 exc,
             )
             return None
@@ -287,10 +296,14 @@ class TaskScheduler:
             await producer.send_to_topic(topic, message, key=task_id)
             logger.debug(
                 "Kafka result sent: task=%s status=%s topic=%s",
-                task_id, status_value, topic,
+                task_id,
+                status_value,
+                topic,
             )
         except Exception as exc:
             logger.error(
                 "Failed to send Kafka result for task %s to topic %s: %s",
-                task_id, topic, exc,
+                task_id,
+                topic,
+                exc,
             )

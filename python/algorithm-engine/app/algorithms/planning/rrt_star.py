@@ -2,6 +2,7 @@
 
 Migrated from: path-planning-service/src/main/python/planners/rrt_star.py
 """
+
 from __future__ import annotations
 
 import logging
@@ -71,7 +72,8 @@ class RRTStarPlanner:
                 if d < self.rewire_radius:
                     new_cost = costs[new_idx] + d
                     if new_cost < costs[i] and not self._check_line_collision(
-                        nodes[i], tuple(new_point),
+                        nodes[i],
+                        tuple(new_point),
                     ):
                         parents[i] = new_idx
                         costs[i] = new_cost

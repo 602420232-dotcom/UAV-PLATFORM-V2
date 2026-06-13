@@ -2,6 +2,7 @@
 
 TODO: Migrate full implementation.
 """
+
 from __future__ import annotations
 
 import logging

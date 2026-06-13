@@ -4,6 +4,7 @@ Migrated from: model-engine/gpr_risk/model.py
 
 Original: GPRegressionModel using GPyTorch. Standalone numpy/scipy implementation.
 """
+
 from __future__ import annotations
 
 import logging
@@ -38,7 +39,7 @@ class GPRUncertaintyQuantifier:
             alpha = np.linalg.solve(L.T, np.linalg.solve(L, train_y))
             mean = K_s.T @ alpha
             v = np.linalg.solve(L, K_s)
-            var = np.diag(K_ss) - np.sum(v ** 2, axis=0)
+            var = np.diag(K_ss) - np.sum(v**2, axis=0)
             var = np.maximum(var, 1e-10)
         except np.linalg.LinAlgError:
             mean = np.zeros(n_test)
@@ -55,4 +56,4 @@ class GPRUncertaintyQuantifier:
 
     def _rbf_kernel(self, x1, x2):  # noqa: N803
         dists = cdist(x1, x2, metric="sqeuclidean")
-        return self.signal_variance * np.exp(-0.5 * dists / self.length_scale ** 2)
+        return self.signal_variance * np.exp(-0.5 * dists / self.length_scale**2)

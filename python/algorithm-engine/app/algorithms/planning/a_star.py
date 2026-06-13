@@ -2,6 +2,7 @@
 
 Migrated from: path-planning-service/src/main/python/planners/
 """
+
 from __future__ import annotations
 
 import heapq
