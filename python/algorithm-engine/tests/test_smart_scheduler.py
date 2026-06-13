@@ -5,8 +5,6 @@ Tests the SmartAlgorithmScheduler decision tree for correct algorithm selection.
 
 from __future__ import annotations
 
-import pytest
-
 
 class TestSmartScheduler:
     """Tests for SmartAlgorithmScheduler."""

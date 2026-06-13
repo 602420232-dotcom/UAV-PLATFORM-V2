@@ -230,7 +230,7 @@ function initTopoChart() {
       formatter: (params: unknown) => {
         const p = params as { dataType?: string; name?: string; data?: { category?: number } }
         if (p.dataType === 'node') {
-          const cat = p.data?.category != null ? topologyCategories[p.data.category].name : ''
+          const cat = p.data?.category != null ? topologyCategories[p.data.category]?.name ?? '' : ''
           return `<strong>${p.name}</strong><br/>层级: ${cat}`
         }
         if (p.dataType === 'edge') {

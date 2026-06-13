@@ -1,5 +1,4 @@
-import { get, post, put, del } from './request'
-import type { PageResult } from './request'
+import { get, post } from './request'
 
 export interface Algorithm {
   id: number

@@ -124,7 +124,8 @@ class SmartAlgorithmScheduler:
 
         # 规则 1: 风险感知 -> 5DVAR
         if require_risk_aware and has_risk_field:
-            self._record("risk_aware", "命中", "需要风险场 + 存在 risk_field 参数")
+            self._record("risk_aware", "命中", "需要风险场 + 存在 risk_field 参数",
+                         selected_algorithm=ALGORITHM_5DVAR)
             return self._make_result(
                 algorithm_id=ALGORITHM_5DVAR,
                 reason=(
@@ -143,7 +144,8 @@ class SmartAlgorithmScheduler:
         if grid_total is not None and grid_total > _LARGE_GRID_THRESHOLD ** 2:
             if gpu_available:
                 self._record("large_grid_gpu", "命中",
-                             f"网格 {grid_total} > {_LARGE_GRID_THRESHOLD}^2 且 GPU 可用")
+                             f"网格 {grid_total} > {_LARGE_GRID_THRESHOLD}^2 且 GPU 可用",
+                             selected_algorithm=ALGORITHM_4DVAR_GPU)
                 return self._make_result(
                     algorithm_id=ALGORITHM_4DVAR_GPU,
                     reason=(

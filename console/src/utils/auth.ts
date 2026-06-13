@@ -19,6 +19,7 @@ export interface StoredUserInfo {
   role: string
   tenantId?: number
   tenantName?: string
+  apiKeySecret?: string
 }
 
 export function getUserInfo(): StoredUserInfo | null {

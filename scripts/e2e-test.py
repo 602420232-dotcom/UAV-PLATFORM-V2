@@ -249,7 +249,6 @@ def test_algorithm_list(results: TestResult, verbose: bool = False) -> None:
 
                 # 验证
                 count_match = algo_count == EXPECTED_ALGORITHM_COUNT
-                has_categories = len(category_counts) > 0
 
                 validation_parts = []
                 if count_match:
@@ -571,7 +570,6 @@ def test_risk_assessment(results: TestResult, verbose: bool = False) -> None:
 
                 has_level = risk_level in ("LOW", "MEDIUM", "HIGH", "CRITICAL")
                 has_score = score is not None
-                has_factors = len(factors) > 0
 
                 test_status = "PASS" if has_level and has_score else "FAIL"
                 results.record(

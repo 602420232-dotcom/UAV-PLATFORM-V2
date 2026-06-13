@@ -95,11 +95,11 @@ public:
     );
 
     /// 预测轨迹
-    /// @param x0, y0, yaw0 初始状态
+    /// @param x0, y0, z0, yaw0 初始状态
     /// @param v, w 速度控制
     /// @return 预测轨迹
     Trajectory predict_trajectory(
-        double x0, double y0, double yaw0,
+        double x0, double y0, double z0, double yaw0,
         double v, double w
     ) const;
 

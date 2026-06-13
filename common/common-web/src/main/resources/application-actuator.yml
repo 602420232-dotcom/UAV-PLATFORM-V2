@@ -1,0 +1,21 @@
+# Actuator 端点暴露配置
+# 所有引用 common-web 的微服务自动获得此配置
+# 需要通过 spring.profiles.include 或 spring.profiles.group 激活
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: prometheus, health, info, metrics
+  endpoint:
+    health:
+      show-details: when-authorized
+    prometheus:
+      enabled: true
+    info:
+      enabled: true
+    metrics:
+      enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}

@@ -150,7 +150,7 @@ function buildWindOption(data: WeatherGrid[]): EChartsOption {
       {
         name: '风速',
         type: 'scatter',
-        symbolSize: (val: number[]) => Math.max(8, val[2] * 2),
+        symbolSize: (val: number[]) => Math.max(8, (val[2] ?? 0) * 2),
         data: scatterData,
         itemStyle: {
           shadowBlur: 10,
@@ -322,7 +322,7 @@ function buildHumidityOption(data: WeatherGrid[]): EChartsOption {
       {
         name: '湿度',
         type: 'effectScatter',
-        symbolSize: (val: number[]) => Math.max(6, val[2] / 5),
+        symbolSize: (val: number[]) => Math.max(6, (val[2] ?? 0) / 5),
         data: scatterData,
         rippleEffect: { brushType: 'stroke' },
         itemStyle: {
@@ -428,7 +428,7 @@ function formatDirection(dir: number): string {
 function getWindDirectionName(dir: number): string {
   const directions = ['北', '东北', '东', '东南', '南', '西南', '西', '西北']
   const index = Math.round(dir / 45) % 8
-  return directions[index]
+  return directions[index] ?? '北'
 }
 
 onMounted(() => {

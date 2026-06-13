@@ -6,8 +6,8 @@ import sys
 from pathlib import Path
 from typing import Any
 
-import pytest
 import numpy as np
+import pytest
 
 # Ensure the app package is importable when running tests from the tests/ directory
 _project_root = Path(__file__).resolve().parent.parent
