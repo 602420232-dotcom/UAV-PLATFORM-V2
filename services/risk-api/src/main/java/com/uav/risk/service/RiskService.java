@@ -1,6 +1,7 @@
 package com.uav.risk.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.uav.common.core.context.MockContext;
 import com.uav.risk.dto.RiskQueryRequest;
 import com.uav.risk.entity.RiskAssessment;
 import com.uav.risk.entity.RiskAssessmentRecord;
@@ -42,6 +43,7 @@ public class RiskService {
      */
     public RiskAssessment assessRisk(RiskQueryRequest request) {
         if (mockEnabled) {
+            MockContext.setMockMode();
             return assessRiskMock(request);
         }
         return assessRiskReal(request);
@@ -54,6 +56,7 @@ public class RiskService {
                                                  double maxLon, double maxLat,
                                                  double resolution) {
         if (mockEnabled) {
+            MockContext.setMockMode();
             return generateRiskMapMock(minLon, minLat, maxLon, maxLat, resolution);
         }
         return generateRiskMapReal(minLon, minLat, maxLon, maxLat, resolution);
@@ -64,6 +67,7 @@ public class RiskService {
      */
     public List<RiskAssessment> getRiskHistory(Long tenantId, String type, int limit) {
         if (mockEnabled) {
+            MockContext.setMockMode();
             return getRiskHistoryMock(tenantId, type, limit);
         }
         return getRiskHistoryReal(tenantId, type, limit);

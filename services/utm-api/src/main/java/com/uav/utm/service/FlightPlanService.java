@@ -1,6 +1,7 @@
 package com.uav.utm.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.uav.common.core.context.MockContext;
 import com.uav.common.core.util.IdUtil;
 import com.uav.utm.entity.FlightPlan;
 import com.uav.utm.mapper.FlightPlanMapper;
@@ -34,6 +35,7 @@ public class FlightPlanService {
 
     public FlightPlan submitPlan(FlightPlan plan) {
         if (mockEnabled) {
+            MockContext.setMockMode();
             plan.setStatus(FlightPlan.FlightPlanStatus.SUBMITTED);
             return plan;
         }
@@ -50,6 +52,7 @@ public class FlightPlanService {
 
     public FlightPlan approvePlan(Long planId) {
         if (mockEnabled) {
+            MockContext.setMockMode();
             FlightPlan plan = new FlightPlan();
             plan.setId(planId);
             plan.setStatus(FlightPlan.FlightPlanStatus.APPROVED);
@@ -68,6 +71,7 @@ public class FlightPlanService {
 
     public FlightPlan rejectPlan(Long planId) {
         if (mockEnabled) {
+            MockContext.setMockMode();
             FlightPlan plan = new FlightPlan();
             plan.setId(planId);
             plan.setStatus(FlightPlan.FlightPlanStatus.REJECTED);
@@ -85,6 +89,7 @@ public class FlightPlanService {
 
     public FlightPlan startFlight(Long planId) {
         if (mockEnabled) {
+            MockContext.setMockMode();
             FlightPlan plan = new FlightPlan();
             plan.setId(planId);
             plan.setStatus(FlightPlan.FlightPlanStatus.ACTIVE);
@@ -103,6 +108,7 @@ public class FlightPlanService {
 
     public FlightPlan completeFlight(Long planId) {
         if (mockEnabled) {
+            MockContext.setMockMode();
             FlightPlan plan = new FlightPlan();
             plan.setId(planId);
             plan.setStatus(FlightPlan.FlightPlanStatus.COMPLETED);
@@ -121,6 +127,7 @@ public class FlightPlanService {
 
     public FlightPlan cancelPlan(Long planId) {
         if (mockEnabled) {
+            MockContext.setMockMode();
             FlightPlan plan = new FlightPlan();
             plan.setId(planId);
             plan.setStatus(FlightPlan.FlightPlanStatus.CANCELLED);
@@ -138,6 +145,7 @@ public class FlightPlanService {
 
     public Optional<FlightPlan> getPlan(Long planId) {
         if (mockEnabled) {
+            MockContext.setMockMode();
             return Optional.empty();
         }
         return Optional.ofNullable(flightPlanMapper.selectById(planId));
@@ -145,6 +153,7 @@ public class FlightPlanService {
 
     public List<FlightPlan> listPlans() {
         if (mockEnabled) {
+            MockContext.setMockMode();
             return List.of();
         }
         LambdaQueryWrapper<FlightPlan> wrapper = new LambdaQueryWrapper<>();

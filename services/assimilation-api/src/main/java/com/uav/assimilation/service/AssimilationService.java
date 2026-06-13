@@ -11,6 +11,7 @@ import com.uav.assimilation.entity.AssimilationTask;
 import com.uav.assimilation.mapper.AssimilationResultMapper;
 import com.uav.assimilation.mapper.AssimilationTaskMapper;
 import com.uav.common.core.constant.TaskStatus;
+import com.uav.common.core.context.MockContext;
 import com.uav.common.core.result.Result;
 import com.uav.common.core.statemachine.TaskStateMachine;
 import com.uav.common.kafka.message.AlgorithmTaskMessage;
@@ -72,6 +73,7 @@ public class AssimilationService {
      */
     public Result<Long> submitTask(SubmitTaskRequest request) {
         if (mockEnabled) {
+            MockContext.setMockMode();
             return submitTaskMock(request);
         }
         return submitTaskReal(request);
@@ -82,6 +84,7 @@ public class AssimilationService {
      */
     public Result<AssimilationTask> getTaskStatus(Long taskId) {
         if (mockEnabled) {
+            MockContext.setMockMode();
             return getTaskStatusMock(taskId);
         }
         return getTaskStatusReal(taskId);
@@ -92,6 +95,7 @@ public class AssimilationService {
      */
     public Result<AssimilationResult> getTaskResult(Long taskId) {
         if (mockEnabled) {
+            MockContext.setMockMode();
             return getTaskResultMock(taskId);
         }
         return getTaskResultReal(taskId);
@@ -102,6 +106,7 @@ public class AssimilationService {
      */
     public Result<Page<AssimilationTask>> listTasks(TaskQueryRequest request) {
         if (mockEnabled) {
+            MockContext.setMockMode();
             return listTasksMock(request);
         }
         return listTasksReal(request);
@@ -112,6 +117,7 @@ public class AssimilationService {
      */
     public Result<Void> cancelTask(Long taskId) {
         if (mockEnabled) {
+            MockContext.setMockMode();
             return cancelTaskMock(taskId);
         }
         return cancelTaskReal(taskId);

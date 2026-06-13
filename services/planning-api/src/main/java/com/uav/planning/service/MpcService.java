@@ -3,6 +3,7 @@ package com.uav.planning.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.uav.common.core.constant.TaskStatus;
+import com.uav.common.core.context.MockContext;
 import com.uav.common.core.util.IdUtil;
 import com.uav.common.kafka.message.AlgorithmTaskMessage;
 import com.uav.common.kafka.producer.AlgorithmTaskProducer;
@@ -58,6 +59,7 @@ public class MpcService {
         String taskId = IdUtil.fastUuid();
 
         if (mockEnabled) {
+            MockContext.setMockMode();
             return submitMpcPlanningMock(taskId, request);
         }
 
@@ -72,6 +74,7 @@ public class MpcService {
      */
     public PlanningTask getMpcStatus(String taskId) {
         if (mockEnabled) {
+            MockContext.setMockMode();
             MpcTaskContext ctx = taskContextStore.get(taskId);
             if (ctx == null) {
                 return null;
@@ -107,6 +110,7 @@ public class MpcService {
      */
     public MpcResult getMpcResult(String taskId) {
         if (mockEnabled) {
+            MockContext.setMockMode();
             MpcTaskContext ctx = taskContextStore.get(taskId);
             if (ctx == null) {
                 return null;
@@ -179,6 +183,7 @@ public class MpcService {
      */
     public boolean cancelMpc(String taskId) {
         if (mockEnabled) {
+            MockContext.setMockMode();
             MpcTaskContext ctx = taskContextStore.remove(taskId);
             if (ctx == null) {
                 return false;

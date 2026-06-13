@@ -2,6 +2,7 @@ package com.uav.common.web.handler;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.uav.common.core.context.MockContext;
 import com.uav.common.core.result.Result;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +16,9 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
 
 /**
  * 响应包装器：自动将Controller返回值包装为Result
+ * <p>
+ * 同时检测 MockContext 标记，若当前请求使用了 Mock 数据，
+ * 则在响应头中添加 X-Mock: true。
  */
 @Slf4j
 @RequiredArgsConstructor
@@ -37,6 +41,12 @@ public class ResponseWrapper implements ResponseBodyAdvice<Object> {
                                   Class<? extends HttpMessageConverter<?>> selectedConverterType,
                                   ServerHttpRequest request,
                                   ServerHttpResponse response) {
+        // 检查 Mock 标记并添加响应头
+        if (MockContext.isMockMode()) {
+            response.getHeaders().add(MockContext.MOCK_HEADER_NAME, MockContext.MOCK_HEADER_VALUE);
+            MockContext.clear();
+        }
+
         if (body instanceof Result) {
             return body;
         }

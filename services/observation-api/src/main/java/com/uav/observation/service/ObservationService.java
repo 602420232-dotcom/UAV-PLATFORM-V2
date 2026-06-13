@@ -3,6 +3,7 @@ package com.uav.observation.service;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.uav.common.core.constant.TaskStatus;
+import com.uav.common.core.context.MockContext;
 import com.uav.common.kafka.message.AlgorithmTaskMessage;
 import com.uav.common.kafka.producer.AlgorithmTaskProducer;
 import com.uav.common.kafka.service.TaskStatusSyncService;
@@ -74,6 +75,7 @@ public class ObservationService {
      */
     public ObservationTask createTask(CreateObservationRequest request) {
         if (mockEnabled) {
+            MockContext.setMockMode();
             return createTaskMock(request);
         }
         return createTaskReal(request);
@@ -84,6 +86,7 @@ public class ObservationService {
      */
     public ObservationTask getTask(Long id) {
         if (mockEnabled) {
+            MockContext.setMockMode();
             return getTaskMock(id);
         }
         return getTaskReal(id);
@@ -94,6 +97,7 @@ public class ObservationService {
      */
     public List<ObservationTask> listTasks() {
         if (mockEnabled) {
+            MockContext.setMockMode();
             return listTasksMock();
         }
         return listTasksReal();
@@ -104,6 +108,7 @@ public class ObservationService {
      */
     public ObservationTask updateTaskStatus(Long id, String status) {
         if (mockEnabled) {
+            MockContext.setMockMode();
             return updateTaskStatusMock(id, status);
         }
         return updateTaskStatusReal(id, status);
@@ -114,6 +119,7 @@ public class ObservationService {
      */
     public Double evaluateDataQuality(Long id) {
         if (mockEnabled) {
+            MockContext.setMockMode();
             return evaluateDataQualityMock(id);
         }
         return evaluateDataQualityReal(id);

@@ -1,6 +1,7 @@
 package com.uav.observation.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.uav.common.core.context.MockContext;
 import com.uav.observation.dto.ObservationDecisionRequest;
 import com.uav.observation.entity.ObservationDecision;
 import com.uav.observation.mapper.ObservationDecisionMapper;
@@ -55,6 +56,7 @@ public class ObservationDecisionService {
      */
     public ObservationDecision makeDecision(ObservationDecisionRequest request) {
         if (mockEnabled) {
+            MockContext.setMockMode();
             return makeDecisionMock(request);
         }
         return makeDecisionReal(request);
@@ -65,6 +67,7 @@ public class ObservationDecisionService {
      */
     public List<ObservationDecision> getDecisionHistory() {
         if (mockEnabled) {
+            MockContext.setMockMode();
             return getDecisionHistoryMock();
         }
         return getDecisionHistoryReal();
@@ -75,6 +78,7 @@ public class ObservationDecisionService {
      */
     public ObservationDecision getDecision(Long id) {
         if (mockEnabled) {
+            MockContext.setMockMode();
             return getDecisionMock(id);
         }
         return getDecisionReal(id);

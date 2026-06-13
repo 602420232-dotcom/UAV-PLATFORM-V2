@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.uav.common.core.constant.TaskStatus;
+import com.uav.common.core.context.MockContext;
 import com.uav.common.core.result.ResultCode;
 import com.uav.common.core.statemachine.TaskStateMachine;
 import com.uav.common.core.util.IdUtil;
@@ -71,6 +72,7 @@ public class PlanningService {
      */
     public PlanningTask submitPathPlanning(PlanPathRequest request) {
         if (mockEnabled) {
+            MockContext.setMockMode();
             return submitPathPlanningMock(request);
         }
         return submitPathPlanningDb(request);
@@ -81,6 +83,7 @@ public class PlanningService {
      */
     public PlanningTask submitMissionPlanning(PlanMissionRequest request) {
         if (mockEnabled) {
+            MockContext.setMockMode();
             return submitMissionPlanningMock(request);
         }
         return submitMissionPlanningDb(request);
@@ -91,6 +94,7 @@ public class PlanningService {
      */
     public PlanningTask getTaskStatus(Long taskId) {
         if (mockEnabled) {
+            MockContext.setMockMode();
             return taskStore.get(taskId);
         }
         return taskMapper.selectById(taskId);
@@ -101,6 +105,7 @@ public class PlanningService {
      */
     public PlanningTask getTaskStatusByTaskId(String taskIdStr) {
         if (mockEnabled) {
+            MockContext.setMockMode();
             return taskStore.values().stream()
                     .filter(t -> String.valueOf(t.getId()).equals(taskIdStr))
                     .findFirst()
@@ -116,6 +121,7 @@ public class PlanningService {
      */
     public PathResult getPathResult(Long taskId) {
         if (mockEnabled) {
+            MockContext.setMockMode();
             return pathResultStore.get(taskId);
         }
         PlanningTask task = taskMapper.selectById(taskId);
@@ -132,6 +138,7 @@ public class PlanningService {
      */
     public MissionPlan getMissionPlan(Long taskId) {
         if (mockEnabled) {
+            MockContext.setMockMode();
             return missionPlanStore.get(taskId);
         }
         PlanningTask task = taskMapper.selectById(taskId);
@@ -148,6 +155,7 @@ public class PlanningService {
      */
     public List<PlanningTask> listTasks() {
         if (mockEnabled) {
+            MockContext.setMockMode();
             return new ArrayList<>(taskStore.values());
         }
         LambdaQueryWrapper<PlanningTask> wrapper = new LambdaQueryWrapper<>();
@@ -160,6 +168,7 @@ public class PlanningService {
      */
     public boolean cancelTask(Long taskId) {
         if (mockEnabled) {
+            MockContext.setMockMode();
             return cancelTaskMock(taskId);
         }
         return cancelTaskDb(taskId);

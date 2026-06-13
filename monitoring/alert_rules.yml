@@ -1,0 +1,125 @@
+groups:
+  - name: uav-platform-service-health
+    interval: 15s
+    rules:
+      # 服务宕机告警：1分钟内无心跳
+      - alert: UAVServiceDown
+        expr: up{job="uav-platform"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: "{{ $labels.instance }}"
+        annotations:
+          summary: "UAV 服务宕机: {{ $labels.instance }}"
+          description: "服务 {{ $labels.instance }} 已连续 1 分钟未响应健康检查。"
+
+      # HTTP 错误率 > 5%
+      - alert: UAVHighErrorRate
+        expr: |
+          (
+            sum(rate(http_server_requests_seconds_count{status=~"5.."}[5m])) by (instance)
+            /
+            sum(rate(http_server_requests_seconds_count[5m])) by (instance)
+          ) > 0.05
+        for: 2m
+        labels:
+          severity: warning
+          service: "{{ $labels.instance }}"
+        annotations:
+          summary: "UAV 服务错误率过高: {{ $labels.instance }}"
+          description: "服务 {{ $labels.instance }} 5xx 错误率超过 5%，持续 2 分钟。"
+
+      # 响应时间 P99 > 3s
+      - alert: UAVHighLatency
+        expr: |
+          histogram_quantile(0.99,
+            sum(rate(http_server_requests_seconds_bucket[5m])) by (le, instance)
+          ) > 3
+        for: 2m
+        labels:
+          severity: warning
+          service: "{{ $labels.instance }}"
+        annotations:
+          summary: "UAV 服务响应延迟过高: {{ $labels.instance }}"
+          description: "服务 {{ $labels.instance }} P99 响应时间超过 3 秒，持续 2 分钟。"
+
+      # JVM 堆内存使用率 > 85%
+      - alert: UAVJvmHeapHigh
+        expr: |
+          (
+            jvm_memory_used_bytes{area="heap"}
+            /
+            jvm_memory_max_bytes{area="heap"}
+          ) > 0.85
+        for: 3m
+        labels:
+          severity: warning
+          service: "{{ $labels.instance }}"
+        annotations:
+          summary: "JVM 堆内存使用率过高: {{ $labels.instance }}"
+          description: "服务 {{ $labels.instance }} JVM 堆内存使用率超过 85%，持续 3 分钟。"
+
+      # JVM GC 停顿时间 > 1s/分钟
+      - alert: UAVJvmGcPauseHigh
+        expr: |
+          rate(jvm_gc_pause_seconds_sum[1m]) > 1
+        for: 2m
+        labels:
+          severity: warning
+          service: "{{ $labels.instance }}"
+        annotations:
+          summary: "JVM GC 停顿时间过长: {{ $labels.instance }}"
+          description: "服务 {{ $labels.instance }} GC 停顿时间超过 1 秒/分钟。"
+
+  - name: uav-platform-infrastructure
+    interval: 30s
+    rules:
+      # MySQL 连接数过高
+      - alert: UAVMySQLConnectionsHigh
+        expr: mysql_global_status_threads_connected > 80
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "MySQL 连接数过高"
+          description: "MySQL 当前连接数 {{ $value }}，超过阈值 80。"
+
+      # Redis 内存使用率 > 90%
+      - alert: UAVRedisMemoryHigh
+        expr: |
+          (
+            redis_memory_used_bytes
+            /
+            redis_memory_max_bytes
+          ) > 0.9
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Redis 内存使用率过高"
+          description: "Redis 内存使用率 {{ $value | humanizePercentage }}，超过阈值 90%。"
+
+      # Kafka 消费者滞后
+      - alert: UAVKafkaConsumerLag
+        expr: kafka_consumer_group_lag > 1000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Kafka 消费者滞后过高"
+          description: "消费者组 lag 超过 1000，持续 5 分钟。"
+
+  - name: uav-platform-mock-detection
+    interval: 15s
+    rules:
+      # Mock 模式响应检测（需要 X-Mock Header 配合）
+      - alert: UAVMockModeResponse
+        expr: |
+          sum(rate(http_server_requests_seconds_count{mock="true"}[5m])) by (instance) > 0
+        for: 1m
+        labels:
+          severity: info
+          service: "{{ $labels.instance }}"
+        annotations:
+          summary: "检测到 Mock 模式响应: {{ $labels.instance }}"
+          description: "服务 {{ $labels.instance }} 正在返回 Mock 数据。"

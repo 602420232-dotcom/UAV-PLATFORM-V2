@@ -4,7 +4,8 @@ import com.uav.weather.dto.WeatherQueryRequest;
 import com.uav.weather.dto.WindProfileQueryRequest;
 import com.uav.weather.entity.WeatherGrid;
 import com.uav.weather.entity.WeatherRecord;
-import com.uav.weather.entity.WindProfile;
+import com.uav.common.core.context.MockContext;
+import com.uav.weather.entity.WeatherRecord;
 import com.uav.weather.mapper.WeatherRecordMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -56,6 +57,7 @@ public class WeatherService {
 
         WeatherGrid grid;
         if (mockEnabled) {
+            MockContext.setMockMode();
             grid = fetchFromSourceMock(request);
         } else {
             grid = fetchFromSourceReal(request);
@@ -103,6 +105,7 @@ public class WeatherService {
             WindProfile.WindLayer layer = new WindProfile.WindLayer();
             layer.setAltitude(alt);
             if (mockEnabled) {
+                MockContext.setMockMode();
                 layer.setWindSpeed(generateWindSpeedMock(alt));
                 layer.setWindDirection(generateWindDirectionMock(alt));
                 layer.setVerticalWindSpeed(generateVerticalWindMock(alt));

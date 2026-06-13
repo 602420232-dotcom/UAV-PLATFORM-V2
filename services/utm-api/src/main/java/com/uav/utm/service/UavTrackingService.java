@@ -42,6 +42,7 @@ public class UavTrackingService {
     public UavPosition reportPosition(UavPositionReport report) {
         UavPosition position;
         if (mockEnabled) {
+            MockContext.setMockMode();
             position = new UavPosition();
             position.setUavId(report.getUavId());
             position.setLongitude(report.getLon());
@@ -71,6 +72,7 @@ public class UavTrackingService {
 
     public Optional<UavPosition> getCurrentPosition(String uavId) {
         if (mockEnabled) {
+            MockContext.setMockMode();
             return Optional.empty();
         }
         LambdaQueryWrapper<UavPosition> wrapper = new LambdaQueryWrapper<>();
@@ -82,6 +84,7 @@ public class UavTrackingService {
 
     public List<UavPosition> getTrackHistory(String uavId) {
         if (mockEnabled) {
+            MockContext.setMockMode();
             return List.of();
         }
         LambdaQueryWrapper<UavPosition> wrapper = new LambdaQueryWrapper<>();
@@ -94,6 +97,7 @@ public class UavTrackingService {
     public List<ConflictAlert> checkConflicts(String uavId) {
         List<ConflictAlert> alerts;
         if (mockEnabled) {
+            MockContext.setMockMode();
             alerts = List.of();
         } else {
             LambdaQueryWrapper<ConflictAlert> wrapper = new LambdaQueryWrapper<>();

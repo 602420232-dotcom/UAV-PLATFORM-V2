@@ -1,5 +1,6 @@
 package com.uav.risk.service;
 
+import com.uav.common.core.context.MockContext;
 import com.uav.risk.dto.AirworthinessRequest;
 import com.uav.risk.entity.AirworthinessAssessment;
 import com.uav.risk.entity.AirworthinessRecord;
@@ -40,6 +41,9 @@ public class AirworthinessService {
      * 全维度适航评估
      */
     public AirworthinessAssessment assessAirworthiness(AirworthinessRequest request) {
+        if (mockEnabled) {
+            MockContext.setMockMode();
+        }
         AirworthinessAssessment assessment = new AirworthinessAssessment();
         assessment.setUavModel(request.getUavModel());
         assessment.setTenantId(1L);

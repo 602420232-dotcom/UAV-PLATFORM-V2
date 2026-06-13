@@ -1,6 +1,7 @@
 package com.uav.utm.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.uav.common.core.context.MockContext;
 import com.uav.utm.entity.Airspace;
 import com.uav.utm.mapper.AirspaceMapper;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +33,7 @@ public class AirspaceService {
 
     public List<Airspace> getAirspaces() {
         if (mockEnabled) {
+            MockContext.setMockMode();
             return List.of();
         }
         LambdaQueryWrapper<Airspace> wrapper = new LambdaQueryWrapper<>();
@@ -41,6 +43,7 @@ public class AirspaceService {
 
     public boolean checkAirspaceRestriction(Double lon, Double lat, Double altitude) {
         if (mockEnabled) {
+            MockContext.setMockMode();
             return false;
         }
         LambdaQueryWrapper<Airspace> wrapper = new LambdaQueryWrapper<>();
@@ -53,6 +56,7 @@ public class AirspaceService {
 
     public Airspace createDynamicAirspace(Airspace airspace) {
         if (mockEnabled) {
+            MockContext.setMockMode();
             return airspace;
         }
         airspace.setStatus(Airspace.AirspaceStatus.ACTIVE);
