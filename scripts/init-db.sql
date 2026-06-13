@@ -106,6 +106,29 @@ CREATE TABLE IF NOT EXISTS `airworthiness_history` (
     INDEX `idx_tenant_time` (`tenant_id`, `created_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='适航评估历史表';
 
+-- ----------------------------
+-- Table: weather_record
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS `weather_record` (
+    `id`                BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '主键ID',
+    `lat`               DOUBLE NOT NULL COMMENT '纬度',
+    `lon`               DOUBLE NOT NULL COMMENT '经度',
+    `altitude`          DOUBLE COMMENT '海拔高度(m)',
+    `temperature`       DOUBLE COMMENT '气温(°C)',
+    `humidity`          DOUBLE COMMENT '相对湿度(%)',
+    `wind_speed`        DOUBLE COMMENT '风速(m/s)',
+    `wind_direction`    DOUBLE COMMENT '风向(°)',
+    `pressure`          DOUBLE COMMENT '气压(hPa)',
+    `visibility`        DOUBLE COMMENT '能见度(km)',
+    `data_source`       VARCHAR(32) COMMENT '数据源',
+    `observation_time`  DATETIME COMMENT '观测时间',
+    `tenant_id`         BIGINT COMMENT '租户ID',
+    `created_at`        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    INDEX `idx_location` (`lat`, `lon`),
+    INDEX `idx_observation_time` (`observation_time`),
+    INDEX `idx_tenant_time` (`tenant_id`, `created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='气象数据记录表';
+
 -- ============================================================
 -- 4. Assimilation tables (uav_assimilation)
 -- ============================================================

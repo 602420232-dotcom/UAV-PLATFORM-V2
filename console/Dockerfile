@@ -8,12 +8,12 @@ FROM node:20-alpine AS builder
 WORKDIR /build
 
 # 先复制依赖文件以利用 Docker 缓存层
-COPY developer-console/package.json developer-console/package-lock.json* ./
+COPY package.json package-lock.json* ./
 
 RUN npm ci
 
 # 复制源代码
-COPY developer-console/ .
+COPY . .
 
 # 构建
 RUN npm run build

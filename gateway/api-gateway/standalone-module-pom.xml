@@ -1,4 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Standalone module POM for api-gateway.
+    This is used by build-standalone.ps1 to temporarily replace api-gateway/pom.xml
+    during standalone builds. DO NOT use this as the primary pom.xml.
+
+    Original pom.xml is backed up as pom.xml.main-branch and restored after build.
+-->
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -6,38 +13,17 @@
 
     <parent>
         <groupId>com.uav</groupId>
-        <artifactId>uav-platform-v2</artifactId>
+        <artifactId>uav-gateway-standalone</artifactId>
         <version>2.0.0</version>
-        <relativePath>../../pom.xml</relativePath>
+        <relativePath>../standalone-pom.xml</relativePath>
     </parent>
 
     <artifactId>api-gateway</artifactId>
     <name>API Gateway</name>
-    <description>UAV Platform API Gateway</description>
+    <description>UAV Platform API Gateway (Standalone)</description>
     <packaging>jar</packaging>
 
-    <properties>
-        <spring-cloud-gateway.version>4.1.0</spring-cloud-gateway.version>
-    </properties>
-
     <dependencies>
-        <!-- Common modules (only available when building from root POM with Boot 4.0) -->
-        <dependency>
-            <groupId>com.uav</groupId>
-            <artifactId>common-core</artifactId>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>com.uav</groupId>
-            <artifactId>common-security</artifactId>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>com.uav</groupId>
-            <artifactId>common-resilience</artifactId>
-            <optional>true</optional>
-        </dependency>
-
         <!-- Spring Cloud Gateway -->
         <dependency>
             <groupId>org.springframework.cloud</groupId>
@@ -51,13 +37,11 @@
             <artifactId>spring-boot-starter-data-redis-reactive</artifactId>
         </dependency>
 
-        <!-- Nacos Discovery (only needed in production with service registry) -->
-        <!--
+        <!-- Nacos Discovery -->
         <dependency>
             <groupId>com.alibaba.cloud</groupId>
             <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
         </dependency>
-        -->
 
         <!-- Load Balancer -->
         <dependency>
@@ -85,37 +69,6 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-
-    <profiles>
-        <!--
-            Standalone profile: builds gateway independently with Spring Boot 3.4.x.
-            Usage: mvn clean package -Pstandalone -f gateway/standalone-pom.xml
-        -->
-        <profile>
-            <id>standalone</id>
-            <activation>
-                <activeByDefault>false</activeByDefault>
-            </activation>
-            <dependencies>
-                <!-- Remove common modules for standalone build -->
-                <dependency>
-                    <groupId>com.uav</groupId>
-                    <artifactId>common-core</artifactId>
-                    <scope>provided</scope>
-                </dependency>
-                <dependency>
-                    <groupId>com.uav</groupId>
-                    <artifactId>common-security</artifactId>
-                    <scope>provided</scope>
-                </dependency>
-                <dependency>
-                    <groupId>com.uav</groupId>
-                    <artifactId>common-resilience</artifactId>
-                    <scope>provided</scope>
-                </dependency>
-            </dependencies>
-        </profile>
-    </profiles>
 
     <build>
         <plugins>

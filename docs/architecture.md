@@ -11,25 +11,29 @@
 ┌─────────────────────────────────────────────────────────────┐
 │                      API Gateway                             │
 │  认证(X-API-Key) / 限流(租户配额) / 路由 / 熔断 / 日志        │
+│  独立构建: Spring Boot 3.4.x + Spring Cloud 2024.0.3         │
 └─────────────────────────────────────────────────────────────┘
                               ↓
 ┌─────────────────────────────────────────────────────────────┐
 │                      核心服务层                              │
 │  platform-api  weather-api  planning-api  assimilation-api  │
-│  observation-api  airworthiness-api  utm-api                │
+│  observation-api  risk-api  utm-api                         │
+│  (risk-api 包含适航评估功能)                                  │
 └─────────────────────────────────────────────────────────────┘
                               ↓
 ┌─────────────────────────────────────────────────────────────┐
 │                      Python 算法层                           │
-│  model-engine  fengwu-service  tianzi-service               │
-│  fenglei-service  edge-cloud-coordinator  assimilation-core │
+│  algorithm-engine (20+ 算法: 风乌/天资/风雷/同化/规划/评估)   │
 └─────────────────────────────────────────────────────────────┘
                               ↓
 ┌─────────────────────────────────────────────────────────────┐
 │                      基础设施层                              │
-│  Nacos 3.2  MySQL 8.4.7  Redis 7.2  Kafka 7.8              │
+│  MySQL 8.4.7  Redis 7.2  Kafka 7.8  Zookeeper              │
 └─────────────────────────────────────────────────────────────┘
 ```
+
+> **服务清单**: 共 8 个服务 — 1 个 API Gateway + 7 个业务服务（platform, weather, assimilation, risk, observation, planning, utm）。
+> **Gateway 说明**: API Gateway 采用独立构建方式运行于 Spring Boot 3.4.x，与主项目 Spring Boot 4.0 解耦，避免兼容性问题。
 
 ## 2. 多租户隔离方案
 
@@ -44,11 +48,11 @@
 // 通过 TenantContext 动态切换数据源
 public class TenantContext {
     private static final ThreadLocal<String> CURRENT_TENANT = new ThreadLocal<>();
-    
+
     public static void setTenant(String tenantId) {
         CURRENT_TENANT.set("tenant_" + tenantId);
     }
-    
+
     public static String getTenant() {
         return CURRENT_TENANT.get();
     }
@@ -147,6 +151,7 @@ U-Net降尺度(3km→1km)
 
 - Docker Compose 单节点部署
 - 所有服务本地启动
+- Gateway 独立构建运行于 Spring Boot 3.4.x
 
 ### 7.2 生产环境
 

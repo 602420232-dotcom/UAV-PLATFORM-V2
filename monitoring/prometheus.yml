@@ -3,61 +3,33 @@ global:
   evaluation_interval: 15s
 
 scrape_configs:
-  - job_name: 'api-gateway'
+  - job_name: 'uav-platform'
     metrics_path: '/actuator/prometheus'
     static_configs:
-      - targets: ['api-gateway:8080']
-    relabel_configs:
-      - source_labels: [__address__]
-        target_label: instance
-        replacement: 'api-gateway'
-
-  - job_name: 'platform-api'
-    metrics_path: '/actuator/prometheus'
-    static_configs:
-      - targets: ['platform-api:8080']
-
-  - job_name: 'weather-api'
-    metrics_path: '/actuator/prometheus'
-    static_configs:
-      - targets: ['weather-api:8080']
-
-  - job_name: 'assimilation-api'
-    metrics_path: '/actuator/prometheus'
-    static_configs:
-      - targets: ['assimilation-api:8080']
-
-  - job_name: 'risk-api'
-    metrics_path: '/actuator/prometheus'
-    static_configs:
-      - targets: ['risk-api:8080']
-
-  - job_name: 'observation-api'
-    metrics_path: '/actuator/prometheus'
-    static_configs:
-      - targets: ['observation-api:8080']
-
-  - job_name: 'planning-api'
-    metrics_path: '/actuator/prometheus'
-    static_configs:
-      - targets: ['planning-api:8080']
-
-  - job_name: 'utm-api'
-    metrics_path: '/actuator/prometheus'
-    static_configs:
-      - targets: ['utm-api:8080']
-
-  - job_name: 'algorithm-engine'
-    metrics_path: '/metrics'
-    static_configs:
-      - targets: ['algorithm-engine:9090']
+      - targets:
+          - 'localhost:18081'  # platform-api
+          - 'localhost:18082'  # weather-api
+          - 'localhost:18083'  # assimilation-api
+          - 'localhost:18084'  # risk-api
+          - 'localhost:18085'  # observation-api
+          - 'localhost:18086'  # planning-api
+          - 'localhost:18087'  # utm-api
+          - 'localhost:18080'  # api-gateway
+    basic_auth:
+      username: ${PROMETHEUS_USER:-admin}
+      password: ${PROMETHEUS_PASSWORD:-admin}
 
   - job_name: 'mysql'
     static_configs:
-      - targets: ['mysql:3306']
-    # 需要安装 mysqld_exporter
+      - targets: ['localhost:19104']  # mysqld_exporter
+    scrape_interval: 30s
 
   - job_name: 'redis'
     static_configs:
-      - targets: ['redis:6379']
-    # 需要安装 redis_exporter
+      - targets: ['localhost:19103']  # redis_exporter
+    scrape_interval: 30s
+
+  - job_name: 'kafka'
+    static_configs:
+      - targets: ['localhost:19092']  # kafka jmx exporter
+    scrape_interval: 30s

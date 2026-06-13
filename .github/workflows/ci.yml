@@ -118,28 +118,28 @@ jobs:
       - name: Cache npm dependencies
         uses: actions/cache@v4
         with:
-          path: console/developer-console/node_modules
-          key: npm-${{ runner.os }}-${{ hashFiles('console/developer-console/package-lock.json') }}
+          path: console/node_modules
+          key: npm-${{ runner.os }}-${{ hashFiles('console/package-lock.json') }}
           restore-keys: |
             npm-${{ runner.os }}-
 
       - name: Install dependencies
-        working-directory: console/developer-console
+        working-directory: console
         run: npm ci
 
       - name: Lint
-        working-directory: console/developer-console
+        working-directory: console
         run: npm run lint
 
       - name: Build
-        working-directory: console/developer-console
+        working-directory: console
         run: npm run build
 
       - name: Upload dist artifacts
         uses: actions/upload-artifact@v4
         with:
           name: frontend-dist
-          path: console/developer-console/dist
+          path: console/dist
           retention-days: 3
 
   # ============================================================
@@ -246,7 +246,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: frontend-dist
-          path: console/developer-console/dist
+          path: console/dist
 
       - name: Extract metadata
         id: meta

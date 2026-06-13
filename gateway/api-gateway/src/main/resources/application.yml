@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: 18080
 
 spring:
   application:
@@ -7,7 +7,7 @@ spring:
   cloud:
     nacos:
       discovery:
-        enabled: true
+        enabled: false
         server-addr: localhost:8848
     gateway:
       discovery:
@@ -22,11 +22,11 @@ spring:
             allowedHeaders: "*"
             allowCredentials: true
       routes:
-        # UAV Control Service
-        - id: uav-control-service
-          uri: lb://uav-control-service
+        # Platform API (tenants, api-keys, usage, platform management)
+        - id: platform-api
+          uri: lb://platform-api
           predicates:
-            - Path=/api/v1/uav/**, /api/v2/uav/**
+            - Path=/api/v1/tenants/**, /api/v2/tenants/**, /api/v1/api-keys/**, /api/v2/api-keys/**, /api/v1/usage/**, /api/v2/usage/**, /api/v1/platform/**, /api/v2/platform/**
           filters:
             - StripPrefix=0
             - name: Retry
@@ -34,43 +34,51 @@ spring:
                 retries: 3
                 statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
 
-        # UTM Service
-        - id: utm-service
-          uri: lb://utm-service
+        # UTM API (UTM service + flight planning)
+        - id: utm-api
+          uri: lb://utm-api
           predicates:
-            - Path=/api/v1/utm/**, /api/v2/utm/**
+            - Path=/api/v1/utm/**, /api/v2/utm/**, /api/v1/flight/**, /api/v2/flight/**
           filters:
             - StripPrefix=0
 
-        # Flight Planning Service
-        - id: flight-plan-service
-          uri: lb://flight-plan-service
+        # Weather API
+        - id: weather-api
+          uri: lb://weather-api
           predicates:
-            - Path=/api/v1/flight/**, /api/v2/flight/**
+            - Path=/api/v1/weather/**, /api/v2/weather/**
           filters:
             - StripPrefix=0
 
-        # Device Management Service
-        - id: device-service
-          uri: lb://device-service
+        # Assimilation API
+        - id: assimilation-api
+          uri: lb://assimilation-api
           predicates:
-            - Path=/api/v1/device/**, /api/v2/device/**
+            - Path=/api/v1/assimilation/**, /api/v2/assimilation/**
           filters:
             - StripPrefix=0
 
-        # User Service
-        - id: user-service
-          uri: lb://user-service
+        # Risk API
+        - id: risk-api
+          uri: lb://risk-api
           predicates:
-            - Path=/api/v1/user/**, /api/v2/user/**, /api/v1/auth/**, /api/v2/auth/**
+            - Path=/api/v1/risk/**, /api/v2/risk/**
           filters:
             - StripPrefix=0
 
-        # WebSocket Route
-        - id: websocket-service
-          uri: lb:ws://websocket-service
+        # Observation API
+        - id: observation-api
+          uri: lb://observation-api
           predicates:
-            - Path=/ws/**
+            - Path=/api/v1/observation/**, /api/v2/observation/**
+          filters:
+            - StripPrefix=0
+
+        # Planning API
+        - id: planning-api
+          uri: lb://planning-api
+          predicates:
+            - Path=/api/v1/planning/**, /api/v2/planning/**
           filters:
             - StripPrefix=0
 
@@ -91,6 +99,81 @@ spring:
         max-active: 50
         max-idle: 20
         min-idle: 5
+
+---
+# Local E2E profile: explicit localhost routes (no Nacos discovery)
+spring:
+  config:
+    activate:
+      on-profile: local
+  cloud:
+    gateway:
+      routes:
+        # Platform API (tenants, api-keys, usage, platform management)
+        - id: platform-api
+          uri: http://localhost:18081
+          predicates:
+            - Path=/api/v1/tenants/**, /api/v2/tenants/**, /api/v1/api-keys/**, /api/v2/api-keys/**, /api/v1/usage/**, /api/v2/usage/**, /api/v1/platform/**, /api/v2/platform/**
+          filters:
+            - StripPrefix=0
+            - name: Retry
+              args:
+                retries: 3
+                statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+
+        # UTM API (UTM service + flight planning)
+        - id: utm-api
+          uri: http://localhost:18087
+          predicates:
+            - Path=/api/v1/utm/**, /api/v2/utm/**, /api/v1/flight/**, /api/v2/flight/**
+          filters:
+            - StripPrefix=0
+
+        # Weather API
+        - id: weather-api
+          uri: http://localhost:18082
+          predicates:
+            - Path=/api/v1/weather/**, /api/v2/weather/**
+          filters:
+            - StripPrefix=0
+
+        # Assimilation API
+        - id: assimilation-api
+          uri: http://localhost:18083
+          predicates:
+            - Path=/api/v1/assimilation/**, /api/v2/assimilation/**
+          filters:
+            - StripPrefix=0
+
+        # Risk API
+        - id: risk-api
+          uri: http://localhost:18084
+          predicates:
+            - Path=/api/v1/risk/**, /api/v2/risk/**
+          filters:
+            - StripPrefix=0
+
+        # Observation API
+        - id: observation-api
+          uri: http://localhost:18085
+          predicates:
+            - Path=/api/v1/observation/**, /api/v2/observation/**
+          filters:
+            - StripPrefix=0
+
+        # Planning API
+        - id: planning-api
+          uri: http://localhost:18086
+          predicates:
+            - Path=/api/v1/planning/**, /api/v2/planning/**
+          filters:
+            - StripPrefix=0
+
+        # Actuator routes (direct access)
+        - id: actuator
+          uri: http://localhost:${server.port}
+          predicates:
+            - Path=/actuator/**
 
 # Gateway specific configuration
 gateway:
@@ -125,7 +208,7 @@ management:
         include: health,info,gateway,metrics,prometheus
   endpoint:
     health:
-      show-details: when_authorized
+      show-details: always
     gateway:
       enabled: true
 

@@ -2,6 +2,10 @@ package com.uav.risk.service;
 
 import com.uav.risk.dto.AirworthinessRequest;
 import com.uav.risk.entity.AirworthinessAssessment;
+import com.uav.risk.entity.AirworthinessRecord;
+import com.uav.risk.mapper.AirworthinessRecordMapper;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -12,16 +16,31 @@ import java.util.Map;
 
 /**
  * 适航评估服务
+ * <p>
+ * 通过 {@code uav.mock.enabled} 控制是否使用模拟数据:
+ * <ul>
+ *   <li>mock=true: 使用纯内存计算（原有逻辑保留）</li>
+ *   <li>mock=false: 计算结果持久化到数据库</li>
+ * </ul>
  */
+@Slf4j
 @Service
 public class AirworthinessService {
+
+    private final AirworthinessRecordMapper airworthinessRecordMapper;
+
+    @Value("${uav.mock.enabled:true}")
+    private boolean mockEnabled;
+
+    public AirworthinessService(AirworthinessRecordMapper airworthinessRecordMapper) {
+        this.airworthinessRecordMapper = airworthinessRecordMapper;
+    }
 
     /**
      * 全维度适航评估
      */
     public AirworthinessAssessment assessAirworthiness(AirworthinessRequest request) {
         AirworthinessAssessment assessment = new AirworthinessAssessment();
-        assessment.setId(System.currentTimeMillis());
         assessment.setUavModel(request.getUavModel());
         assessment.setTenantId(1L);
         assessment.setCreatedAt(LocalDateTime.now());
@@ -48,6 +67,28 @@ public class AirworthinessService {
         List<String> recommendations = generateRecommendations(weatherScore, structureScore,
                 powerScore, communicationScore, missionScore, request);
         assessment.setRecommendationsJson(listToJson(recommendations));
+
+        // 真实模式：持久化到数据库
+        if (!mockEnabled) {
+            try {
+                AirworthinessRecord record = new AirworthinessRecord();
+                record.setUavModel(assessment.getUavModel());
+                record.setOverallScore((double) assessment.getOverallScore());
+                record.setDimensionScoresJson(assessment.getDimensionScoresJson());
+                record.setStatus(assessment.getStatus());
+                record.setRecommendationsJson(assessment.getRecommendationsJson());
+                record.setTenantId("1");
+                record.setCreatedAt(LocalDateTime.now());
+                airworthinessRecordMapper.insert(record);
+                assessment.setId(record.getId());
+                log.debug("适航评估记录已持久化, id={}", record.getId());
+            } catch (Exception e) {
+                log.warn("适航评估记录持久化失败: {}", e.getMessage());
+                assessment.setId(System.currentTimeMillis());
+            }
+        } else {
+            assessment.setId(System.currentTimeMillis());
+        }
 
         return assessment;
     }
