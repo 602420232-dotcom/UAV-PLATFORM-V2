@@ -31,6 +31,8 @@ public class MockContext {
 
     /**
      * 检查当前请求是否使用了 Mock 数据
+     *
+     * @return 是否使用 Mock 数据
      */
     public static boolean isMockMode() {
         return MOCK_HEADER_VALUE.equals(MDC.get(MOCK_FLAG_KEY));

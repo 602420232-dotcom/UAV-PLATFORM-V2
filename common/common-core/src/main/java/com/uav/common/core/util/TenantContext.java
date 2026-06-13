@@ -5,7 +5,7 @@ package com.uav.common.core.util;
  */
 public final class TenantContext {
 
-    private TenantContext() {}
+    private TenantContext() { }
 
     private static final ThreadLocal<String> TENANT_ID = new ThreadLocal<>();
     private static final ThreadLocal<String> API_KEY = new ThreadLocal<>();

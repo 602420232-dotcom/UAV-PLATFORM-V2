@@ -16,7 +16,7 @@ public final class IdempotentKeyGenerator {
     private static final String KEY_PREFIX = "idempotent:";
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-    private IdempotentKeyGenerator() {}
+    private IdempotentKeyGenerator() { }
 
     /**
      * 生成幂等 Key

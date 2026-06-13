@@ -68,10 +68,7 @@ class AdaptiveObservationAdapter(ObservationAdapter):
                 name="AdaptiveObservation",
                 category="observation",
                 version="1.0.0",
-                description=(
-                    "Adaptive observation strategy that adjusts"
-                    " based on real-time uncertainty"
-                ),
+                description=("Adaptive observation strategy that adjusts based on real-time uncertainty"),
                 input_schema={
                     "type": "object",
                     "required": ["current_state", "available_sensors"],

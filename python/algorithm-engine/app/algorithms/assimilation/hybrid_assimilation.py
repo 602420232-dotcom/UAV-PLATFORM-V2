@@ -66,11 +66,9 @@ class HybridAssimilation:
                 results[algo_type] = {"error": str(exc)}
 
         if analysis_fields:
-            weights = np.array([
-                self.weights.get(t, 0)
-                for t in self.algorithm_types
-                if t in results and "error" not in results[t]
-            ])
+            weights = np.array(
+                [self.weights.get(t, 0) for t in self.algorithm_types if t in results and "error" not in results[t]]
+            )
             if weights.sum() > 0:
                 weights = weights / weights.sum()
                 combined = sum(w * f for w, f in zip(weights, analysis_fields))

@@ -11,7 +11,7 @@ import java.util.Base64;
  */
 public final class HmacUtil {
 
-    private HmacUtil() {}
+    private HmacUtil() { }
 
     private static final String HMAC_ALGORITHM = "HmacSHA256";
 

@@ -17,11 +17,15 @@ public @interface Idempotent {
 
     /**
      * 幂等 Key 的 TTL（秒），默认 24 小时
+     *
+     * @return TTL 秒数
      */
     int ttlSeconds() default 86400;
 
     /**
      * 重复请求时返回的错误消息
+     *
+     * @return 错误消息
      */
     String message() default "重复请求，请勿重复提交";
 }

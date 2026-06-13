@@ -10,13 +10,15 @@ import java.util.UUID;
  */
 public final class IdUtil {
 
-    private IdUtil() {}
+    private IdUtil() { }
 
     private static final SecureRandom RANDOM = new SecureRandom();
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd");
 
     /**
      * 生成任务ID
+     *
+     * @return 任务ID
      */
     public static String generateJobId() {
         return "job_" + LocalDateTime.now().format(DATE_FORMATTER) + "_" + randomAlphanumeric(8);
@@ -24,6 +26,8 @@ public final class IdUtil {
 
     /**
      * 生成请求ID
+     *
+     * @return 请求ID
      */
     public static String generateRequestId() {
         return "req_" + randomAlphanumeric(16);
@@ -31,6 +35,8 @@ public final class IdUtil {
 
     /**
      * 生成API Key
+     *
+     * @return API Key
      */
     public static String generateApiKey() {
         return "uk_" + randomAlphanumeric(32);
@@ -38,6 +44,8 @@ public final class IdUtil {
 
     /**
      * 生成租户ID
+     *
+     * @return 租户ID
      */
     public static String generateTenantId() {
         return "tenant_" + randomAlphanumeric(8);
@@ -45,6 +53,8 @@ public final class IdUtil {
 
     /**
      * 生成UUID（无横线）
+     *
+     * @return UUID字符串（无横线）
      */
     public static String fastUuid() {
         return UUID.randomUUID().toString().replace("-", "");

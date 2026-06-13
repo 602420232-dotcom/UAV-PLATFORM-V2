@@ -95,8 +95,13 @@ def _register_builtin_algorithms() -> None:
             EnhancedBayesianAdapter,
         ]
         + [
-            VRPTWAdapter, DERRTStarAdapter, DWAAdapter, MPCAdapter,
-            AStarAdapter, DijkstraAdapter, RRTStarAdapter,
+            VRPTWAdapter,
+            DERRTStarAdapter,
+            DWAAdapter,
+            MPCAdapter,
+            AStarAdapter,
+            DijkstraAdapter,
+            RRTStarAdapter,
         ]
         + [WeatherRiskAdapter, TerrainRiskAdapter, AirspaceRiskAdapter, CompositeRiskAdapter]
         + [InformationGainAdapter, AdaptiveObservationAdapter, SensorSchedulingAdapter]

@@ -30,10 +30,7 @@ class VRPTWAdapter(PlanningAdapter):
                 name="VRPTW",
                 category="planning",
                 version="1.0.0",
-                description=(
-                    "Vehicle Routing Problem with Time Windows"
-                    " for multi-UAV mission planning"
-                ),
+                description=("Vehicle Routing Problem with Time Windows for multi-UAV mission planning"),
                 input_schema={
                     "type": "object",
                     "required": ["start", "goal", "waypoints"],

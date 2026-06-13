@@ -5,7 +5,7 @@ package com.uav.common.core.constant;
  */
 public final class CommonConstant {
 
-    private CommonConstant() {}
+    private CommonConstant() { }
 
     /** 请求头：租户ID */
     public static final String HEADER_TENANT_ID = "X-Tenant-Id";

@@ -109,11 +109,13 @@ services:
       dockerfile: gateway/api-gateway/Dockerfile
     container_name: uav-gateway
     ports:
-      - "8088:8080"
+      - "8258:8088"
     environment:
       - NACOS_SERVER_ADDR=nacos:8848
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATA_REDIS_PORT=6379
       - JAVA_OPTS=-Xms512m -Xmx1024m -XX:+UseG1GC
     depends_on:
       nacos:
@@ -121,7 +123,7 @@ services:
       redis:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-sf", "http://localhost:8080/actuator/health"]
+      test: ["CMD", "curl", "-sf", "http://localhost:8088/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -138,15 +140,20 @@ services:
         SERVICE_NAME: platform-api
     container_name: uav-platform-api
     ports:
-      - "8081:8080"
+      - "8251:8081"
     environment:
       - NACOS_SERVER_ADDR=nacos:8848
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/uav_platform?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
       - MYSQL_HOST=mysql
       - MYSQL_PORT=3306
       - MYSQL_USER=root
       - MYSQL_PASSWORD=rootpass
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATA_REDIS_PORT=6379
+      - ALGORITHM_ENGINE_URL=http://algorithm-engine:9090
+      - KAFKA_MOCK=false
       - JAVA_OPTS=-Xms256m -Xmx512m -XX:+UseG1GC
     depends_on:
       nacos:
@@ -154,7 +161,7 @@ services:
       mysql:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-sf", "http://localhost:8080/actuator/health"]
+      test: ["CMD", "curl", "-sf", "http://localhost:8081/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -171,9 +178,11 @@ services:
         SERVICE_NAME: weather-api
     container_name: uav-weather-api
     ports:
-      - "8082:8080"
+      - "8252:8082"
     environment:
       - NACOS_SERVER_ADDR=nacos:8848
+      - MYSQL_HOST=mysql
+      - MYSQL_PORT=3306
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - ALGORITHM_ENGINE_URL=http://algorithm-engine:9090
@@ -186,7 +195,7 @@ services:
       kafka:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-sf", "http://localhost:8080/actuator/health"]
+      test: ["CMD", "curl", "-sf", "http://localhost:8082/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -203,9 +212,10 @@ services:
         SERVICE_NAME: assimilation-api
     container_name: uav-assimilation-api
     ports:
-      - "8083:8080"
+      - "8253:8083"
     environment:
       - NACOS_SERVER_ADDR=nacos:8848
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/uav_assimilation?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
       - MYSQL_HOST=mysql
       - MYSQL_PORT=3306
       - MYSQL_USER=root
@@ -224,7 +234,7 @@ services:
       kafka:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-sf", "http://localhost:8080/actuator/health"]
+      test: ["CMD", "curl", "-sf", "http://localhost:8083/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -241,9 +251,10 @@ services:
         SERVICE_NAME: risk-api
     container_name: uav-risk-api
     ports:
-      - "8084:8080"
+      - "8254:8084"
     environment:
       - NACOS_SERVER_ADDR=nacos:8848
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/uav_platform?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - ALGORITHM_ENGINE_URL=http://algorithm-engine:9090
@@ -252,7 +263,7 @@ services:
       nacos:
         condition: service_started
     healthcheck:
-      test: ["CMD", "curl", "-sf", "http://localhost:8080/actuator/health"]
+      test: ["CMD", "curl", "-sf", "http://localhost:8084/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -269,9 +280,10 @@ services:
         SERVICE_NAME: observation-api
     container_name: uav-observation-api
     ports:
-      - "8085:8080"
+      - "8255:8085"
     environment:
       - NACOS_SERVER_ADDR=nacos:8848
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/uav_observation?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
       - MYSQL_HOST=mysql
       - MYSQL_PORT=3306
       - MYSQL_USER=root
@@ -290,7 +302,7 @@ services:
       kafka:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-sf", "http://localhost:8080/actuator/health"]
+      test: ["CMD", "curl", "-sf", "http://localhost:8085/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -307,9 +319,10 @@ services:
         SERVICE_NAME: planning-api
     container_name: uav-planning-api
     ports:
-      - "8086:8080"
+      - "8256:8086"
     environment:
       - NACOS_SERVER_ADDR=nacos:8848
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/uav_planning?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
       - MYSQL_HOST=mysql
       - MYSQL_PORT=3306
       - MYSQL_USER=root
@@ -328,7 +341,7 @@ services:
       kafka:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-sf", "http://localhost:8080/actuator/health"]
+      test: ["CMD", "curl", "-sf", "http://localhost:8086/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -345,9 +358,10 @@ services:
         SERVICE_NAME: utm-api
     container_name: uav-utm-api
     ports:
-      - "8089:8080"
+      - "8259:8087"
     environment:
       - NACOS_SERVER_ADDR=nacos:8848
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/uav_utm?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
       - MYSQL_HOST=mysql
       - MYSQL_PORT=3306
       - MYSQL_USER=root
@@ -364,7 +378,7 @@ services:
       kafka:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-sf", "http://localhost:8080/actuator/health"]
+      test: ["CMD", "curl", "-sf", "http://localhost:8087/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 3

@@ -89,10 +89,7 @@ class Pipeline:
                         elapsed_seconds=0.0,
                     )
                 )
-                logger.info(
-                    "Pipeline '%s': step %d (%s) skipped by condition",
-                    self.name, idx, step_cfg.algorithm_id
-                )
+                logger.info("Pipeline '%s': step %d (%s) skipped by condition", self.name, idx, step_cfg.algorithm_id)
                 continue
 
             # Transform params
