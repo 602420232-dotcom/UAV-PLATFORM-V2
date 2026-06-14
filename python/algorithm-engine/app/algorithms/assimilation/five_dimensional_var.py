@@ -322,7 +322,6 @@ class FiveDimensionalVAR:
 
         每轮循环处理不同的观测子集，模拟时间演化的观测序列。
         """
-        n_obs = len(observations)
         round_obs = []
         for i, obs in enumerate(observations):
             # 将观测均匀分配到不同时间窗口

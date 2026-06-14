@@ -68,7 +68,7 @@ jobs:
             api-gateway) MODULE_PATH="gateway/api-gateway" ;;
             *) MODULE_PATH="services/$MODULE" ;;
           esac
-          mvn package -DskipTests -pl "$MODULE_PATH" -am -B
+          mvn clean package -Dspring.profiles.active=test -pl "$MODULE_PATH" -am -B
 
       - name: Upload service artifact
         if: matrix.module != 'common-core' && matrix.module != 'common-web' && matrix.module != 'common-kafka' && matrix.module != 'common-security' && matrix.module != 'common-resilience'
@@ -144,7 +144,6 @@ jobs:
       - name: Lint
         working-directory: console
         run: npm run lint
-        continue-on-error: true
 
       - name: Build
         working-directory: console
@@ -172,6 +171,13 @@ jobs:
       matrix:
         service:
           - platform-api
+          - weather-api
+          - assimilation-api
+          - risk-api
+          - observation-api
+          - planning-api
+          - utm-api
+          - api-gateway
           - algorithm-engine
       fail-fast: false
     steps:
@@ -255,7 +261,6 @@ jobs:
 
       - name: Run E2E grayscale verification
         run: python scripts/grayscale-verify.py --mode mock --base-url http://localhost:8258
-        continue-on-error: true
 
       - name: Upload E2E test results
         if: always()
