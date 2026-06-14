@@ -1,0 +1,56 @@
+# =============================================================================
+# UAV Platform V2 - Canary Services
+# =============================================================================
+# 金丝雀版本 Service，使用独立 selector 匹配 canary track 的 Pod
+# =============================================================================
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-gateway-canary
+  namespace: uav-platform
+  labels:
+    app.kubernetes.io/name: api-gateway
+    app.kubernetes.io/part-of: uav-platform
+    app.kubernetes.io/component: gateway
+    app.kubernetes.io/track: canary
+  annotations:
+    # Prometheus 服务发现
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8088"
+    prometheus.io/path: "/actuator/prometheus"
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: api-gateway
+    app.kubernetes.io/track: canary
+  ports:
+    - name: http
+      port: 8088
+      targetPort: 8088
+      protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: algorithm-engine-canary
+  namespace: uav-platform
+  labels:
+    app.kubernetes.io/name: algorithm-engine
+    app.kubernetes.io/part-of: uav-platform
+    app.kubernetes.io/component: algorithm
+    app.kubernetes.io/track: canary
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "9090"
+    prometheus.io/path: "/metrics"
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: algorithm-engine
+    app.kubernetes.io/track: canary
+  ports:
+    - name: http
+      port: 9090
+      targetPort: 9090
+      protocol: TCP

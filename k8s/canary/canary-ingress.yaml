@@ -1,0 +1,196 @@
+# =============================================================================
+# UAV Platform V2 - Canary Ingress
+# =============================================================================
+# 金丝雀 Ingress 使用 Nginx Ingress Canary 注解控制流量切分
+#
+# 流量切分策略：
+#   1. 请求头匹配：X-Canary: true 的请求 100% 走金丝雀版本
+#   2. 权重切分：按 canary-weight 百分比分配流量到金丝雀版本
+#
+# 渐进发布流程：
+#   Phase 1: canary-weight: 5   (5% 流量)
+#   Phase 2: canary-weight: 25  (25% 流量)
+#   Phase 3: canary-weight: 50  (50% 流量)
+#   Phase 4: canary-weight: 100 (100% 流量，完成后删除金丝雀资源)
+#
+# 自动回滚条件：
+#   - 错误率 > 5%
+#   - P99 延迟 > 1000ms
+# =============================================================================
+
+# =============================================================================
+# Canary Ingress - API Gateway
+# =============================================================================
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: api-gateway-canary-ingress
+  namespace: uav-platform
+  labels:
+    app.kubernetes.io/name: api-gateway
+    app.kubernetes.io/part-of: uav-platform
+    app.kubernetes.io/component: gateway
+    app.kubernetes.io/track: canary
+  annotations:
+    # ---- Canary 核心注解 ----
+    # 启用金丝雀发布
+    nginx.ingress.kubernetes.io/canary: "true"
+    # 基于请求头匹配：X-Canary: true 的请求走金丝雀版本
+    nginx.ingress.kubernetes.io/canary-by-header: "X-Canary"
+    nginx.ingress.kubernetes.io/canary-by-header-value: "true"
+    # 基于权重的流量切分（初始 5%）
+    nginx.ingress.kubernetes.io/canary-weight: "5"
+    # ---- 通用注解（与主 Ingress 保持一致）----
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
+    nginx.ingress.kubernetes.io/proxy-buffer-size: "128k"
+    nginx.ingress.kubernetes.io/proxy-buffers-number: "4"
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "*"
+    nginx.ingress.kubernetes.io/cors-allow-methods: "GET, PUT, POST, DELETE, PATCH, OPTIONS"
+    nginx.ingress.kubernetes.io/cors-allow-headers: "DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization,X-Canary"
+    nginx.ingress.kubernetes.io/cors-max-age: "3600"
+    nginx.ingress.kubernetes.io/limit-rps: "100"
+    nginx.ingress.kubernetes.io/limit-connections: "10"
+    nginx.ingress.kubernetes.io/upstream-keepalive-connections: "16"
+    nginx.ingress.kubernetes.io/upstream-keepalive-timeout: "60"
+    nginx.ingress.kubernetes.io/upstream-keepalive-requests: "500"
+    # ArgoCD 同步控制
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - uav-platform.local
+        - api.uav-platform.local
+      secretName: uav-platform-tls
+  rules:
+    - host: uav-platform.local
+      http:
+        paths:
+          - path: /api/v1
+            pathType: Prefix
+            backend:
+              service:
+                name: api-gateway-canary
+                port:
+                  number: 8088
+          - path: /api/v2
+            pathType: Prefix
+            backend:
+              service:
+                name: api-gateway-canary
+                port:
+                  number: 8088
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: api-gateway-canary
+                port:
+                  number: 8088
+    - host: api.uav-platform.local
+      http:
+        paths:
+          - path: /api/v1
+            pathType: Prefix
+            backend:
+              service:
+                name: api-gateway-canary
+                port:
+                  number: 8088
+          - path: /api/v2
+            pathType: Prefix
+            backend:
+              service:
+                name: api-gateway-canary
+                port:
+                  number: 8088
+---
+# =============================================================================
+# Canary Ingress - Algorithm Engine
+# =============================================================================
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: algorithm-engine-canary-ingress
+  namespace: uav-platform
+  labels:
+    app.kubernetes.io/name: algorithm-engine
+    app.kubernetes.io/part-of: uav-platform
+    app.kubernetes.io/component: algorithm
+    app.kubernetes.io/track: canary
+  annotations:
+    # ---- Canary 核心注解 ----
+    nginx.ingress.kubernetes.io/canary: "true"
+    nginx.ingress.kubernetes.io/canary-by-header: "X-Canary"
+    nginx.ingress.kubernetes.io/canary-by-header-value: "true"
+    nginx.ingress.kubernetes.io/canary-weight: "5"
+    # ---- 通用注解 ----
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
+    nginx.ingress.kubernetes.io/proxy-buffer-size: "128k"
+    nginx.ingress.kubernetes.io/proxy-buffers-number: "4"
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "*"
+    nginx.ingress.kubernetes.io/cors-allow-methods: "GET, PUT, POST, DELETE, PATCH, OPTIONS"
+    nginx.ingress.kubernetes.io/cors-allow-headers: "DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization,X-Canary"
+    nginx.ingress.kubernetes.io/cors-max-age: "3600"
+    nginx.ingress.kubernetes.io/limit-rps: "200"
+    nginx.ingress.kubernetes.io/limit-connections: "20"
+    nginx.ingress.kubernetes.io/upstream-keepalive-connections: "16"
+    nginx.ingress.kubernetes.io/upstream-keepalive-timeout: "60"
+    nginx.ingress.kubernetes.io/upstream-keepalive-requests: "500"
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - uav-platform.local
+        - api.uav-platform.local
+      secretName: uav-platform-tls
+  rules:
+    - host: uav-platform.local
+      http:
+        paths:
+          - path: /api/v1/algorithm
+            pathType: Prefix
+            backend:
+              service:
+                name: algorithm-engine-canary
+                port:
+                  number: 9090
+          - path: /api/v2/algorithm
+            pathType: Prefix
+            backend:
+              service:
+                name: algorithm-engine-canary
+                port:
+                  number: 9090
+    - host: api.uav-platform.local
+      http:
+        paths:
+          - path: /api/v1/algorithm
+            pathType: Prefix
+            backend:
+              service:
+                name: algorithm-engine-canary
+                port:
+                  number: 9090
+          - path: /api/v2/algorithm
+            pathType: Prefix
+            backend:
+              service:
+                name: algorithm-engine-canary
+                port:
+                  number: 9090

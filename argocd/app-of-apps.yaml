@@ -1,0 +1,130 @@
+# =============================================================================
+# UAV Platform V2 - ArgoCD ApplicationSet (App of Apps)
+# =============================================================================
+# 使用 ApplicationSet 实现多服务自动发现和批量管理
+# 基于 Git 目录结构自动生成 ArgoCD Application
+# =============================================================================
+#
+# 目录结构约定:
+#   helm/
+#     uav-platform/
+#       Chart.yaml          # 主 Chart
+#       values.yaml          # 默认值
+#       values-prod.yaml     # 生产环境覆盖
+#       values-staging.yaml  # 预发布环境覆盖
+#
+#   k8s/
+#     base/                  # Kustomize 基础配置
+#     overlays/
+#       prod/                # 生产环境覆盖
+#       staging/             # 预发布环境覆盖
+#     canary/                # 金丝雀发布配置
+#
+# =============================================================================
+
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: uav-platform-appset
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: uav-platform-appset
+    app.kubernetes.io/part-of: uav-platform
+    app.kubernetes.io/component: gitops
+spec:
+  # ---- 应用生成策略 ----
+  generators:
+    # ---- 策略 1: Git 目录生成器（基于 Helm Chart）----
+    - git:
+        repoURL: https://github.com/602420232-dotcom/uav-platform-v2.git
+        revision: main
+        directories:
+          - path: helm/*
+        # 仅匹配包含 Chart.yaml 的目录
+        # 通过 fileFilter 进一步过滤
+        fileFilter:
+          - path: "**/Chart.yaml"
+
+    # ---- 策略 2: 列表生成器（显式定义多环境应用）----
+    - list:
+      elements:
+        # 生产环境 - Helm 部署
+        - cluster: https://kubernetes.default.svc
+          url: https://github.com/602420232-dotcom/uav-platform-v2.git
+          path: helm/uav-platform
+          valuesFile: values-prod.yaml
+          appName: uav-platform-prod
+          namespace: uav-platform
+          revision: main
+        # 预发布环境 - Helm 部署
+        - cluster: https://kubernetes.default.svc
+          url: https://github.com/602420232-dotcom/uav-platform-v2.git
+          path: helm/uav-platform
+          valuesFile: values-staging.yaml
+          appName: uav-platform-staging
+          namespace: uav-platform-staging
+          revision: main
+        # 生产环境 - Kustomize 部署
+        - cluster: https://kubernetes.default.svc
+          url: https://github.com/602420232-dotcom/uav-platform-v2.git
+          path: k8s/overlays/prod
+          valuesFile: ""
+          appName: uav-platform-kustomize-prod
+          namespace: uav-platform
+          revision: main
+        # 金丝雀发布配置
+        - cluster: https://kubernetes.default.svc
+          url: https://github.com/602420232-dotcom/uav-platform-v2.git
+          path: k8s/canary
+          valuesFile: ""
+          appName: uav-platform-canary
+          namespace: uav-platform
+          revision: main
+
+  # ---- 应用模板 ----
+  template:
+    metadata:
+      name: '{{appName}}'
+      namespace: argocd
+      labels:
+        app.kubernetes.io/name: '{{appName}}'
+        app.kubernetes.io/part-of: uav-platform
+        app.kubernetes.io/component: gitops
+      finalizers:
+        - resources-finalizer.argocd.argoproj.io
+    spec:
+      project: default
+      source:
+        repoURL: '{{url}}'
+        targetRevision: '{{revision}}'
+        path: '{{path}}'
+        # Helm 配置（仅当 valuesFile 非空时生效）
+        helm:
+          valueFiles:
+            - values.yaml
+            {{- if valuesFile }}
+            - '{{valuesFile}}'
+            {{- end }}
+      destination:
+        server: '{{cluster}}'
+        namespace: '{{namespace}}'
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+          allowEmpty: false
+        syncOptions:
+          - CreateNamespace=true
+          - ServerSideApply=true
+          - PrunePropagationPolicy=foreground
+          - PruneLast=true
+      ignoreDifferences:
+        - group: apps
+          kind: Deployment
+          jsonPointers:
+            - /spec/template/spec/containers/0/image
+        - group: autoscaling
+          kind: HorizontalPodAutoscaler
+          jsonPointers:
+            - /spec/replicas
+      revisionHistoryLimit: 10

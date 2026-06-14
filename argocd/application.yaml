@@ -1,0 +1,101 @@
+# =============================================================================
+# UAV Platform V2 - ArgoCD Application
+# =============================================================================
+# ArgoCD 单应用配置，用于管理 UAV Platform 的 GitOps 部署
+# =============================================================================
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: uav-platform
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: uav-platform
+    app.kubernetes.io/part-of: uav-platform
+    app.kubernetes.io/component: gitops
+  # Finalizer 确保删除 Application 时清理关联资源
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  # ---- 项目 ----
+  project: default
+
+  # ---- 源配置 ----
+  source:
+    # GitHub 仓库地址
+    repoURL: https://github.com/602420232-dotcom/uav-platform-v2.git
+    # Helm Chart 路径（优先使用 Helm）
+    targetRevision: main
+    path: helm/uav-platform
+    helm:
+      # Helm values 文件覆盖
+      valueFiles:
+        - values.yaml
+        - values-prod.yaml
+      # 可通过 ArgoCD UI 或 CLI 动态覆盖的参数
+      parameters:
+        - name: global.imageTag
+          value: "latest"
+        - name: global.springProfilesActive
+          value: "prod"
+      # Helm release 名称
+      releaseName: uav-platform
+    # ---- 备选：Kustomize 配置（取消注释以使用）----
+    # repoURL: https://github.com/602420232-dotcom/uav-platform-v2.git
+    # targetRevision: main
+    # path: k8s/overlays/prod
+
+  # ---- 目标集群 ----
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: uav-platform
+
+  # ---- 同步策略 ----
+  syncPolicy:
+    # 自动同步
+    automated:
+      # 自动应用配置变更
+      prune: true
+      # 自动修复配置漂移（如手动修改了资源）
+      selfHeal: true
+      # 允许自动删除资源
+      allowEmpty: false
+    # 同步选项
+    syncOptions:
+      # 创建命名空间（如果不存在）
+      - CreateNamespace=true
+      # 尊重 Helm 钩子中的资源删除策略
+      - PrunePropagationPolicy=foreground
+      # 跳过 Schema 验证（某些 CRD 可能需要）
+      - ServerSideApply=true
+      # 保留空数组字段
+      - PruneLast=true
+    # 同步窗口（可选：限制同步时间）
+    # syncWindows:
+    #   - kind: allow
+    #     schedule: "0 9 * * 1-5"  # 工作日 9:00-18:00
+    #     duration: 9h
+    #     applications:
+    #       - uav-platform
+    #     manualSync: true
+
+  # ---- 忽略差异（防止 ArgoCD 检测到非关键差异）----
+  ignoreDifferences:
+    # 忽略镜像标签的自动更新（由 CI/CD 流程管理）
+    - group: apps
+      kind: Deployment
+      jsonPointers:
+        - /spec/template/spec/containers/0/image
+    # 忽略 HPA 自动调整的副本数
+    - group: autoscaling
+      kind: HorizontalPodAutoscaler
+      jsonPointers:
+        - /spec/replicas
+    # 忽略 ConfigMap 中的动态配置变更
+    - group: ""
+      kind: ConfigMap
+      jsonPointers:
+        - /data/LAST_UPDATED
+
+  # ---- 修订历史保留 ----
+  revisionHistoryLimit: 10
