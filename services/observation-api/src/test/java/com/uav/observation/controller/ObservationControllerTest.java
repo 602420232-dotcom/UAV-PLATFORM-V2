@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.MediaType;
@@ -25,7 +26,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Observation 控制器单元测试
  */
 @DisplayName("Observation 控制器测试")
-@SpringBootTest(classes = com.uav.observation.ObservationApplication.class)
+@SpringBootTest(classes = ObservationApplication.class)
 @AutoConfigureMockMvc(addFilters = false)
 @TestPropertySource(locations = "classpath:application-test.yml")
 class ObservationControllerTest {
@@ -38,18 +39,19 @@ class ObservationControllerTest {
 
     @Test
     @DisplayName("POST /api/v1/observation/tasks 应创建观测任务")
+    @WithMockUser(roles = {"ADMIN"})
     void createTaskShouldReturnObservationTask() throws Exception {
         ObservationTask task = new ObservationTask();
         task.setId(1L);
         task.setType("ADAPTIVE");
         task.setStatus("PENDING");
-        task.setDataQuality(95.5);
+        task.setDataQuality(0.0);
 
         when(observationService.createTask(any(CreateObservationRequest.class))).thenReturn(task);
 
         mockMvc.perform(post("/api/v1/observation/tasks")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"type\":\"ADAPTIVE\",\"sensorConfigJson\":\"{\\\"camera\\\":true}\"}")
+                        .content("{\"type\":\"ADAPTIVE\",\"targetArea\":\"{\\\"type\\\":\\\"Polygon\\\"}\",\"sensorType\":\"LIDAR\",\"priority\":5}")
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
@@ -59,6 +61,7 @@ class ObservationControllerTest {
 
     @Test
     @DisplayName("GET /api/v1/observation/tasks/{id} 应返回观测任务详情")
+    @WithMockUser(roles = {"ADMIN"})
     void getTaskShouldReturnTaskDetails() throws Exception {
         ObservationTask task = new ObservationTask();
         task.setId(1L);
@@ -68,6 +71,7 @@ class ObservationControllerTest {
         when(observationService.getTask(anyLong())).thenReturn(task);
 
         mockMvc.perform(get("/api/v1/observation/tasks/1")
+                        .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
@@ -76,11 +80,13 @@ class ObservationControllerTest {
     }
 
     @Test
-    @DisplayName("GET /api/v1/observation/tasks/{id} 任务不存在应返回错误码")
+    @DisplayName("GET /api/v1/observation/tasks/{id} 任务不存在应返回错误码 3000")
+    @WithMockUser(roles = {"ADMIN"})
     void getNonExistentTaskShouldReturnError() throws Exception {
         when(observationService.getTask(anyLong())).thenReturn(null);
 
         mockMvc.perform(get("/api/v1/observation/tasks/999")
+                        .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(3000));
@@ -88,6 +94,7 @@ class ObservationControllerTest {
 
     @Test
     @DisplayName("GET /api/v1/observation/tasks 应返回所有观测任务列表")
+    @WithMockUser(roles = {"ADMIN"})
     void listTasksShouldReturnAllTasks() throws Exception {
         ObservationTask task1 = new ObservationTask();
         task1.setId(1L);
@@ -100,6 +107,7 @@ class ObservationControllerTest {
         when(observationService.listTasks()).thenReturn(List.of(task1, task2));
 
         mockMvc.perform(get("/api/v1/observation/tasks")
+                        .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
@@ -109,6 +117,7 @@ class ObservationControllerTest {
 
     @Test
     @DisplayName("POST /api/v1/observation/tasks/{id}/status 应更新任务状态")
+    @WithMockUser(roles = {"ADMIN"})
     void updateTaskStatusShouldReturnUpdatedTask() throws Exception {
         ObservationTask task = new ObservationTask();
         task.setId(1L);
@@ -118,6 +127,7 @@ class ObservationControllerTest {
 
         mockMvc.perform(post("/api/v1/observation/tasks/1/status")
                         .param("status", "COMPLETED")
+                        .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))

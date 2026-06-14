@@ -95,12 +95,7 @@ class SplitLearning:
             predictions = 1.0 / (1.0 + np.exp(-logits))  # Sigmoid
 
             # 计算损失
-            loss = float(
-                -np.mean(
-                    y * np.log(predictions + 1e-8)
-                    + (1 - y) * np.log(1 - predictions + 1e-8)
-                )
-            )
+            loss = float(-np.mean(y * np.log(predictions + 1e-8) + (1 - y) * np.log(1 - predictions + 1e-8)))
 
             # 后端反向传播
             grad_logits = predictions - y

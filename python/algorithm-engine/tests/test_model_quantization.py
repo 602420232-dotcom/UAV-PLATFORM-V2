@@ -141,9 +141,7 @@ class TestAccuracyLoss:
         accuracy = quantizer.evaluate_accuracy_loss(sample_weights, quantized, info)
 
         assert accuracy["rmse"] < 0.05, f"INT8 RMSE {accuracy['rmse']} 超出可接受范围"
-        assert accuracy["cosine_similarity"] > 0.99, (
-            f"INT8 余弦相似度 {accuracy['cosine_similarity']} 过低"
-        )
+        assert accuracy["cosine_similarity"] > 0.99, f"INT8 余弦相似度 {accuracy['cosine_similarity']} 过低"
 
     def test_fp16_accuracy_loss_acceptable(self, quantizer, sample_weights):
         """FP16 量化精度损失应在可接受范围内。
@@ -155,9 +153,7 @@ class TestAccuracyLoss:
         accuracy = quantizer.evaluate_accuracy_loss(sample_weights, quantized, info)
 
         assert accuracy["rmse"] < 0.001, f"FP16 RMSE {accuracy['rmse']} 超出可接受范围"
-        assert accuracy["cosine_similarity"] > 0.9999, (
-            f"FP16 余弦相似度 {accuracy['cosine_similarity']} 过低"
-        )
+        assert accuracy["cosine_similarity"] > 0.9999, f"FP16 余弦相似度 {accuracy['cosine_similarity']} 过低"
 
     def test_fp16_more_accurate_than_int8(self, quantizer, sample_weights):
         """FP16 精度损失应小于 INT8。"""
@@ -176,8 +172,12 @@ class TestAccuracyLoss:
         accuracy = quantizer.evaluate_accuracy_loss(sample_weights, quantized, info)
 
         required_keys = [
-            "mse", "rmse", "mean_absolute_error",
-            "max_absolute_error", "relative_error", "cosine_similarity",
+            "mse",
+            "rmse",
+            "mean_absolute_error",
+            "max_absolute_error",
+            "relative_error",
+            "cosine_similarity",
         ]
         for key in required_keys:
             assert key in accuracy, f"缺少精度指标: {key}"
@@ -193,12 +193,8 @@ class TestInferenceLatency:
 
     def test_int8_latency_reduction(self, quantizer, sample_weights, sample_input):
         """INT8 推理延迟降低应 >= 30%。"""
-        original_latency = quantizer.simulate_inference(
-            sample_weights, sample_input, "fp32", n_runs=20
-        )
-        int8_latency = quantizer.simulate_inference(
-            sample_weights, sample_input, "int8", n_runs=20
-        )
+        original_latency = quantizer.simulate_inference(sample_weights, sample_input, "fp32", n_runs=20)
+        int8_latency = quantizer.simulate_inference(sample_weights, sample_input, "int8", n_runs=20)
 
         reduction = (
             (original_latency["mean_latency_ms"] - int8_latency["mean_latency_ms"])
@@ -209,12 +205,8 @@ class TestInferenceLatency:
 
     def test_fp16_latency_reduction(self, quantizer, sample_weights, sample_input):
         """FP16 推理延迟降低应 >= 30%。"""
-        original_latency = quantizer.simulate_inference(
-            sample_weights, sample_input, "fp32", n_runs=20
-        )
-        fp16_latency = quantizer.simulate_inference(
-            sample_weights, sample_input, "fp16", n_runs=20
-        )
+        original_latency = quantizer.simulate_inference(sample_weights, sample_input, "fp32", n_runs=20)
+        fp16_latency = quantizer.simulate_inference(sample_weights, sample_input, "fp16", n_runs=20)
 
         reduction = (
             (original_latency["mean_latency_ms"] - fp16_latency["mean_latency_ms"])
@@ -225,9 +217,7 @@ class TestInferenceLatency:
 
     def test_latency_stats_has_percentiles(self, quantizer, sample_weights, sample_input):
         """延迟统计应包含百分位数据。"""
-        latency = quantizer.simulate_inference(
-            sample_weights, sample_input, "fp32", n_runs=20
-        )
+        latency = quantizer.simulate_inference(sample_weights, sample_input, "fp32", n_runs=20)
         for key in ["p50_latency_ms", "p95_latency_ms", "p99_latency_ms"]:
             assert key in latency, f"缺少延迟统计: {key}"
 
@@ -242,25 +232,19 @@ class TestQAT:
 
     def test_qat_returns_loss_history(self, quantizer, sample_weights):
         """QAT 应返回损失历史记录。"""
-        result = quantizer.simulate_qat(
-            sample_weights, "int8", n_epochs=5
-        )
+        result = quantizer.simulate_qat(sample_weights, "int8", n_epochs=5)
         assert "loss_history" in result
         assert len(result["loss_history"]) == 5
 
     def test_qat_returns_accuracy_history(self, quantizer, sample_weights):
         """QAT 应返回精度历史记录。"""
-        result = quantizer.simulate_qat(
-            sample_weights, "int8", n_epochs=5
-        )
+        result = quantizer.simulate_qat(sample_weights, "int8", n_epochs=5)
         assert "accuracy_history" in result
         assert len(result["accuracy_history"]) == 5
 
     def test_qat_accuracy_recovery_non_negative(self, quantizer, sample_weights):
         """QAT 精度恢复率应 >= 0。"""
-        result = quantizer.simulate_qat(
-            sample_weights, "int8", n_epochs=5
-        )
+        result = quantizer.simulate_qat(sample_weights, "int8", n_epochs=5)
         assert result["accuracy_recovery"] >= 0.0
 
 
@@ -276,25 +260,27 @@ class TestQuantizationPipeline:
         """流水线应返回 QuantizationReport。"""
         from app.algorithms.edge.model_quantization import QuantizationReport
 
-        report = quantizer.run_quantization_pipeline(
-            sample_weights, model_name="test_model", quantization_type="int8"
-        )
+        report = quantizer.run_quantization_pipeline(sample_weights, model_name="test_model", quantization_type="int8")
         assert isinstance(report, QuantizationReport)
 
     def test_pipeline_report_has_all_fields(self, quantizer, sample_weights):
         """流水线报告应包含所有字段。"""
-        report = quantizer.run_quantization_pipeline(
-            sample_weights, model_name="test_model", quantization_type="int8"
-        )
+        report = quantizer.run_quantization_pipeline(sample_weights, model_name="test_model", quantization_type="int8")
         report_dict = report.to_dict()
 
         required_keys = [
-            "model_name", "quantization_type",
-            "original_size_bytes", "quantized_size_bytes",
+            "model_name",
+            "quantization_type",
+            "original_size_bytes",
+            "quantized_size_bytes",
             "compression_ratio",
-            "original_latency_ms", "quantized_latency_ms",
+            "original_latency_ms",
+            "quantized_latency_ms",
             "latency_reduction_pct",
-            "mse", "rmse", "max_absolute_error", "mean_absolute_error",
+            "mse",
+            "rmse",
+            "max_absolute_error",
+            "mean_absolute_error",
             "qat_applied",
         ]
         for key in required_keys:
@@ -325,22 +311,26 @@ class TestQuantizationPipeline:
 
     def test_compatible_quantize_interface(self, quantizer, sample_weights):
         """兼容原有 quantize 接口应正常工作。"""
-        result = quantizer.quantize({
-            "weights": sample_weights.tolist(),
-            "quantization_type": "int8",
-        })
+        result = quantizer.quantize(
+            {
+                "weights": sample_weights.tolist(),
+                "quantization_type": "int8",
+            }
+        )
         assert result["quantized"] is True
         assert result["quantization_type"] == "int8"
         assert "compression_ratio" in result
 
     def test_compatible_quantize_pipeline_mode(self, quantizer, sample_weights):
         """兼容接口的 pipeline 模式应返回报告。"""
-        result = quantizer.quantize({
-            "weights": sample_weights.tolist(),
-            "quantization_type": "int8",
-            "model_name": "test",
-            "run_pipeline": True,
-        })
+        result = quantizer.quantize(
+            {
+                "weights": sample_weights.tolist(),
+                "quantization_type": "int8",
+                "model_name": "test",
+                "run_pipeline": True,
+            }
+        )
         assert result["quantized"] is True
         assert "report" in result
 
@@ -395,9 +385,7 @@ class TestOnnxRuntimeInference:
 
     def test_benchmark(self, onnx_inferencer):
         """基准测试应返回有效统计。"""
-        stats = onnx_inferencer.benchmark(
-            input_shape=(1, 64), n_warmup=3, n_runs=10, batch_size=1
-        )
+        stats = onnx_inferencer.benchmark(input_shape=(1, 64), n_warmup=3, n_runs=10, batch_size=1)
         assert stats.total_samples == 10
         assert stats.mean_latency_ms > 0
         assert stats.throughput_fps > 0
@@ -426,11 +414,13 @@ class TestOnnxRuntimeInference:
 
     def test_compatible_infer_interface(self, onnx_inferencer, sample_input):
         """兼容 infer 接口应正常工作。"""
-        result = onnx_inferencer.infer({
-            "input_data": sample_input.tolist(),
-            "precision": "fp16",
-            "batch_size": 1,
-        })
+        result = onnx_inferencer.infer(
+            {
+                "input_data": sample_input.tolist(),
+                "precision": "fp16",
+                "batch_size": 1,
+            }
+        )
         assert "predictions" in result
         assert "inference_time" in result
         assert "memory_usage" in result
@@ -450,10 +440,12 @@ class TestAdapters:
         from app.adapters.edge_adapter import ModelQuantizationAdapter
 
         adapter = ModelQuantizationAdapter()
-        result = adapter.execute({
-            "weights": sample_weights.tolist(),
-            "quantization_type": "int8",
-        })
+        result = adapter.execute(
+            {
+                "weights": sample_weights.tolist(),
+                "quantization_type": "int8",
+            }
+        )
         assert result["quantized"] is True
 
     def test_model_quantization_adapter_metadata(self):
@@ -470,10 +462,12 @@ class TestAdapters:
         from app.adapters.edge_adapter import OnnxRuntimeInferenceAdapter
 
         adapter = OnnxRuntimeInferenceAdapter()
-        result = adapter.execute({
-            "input_data": sample_input.tolist(),
-            "precision": "fp16",
-        })
+        result = adapter.execute(
+            {
+                "input_data": sample_input.tolist(),
+                "precision": "fp16",
+            }
+        )
         assert "predictions" in result
 
     def test_onnx_runtime_adapter_metadata(self):
@@ -490,13 +484,15 @@ class TestAdapters:
         from app.adapters.edge_adapter import OnnxRuntimeInferenceAdapter
 
         adapter = OnnxRuntimeInferenceAdapter()
-        result = adapter.execute({
-            "input_data": [[1.0, 2.0, 3.0]],
-            "mode": "benchmark",
-            "input_shape": [1, 64],
-            "n_runs": 5,
-            "n_warmup": 2,
-        })
+        result = adapter.execute(
+            {
+                "input_data": [[1.0, 2.0, 3.0]],
+                "mode": "benchmark",
+                "input_shape": [1, 64],
+                "n_runs": 5,
+                "n_warmup": 2,
+            }
+        )
         assert "stats" in result
         assert "mean_latency_ms" in result["stats"]
 
@@ -505,13 +501,15 @@ class TestAdapters:
         from app.adapters.edge_adapter import OnnxRuntimeInferenceAdapter
 
         adapter = OnnxRuntimeInferenceAdapter()
-        result = adapter.execute({
-            "input_data": [[1.0, 2.0, 3.0]],
-            "mode": "memory",
-            "input_shape": [1, 64],
-            "output_shape": [1, 10],
-            "precision": "int8",
-        })
+        result = adapter.execute(
+            {
+                "input_data": [[1.0, 2.0, 3.0]],
+                "mode": "memory",
+                "input_shape": [1, 64],
+                "output_shape": [1, 10],
+                "precision": "int8",
+            }
+        )
         assert "memory" in result
         assert "total_memory_mb" in result["memory"]
 

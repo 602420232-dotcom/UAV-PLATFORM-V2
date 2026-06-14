@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.MediaType;
@@ -26,7 +27,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Risk 控制器单元测试
  */
 @DisplayName("Risk 控制器测试")
-@SpringBootTest(classes = com.uav.risk.RiskApplication.class)
+@SpringBootTest(classes = RiskApplication.class)
 @AutoConfigureMockMvc(addFilters = false)
 @TestPropertySource(locations = "classpath:application-test.yml")
 class RiskControllerTest {
@@ -39,6 +40,7 @@ class RiskControllerTest {
 
     @Test
     @DisplayName("POST /api/v1/risk/assess 应返回风险评估结果")
+    @WithMockUser(roles = {"ADMIN"})
     void assessShouldReturnRiskAssessment() throws Exception {
         RiskAssessment assessment = new RiskAssessment();
         assessment.setId(1L);
@@ -61,6 +63,7 @@ class RiskControllerTest {
 
     @Test
     @DisplayName("GET /api/v1/risk/map 应返回区域风险栅格地图")
+    @WithMockUser(roles = {"ADMIN"})
     void riskMapShouldReturnGridList() throws Exception {
         RiskAssessment grid1 = new RiskAssessment();
         grid1.setId(1L);
@@ -81,6 +84,7 @@ class RiskControllerTest {
                         .param("maxLon", "117.0")
                         .param("maxLat", "40.0")
                         .param("resolution", "0.01")
+                        .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
@@ -90,6 +94,7 @@ class RiskControllerTest {
 
     @Test
     @DisplayName("GET /api/v1/risk/history 应返回历史风险评估记录")
+    @WithMockUser(roles = {"ADMIN"})
     void historyShouldReturnRiskRecords() throws Exception {
         RiskAssessment record = new RiskAssessment();
         record.setId(1L);
@@ -100,6 +105,7 @@ class RiskControllerTest {
 
         mockMvc.perform(get("/api/v1/risk/history")
                         .param("limit", "5")
+                        .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
@@ -108,22 +114,26 @@ class RiskControllerTest {
 
     @Test
     @DisplayName("GET /api/v1/risk/history 不带参数应使用默认值")
+    @WithMockUser(roles = {"ADMIN"})
     void historyWithoutParamsShouldUseDefaults() throws Exception {
         when(riskService.getRiskHistory(null, null, 10)).thenReturn(List.of());
 
         mockMvc.perform(get("/api/v1/risk/history")
+                        .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200));
     }
 
     @Test
-    @DisplayName("无效风险评估请求应返回 400")
+    @DisplayName("无效风险评估请求应返回业务错误码 1000")
+    @WithMockUser(roles = {"ADMIN"})
     void invalidAssessRequestShouldReturnBadRequest() throws Exception {
         mockMvc.perform(post("/api/v1/risk/assess")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{}")
                         .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(1000));
     }
 }

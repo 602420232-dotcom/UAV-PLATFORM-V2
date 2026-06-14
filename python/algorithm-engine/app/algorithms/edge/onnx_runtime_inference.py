@@ -128,9 +128,7 @@ class OnnxRuntimeInferencer:
         self.model_name = self.config.get("model_name", "simulated_model")
         self.input_shape = self.config.get("input_shape", (1, 64))
         self.output_shape = self.config.get("output_shape", (1, 10))
-        self.providers = self.config.get(
-            "providers", ["CPUExecutionProvider"]
-        )
+        self.providers = self.config.get("providers", ["CPUExecutionProvider"])
         self._session: Optional[InferenceSession] = None
 
     # ------------------------------------------------------------------
@@ -203,15 +201,13 @@ class OnnxRuntimeInferencer:
         # 根据精度调整计算
         if self.precision == "int8":
             scale = max(float(np.max(np.abs(weights))) / 127.0, 1e-10)
-            q_weights = np.clip(
-                np.round(weights / scale), -127, 127
-            ).astype(np.int8)
+            q_weights = np.clip(np.round(weights / scale), -127, 127).astype(np.int8)
             weights_fp32 = q_weights.astype(np.float32) * scale
             output = input_data.astype(np.float32) @ weights_fp32 + bias
         elif self.precision == "fp16":
-            output = (
-                input_data.astype(np.float16) @ weights.astype(np.float16) + bias.astype(np.float16)
-            ).astype(np.float32)
+            output = (input_data.astype(np.float16) @ weights.astype(np.float16) + bias.astype(np.float16)).astype(
+                np.float32
+            )
         else:
             output = input_data @ weights + bias
 
@@ -491,12 +487,14 @@ class OnnxRuntimeInferencer:
 
             layer_mem = w_elements * bytes_per_param
             weights_memory += layer_mem
-            layer_details.append({
-                "name": layer_name,
-                "n_params": w_elements,
-                "memory_bytes": layer_mem,
-                "memory_mb": round(layer_mem / (1024 * 1024), 4),
-            })
+            layer_details.append(
+                {
+                    "name": layer_name,
+                    "n_params": w_elements,
+                    "memory_bytes": layer_mem,
+                    "memory_mb": round(layer_mem / (1024 * 1024), 4),
+                }
+            )
 
         # 中间激活值内存
         activation_memory = batch_size * hidden_dim * bytes_per_param * n_layers
@@ -518,9 +516,7 @@ class OnnxRuntimeInferencer:
             "output_memory_mb": round(output_memory / (1024 * 1024), 4),
             "total_memory_mb": round(total_memory / (1024 * 1024), 4),
             "framework_overhead_mb": round(framework_overhead / (1024 * 1024), 2),
-            "estimated_peak_mb": round(
-                (total_memory + framework_overhead) / (1024 * 1024), 4
-            ),
+            "estimated_peak_mb": round((total_memory + framework_overhead) / (1024 * 1024), 4),
             "precision": precision,
             "batch_size": batch_size,
             "n_layers": n_layers,

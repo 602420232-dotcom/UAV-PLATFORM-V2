@@ -93,10 +93,7 @@ class EdgeScheduler:
                 best_node = max(
                     node_ids,
                     # fmt: off
-                    key=lambda nid: (
-                        node_states[nid]["cpu_capacity"]
-                        - node_states[nid]["cpu_used"]
-                    ),
+                    key=lambda nid: (node_states[nid]["cpu_capacity"] - node_states[nid]["cpu_used"]),
                     # fmt: on
                 )
             elif scheduling_policy == "round_robin":
@@ -108,10 +105,7 @@ class EdgeScheduler:
                 best_node = min(
                     node_ids,
                     # fmt: off
-                    key=lambda nid: (
-                        node_states[nid]["cpu_used"]
-                        / max(node_states[nid]["cpu_capacity"], 1)
-                    ),
+                    key=lambda nid: (node_states[nid]["cpu_used"] / max(node_states[nid]["cpu_capacity"], 1)),
                     # fmt: on
                 )
             elif scheduling_policy == "priority":

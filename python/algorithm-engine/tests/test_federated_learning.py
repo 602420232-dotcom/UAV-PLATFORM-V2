@@ -81,9 +81,7 @@ class TestFedAvgClient:
         from app.algorithms.edge.federated_learning import FedAvgClient
 
         model = np.zeros(5)
-        client = FedAvgClient(
-            client_id="c1", model=model, learning_rate=0.01, local_epochs=3
-        )
+        client = FedAvgClient(client_id="c1", model=model, learning_rate=0.01, local_epochs=3)
         result = client.local_train()
 
         assert result["local_epochs"] == 3
@@ -205,9 +203,7 @@ class TestFedAvgServer:
         """Constant LR schedule should return same LR every round."""
         from app.algorithms.edge.federated_learning import FedAvgServer
 
-        server = FedAvgServer(
-            model_shape=(5,), learning_rate=0.01, lr_schedule="constant"
-        )
+        server = FedAvgServer(model_shape=(5,), learning_rate=0.01, lr_schedule="constant")
 
         assert server.get_learning_rate(0) == 0.01
         assert server.get_learning_rate(5) == 0.01
@@ -217,9 +213,7 @@ class TestFedAvgServer:
         """Step LR schedule should decay every 5 rounds."""
         from app.algorithms.edge.federated_learning import FedAvgServer
 
-        server = FedAvgServer(
-            model_shape=(5,), learning_rate=0.1, lr_schedule="step", lr_decay=0.5
-        )
+        server = FedAvgServer(model_shape=(5,), learning_rate=0.1, lr_schedule="step", lr_decay=0.5)
 
         assert server.get_learning_rate(0) == 0.1
         assert server.get_learning_rate(4) == 0.1
@@ -231,9 +225,7 @@ class TestFedAvgServer:
         """Exponential LR schedule should decay every round."""
         from app.algorithms.edge.federated_learning import FedAvgServer
 
-        server = FedAvgServer(
-            model_shape=(5,), learning_rate=1.0, lr_schedule="exponential", lr_decay=0.5
-        )
+        server = FedAvgServer(model_shape=(5,), learning_rate=1.0, lr_schedule="exponential", lr_decay=0.5)
 
         assert server.get_learning_rate(0) == 1.0
         assert server.get_learning_rate(1) == 0.5
@@ -320,9 +312,7 @@ class TestFedProxClient:
             local_epochs=5,
         )
         result_low = client_low_mu.local_train()
-        drift_low = np.linalg.norm(
-            np.array(result_low["model_update"])
-        )
+        drift_low = np.linalg.norm(np.array(result_low["model_update"]))
 
         # High mu: less drift allowed
         client_high_mu = FedProxClient(
@@ -334,9 +324,7 @@ class TestFedProxClient:
             local_epochs=5,
         )
         result_high = client_high_mu.local_train()
-        drift_high = np.linalg.norm(
-            np.array(result_high["model_update"])
-        )
+        drift_high = np.linalg.norm(np.array(result_high["model_update"]))
 
         # Higher mu should result in smaller model update (more constrained)
         assert drift_high < drift_low
@@ -347,9 +335,7 @@ class TestFedProxClient:
 
         model = np.random.randn(5)
         global_model = np.random.randn(5)
-        client = FedProxClient(
-            client_id="c1", model=model, global_model=global_model, mu=0.1
-        )
+        client = FedProxClient(client_id="c1", model=model, global_model=global_model, mu=0.1)
         result = client.local_train()
 
         assert result["proximal_loss"] >= 0
@@ -364,9 +350,7 @@ class TestFedProxClient:
         model = np.random.randn(5)
         global_model = model.copy()
 
-        FedAvgClient(
-            client_id="fedavg", model=model.copy(), learning_rate=0.01
-        )
+        FedAvgClient(client_id="fedavg", model=model.copy(), learning_rate=0.01)
         fedprox_client = FedProxClient(
             client_id="fedprox",
             model=model.copy(),
@@ -390,9 +374,7 @@ class TestFedProxServer:
         """FedProxServer.train should identify strategy as fedprox."""
         from app.algorithms.edge.federated_learning import FedProxServer
 
-        server = FedProxServer(
-            model_shape=(5,), n_rounds=2, learning_rate=0.01, mu=0.1
-        )
+        server = FedProxServer(model_shape=(5,), n_rounds=2, learning_rate=0.01, mu=0.1)
         client_data = [{"n_samples": 50} for _ in range(2)]
 
         result = server.train(client_data)
@@ -685,11 +667,13 @@ class TestLegacyFederatedLearner:
         """Legacy FederatedLearner should work with FedProx."""
         from app.algorithms.edge.federated_learning import FederatedLearner
 
-        learner = FederatedLearner({
-            "strategy": "fedprox",
-            "n_rounds": 3,
-            "proximal_mu": 0.1,
-        })
+        learner = FederatedLearner(
+            {
+                "strategy": "fedprox",
+                "n_rounds": 3,
+                "proximal_mu": 0.1,
+            }
+        )
         client_updates = [
             [1.0, 2.0],
             [3.0, 4.0],

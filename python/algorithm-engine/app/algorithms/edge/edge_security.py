@@ -93,11 +93,7 @@ class EdgeSecurity:
 
             encryption_info = {
                 "method": encryption_method,
-                "encrypted_data": (
-                    encrypted_hex[:64] + "..."
-                    if len(encrypted_hex) > 64
-                    else encrypted_hex
-                ),
+                "encrypted_data": (encrypted_hex[:64] + "..." if len(encrypted_hex) > 64 else encrypted_hex),
                 "data_length": len(data_str),
                 "n_blocks": n_blocks,
                 "key_length": self.key_length,
@@ -109,11 +105,7 @@ class EdgeSecurity:
             # 模拟数据解密
             encrypted_data = params.get("encrypted_data", "")
             decrypted = (
-                hashlib.sha256(
-                    (str(encrypted_data) + key).encode()
-                ).hexdigest()[: len(str(data))]
-                if data
-                else ""
+                hashlib.sha256((str(encrypted_data) + key).encode()).hexdigest()[: len(str(data))] if data else ""
             )
             encryption_info = {
                 "method": encryption_method,
@@ -152,9 +144,7 @@ class EdgeSecurity:
             else:
                 auth_result = {"method": auth_method, "authenticated": False}
 
-            security_status["authentication"] = (
-                "success" if auth_result.get("authenticated") else "failed"
-            )
+            security_status["authentication"] = "success" if auth_result.get("authenticated") else "failed"
 
         elif operation == "verify":
             # 模拟完整性验证

@@ -310,12 +310,8 @@ class MultiUAVConflictResolver:
                 }
             )
 
-            state_map[id_a]["position"] = (
-                np.array(state_map[id_a]["position"]) + deviation_a
-            ).tolist()
-            state_map[id_b]["position"] = (
-                np.array(state_map[id_b]["position"]) + deviation_b
-            ).tolist()
+            state_map[id_a]["position"] = (np.array(state_map[id_a]["position"]) + deviation_a).tolist()
+            state_map[id_b]["position"] = (np.array(state_map[id_b]["position"]) + deviation_b).tolist()
 
         resolved = list(state_map.values())
         return resolved, actions

@@ -142,9 +142,7 @@ class EdgeTaskOffload:
             "offload_decision": offload_decision,
             "latency_estimate": {
                 "avg_latency_ms": (
-                    round(float(np.mean([
-                        d["actual_latency_ms"] for d in offload_decision
-                    ])), 2)
+                    round(float(np.mean([d["actual_latency_ms"] for d in offload_decision])), 2)
                     if offload_decision
                     else 0.0
                 ),

@@ -92,12 +92,7 @@ class V2XCommunication:
         # 计算热噪声功率
         noise_figure_linear = 10 ** (self.noise_figure_db / 10)
         bandwidth_hz = self.bandwidth_mhz * 1e6
-        noise_power_w = (
-            self.boltzmann_constant
-            * self.noise_temperature
-            * bandwidth_hz
-            * noise_figure_linear
-        )
+        noise_power_w = self.boltzmann_constant * self.noise_temperature * bandwidth_hz * noise_figure_linear
         noise_power_dbm = 10 * math.log10(noise_power_w * 1000)
 
         snr = rx_power - noise_power_dbm

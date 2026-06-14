@@ -96,10 +96,7 @@ class KnowledgeDistillation:
             teacher_soft = self._softmax(teacher_logits / temperature)
             student_soft = self._softmax(student_logits / temperature)
             distill_loss = float(
-                np.mean(
-                    -np.sum(teacher_soft * np.log(student_soft + 1e-8), axis=1)
-                    * temperature * temperature
-                )
+                np.mean(-np.sum(teacher_soft * np.log(student_soft + 1e-8), axis=1) * temperature * temperature)
             )
 
             # 硬标签损失：交叉熵

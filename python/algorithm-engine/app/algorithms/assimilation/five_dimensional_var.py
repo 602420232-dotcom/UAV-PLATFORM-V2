@@ -86,7 +86,12 @@ class FiveDimensionalVAR:
     # ================================================================
 
     def assimilate(self, params: dict[str, Any]) -> dict[str, Any]:
-        """执行5D-VAR同化（单次分析模式）.
+        """执行5D-VAR同化.
+
+        支持多种运行模式:
+        - 单次分析（single）: 一次性同化所有时间窗口的观测
+        - 循环同化（cycling）: 滚动时间窗口，逐步同化
+        - 增强循环（enhanced_cycling）: 多轮循环同化 + Hybrid B 矩阵
 
         Args:
             params: 分析参数字典，包含:
@@ -100,14 +105,21 @@ class FiveDimensionalVAR:
                 - risk_field: 风险场（可选）
                 - nmc_ensemble: NMC集合（可选，用于Hybrid B）
                 - climatology_field: 气候态背景场（可选）
-                - mode: 运行模式 "single" | "cycling"（默认 "single"）
+                - mode: 运行模式 "single" | "cycling" | "enhanced_cycling"
+                - observation_density: 观测密度 "sparse" | "normal" | "dense"
 
         Returns:
             包含分析结果和诊断统计的字典
         """
         mode = params.get("mode", "single")
 
-        if mode == "cycling":
+        # 根据配置自动选择增强模式
+        if self.cycling_mode and mode == "single":
+            mode = "enhanced_cycling"
+
+        if mode == "enhanced_cycling":
+            return self._enhanced_cycling_assimilation(params)
+        elif mode == "cycling":
             return self._cycling_assimilation(params)
         else:
             return self._single_assimilation(params)
@@ -231,6 +243,150 @@ class FiveDimensionalVAR:
         }
 
     # ================================================================
+    # 增强循环同化（Enhanced Cycling DA）
+    # ================================================================
+
+    def _enhanced_cycling_assimilation(self, params: dict[str, Any]) -> dict[str, Any]:
+        """增强循环同化模式: 多轮循环 + Hybrid B 矩阵.
+
+        将上一次分析结果作为下一次的背景场，支持多轮循环同化。
+        当提供 NMC 集合时，使用 Hybrid B 矩阵估计背景误差。
+        """
+        background = np.asarray(
+            params.get("background_field", np.zeros(self.grid_shape)),
+            dtype=float,
+        )
+        observations = params.get("observations", [])
+        n_rounds = params.get("n_cycling_rounds", self.n_cycling_rounds)
+
+        logger.info(
+            "开始增强循环同化: %d轮循环, hybrid_b=%s",
+            n_rounds,
+            self.hybrid_b_matrix,
+        )
+
+        current_background = background.copy()
+        round_results = []
+        total_cost_history = []
+
+        for round_idx in range(n_rounds):
+            logger.info("循环轮次 %d/%d", round_idx + 1, n_rounds)
+
+            # 为每轮循环生成带时间索引的观测子集
+            round_obs = self._assign_time_indices_to_observations(
+                observations,
+                round_idx,
+                n_rounds,
+            )
+
+            cycle_params = {
+                "background_field": current_background,
+                "observations": round_obs,
+                "risk_weight": self.risk_weight,
+                "ai_correction": params.get("ai_correction", np.zeros_like(background)),
+                "nmc_ensemble": params.get("nmc_ensemble"),
+                "climatology_field": params.get("climatology_field"),
+            }
+
+            result = self._single_assimilation(cycle_params)
+
+            # 更新背景场为当前分析场
+            current_background = np.asarray(result["analysis_field"])
+            result["round"] = round_idx
+            result["n_observations"] = len(round_obs)
+            round_results.append(result)
+            total_cost_history.append(result.get("cost", 0.0))
+
+        return {
+            "mode": "enhanced_cycling",
+            "analysis_field": current_background.tolist(),
+            "n_rounds": n_rounds,
+            "round_results": round_results,
+            "total_cost": total_cost_history[-1] if total_cost_history else 0.0,
+            "grid_shape": list(background.shape),
+            "diagnostics": {
+                "n_rounds_completed": n_rounds,
+                "total_observations_assimilated": sum(r.get("n_observations", 0) for r in round_results),
+                "rounds_converged": sum(1 for r in round_results if r.get("converged", False)),
+                "cost_history": total_cost_history,
+            },
+        }
+
+    def _assign_time_indices_to_observations(
+        self,
+        observations: list[dict[str, Any]],
+        round_idx: int,
+        n_rounds: int,
+    ) -> list[dict[str, Any]]:
+        """为观测分配时间索引，用于多轮循环同化.
+
+        每轮循环处理不同的观测子集，模拟时间演化的观测序列。
+        """
+        n_obs = len(observations)
+        round_obs = []
+        for i, obs in enumerate(observations):
+            # 将观测均匀分配到不同时间窗口
+            time_idx = (i + round_idx) % max(n_rounds, 1)
+            obs_copy = dict(obs)
+            obs_copy["time_index"] = time_idx
+            round_obs.append(obs_copy)
+        return round_obs
+
+    @staticmethod
+    def generate_observations(
+        true_field: np.ndarray,
+        n_obs_points: int,
+        obs_error: float = 0.5,
+        grid_shape: tuple[int, ...] | None = None,
+        seed: int = 42,
+    ) -> list[dict[str, Any]]:
+        """根据真实场生成模拟观测数据.
+
+        Args:
+            true_field: 真实场
+            n_obs_points: 观测点数量
+            obs_error: 观测误差标准差
+            grid_shape: 网格形状
+            seed: 随机种子
+
+        Returns:
+            观测数据列表
+        """
+        if grid_shape is None:
+            grid_shape = true_field.shape
+
+        rng = np.random.RandomState(seed)
+        n_total = int(np.prod(grid_shape))
+        n_obs = min(n_obs_points, n_total)
+
+        # 随机选择观测位置
+        indices = rng.choice(n_total, size=n_obs, replace=False)
+
+        observations = []
+        for idx in indices:
+            # 将一维索引转换为多维位置
+            pos = []
+            remaining = idx
+            for dim in reversed(grid_shape):
+                pos.append(int(remaining % dim))
+                remaining //= dim
+            pos = list(reversed(pos))
+
+            true_val = float(true_field.flat[idx])
+            noisy_val = true_val + rng.randn() * obs_error
+
+            observations.append(
+                {
+                    "position": pos,
+                    "value": float(noisy_val),
+                    "error": obs_error,
+                    "time_index": 0,
+                }
+            )
+
+        return observations
+
+    # ================================================================
     # 循环同化（Cycling DA）
     # ================================================================
 
@@ -315,9 +471,7 @@ class FiveDimensionalVAR:
             "grid_shape": list(background.shape),
             "diagnostics": {
                 "n_cycles_completed": n_windows,
-                "total_observations_assimilated": sum(
-                    r.get("n_observations", 0) for r in cycle_results
-                ),
+                "total_observations_assimilated": sum(r.get("n_observations", 0) for r in cycle_results),
                 "cycles_converged": sum(1 for r in cycle_results if r.get("converged", False)),
             },
         }

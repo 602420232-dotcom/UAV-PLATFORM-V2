@@ -265,10 +265,7 @@ class ProbabilisticUNet:
             for ci in range(x.shape[2]):
                 for ii in range(kh):
                     for jj in range(kw):
-                        output[:, :, co] += (
-                            padded[ii: ii + h, jj: jj + w, ci]
-                            * kernel[ii, jj, ci, co]
-                        )
+                        output[:, :, co] += padded[ii : ii + h, jj : jj + w, ci] * kernel[ii, jj, ci, co]
             output[:, :, co] += bias[co]
         return output
 

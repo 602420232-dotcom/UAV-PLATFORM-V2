@@ -16,9 +16,7 @@ class CompositeRiskAssessor:
 
     def __init__(self, params: dict[str, Any] | None = None):
         self.params = params or {}
-        self.weights = self.params.get(
-            "weights", {"weather": 0.4, "terrain": 0.3, "airspace": 0.3}
-        )
+        self.weights = self.params.get("weights", {"weather": 0.4, "terrain": 0.3, "airspace": 0.3})
 
     def assess(self) -> dict[str, Any]:
         from app.algorithms.risk.airspace_risk import AirspaceRiskAssessor

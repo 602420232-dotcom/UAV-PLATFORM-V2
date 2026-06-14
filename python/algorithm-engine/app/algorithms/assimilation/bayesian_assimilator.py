@@ -121,9 +121,7 @@ class BayesianAssimilator:
                         / (prior_var + effective_likelihood_var)
                     )
                     # fmt: on
-                    posterior_mean[idx] = (
-                        effective_likelihood_var * prior_mean[idx] + prior_var * y_eff
-                    ) / (
+                    posterior_mean[idx] = (effective_likelihood_var * prior_mean[idx] + prior_var * y_eff) / (
                         prior_var + effective_likelihood_var
                     )
 

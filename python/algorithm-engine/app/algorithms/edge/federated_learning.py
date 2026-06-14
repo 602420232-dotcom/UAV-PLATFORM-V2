@@ -403,9 +403,9 @@ class FedAvgServer:
         elif self.lr_schedule == "step":
             # Decay every 5 rounds
             steps = round_idx // 5
-            return self.base_learning_rate * (self.lr_decay ** steps)
+            return self.base_learning_rate * (self.lr_decay**steps)
         elif self.lr_schedule == "exponential":
-            return self.base_learning_rate * (self.lr_decay ** round_idx)
+            return self.base_learning_rate * (self.lr_decay**round_idx)
         else:
             return self.base_learning_rate
 
@@ -549,9 +549,7 @@ class FedAvgServer:
         """
         # Optionally resume from checkpoint
         if resume and self.load_checkpoint():
-            logger.info(
-                "Resumed from checkpoint at round %d", self.current_round
-            )
+            logger.info("Resumed from checkpoint at round %d", self.current_round)
 
         start_round = self.current_round
         early_stopped = False
@@ -613,9 +611,7 @@ class FedAvgServer:
                 "total_rounds_compressed": len(self.compression_stats),
                 "total_original_bytes": total_original,
                 "total_bytes_saved": total_saved,
-                "avg_compression_rate": round(
-                    total_saved / total_original, 4
-                ) if total_original > 0 else 0.0,
+                "avg_compression_rate": round(total_saved / total_original, 4) if total_original > 0 else 0.0,
             }
 
         return {
@@ -809,9 +805,7 @@ class FedProxServer(FedAvgServer):
         """
         # Optionally resume from checkpoint
         if resume and self.load_checkpoint():
-            logger.info(
-                "Resumed FedProx from checkpoint at round %d", self.current_round
-            )
+            logger.info("Resumed FedProx from checkpoint at round %d", self.current_round)
 
         start_round = self.current_round
         early_stopped = False
@@ -856,9 +850,7 @@ class FedProxServer(FedAvgServer):
             if self.should_early_stop(round_loss):
                 early_stopped = True
                 self.history[-1]["early_stopped"] = True
-                logger.info(
-                    "FedProx early stopping at round %d", round_idx + 1
-                )
+                logger.info("FedProx early stopping at round %d", round_idx + 1)
                 break
 
         total_compression = {}
@@ -870,9 +862,7 @@ class FedProxServer(FedAvgServer):
                 "total_rounds_compressed": len(self.compression_stats),
                 "total_original_bytes": total_original,
                 "total_bytes_saved": total_saved,
-                "avg_compression_rate": round(
-                    total_saved / total_original, 4
-                ) if total_original > 0 else 0.0,
+                "avg_compression_rate": round(total_saved / total_original, 4) if total_original > 0 else 0.0,
             }
 
         return {

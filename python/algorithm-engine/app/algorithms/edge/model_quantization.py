@@ -136,9 +136,7 @@ class ModelQuantizer:
         else:
             raise ValueError(f"不支持的量化类型: {quantization_type}")
 
-    def _quantize_int8(
-        self, weights: np.ndarray
-    ) -> tuple[np.ndarray, dict[str, Any]]:
+    def _quantize_int8(self, weights: np.ndarray) -> tuple[np.ndarray, dict[str, Any]]:
         """INT8 对称量化。
 
         使用 min-max 对称量化方案，将 FP32 权重映射到 [-127, 127] 范围。
@@ -151,9 +149,7 @@ class ModelQuantizer:
             abs_max = 1.0
 
         scale = abs_max / 127.0
-        quantized = np.clip(
-            np.round(weights / scale), -127, 127
-        ).astype(np.int8)
+        quantized = np.clip(np.round(weights / scale), -127, 127).astype(np.int8)
 
         info = {
             "scale": float(scale),
@@ -164,9 +160,7 @@ class ModelQuantizer:
         }
         return quantized, info
 
-    def _quantize_fp16(
-        self, weights: np.ndarray
-    ) -> tuple[np.ndarray, dict[str, Any]]:
+    def _quantize_fp16(self, weights: np.ndarray) -> tuple[np.ndarray, dict[str, Any]]:
         """FP16 半精度量化。
 
         直接将 FP32 转换为 FP16。
@@ -325,7 +319,7 @@ class ModelQuantizer:
         dequantized = self.dequantize(quantized_weights, quantization_info)
 
         diff = original_weights - dequantized
-        mse = float(np.mean(diff ** 2))
+        mse = float(np.mean(diff**2))
         rmse = float(np.sqrt(mse))
         mae = float(np.mean(np.abs(diff)))
         max_ae = float(np.max(np.abs(diff)))
@@ -338,10 +332,7 @@ class ModelQuantizer:
         cos_sim = float(
             np.dot(original_weights.flatten(), dequantized.flatten())
             / max(
-                float(
-                    np.linalg.norm(original_weights.flatten())
-                    * np.linalg.norm(dequantized.flatten())
-                ),
+                float(np.linalg.norm(original_weights.flatten()) * np.linalg.norm(dequantized.flatten())),
                 1e-10,
             )
         )
@@ -408,7 +399,7 @@ class ModelQuantizer:
 
             # 计算量化损失
             quant_error = trainable_w - dequantized_w
-            loss = float(np.mean(quant_error ** 2))
+            loss = float(np.mean(quant_error**2))
 
             # 模拟微调：向减小量化误差的方向调整权重
             # 梯度方向：减少量化误差
@@ -429,10 +420,7 @@ class ModelQuantizer:
             cos_sim = float(
                 np.dot(weights.flatten(), new_dequantized.flatten())
                 / max(
-                    float(
-                        np.linalg.norm(weights.flatten())
-                        * np.linalg.norm(new_dequantized.flatten())
-                    ),
+                    float(np.linalg.norm(weights.flatten()) * np.linalg.norm(new_dequantized.flatten())),
                     1e-10,
                 )
             )
@@ -506,16 +494,12 @@ class ModelQuantizer:
         if weights.ndim == 1:
             input_data = np.random.randn(1, len(weights)).astype(np.float32)
         else:
-            input_data = np.random.randn(
-                10, weights.shape[1] if weights.ndim >= 2 else weights.shape[0]
-            ).astype(np.float32)
+            input_data = np.random.randn(10, weights.shape[1] if weights.ndim >= 2 else weights.shape[0]).astype(
+                np.float32
+            )
 
-        original_latency = self.simulate_inference(
-            weights, input_data, "fp32", n_inference_runs
-        )
-        quantized_latency = self.simulate_inference(
-            weights, input_data, quantization_type, n_inference_runs
-        )
+        original_latency = self.simulate_inference(weights, input_data, "fp32", n_inference_runs)
+        quantized_latency = self.simulate_inference(weights, input_data, quantization_type, n_inference_runs)
 
         latency_reduction = (
             (original_latency["mean_latency_ms"] - quantized_latency["mean_latency_ms"])
@@ -530,9 +514,7 @@ class ModelQuantizer:
         qat_result = None
         qat_accuracy_recovery = 0.0
         if apply_qat:
-            qat_result = self.simulate_qat(
-                weights, quantization_type, qat_epochs
-            )
+            qat_result = self.simulate_qat(weights, quantization_type, qat_epochs)
             qat_accuracy_recovery = qat_result["accuracy_recovery"]
 
         # 6. 生成报告
