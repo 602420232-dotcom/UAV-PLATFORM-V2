@@ -1,0 +1,39 @@
+# =============================================================================
+# Kustomize Base - UAV Platform V2
+# =============================================================================
+# Usage: kubectl apply -k k8s/base
+# =============================================================================
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: uav-platform
+
+commonLabels:
+  app.kubernetes.io/name: uav-platform
+  app.kubernetes.io/part-of: uav-platform
+  app.kubernetes.io/managed-by: kustomize
+
+resources:
+  - ../namespace.yaml
+  - ../configmap.yaml
+  - ../secrets.yaml
+  - ../api-gateway-deployment.yaml
+  - ../api-gateway-service.yaml
+  - ../platform-api-deployment.yaml
+  - ../platform-api-service.yaml
+  - ../weather-api-deployment.yaml
+  - ../weather-api-service.yaml
+  - ../assimilation-api-deployment.yaml
+  - ../assimilation-api-service.yaml
+  - ../risk-api-deployment.yaml
+  - ../risk-api-service.yaml
+  - ../observation-api-deployment.yaml
+  - ../observation-api-service.yaml
+  - ../planning-api-deployment.yaml
+  - ../planning-api-service.yaml
+  - ../utm-api-deployment.yaml
+  - ../utm-api-service.yaml
+  - ../algorithm-engine-deployment.yaml
+  - ../algorithm-engine-service.yaml
+  - ../ingress.yaml
+  - ../hpa.yaml

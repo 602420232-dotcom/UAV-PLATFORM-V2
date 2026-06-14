@@ -32,6 +32,9 @@
         <jjwt.version>0.12.6</jjwt.version>
         <resilience4j.version>2.3.0</resilience4j.version>
         <mysql.version>8.4.0</mysql.version>
+        <opentelemetry.version>1.45.0</opentelemetry.version>
+        <opentelemetry-instrumentation.version>2.10.0</opentelemetry-instrumentation.version>
+        <micrometer-tracing.version>1.4.2</micrometer-tracing.version>
 
         <sonar.projectKey>uav-platform-v2</sonar.projectKey>
         <sonar.projectName>UAV Platform V2</sonar.projectName>
@@ -132,6 +135,26 @@
                 <groupId>io.micrometer</groupId>
                 <artifactId>micrometer-registry-prometheus</artifactId>
                 <version>1.14.2</version>
+            </dependency>
+            <!-- OpenTelemetry Instrumentation BOM -->
+            <dependency>
+                <groupId>io.opentelemetry.instrumentation</groupId>
+                <artifactId>opentelemetry-instrumentation-bom</artifactId>
+                <version>${opentelemetry-instrumentation.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <!-- Micrometer Tracing Bridge to OpenTelemetry -->
+            <dependency>
+                <groupId>io.micrometer</groupId>
+                <artifactId>micrometer-tracing-bridge-otel</artifactId>
+                <version>${micrometer-tracing.version}</version>
+            </dependency>
+            <!-- OpenTelemetry Exporter OTLP -->
+            <dependency>
+                <groupId>io.opentelemetry</groupId>
+                <artifactId>opentelemetry-exporter-otlp</artifactId>
+                <version>${opentelemetry.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

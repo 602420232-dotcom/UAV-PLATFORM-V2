@@ -1,0 +1,171 @@
+{{- if .Values.observationApi.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: observation-api
+  namespace: {{ .Values.namespace.name }}
+  labels:
+    app.kubernetes.io/name: observation-api
+    app.kubernetes.io/part-of: uav-platform
+    app.kubernetes.io/component: microservice
+    app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+spec:
+  replicas: {{ .Values.observationApi.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: observation-api
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: observation-api
+        app.kubernetes.io/part-of: uav-platform
+        app.kubernetes.io/component: microservice
+        app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "{{ .Values.observationApi.containerPort }}"
+        prometheus.io/path: "/actuator/prometheus"
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app.kubernetes.io/name
+                      operator: In
+                      values:
+                        - observation-api
+                topologyKey: kubernetes.io/hostname
+      containers:
+        - name: observation-api
+          image: {{ .Values.global.imageRegistry }}/{{ .Values.observationApi.image.repository }}:{{ .Values.observationApi.image.tag | default .Values.global.imageTag }}
+          imagePullPolicy: {{ .Values.observationApi.image.pullPolicy | default .Values.global.imagePullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.observationApi.containerPort }}
+              protocol: TCP
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "uav-platform.fullname" . }}-config
+                  key: SPRING_PROFILES_ACTIVE
+            - name: NACOS_SERVER_ADDR
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "uav-platform.fullname" . }}-config
+                  key: NACOS_SERVER_ADDR
+            - name: SPRING_DATASOURCE_URL
+              value: {{ printf "jdbc:mysql://%s:%s/uav_observation?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true" .Values.global.mysql.host .Values.global.mysql.port }}
+            - name: MYSQL_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "uav-platform.fullname" . }}-config
+                  key: MYSQL_HOST
+            - name: MYSQL_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "uav-platform.fullname" . }}-config
+                  key: MYSQL_PORT
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "uav-platform.fullname" . }}-secrets
+                  key: MYSQL_PASSWORD
+            - name: REDIS_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "uav-platform.fullname" . }}-config
+                  key: REDIS_HOST
+            - name: REDIS_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "uav-platform.fullname" . }}-config
+                  key: REDIS_PORT
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "uav-platform.fullname" . }}-secrets
+                  key: REDIS_PASSWORD
+            - name: SPRING_DATA_REDIS_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "uav-platform.fullname" . }}-config
+                  key: SPRING_DATA_REDIS_HOST
+            - name: SPRING_DATA_REDIS_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "uav-platform.fullname" . }}-config
+                  key: SPRING_DATA_REDIS_PORT
+            - name: ALGORITHM_ENGINE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "uav-platform.fullname" . }}-config
+                  key: ALGORITHM_ENGINE_URL
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "uav-platform.fullname" . }}-config
+                  key: KAFKA_BOOTSTRAP_SERVERS
+            - name: KAFKA_MOCK
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "uav-platform.fullname" . }}-config
+                  key: KAFKA_MOCK
+            - name: JAVA_OPTS
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "uav-platform.fullname" . }}-config
+                  key: JAVA_OPTS
+          resources:
+            {{- toYaml .Values.observationApi.resources | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: {{ .Values.observationApi.containerPort }}
+            initialDelaySeconds: {{ .Values.observationApi.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.observationApi.livenessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.observationApi.livenessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.observationApi.livenessProbe.failureThreshold }}
+            successThreshold: 1
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: {{ .Values.observationApi.containerPort }}
+            initialDelaySeconds: {{ .Values.observationApi.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.observationApi.readinessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.observationApi.readinessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.observationApi.readinessProbe.failureThreshold }}
+            successThreshold: 1
+          lifecycle:
+            preStop:
+              exec:
+                command: ["/bin/sh", "-c", "sleep 10"]
+      terminationGracePeriodSeconds: 30
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: observation-api
+  namespace: {{ .Values.namespace.name }}
+  labels:
+    app.kubernetes.io/name: observation-api
+    app.kubernetes.io/part-of: uav-platform
+    app.kubernetes.io/component: microservice
+spec:
+  type: {{ .Values.observationApi.service.type }}
+  selector:
+    app.kubernetes.io/name: observation-api
+  ports:
+    - name: http
+      port: {{ .Values.observationApi.service.port }}
+      targetPort: {{ .Values.observationApi.containerPort }}
+      protocol: TCP
+{{- end }}

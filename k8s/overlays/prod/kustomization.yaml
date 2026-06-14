@@ -1,0 +1,217 @@
+# =============================================================================
+# Kustomize Overlay - Production Environment
+# =============================================================================
+# Usage: kubectl apply -k k8s/overlays/prod
+# =============================================================================
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: uav-platform
+
+commonLabels:
+  environment: production
+
+resources:
+  - ../../base
+
+patches:
+  # API Gateway: 5 replicas, higher resources
+  - target:
+      kind: Deployment
+      name: api-gateway
+    patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: api-gateway
+      spec:
+        replicas: 5
+        template:
+          spec:
+            containers:
+              - name: api-gateway
+                resources:
+                  requests:
+                    cpu: "1000m"
+                    memory: "1Gi"
+                  limits:
+                    cpu: "2000m"
+                    memory: "2Gi"
+
+  # All Java microservices: 3 replicas, higher resources
+  - target:
+      kind: Deployment
+      name: platform-api
+    patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: platform-api
+      spec:
+        replicas: 3
+        template:
+          spec:
+            containers:
+              - name: platform-api
+                resources:
+                  requests:
+                    cpu: "500m"
+                    memory: "512Mi"
+                  limits:
+                    cpu: "1000m"
+                    memory: "1Gi"
+
+  - target:
+      kind: Deployment
+      name: weather-api
+    patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: weather-api
+      spec:
+        replicas: 3
+        template:
+          spec:
+            containers:
+              - name: weather-api
+                resources:
+                  requests:
+                    cpu: "500m"
+                    memory: "512Mi"
+                  limits:
+                    cpu: "1000m"
+                    memory: "1Gi"
+
+  - target:
+      kind: Deployment
+      name: assimilation-api
+    patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: assimilation-api
+      spec:
+        replicas: 3
+        template:
+          spec:
+            containers:
+              - name: assimilation-api
+                resources:
+                  requests:
+                    cpu: "500m"
+                    memory: "512Mi"
+                  limits:
+                    cpu: "1000m"
+                    memory: "1Gi"
+
+  - target:
+      kind: Deployment
+      name: risk-api
+    patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: risk-api
+      spec:
+        replicas: 3
+        template:
+          spec:
+            containers:
+              - name: risk-api
+                resources:
+                  requests:
+                    cpu: "500m"
+                    memory: "512Mi"
+                  limits:
+                    cpu: "1000m"
+                    memory: "1Gi"
+
+  - target:
+      kind: Deployment
+      name: observation-api
+    patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: observation-api
+      spec:
+        replicas: 3
+        template:
+          spec:
+            containers:
+              - name: observation-api
+                resources:
+                  requests:
+                    cpu: "500m"
+                    memory: "512Mi"
+                  limits:
+                    cpu: "1000m"
+                    memory: "1Gi"
+
+  - target:
+      kind: Deployment
+      name: planning-api
+    patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: planning-api
+      spec:
+        replicas: 3
+        template:
+          spec:
+            containers:
+              - name: planning-api
+                resources:
+                  requests:
+                    cpu: "500m"
+                    memory: "512Mi"
+                  limits:
+                    cpu: "1000m"
+                    memory: "1Gi"
+
+  - target:
+      kind: Deployment
+      name: utm-api
+    patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: utm-api
+      spec:
+        replicas: 3
+        template:
+          spec:
+            containers:
+              - name: utm-api
+                resources:
+                  requests:
+                    cpu: "500m"
+                    memory: "512Mi"
+                  limits:
+                    cpu: "1000m"
+                    memory: "1Gi"
+
+  # Algorithm Engine: 2 replicas, higher resources
+  - target:
+      kind: Deployment
+      name: algorithm-engine
+    patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: algorithm-engine
+      spec:
+        replicas: 2
+        template:
+          spec:
+            containers:
+              - name: algorithm-engine
+                resources:
+                  requests:
+                    cpu: "1000m"
+                    memory: "1Gi"
+                  limits:
+                    cpu: "2000m"
+                    memory: "2Gi"

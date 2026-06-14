@@ -1,0 +1,115 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: uav-platform-ingress
+  namespace: uav-platform
+  labels:
+    app.kubernetes.io/name: uav-platform
+    app.kubernetes.io/component: ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
+    nginx.ingress.kubernetes.io/proxy-buffer-size: "128k"
+    nginx.ingress.kubernetes.io/proxy-buffers-number: "4"
+    nginx.ingress.kubernetes.io/client-max-body-size: "50m"
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "*"
+    nginx.ingress.kubernetes.io/cors-allow-methods: "GET, PUT, POST, DELETE, PATCH, OPTIONS"
+    nginx.ingress.kubernetes.io/cors-allow-headers: "DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization"
+    nginx.ingress.kubernetes.io/cors-max-age: "3600"
+    # Rate limiting
+    nginx.ingress.kubernetes.io/limit-rps: "1000"
+    nginx.ingress.kubernetes.io/limit-connections: "100"
+    # Upstream keepalive
+    nginx.ingress.kubernetes.io/upstream-keepalive-connections: "32"
+    nginx.ingress.kubernetes.io/upstream-keepalive-timeout: "60"
+    nginx.ingress.kubernetes.io/upstream-keepalive-requests: "1000"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - uav-platform.local
+        - api.uav-platform.local
+      secretName: uav-platform-tls
+  rules:
+    # Main API routes -> Gateway
+    - host: uav-platform.local
+      http:
+        paths:
+          # API v1 & v2 -> Gateway
+          - path: /api/v1
+            pathType: Prefix
+            backend:
+              service:
+                name: api-gateway
+                port:
+                  number: 8088
+          - path: /api/v2
+            pathType: Prefix
+            backend:
+              service:
+                name: api-gateway
+                port:
+                  number: 8088
+          # Algorithm Engine (direct access)
+          - path: /api/v1/algorithm
+            pathType: Prefix
+            backend:
+              service:
+                name: algorithm-engine
+                port:
+                  number: 9090
+          - path: /api/v2/algorithm
+            pathType: Prefix
+            backend:
+              service:
+                name: algorithm-engine
+                port:
+                  number: 9090
+          # Console (frontend)
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: api-gateway
+                port:
+                  number: 8088
+
+    # Dedicated API subdomain
+    - host: api.uav-platform.local
+      http:
+        paths:
+          - path: /api/v1
+            pathType: Prefix
+            backend:
+              service:
+                name: api-gateway
+                port:
+                  number: 8088
+          - path: /api/v2
+            pathType: Prefix
+            backend:
+              service:
+                name: api-gateway
+                port:
+                  number: 8088
+          - path: /api/v1/algorithm
+            pathType: Prefix
+            backend:
+              service:
+                name: algorithm-engine
+                port:
+                  number: 9090
+          - path: /api/v2/algorithm
+            pathType: Prefix
+            backend:
+              service:
+                name: algorithm-engine
+                port:
+                  number: 9090

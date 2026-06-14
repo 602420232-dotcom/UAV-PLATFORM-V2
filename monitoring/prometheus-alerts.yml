@@ -1,0 +1,420 @@
+# ============================================================
+# Prometheus SLA 告警规则 - UAV Platform V2
+# ============================================================
+# 规则类别:
+#   - SLA 可用性
+#   - SLA 延迟 (P50/P95/P99)
+#   - JVM 运行时
+#   - Kafka 消息队列
+#   - 数据库连接池
+#   - Redis 连接池
+#   - 算法执行
+#   - 服务可用性
+# ============================================================
+
+groups:
+  # ==========================================================
+  # 组 1: SLA 可用性告警
+  # ==========================================================
+  - name: sla_availability
+    rules:
+      # API 可用性 < 99.9% (5分钟窗口)
+      # 计算方式: 1 - (5xx错误率 + 超时率)
+      - alert: SLAAvailabilityBreach
+        expr: |
+          (
+            1 - (
+              sum(rate(http_server_requests_seconds_count{job=~"api-gateway|platform-api|weather-api|assimilation-api|risk-api|observation-api|planning-api|utm-api", status=~"5.."}[5m])) by (job)
+              /
+              sum(rate(http_server_requests_seconds_count{job=~"api-gateway|platform-api|weather-api|assimilation-api|risk-api|observation-api|planning-api|utm-api"}[5m])) by (job)
+            )
+          ) < 0.999
+        for: 5m
+        labels:
+          severity: critical
+          category: sla
+          sla_target: "99.9%"
+        annotations:
+          summary: "SLA 可用性违规: {{ $labels.job }}"
+          description: "服务 {{ $labels.job }} 的 API 可用性低于 99.9%，当前可用性: {{ $value | printf \"%.4f\" }}。"
+          runbook_url: "https://wiki.uav-platform.local/runbook/sla-availability-breach"
+
+  # ==========================================================
+  # 组 2: SLA 延迟告警
+  # ==========================================================
+  - name: sla_latency
+    rules:
+      # API P99 延迟 > 500ms (持续5分钟)
+      - alert: SLAP99LatencyBreach
+        expr: |
+          histogram_quantile(0.99,
+            sum(rate(http_server_requests_seconds_bucket{job=~"api-gateway|platform-api|weather-api|assimilation-api|risk-api|observation-api|planning-api|utm-api"}[5m])) by (le, job)
+          ) > 0.5
+        for: 5m
+        labels:
+          severity: warning
+          category: sla
+          sla_target: "P99 < 500ms"
+        annotations:
+          summary: "SLA P99 延迟违规: {{ $labels.job }}"
+          description: "服务 {{ $labels.job }} 的 P99 延迟超过 500ms，当前值: {{ $value | printf \"%.3f\" }}s。"
+          runbook_url: "https://wiki.uav-platform.local/runbook/sla-p99-latency"
+
+      # API P95 延迟 > 200ms (持续5分钟)
+      - alert: SLAP95LatencyBreach
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(http_server_requests_seconds_bucket{job=~"api-gateway|platform-api|weather-api|assimilation-api|risk-api|observation-api|planning-api|utm-api"}[5m])) by (le, job)
+          ) > 0.2
+        for: 5m
+        labels:
+          severity: warning
+          category: sla
+          sla_target: "P95 < 200ms"
+        annotations:
+          summary: "SLA P95 延迟违规: {{ $labels.job }}"
+          description: "服务 {{ $labels.job }} 的 P95 延迟超过 200ms，当前值: {{ $value | printf \"%.3f\" }}s。"
+          runbook_url: "https://wiki.uav-platform.local/runbook/sla-p95-latency"
+
+  # ==========================================================
+  # 组 3: JVM 运行时告警
+  # ==========================================================
+  - name: jvm_runtime
+    rules:
+      # JVM 堆内存使用 > 85%
+      - alert: JVMHeapMemoryHigh
+        expr: |
+          (
+            sum(jvm_memory_used_bytes{area="heap"}) by (job)
+            /
+            sum(jvm_memory_max_bytes{area="heap"}) by (job)
+          ) > 0.85
+        for: 5m
+        labels:
+          severity: warning
+          category: jvm
+        annotations:
+          summary: "JVM 堆内存使用过高: {{ $labels.job }}"
+          description: "服务 {{ $labels.job }} 的 JVM 堆内存使用率超过 85%，当前值: {{ $value | printf \"%.1f\" }}%。"
+          runbook_url: "https://wiki.uav-platform.local/runbook/jvm-heap-memory"
+
+      # JVM 堆内存使用 > 95% (严重)
+      - alert: JVMHeapMemoryCritical
+        expr: |
+          (
+            sum(jvm_memory_used_bytes{area="heap"}) by (job)
+            /
+            sum(jvm_memory_max_bytes{area="heap"}) by (job)
+          ) > 0.95
+        for: 2m
+        labels:
+          severity: critical
+          category: jvm
+        annotations:
+          summary: "JVM 堆内存即将耗尽: {{ $labels.job }}"
+          description: "服务 {{ $labels.job }} 的 JVM 堆内存使用率超过 95%，即将 OOM，当前值: {{ $value | printf \"%.1f\" }}%。"
+
+      # JVM GC 暂停时间 > 1s
+      - alert: JVMGCPauseTooLong
+        expr: |
+          rate(jvm_gc_pause_seconds_sum{job=~"api-gateway|platform-api|weather-api|assimilation-api|risk-api|observation-api|planning-api|utm-api"}[5m])
+          /
+          rate(jvm_gc_pause_seconds_count{job=~"api-gateway|platform-api|weather-api|assimilation-api|risk-api|observation-api|planning-api|utm-api"}[5m])
+          > 1
+        for: 5m
+        labels:
+          severity: warning
+          category: jvm
+        annotations:
+          summary: "JVM GC 暂停时间过长: {{ $labels.job }}"
+          description: "服务 {{ $labels.job }} 的平均 GC 暂停时间超过 1s，当前值: {{ $value | printf \"%.3f\" }}s。"
+          runbook_url: "https://wiki.uav-platform.local/runbook/jvm-gc-pause"
+
+      # JVM GC 暂停时间 > 5s (严重)
+      - alert: JVMGCPauseCritical
+        expr: |
+          rate(jvm_gc_pause_seconds_sum{job=~"api-gateway|platform-api|weather-api|assimilation-api|risk-api|observation-api|planning-api|utm-api"}[5m])
+          /
+          rate(jvm_gc_pause_seconds_count{job=~"api-gateway|platform-api|weather-api|assimilation-api|risk-api|observation-api|planning-api|utm-api"}[5m])
+          > 5
+        for: 2m
+        labels:
+          severity: critical
+          category: jvm
+        annotations:
+          summary: "JVM GC 暂停时间严重: {{ $labels.job }}"
+          description: "服务 {{ $labels.job }} 的平均 GC 暂停时间超过 5s，应用可能已无响应。"
+
+  # ==========================================================
+  # 组 4: Kafka 消费者延迟告警
+  # ==========================================================
+  - name: kafka_consumer_lag
+    rules:
+      # Kafka 消费者延迟 > 1000 条
+      - alert: KafkaConsumerLagHigh
+        expr: kafka_consumergroup_lag > 1000
+        for: 5m
+        labels:
+          severity: warning
+          category: kafka
+        annotations:
+          summary: "Kafka 消费者延迟过高: {{ $labels.group }} / {{ $labels.topic }}"
+          description: "消费者组 {{ $labels.group }} 在 topic {{ $labels.topic }} 分区 {{ $labels.partition }} 的延迟超过 1000 条，当前值: {{ $value }}。"
+          runbook_url: "https://wiki.uav-platform.local/runbook/kafka-consumer-lag"
+
+      # Kafka 消费者延迟 > 5000 条 (严重)
+      - alert: KafkaConsumerLagCritical
+        expr: kafka_consumergroup_lag > 5000
+        for: 2m
+        labels:
+          severity: critical
+          category: kafka
+        annotations:
+          summary: "Kafka 消费者延迟严重: {{ $labels.group }} / {{ $labels.topic }}"
+          description: "消费者组 {{ $labels.group }} 在 topic {{ $labels.topic }} 分区 {{ $labels.partition }} 的延迟超过 5000 条，当前值: {{ $value }}。"
+
+      # Kafka 消费者停止消费
+      - alert: KafkaConsumerStopped
+        expr: |
+          increase(kafka_consumergroup_lag{topic=~".*"}[5m]) == 0
+          and kafka_consumergroup_lag > 0
+        for: 10m
+        labels:
+          severity: critical
+          category: kafka
+        annotations:
+          summary: "Kafka 消费者停止消费: {{ $labels.group }}"
+          description: "消费者组 {{ $labels.group }} 在 topic {{ $labels.topic }} 上已停止消费超过 10 分钟。"
+
+  # ==========================================================
+  # 组 5: MySQL 连接池告警
+  # ==========================================================
+  - name: mysql_connection_pool
+    rules:
+      # MySQL 连接池使用 > 80%
+      - alert: MySQLConnectionPoolHigh
+        expr: |
+          (
+            hikaricp_connections_active{pool=~".*mysql.*|.*datasource.*"}
+            /
+            hikaricp_connections_max{pool=~".*mysql.*|.*datasource.*"}
+          ) > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          category: database
+        annotations:
+          summary: "MySQL 连接池使用过高: {{ $labels.job }}"
+          description: "服务 {{ $labels.job }} 的 MySQL 连接池使用率超过 80%，活跃连接: {{ $value | printf \"%.0f\" }}%。"
+          runbook_url: "https://wiki.uav-platform.local/runbook/mysql-connection-pool"
+
+      # MySQL 连接池使用 > 95% (严重)
+      - alert: MySQLConnectionPoolCritical
+        expr: |
+          (
+            hikaricp_connections_active{pool=~".*mysql.*|.*datasource.*"}
+            /
+            hikaricp_connections_max{pool=~".*mysql.*|.*datasource.*"}
+          ) > 0.95
+        for: 2m
+        labels:
+          severity: critical
+          category: database
+        annotations:
+          summary: "MySQL 连接池即将耗尽: {{ $labels.job }}"
+          description: "服务 {{ $labels.job }} 的 MySQL 连接池使用率超过 95%，即将无法获取新连接。"
+
+      # MySQL 连接等待时间过长
+      - alert: MySQLConnectionWaitTimeHigh
+        expr: |
+          rate(hikaricp_connections_creation_seconds_sum{pool=~".*mysql.*|.*datasource.*"}[5m])
+          /
+          rate(hikaricp_connections_creation_seconds_count{pool=~".*mysql.*|.*datasource.*"}[5m])
+          > 0.5
+        for: 5m
+        labels:
+          severity: warning
+          category: database
+        annotations:
+          summary: "MySQL 连接创建时间过长: {{ $labels.job }}"
+          description: "服务 {{ $labels.job }} 的 MySQL 平均连接创建时间超过 500ms，可能存在数据库性能问题。"
+
+  # ==========================================================
+  # 组 6: Redis 连接池告警
+  # ==========================================================
+  - name: redis_connection_pool
+    rules:
+      # Redis 连接池使用 > 80%
+      - alert: RedisConnectionPoolHigh
+        expr: |
+          (
+            lettuce_pool_active_connections{job=~"api-gateway|platform-api|weather-api|assimilation-api|risk-api|observation-api|planning-api|utm-api"}
+            /
+            lettuce_pool_max_connections{job=~"api-gateway|platform-api|weather-api|assimilation-api|risk-api|observation-api|planning-api|utm-api"}
+          ) > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          category: cache
+        annotations:
+          summary: "Redis 连接池使用过高: {{ $labels.job }}"
+          description: "服务 {{ $labels.job }} 的 Redis 连接池使用率超过 80%，活跃连接: {{ $value | printf \"%.0f\" }}%。"
+          runbook_url: "https://wiki.uav-platform.local/runbook/redis-connection-pool"
+
+      # Redis 连接池使用 > 95% (严重)
+      - alert: RedisConnectionPoolCritical
+        expr: |
+          (
+            lettuce_pool_active_connections{job=~"api-gateway|platform-api|weather-api|assimilation-api|risk-api|observation-api|planning-api|utm-api"}
+            /
+            lettuce_pool_max_connections{job=~"api-gateway|platform-api|weather-api|assimilation-api|risk-api|observation-api|planning-api|utm-api"}
+          ) > 0.95
+        for: 2m
+        labels:
+          severity: critical
+          category: cache
+        annotations:
+          summary: "Redis 连接池即将耗尽: {{ $labels.job }}"
+          description: "服务 {{ $labels.job }} 的 Redis 连接池使用率超过 95%，即将无法获取新连接。"
+
+  # ==========================================================
+  # 组 7: 算法执行告警
+  # ==========================================================
+  - name: algorithm_execution
+    rules:
+      # 算法执行失败率 > 5% (5分钟窗口)
+      - alert: AlgorithmExecutionFailureRate
+        expr: |
+          (
+            sum(rate(algorithm_execution_total{status="failed"}[5m])) by (job)
+            /
+            sum(rate(algorithm_execution_total[5m])) by (job)
+          ) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+          category: algorithm
+        annotations:
+          summary: "算法执行失败率过高: {{ $labels.job }}"
+          description: "服务 {{ $labels.job }} 的算法执行失败率超过 5%，当前值: {{ $value | printf \"%.2f\" }}%。"
+          runbook_url: "https://wiki.uav-platform.local/runbook/algorithm-failure-rate"
+
+      # 算法执行失败率 > 20% (严重)
+      - alert: AlgorithmExecutionFailureRateCritical
+        expr: |
+          (
+            sum(rate(algorithm_execution_total{status="failed"}[5m])) by (job)
+            /
+            sum(rate(algorithm_execution_total[5m])) by (job)
+          ) > 0.20
+        for: 2m
+        labels:
+          severity: critical
+          category: algorithm
+        annotations:
+          summary: "算法执行失败率严重: {{ $labels.job }}"
+          description: "服务 {{ $labels.job }} 的算法执行失败率超过 20%，当前值: {{ $value | printf \"%.2f\" }}%。"
+
+      # 算法执行超时率 > 10%
+      - alert: AlgorithmExecutionTimeoutRate
+        expr: |
+          (
+            sum(rate(algorithm_execution_total{status="timeout"}[5m])) by (job)
+            /
+            sum(rate(algorithm_execution_total[5m])) by (job)
+          ) > 0.10
+        for: 5m
+        labels:
+          severity: warning
+          category: algorithm
+        annotations:
+          summary: "算法执行超时率过高: {{ $labels.job }}"
+          description: "服务 {{ $labels.job }} 的算法执行超时率超过 10%，当前值: {{ $value | printf \"%.2f\" }}%。"
+
+  # ==========================================================
+  # 组 8: 服务实例可用性告警
+  # ==========================================================
+  - name: service_instance_availability
+    rules:
+      # 服务实例不可用
+      - alert: ServiceInstanceDown
+        expr: up{job=~"api-gateway|platform-api|weather-api|assimilation-api|risk-api|observation-api|planning-api|utm-api|algorithm-engine"} == 0
+        for: 30s
+        labels:
+          severity: critical
+          category: availability
+        annotations:
+          summary: "服务实例不可用: {{ $labels.job }}"
+          description: "服务 {{ $labels.job }} ({{ $labels.instance }}) 不可用，Prometheus 无法采集指标。"
+          runbook_url: "https://wiki.uav-platform.local/runbook/service-instance-down"
+
+      # Prometheus 自身不可用
+      - alert: PrometheusDown
+        expr: up{job="prometheus"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          category: availability
+        annotations:
+          summary: "Prometheus 已宕机"
+          description: "Prometheus 实例 {{ $labels.instance }} 不可用，监控数据可能丢失。"
+
+      # Grafana 不可用
+      - alert: GrafanaDown
+        expr: up{job="grafana"} == 0
+        for: 2m
+        labels:
+          severity: warning
+          category: availability
+        annotations:
+          summary: "Grafana 已宕机"
+          description: "Grafana 实例 {{ $labels.instance }} 不可用，Dashboard 无法访问。"
+
+      # AlertManager 不可用
+      - alert: AlertManagerDown
+        expr: up{job="alertmanager"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          category: availability
+        annotations:
+          summary: "AlertManager 已宕机"
+          description: "AlertManager 实例 {{ $labels.instance }} 不可用，告警通知可能中断。"
+
+  # ==========================================================
+  # 组 9: 错误率告警
+  # ==========================================================
+  - name: error_rate
+    rules:
+      # 5xx 错误率 > 5%
+      - alert: High5xxErrorRate
+        expr: |
+          (
+            sum(rate(http_server_requests_seconds_count{job=~"api-gateway|platform-api|weather-api|assimilation-api|risk-api|observation-api|planning-api|utm-api", status=~"5.."}[5m])) by (job)
+            /
+            sum(rate(http_server_requests_seconds_count{job=~"api-gateway|platform-api|weather-api|assimilation-api|risk-api|observation-api|planning-api|utm-api"}[5m])) by (job)
+          ) > 0.05
+        for: 2m
+        labels:
+          severity: critical
+          category: error
+        annotations:
+          summary: "5xx 错误率过高: {{ $labels.job }}"
+          description: "服务 {{ $labels.job }} 的 5xx 错误率超过 5%，当前值: {{ $value | printf \"%.2f\" }}%。"
+          runbook_url: "https://wiki.uav-platform.local/runbook/high-error-rate"
+
+      # 4xx 错误率 > 10%
+      - alert: High4xxErrorRate
+        expr: |
+          (
+            sum(rate(http_server_requests_seconds_count{job=~"api-gateway|platform-api|weather-api|assimilation-api|risk-api|observation-api|planning-api|utm-api", status=~"4.."}[5m])) by (job)
+            /
+            sum(rate(http_server_requests_seconds_count{job=~"api-gateway|platform-api|weather-api|assimilation-api|risk-api|observation-api|planning-api|utm-api"}[5m])) by (job)
+          ) > 0.10
+        for: 5m
+        labels:
+          severity: warning
+          category: error
+        annotations:
+          summary: "4xx 错误率过高: {{ $labels.job }}"
+          description: "服务 {{ $labels.job }} 的 4xx 错误率超过 10%，当前值: {{ $value | printf \"%.2f\" }}%。"

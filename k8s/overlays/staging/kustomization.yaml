@@ -1,0 +1,271 @@
+# =============================================================================
+# Kustomize Overlay - Staging Environment
+# =============================================================================
+# Usage: kubectl apply -k k8s/overlays/staging
+# =============================================================================
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: uav-platform-staging
+
+commonLabels:
+  environment: staging
+
+resources:
+  - ../../base
+
+# Override namespace for all resources
+namespace: uav-platform-staging
+
+patches:
+  # API Gateway: 2 replicas, lower resources
+  - target:
+      kind: Deployment
+      name: api-gateway
+    patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: api-gateway
+      spec:
+        replicas: 2
+        template:
+          spec:
+            containers:
+              - name: api-gateway
+                resources:
+                  requests:
+                    cpu: "250m"
+                    memory: "256Mi"
+                  limits:
+                    cpu: "500m"
+                    memory: "512Mi"
+
+  # All Java microservices: 1 replica, lower resources
+  - target:
+      kind: Deployment
+      name: platform-api
+    patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: platform-api
+      spec:
+        replicas: 1
+        template:
+          spec:
+            containers:
+              - name: platform-api
+                resources:
+                  requests:
+                    cpu: "250m"
+                    memory: "128Mi"
+                  limits:
+                    cpu: "500m"
+                    memory: "256Mi"
+
+  - target:
+      kind: Deployment
+      name: weather-api
+    patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: weather-api
+      spec:
+        replicas: 1
+        template:
+          spec:
+            containers:
+              - name: weather-api
+                resources:
+                  requests:
+                    cpu: "250m"
+                    memory: "128Mi"
+                  limits:
+                    cpu: "500m"
+                    memory: "256Mi"
+
+  - target:
+      kind: Deployment
+      name: assimilation-api
+    patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: assimilation-api
+      spec:
+        replicas: 1
+        template:
+          spec:
+            containers:
+              - name: assimilation-api
+                resources:
+                  requests:
+                    cpu: "250m"
+                    memory: "128Mi"
+                  limits:
+                    cpu: "500m"
+                    memory: "256Mi"
+
+  - target:
+      kind: Deployment
+      name: risk-api
+    patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: risk-api
+      spec:
+        replicas: 1
+        template:
+          spec:
+            containers:
+              - name: risk-api
+                resources:
+                  requests:
+                    cpu: "250m"
+                    memory: "128Mi"
+                  limits:
+                    cpu: "500m"
+                    memory: "256Mi"
+
+  - target:
+      kind: Deployment
+      name: observation-api
+    patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: observation-api
+      spec:
+        replicas: 1
+        template:
+          spec:
+            containers:
+              - name: observation-api
+                resources:
+                  requests:
+                    cpu: "250m"
+                    memory: "128Mi"
+                  limits:
+                    cpu: "500m"
+                    memory: "256Mi"
+
+  - target:
+      kind: Deployment
+      name: planning-api
+    patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: planning-api
+      spec:
+        replicas: 1
+        template:
+          spec:
+            containers:
+              - name: planning-api
+                resources:
+                  requests:
+                    cpu: "250m"
+                    memory: "128Mi"
+                  limits:
+                    cpu: "500m"
+                    memory: "256Mi"
+
+  - target:
+      kind: Deployment
+      name: utm-api
+    patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: utm-api
+      spec:
+        replicas: 1
+        template:
+          spec:
+            containers:
+              - name: utm-api
+                resources:
+                  requests:
+                    cpu: "250m"
+                    memory: "128Mi"
+                  limits:
+                    cpu: "500m"
+                    memory: "256Mi"
+
+  # Algorithm Engine: 1 replica, lower resources
+  - target:
+      kind: Deployment
+      name: algorithm-engine
+    patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: algorithm-engine
+      spec:
+        replicas: 1
+        template:
+          spec:
+            containers:
+              - name: algorithm-engine
+                resources:
+                  requests:
+                    cpu: "500m"
+                    memory: "256Mi"
+                  limits:
+                    cpu: "1000m"
+                    memory: "512Mi"
+
+  # Ingress: staging domain, no TLS
+  - target:
+      kind: Ingress
+      name: uav-platform-ingress
+    patch: |-
+      apiVersion: networking.k8s.io/v1
+      kind: Ingress
+      metadata:
+        name: uav-platform-ingress
+      spec:
+        tls: null
+        rules:
+          - host: staging.uav-platform.local
+            http:
+              paths:
+                - path: /api/v1
+                  pathType: Prefix
+                  backend:
+                    service:
+                      name: api-gateway
+                      port:
+                        number: 8088
+                - path: /api/v2
+                  pathType: Prefix
+                  backend:
+                    service:
+                      name: api-gateway
+                      port:
+                        number: 8088
+                - path: /api/v1/algorithm
+                  pathType: Prefix
+                  backend:
+                    service:
+                      name: algorithm-engine
+                      port:
+                        number: 9090
+                - path: /api/v2/algorithm
+                  pathType: Prefix
+                  backend:
+                    service:
+                      name: algorithm-engine
+                      port:
+                        number: 9090
+                - path: /
+                  pathType: Prefix
+                  backend:
+                    service:
+                      name: api-gateway
+                      port:
+                        number: 8088

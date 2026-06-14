@@ -1,0 +1,190 @@
+# ============================================================
+# OpenTelemetry 链路追踪配置 - UAV Platform V2
+# ============================================================
+# 包含:
+#   - Java 服务的 OpenTelemetry JVM 参数
+#   - Python 服务的 OpenTelemetry 配置
+#   - 采样率配置 (生产环境 10%, 压测 100%)
+#   - 导出器配置 (OTLP -> Jaeger/Tempo)
+# ============================================================
+
+# ============================================================
+# 1. 环境变量配置模板
+# ============================================================
+# 以下环境变量需添加到 docker-compose.yml 中各服务容器
+
+# --- 通用配置 ---
+tracing:
+  otlp:
+    endpoint: "uav-jaeger:4317"  # OTLP gRPC 端口 (Jaeger/Tempo)
+    # endpoint: "uav-tempo:4317"  # 或使用 Tempo
+
+# --- 生产环境采样率 ---
+sampling:
+  production:
+    rate: 0.10  # 10% 采样率
+    description: "生产环境采样率，平衡可观测性与性能开销"
+  staging:
+    rate: 0.50  # 50% 采样率
+    description: "预发布环境采样率"
+  benchmark:
+    rate: 1.0   # 100% 采样率
+    description: "压测环境全量采样"
+  development:
+    rate: 1.0   # 100% 采样率
+    description: "开发环境全量采样"
+
+# ============================================================
+# 2. Java 服务 OpenTelemetry JVM 参数
+# ============================================================
+# 添加到各 Java 服务的 JAVA_OPTS 环境变量中
+
+java_services:
+  # --- 生产环境 (10% 采样率) ---
+  production:
+    java_opts: >-
+      -javaagent:/opentelemetry/opentelemetry-javaagent.jar
+      -Dotel.service.name=${SERVICE_NAME}
+      -Dotel.traces.exporter=otlp
+      -Dotel.metrics.exporter=prometheus
+      -Dotel.exporter.otlp.endpoint=uav-jaeger:4317
+      -Dotel.exporter.otlp.protocol=grpc
+      -Dotel.resource.attributes=service.name=${SERVICE_NAME},deployment.environment=production,service.version=2.0.0
+      -Dotel.traces.sampler=traceidratio
+      -Dotel.traces.sampler.arg=0.10
+      -Dotel.instrumentation.spring-web.enabled=true
+      -Dotel.instrumentation.spring-webmvc.enabled=true
+      -Dotel.instrumentation.jdbc.enabled=true
+      -Dotel.instrumentation.redis-lettuce.enabled=true
+      -Dotel.instrumentation.kafka.enabled=true
+      -Dotel.instrumentation.micrometer.enabled=true
+      -Dotel.java.disabled-instrumentations=oracle-jdbc
+      -Dotel.propagators=tracecontext,baggage
+
+  # --- 压测环境 (100% 采样率) ---
+  benchmark:
+    java_opts: >-
+      -javaagent:/opentelemetry/opentelemetry-javaagent.jar
+      -Dotel.service.name=${SERVICE_NAME}
+      -Dotel.traces.exporter=otlp
+      -Dotel.metrics.exporter=prometheus
+      -Dotel.exporter.otlp.endpoint=uav-jaeger:4317
+      -Dotel.exporter.otlp.protocol=grpc
+      -Dotel.resource.attributes=service.name=${SERVICE_NAME},deployment.environment=benchmark,service.version=2.0.0
+      -Dotel.traces.sampler=always_on
+      -Dotel.instrumentation.spring-web.enabled=true
+      -Dotel.instrumentation.spring-webmvc.enabled=true
+      -Dotel.instrumentation.jdbc.enabled=true
+      -Dotel.instrumentation.redis-lettuce.enabled=true
+      -Dotel.instrumentation.kafka.enabled=true
+      -Dotel.instrumentation.micrometer.enabled=true
+      -Dotel.java.disabled-instrumentations=oracle-jdbc
+      -Dotel.propagators=tracecontext,baggage
+
+  # --- 开发环境 (100% 采样率) ---
+  development:
+    java_opts: >-
+      -javaagent:/opentelemetry/opentelemetry-javaagent.jar
+      -Dotel.service.name=${SERVICE_NAME}
+      -Dotel.traces.exporter=otlp
+      -Dotel.metrics.exporter=prometheus
+      -Dotel.exporter.otlp.endpoint=localhost:4317
+      -Dotel.exporter.otlp.protocol=grpc
+      -Dotel.resource.attributes=service.name=${SERVICE_NAME},deployment.environment=development,service.version=2.0.0
+      -Dotel.traces.sampler=always_on
+      -Dotel.instrumentation.spring-web.enabled=true
+      -Dotel.instrumentation.spring-webmvc.enabled=true
+      -Dotel.instrumentation.jdbc.enabled=true
+      -Dotel.instrumentation.redis-lettuce.enabled=true
+      -Dotel.instrumentation.kafka.enabled=true
+      -Dotel.instrumentation.micrometer.enabled=true
+      -Dotel.java.disabled-instrumentations=oracle-jdbc
+      -Dotel.propagators=tracecontext,baggage
+
+# ============================================================
+# 3. Python 服务 OpenTelemetry 配置
+# ============================================================
+# 添加到 algorithm-engine 的环境变量中
+
+python_services:
+  # --- 生产环境 (10% 采样率) ---
+  production:
+    environment:
+      OTEL_SERVICE_NAME: "algorithm-engine"
+      OTEL_TRACES_EXPORTER: "otlp"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "uav-jaeger:4317"
+      OTEL_EXPORTER_OTLP_PROTOCOL: "grpc"
+      OTEL_RESOURCE_ATTRIBUTES: "service.name=algorithm-engine,deployment.environment=production,service.version=2.0.0"
+      OTEL_TRACES_SAMPLER: "traceidratio"
+      OTEL_TRACES_SAMPLER_ARG: "0.10"
+      OTEL_PROPAGATORS: "tracecontext,baggage"
+      OTEL_PYTHON_INSTRUMENTATION_HTTP_CAPTURE_HEADERS_SERVER_REQUEST: "true"
+      OTEL_PYTHON_INSTRUMENTATION_KAFKA_EXTRACT_CONTEXT: "true"
+      OTEL_PYTHON_EXCLUDED_INSTRUMENTATIONS: "asyncio,aiohttp_client"
+
+  # --- 压测环境 (100% 采样率) ---
+  benchmark:
+    environment:
+      OTEL_SERVICE_NAME: "algorithm-engine"
+      OTEL_TRACES_EXPORTER: "otlp"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "uav-jaeger:4317"
+      OTEL_EXPORTER_OTLP_PROTOCOL: "grpc"
+      OTEL_RESOURCE_ATTRIBUTES: "service.name=algorithm-engine,deployment.environment=benchmark,service.version=2.0.0"
+      OTEL_TRACES_SAMPLER: "always_on"
+      OTEL_PROPAGATORS: "tracecontext,baggage"
+      OTEL_PYTHON_INSTRUMENTATION_HTTP_CAPTURE_HEADERS_SERVER_REQUEST: "true"
+      OTEL_PYTHON_INSTRUMENTATION_KAFKA_EXTRACT_CONTEXT: "true"
+
+  # --- 开发环境 (100% 采样率) ---
+  development:
+    environment:
+      OTEL_SERVICE_NAME: "algorithm-engine"
+      OTEL_TRACES_EXPORTER: "otlp"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "localhost:4317"
+      OTEL_EXPORTER_OTLP_PROTOCOL: "grpc"
+      OTEL_RESOURCE_ATTRIBUTES: "service.name=algorithm-engine,deployment.environment=development,service.version=2.0.0"
+      OTEL_TRACES_SAMPLER: "always_on"
+      OTEL_PROPAGATORS: "tracecontext,baggage"
+
+# ============================================================
+# 4. Python 依赖 (requirements.txt)
+# ============================================================
+# 需要添加到 python/algorithm-engine/requirements.txt
+
+python_dependencies:
+  opentelemetry-api: ">=1.28.0"
+  opentelemetry-sdk: ">=1.28.0"
+  opentelemetry-exporter-otlp-proto-grpc: ">=1.28.0"
+  opentelemetry-instrumentation-fastapi: ">=0.49b0"
+  opentelemetry-instrumentation-httpx: ">=0.49b0"
+  opentelemetry-instrumentation-kafka-python: ">=0.49b0"
+  opentelemetry-instrumentation-redis: ">=0.49b0"
+  opentelemetry-instrumentation-sqlalchemy: ">=0.49b0"
+  opentelemetry-instrumentation-logging: ">=0.49b0"
+  opentelemetry-instrumentation-auto-instrumentation: ">=0.49b0"
+
+# ============================================================
+# 5. Spring Boot application.yml 追加配置
+# ============================================================
+# 添加到 common-web/src/main/resources/application-actuator.yml
+
+spring_boot_config:
+  management:
+    tracing:
+      enabled: true
+      sampling:
+        probability: 0.10  # 生产环境采样率
+      propagation:
+        type: w3c  # W3C TraceContext
+      otel:
+        exporter:
+          endpoint: uav-jaeger:4317
+          protocol: grpc
+    metrics:
+      distribution:
+        percentiles-histogram:
+          http.server.requests: true
+        percentiles:
+          http.server.requests: 0.5,0.95,0.99
+        slo:
+          http.server.requests: 50ms,100ms,200ms,500ms,1s,2s,5s

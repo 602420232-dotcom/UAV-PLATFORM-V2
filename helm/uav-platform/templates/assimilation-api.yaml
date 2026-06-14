@@ -1,0 +1,171 @@
+{{- if .Values.assimilationApi.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: assimilation-api
+  namespace: {{ .Values.namespace.name }}
+  labels:
+    app.kubernetes.io/name: assimilation-api
+    app.kubernetes.io/part-of: uav-platform
+    app.kubernetes.io/component: microservice
+    app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+spec:
+  replicas: {{ .Values.assimilationApi.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: assimilation-api
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: assimilation-api
+        app.kubernetes.io/part-of: uav-platform
+        app.kubernetes.io/component: microservice
+        app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "{{ .Values.assimilationApi.containerPort }}"
+        prometheus.io/path: "/actuator/prometheus"
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app.kubernetes.io/name
+                      operator: In
+                      values:
+                        - assimilation-api
+                topologyKey: kubernetes.io/hostname
+      containers:
+        - name: assimilation-api
+          image: {{ .Values.global.imageRegistry }}/{{ .Values.assimilationApi.image.repository }}:{{ .Values.assimilationApi.image.tag | default .Values.global.imageTag }}
+          imagePullPolicy: {{ .Values.assimilationApi.image.pullPolicy | default .Values.global.imagePullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.assimilationApi.containerPort }}
+              protocol: TCP
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "uav-platform.fullname" . }}-config
+                  key: SPRING_PROFILES_ACTIVE
+            - name: NACOS_SERVER_ADDR
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "uav-platform.fullname" . }}-config
+                  key: NACOS_SERVER_ADDR
+            - name: SPRING_DATASOURCE_URL
+              value: {{ printf "jdbc:mysql://%s:%s/uav_assimilation?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true" .Values.global.mysql.host .Values.global.mysql.port }}
+            - name: MYSQL_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "uav-platform.fullname" . }}-config
+                  key: MYSQL_HOST
+            - name: MYSQL_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "uav-platform.fullname" . }}-config
+                  key: MYSQL_PORT
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "uav-platform.fullname" . }}-secrets
+                  key: MYSQL_PASSWORD
+            - name: REDIS_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "uav-platform.fullname" . }}-config
+                  key: REDIS_HOST
+            - name: REDIS_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "uav-platform.fullname" . }}-config
+                  key: REDIS_PORT
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "uav-platform.fullname" . }}-secrets
+                  key: REDIS_PASSWORD
+            - name: SPRING_DATA_REDIS_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "uav-platform.fullname" . }}-config
+                  key: SPRING_DATA_REDIS_HOST
+            - name: SPRING_DATA_REDIS_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "uav-platform.fullname" . }}-config
+                  key: SPRING_DATA_REDIS_PORT
+            - name: ALGORITHM_ENGINE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "uav-platform.fullname" . }}-config
+                  key: ALGORITHM_ENGINE_URL
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "uav-platform.fullname" . }}-config
+                  key: KAFKA_BOOTSTRAP_SERVERS
+            - name: KAFKA_MOCK
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "uav-platform.fullname" . }}-config
+                  key: KAFKA_MOCK
+            - name: JAVA_OPTS
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "uav-platform.fullname" . }}-config
+                  key: JAVA_OPTS
+          resources:
+            {{- toYaml .Values.assimilationApi.resources | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: {{ .Values.assimilationApi.containerPort }}
+            initialDelaySeconds: {{ .Values.assimilationApi.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.assimilationApi.livenessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.assimilationApi.livenessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.assimilationApi.livenessProbe.failureThreshold }}
+            successThreshold: 1
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: {{ .Values.assimilationApi.containerPort }}
+            initialDelaySeconds: {{ .Values.assimilationApi.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.assimilationApi.readinessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.assimilationApi.readinessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.assimilationApi.readinessProbe.failureThreshold }}
+            successThreshold: 1
+          lifecycle:
+            preStop:
+              exec:
+                command: ["/bin/sh", "-c", "sleep 10"]
+      terminationGracePeriodSeconds: 30
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: assimilation-api
+  namespace: {{ .Values.namespace.name }}
+  labels:
+    app.kubernetes.io/name: assimilation-api
+    app.kubernetes.io/part-of: uav-platform
+    app.kubernetes.io/component: microservice
+spec:
+  type: {{ .Values.assimilationApi.service.type }}
+  selector:
+    app.kubernetes.io/name: assimilation-api
+  ports:
+    - name: http
+      port: {{ .Values.assimilationApi.service.port }}
+      targetPort: {{ .Values.assimilationApi.containerPort }}
+      protocol: TCP
+{{- end }}

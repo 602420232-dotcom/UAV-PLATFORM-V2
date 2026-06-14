@@ -1,0 +1,160 @@
+{{- /*
+    Generic Java Microservice Deployment Template
+    Usage: Called by each service template with service-specific values
+*/ -}}
+{{- define "uav-platform.javaDeployment" -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .serviceName }}
+  namespace: {{ $.Values.namespace.name }}
+  labels:
+    app.kubernetes.io/name: {{ .serviceName }}
+    app.kubernetes.io/part-of: uav-platform
+    app.kubernetes.io/component: {{ .component }}
+    app.kubernetes.io/version: {{ $.Chart.AppVersion | quote }}
+spec:
+  replicas: {{ .replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ .serviceName }}
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ .serviceName }}
+        app.kubernetes.io/part-of: uav-platform
+        app.kubernetes.io/component: {{ .component }}
+        app.kubernetes.io/version: {{ $.Chart.AppVersion | quote }}
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "{{ .containerPort }}"
+        prometheus.io/path: "/actuator/prometheus"
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app.kubernetes.io/name
+                      operator: In
+                      values:
+                        - {{ .serviceName }}
+                topologyKey: kubernetes.io/hostname
+      containers:
+        - name: {{ .serviceName }}
+          image: {{ $.global.imageRegistry }}/{{ .imageRepository }}:{{ .imageTag }}
+          imagePullPolicy: {{ $.global.imagePullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .containerPort }}
+              protocol: TCP
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "uav-platform.fullname" $ }}-config
+                  key: SPRING_PROFILES_ACTIVE
+            - name: NACOS_SERVER_ADDR
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "uav-platform.fullname" $ }}-config
+                  key: NACOS_SERVER_ADDR
+            - name: REDIS_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "uav-platform.fullname" $ }}-config
+                  key: REDIS_HOST
+            - name: REDIS_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "uav-platform.fullname" $ }}-config
+                  key: REDIS_PORT
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "uav-platform.fullname" $ }}-secrets
+                  key: REDIS_PASSWORD
+            - name: SPRING_DATA_REDIS_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "uav-platform.fullname" $ }}-config
+                  key: SPRING_DATA_REDIS_HOST
+            - name: SPRING_DATA_REDIS_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "uav-platform.fullname" $ }}-config
+                  key: SPRING_DATA_REDIS_PORT
+            - name: ALGORITHM_ENGINE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "uav-platform.fullname" $ }}-config
+                  key: ALGORITHM_ENGINE_URL
+            - name: JAVA_OPTS
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "uav-platform.fullname" $ }}-config
+                  key: JAVA_OPTS
+            {{- if .hasMySQL }}
+            - name: SPRING_DATASOURCE_URL
+              value: {{ .datasourceUrl }}
+            - name: MYSQL_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "uav-platform.fullname" $ }}-config
+                  key: MYSQL_HOST
+            - name: MYSQL_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "uav-platform.fullname" $ }}-config
+                  key: MYSQL_PORT
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "uav-platform.fullname" $ }}-secrets
+                  key: MYSQL_PASSWORD
+            {{- end }}
+            {{- if .hasKafka }}
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "uav-platform.fullname" $ }}-config
+                  key: KAFKA_BOOTSTRAP_SERVERS
+            - name: KAFKA_MOCK
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "uav-platform.fullname" $ }}-config
+                  key: KAFKA_MOCK
+            {{- end }}
+          resources:
+            {{- toYaml .resources | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: {{ .containerPort }}
+            initialDelaySeconds: {{ .livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .livenessProbe.periodSeconds }}
+            timeoutSeconds: {{ .livenessProbe.timeoutSeconds }}
+            failureThreshold: {{ .livenessProbe.failureThreshold }}
+            successThreshold: 1
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: {{ .containerPort }}
+            initialDelaySeconds: {{ .readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .readinessProbe.periodSeconds }}
+            timeoutSeconds: {{ .readinessProbe.timeoutSeconds }}
+            failureThreshold: {{ .readinessProbe.failureThreshold }}
+            successThreshold: 1
+          lifecycle:
+            preStop:
+              exec:
+                command: ["/bin/sh", "-c", "sleep 10"]
+      terminationGracePeriodSeconds: 30
+{{- end -}}

@@ -1,0 +1,161 @@
+{{- if .Values.utmApi.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: utm-api
+  namespace: {{ .Values.namespace.name }}
+  labels:
+    app.kubernetes.io/name: utm-api
+    app.kubernetes.io/part-of: uav-platform
+    app.kubernetes.io/component: microservice
+    app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+spec:
+  replicas: {{ .Values.utmApi.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: utm-api
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: utm-api
+        app.kubernetes.io/part-of: uav-platform
+        app.kubernetes.io/component: microservice
+        app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "{{ .Values.utmApi.containerPort }}"
+        prometheus.io/path: "/actuator/prometheus"
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app.kubernetes.io/name
+                      operator: In
+                      values:
+                        - utm-api
+                topologyKey: kubernetes.io/hostname
+      containers:
+        - name: utm-api
+          image: {{ .Values.global.imageRegistry }}/{{ .Values.utmApi.image.repository }}:{{ .Values.utmApi.image.tag | default .Values.global.imageTag }}
+          imagePullPolicy: {{ .Values.utmApi.image.pullPolicy | default .Values.global.imagePullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.utmApi.containerPort }}
+              protocol: TCP
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "uav-platform.fullname" . }}-config
+                  key: SPRING_PROFILES_ACTIVE
+            - name: NACOS_SERVER_ADDR
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "uav-platform.fullname" . }}-config
+                  key: NACOS_SERVER_ADDR
+            - name: SPRING_DATASOURCE_URL
+              value: {{ printf "jdbc:mysql://%s:%s/uav_utm?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true" .Values.global.mysql.host .Values.global.mysql.port }}
+            - name: MYSQL_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "uav-platform.fullname" . }}-config
+                  key: MYSQL_HOST
+            - name: MYSQL_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "uav-platform.fullname" . }}-config
+                  key: MYSQL_PORT
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "uav-platform.fullname" . }}-secrets
+                  key: MYSQL_PASSWORD
+            - name: REDIS_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "uav-platform.fullname" . }}-config
+                  key: REDIS_HOST
+            - name: REDIS_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "uav-platform.fullname" . }}-config
+                  key: REDIS_PORT
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "uav-platform.fullname" . }}-secrets
+                  key: REDIS_PASSWORD
+            - name: SPRING_DATA_REDIS_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "uav-platform.fullname" . }}-config
+                  key: SPRING_DATA_REDIS_HOST
+            - name: SPRING_DATA_REDIS_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "uav-platform.fullname" . }}-config
+                  key: SPRING_DATA_REDIS_PORT
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "uav-platform.fullname" . }}-config
+                  key: KAFKA_BOOTSTRAP_SERVERS
+            - name: JAVA_OPTS
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "uav-platform.fullname" . }}-config
+                  key: JAVA_OPTS
+          resources:
+            {{- toYaml .Values.utmApi.resources | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: {{ .Values.utmApi.containerPort }}
+            initialDelaySeconds: {{ .Values.utmApi.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.utmApi.livenessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.utmApi.livenessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.utmApi.livenessProbe.failureThreshold }}
+            successThreshold: 1
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: {{ .Values.utmApi.containerPort }}
+            initialDelaySeconds: {{ .Values.utmApi.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.utmApi.readinessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.utmApi.readinessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.utmApi.readinessProbe.failureThreshold }}
+            successThreshold: 1
+          lifecycle:
+            preStop:
+              exec:
+                command: ["/bin/sh", "-c", "sleep 10"]
+      terminationGracePeriodSeconds: 30
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: utm-api
+  namespace: {{ .Values.namespace.name }}
+  labels:
+    app.kubernetes.io/name: utm-api
+    app.kubernetes.io/part-of: uav-platform
+    app.kubernetes.io/component: microservice
+spec:
+  type: {{ .Values.utmApi.service.type }}
+  selector:
+    app.kubernetes.io/name: utm-api
+  ports:
+    - name: http
+      port: {{ .Values.utmApi.service.port }}
+      targetPort: {{ .Values.utmApi.containerPort }}
+      protocol: TCP
+{{- end }}

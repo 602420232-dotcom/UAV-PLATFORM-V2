@@ -1,0 +1,9 @@
+{{- if .Values.namespace.enabled }}
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ .Values.namespace.name }}
+  labels:
+    app.kubernetes.io/name: uav-platform
+    app.kubernetes.io/part-of: uav-platform
+{{- end }}

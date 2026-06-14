@@ -1,0 +1,137 @@
+# =============================================================================
+# Staging Environment Override Values
+# =============================================================================
+# Usage: helm install uav-platform ./helm/uav-platform -f values.yaml -f values-staging.yaml
+
+global:
+  springProfilesActive: "staging"
+  javaOpts: "-Xms128m -Xmx256m -XX:+UseG1GC"
+  gatewayJavaOpts: "-Xms256m -Xmx512m -XX:+UseG1GC"
+
+namespace:
+  name: uav-platform-staging
+
+# Gateway: fewer replicas, lower resources
+apiGateway:
+  replicaCount: 2
+  resources:
+    requests:
+      cpu: "250m"
+      memory: "256Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+  hpa:
+    enabled: false
+
+# All microservices: 1 replica, lower resources
+platformApi:
+  replicaCount: 1
+  resources:
+    requests:
+      cpu: "250m"
+      memory: "128Mi"
+    limits:
+      cpu: "500m"
+      memory: "256Mi"
+  hpa:
+    enabled: false
+
+weatherApi:
+  replicaCount: 1
+  resources:
+    requests:
+      cpu: "250m"
+      memory: "128Mi"
+    limits:
+      cpu: "500m"
+      memory: "256Mi"
+
+assimilationApi:
+  replicaCount: 1
+  resources:
+    requests:
+      cpu: "250m"
+      memory: "128Mi"
+    limits:
+      cpu: "500m"
+      memory: "256Mi"
+
+riskApi:
+  replicaCount: 1
+  resources:
+    requests:
+      cpu: "250m"
+      memory: "128Mi"
+    limits:
+      cpu: "500m"
+      memory: "256Mi"
+
+observationApi:
+  replicaCount: 1
+  resources:
+    requests:
+      cpu: "250m"
+      memory: "128Mi"
+    limits:
+      cpu: "500m"
+      memory: "256Mi"
+
+planningApi:
+  replicaCount: 1
+  resources:
+    requests:
+      cpu: "250m"
+      memory: "128Mi"
+    limits:
+      cpu: "500m"
+      memory: "256Mi"
+
+utmApi:
+  replicaCount: 1
+  resources:
+    requests:
+      cpu: "250m"
+      memory: "128Mi"
+    limits:
+      cpu: "500m"
+      memory: "256Mi"
+
+algorithmEngine:
+  replicaCount: 1
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "256Mi"
+    limits:
+      cpu: "1000m"
+      memory: "512Mi"
+  hpa:
+    enabled: false
+
+# Ingress: staging domain
+ingress:
+  enabled: true
+  hosts:
+    - host: staging.uav-platform.local
+      paths:
+        - path: /api/v1
+          service: api-gateway
+          port: 8088
+        - path: /api/v2
+          service: api-gateway
+          port: 8088
+        - path: /api/v1/algorithm
+          service: algorithm-engine
+          port: 9090
+        - path: /api/v2/algorithm
+          service: algorithm-engine
+          port: 9090
+        - path: /
+          service: api-gateway
+          port: 8088
+  tls:
+    enabled: false
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "false"

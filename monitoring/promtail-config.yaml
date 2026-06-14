@@ -1,0 +1,154 @@
+# ============================================================
+# Promtail 采集器配置 - UAV Platform V2
+# ============================================================
+# 采集目标: 8个Java微服务 + 1个Python算法引擎 + 前端控制台
+# 日志标签: service, instance, level, trace_id
+# ============================================================
+
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+  log_level: info
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://uav-loki:3100/loki/api/v1/push
+    timeout: 30s
+
+scrape_configs:
+  # ==========================================================
+  # Java 微服务日志采集
+  # ==========================================================
+  - job_name: java_services
+    docker_sd_configs:
+      - host: unix:///var/run/docker.sock
+        refresh_interval: 15s
+        filters:
+          - name: name
+            values:
+              - uav-gateway
+              - uav-platform-api
+              - uav-weather-api
+              - uav-assimilation-api
+              - uav-risk-api
+              - uav-observation-api
+              - uav-planning-api
+              - uav-utm-api
+    relabel_configs:
+      - source_labels: ['__meta_docker_container_name']
+        target_label: 'container_name'
+        regex: '/(.*)'
+      - source_labels: ['__meta_docker_container_name']
+        target_label: 'service'
+        regex: '/uav-(.*)'
+      - source_labels: ['__meta_docker_container_log_stream']
+        target_label: 'log_stream'
+    pipeline_stages:
+      # 解析 JSON 格式日志 (Spring Boot 默认 JSON 日志)
+      - json:
+          expressions:
+            level: level
+            trace_id: traceId
+            span_id: spanId
+            thread: thread
+            logger: logger
+            message: message
+            timestamp: timestamp
+      # 设置日志级别标签
+      - labels:
+          level:
+          trace_id:
+          service:
+      # 时间戳解析
+      - timestamp:
+          source: timestamp
+          format: RFC3339Nano
+      # 过滤掉健康检查日志噪音
+      - match:
+          selector: '{service=~"api-gateway|platform-api|weather-api|assimilation-api|risk-api|observation-api|planning-api|utm-api"} |~ "/actuator/health"'
+          stages:
+            - drop:
+                expression: '.*'
+
+  # ==========================================================
+  # Python 算法引擎日志采集
+  # ==========================================================
+  - job_name: python_services
+    docker_sd_configs:
+      - host: unix:///var/run/docker.sock
+        refresh_interval: 15s
+        filters:
+          - name: name
+            values:
+              - uav-algorithm-engine
+    relabel_configs:
+      - source_labels: ['__meta_docker_container_name']
+        target_label: 'container_name'
+        regex: '/(.*)'
+      - source_labels: ['__meta_docker_container_name']
+        target_label: 'service'
+        regex: '/uav-(.*)'
+      - source_labels: ['__meta_docker_container_log_stream']
+        target_label: 'log_stream'
+    pipeline_stages:
+      # 解析 Python 标准日志格式
+      - regex:
+          expression: '^(?P<timestamp>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3}) \[(?P<thread>[^\]]+)\] (?P<level>\w+) (?P<logger>[^\s]+) - (?P<message>.*)$'
+      # 尝试从日志中提取 trace_id (OpenTelemetry 格式)
+      - regex:
+          source: message
+          expression: '(?:trace_id=(?P<trace_id>[a-f0-9]{32}))?'
+      - labels:
+          level:
+          trace_id:
+          service:
+      # 时间戳解析
+      - timestamp:
+          source: timestamp
+          format: "2006-01-02 15:04:05,000"
+      # 过滤掉健康检查日志噪音
+      - match:
+          selector: '{service="algorithm-engine"} |~ "/health"'
+          stages:
+            - drop:
+                expression: '.*'
+
+  # ==========================================================
+  # 基础设施日志采集 (Nginx / Console)
+  # ==========================================================
+  - job_name: infra_services
+    docker_sd_configs:
+      - host: unix:///var/run/docker.sock
+        refresh_interval: 15s
+        filters:
+          - name: name
+            values:
+              - uav-console
+    relabel_configs:
+      - source_labels: ['__meta_docker_container_name']
+        target_label: 'container_name'
+        regex: '/(.*)'
+      - source_labels: ['__meta_docker_container_name']
+        target_label: 'service'
+        regex: '/uav-(.*)'
+      - source_labels: ['__meta_docker_container_log_stream']
+        target_label: 'log_stream'
+    pipeline_stages:
+      - labels:
+          service:
+      # Nginx access log 解析
+      - match:
+          selector: '{service="console"}'
+          stages:
+            - regex:
+                expression: '^(?P<remote_addr>\S+) - (?P<remote_user>\S+) \[(?P<timestamp>[^\]]+)\] "(?P<method>\S+) (?P<path>\S+) (?P<protocol>\S+)" (?P<status>\d+) (?P<body_bytes_sent>\d+) "(?P<referer>[^"]*)" "(?P<user_agent>[^"]*)"'
+            - labels:
+                method:
+                status:
+
+limits_config:
+  label_limit: 20
+  label_name_length_limit: 40
+  label_value_length_limit: 200

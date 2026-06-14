@@ -1,0 +1,128 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: algorithm-engine
+  namespace: uav-platform
+  labels:
+    app.kubernetes.io/name: algorithm-engine
+    app.kubernetes.io/part-of: uav-platform
+    app.kubernetes.io/component: algorithm
+    app.kubernetes.io/version: "2.0.0"
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: algorithm-engine
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: algorithm-engine
+        app.kubernetes.io/part-of: uav-platform
+        app.kubernetes.io/component: algorithm
+        app.kubernetes.io/version: "2.0.0"
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9090"
+        prometheus.io/path: "/metrics"
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app.kubernetes.io/name
+                      operator: In
+                      values:
+                        - algorithm-engine
+                topologyKey: kubernetes.io/hostname
+      containers:
+        - name: algorithm-engine
+          image: ghcr.io/602420232-dotcom/algorithm-engine:latest
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 9090
+              protocol: TCP
+          env:
+            - name: NACOS_SERVER_ADDR
+              valueFrom:
+                configMapKeyRef:
+                  name: uav-platform-config
+                  key: NACOS_SERVER_ADDR
+            - name: REDIS_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: uav-platform-config
+                  key: REDIS_HOST
+            - name: REDIS_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: uav-platform-config
+                  key: REDIS_PORT
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: uav-platform-secrets
+                  key: REDIS_PASSWORD
+            - name: ALGORITHM_ENGINE_KAFKA_BOOTSTRAP_SERVERS
+              valueFrom:
+                configMapKeyRef:
+                  name: uav-platform-config
+                  key: ALGORITHM_ENGINE_KAFKA_BOOTSTRAP_SERVERS
+            - name: ALGORITHM_ENGINE_REDIS_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: uav-platform-config
+                  key: ALGORITHM_ENGINE_REDIS_URL
+            - name: ALGORITHM_ENGINE_NACOS_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: uav-platform-config
+                  key: ALGORITHM_ENGINE_NACOS_HOST
+            - name: ALGORITHM_ENGINE_NACOS_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: uav-platform-config
+                  key: ALGORITHM_ENGINE_NACOS_PORT
+            - name: LOG_LEVEL
+              valueFrom:
+                configMapKeyRef:
+                  name: uav-platform-config
+                  key: LOG_LEVEL
+          resources:
+            requests:
+              cpu: "1000m"
+              memory: "512Mi"
+            limits:
+              cpu: "2000m"
+              memory: "1Gi"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 9090
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
+            successThreshold: 1
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 9090
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+            successThreshold: 1
+          lifecycle:
+            preStop:
+              exec:
+                command: ["/bin/sh", "-c", "sleep 10"]
+      terminationGracePeriodSeconds: 30

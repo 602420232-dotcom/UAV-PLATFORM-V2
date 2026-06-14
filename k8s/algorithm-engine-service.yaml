@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: algorithm-engine
+  namespace: uav-platform
+  labels:
+    app.kubernetes.io/name: algorithm-engine
+    app.kubernetes.io/part-of: uav-platform
+    app.kubernetes.io/component: algorithm
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: algorithm-engine
+  ports:
+    - name: http
+      port: 9090
+      targetPort: 9090
+      protocol: TCP

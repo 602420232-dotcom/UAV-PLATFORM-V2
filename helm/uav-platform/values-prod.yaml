@@ -1,0 +1,158 @@
+# =============================================================================
+# Production Environment Override Values
+# =============================================================================
+# Usage: helm install uav-platform ./helm/uav-platform -f values.yaml -f values-prod.yaml
+
+global:
+  springProfilesActive: "prod"
+  javaOpts: "-Xms512m -Xmx1024m -XX:+UseG1GC -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/heapdump.hprof -XX:+UseContainerSupport"
+  gatewayJavaOpts: "-Xms1g -Xmx2g -XX:+UseG1GC -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/heapdump.hprof -XX:+UseContainerSupport"
+
+namespace:
+  name: uav-platform
+
+# Gateway: more replicas, higher resources
+apiGateway:
+  replicaCount: 5
+  resources:
+    requests:
+      cpu: "1000m"
+      memory: "1Gi"
+    limits:
+      cpu: "2000m"
+      memory: "2Gi"
+  hpa:
+    enabled: true
+    minReplicas: 3
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+
+# All microservices: more replicas, higher resources
+platformApi:
+  replicaCount: 3
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "512Mi"
+    limits:
+      cpu: "1000m"
+      memory: "1Gi"
+  hpa:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 70
+
+weatherApi:
+  replicaCount: 3
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "512Mi"
+    limits:
+      cpu: "1000m"
+      memory: "1Gi"
+
+assimilationApi:
+  replicaCount: 3
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "512Mi"
+    limits:
+      cpu: "1000m"
+      memory: "1Gi"
+
+riskApi:
+  replicaCount: 3
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "512Mi"
+    limits:
+      cpu: "1000m"
+      memory: "1Gi"
+
+observationApi:
+  replicaCount: 3
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "512Mi"
+    limits:
+      cpu: "1000m"
+      memory: "1Gi"
+
+planningApi:
+  replicaCount: 3
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "512Mi"
+    limits:
+      cpu: "1000m"
+      memory: "1Gi"
+
+utmApi:
+  replicaCount: 3
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "512Mi"
+    limits:
+      cpu: "1000m"
+      memory: "1Gi"
+
+algorithmEngine:
+  replicaCount: 2
+  resources:
+    requests:
+      cpu: "1000m"
+      memory: "1Gi"
+    limits:
+      cpu: "2000m"
+      memory: "2Gi"
+  hpa:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPUUtilizationPercentage: 80
+
+# Ingress: production domain with TLS
+ingress:
+  enabled: true
+  hosts:
+    - host: uav-platform.local
+      paths:
+        - path: /api/v1
+          service: api-gateway
+          port: 8088
+        - path: /api/v2
+          service: api-gateway
+          port: 8088
+        - path: /api/v1/algorithm
+          service: algorithm-engine
+          port: 9090
+        - path: /api/v2/algorithm
+          service: algorithm-engine
+          port: 9090
+        - path: /
+          service: api-gateway
+          port: 8088
+    - host: api.uav-platform.local
+      paths:
+        - path: /api/v1
+          service: api-gateway
+          port: 8088
+        - path: /api/v2
+          service: api-gateway
+          port: 8088
+        - path: /api/v1/algorithm
+          service: algorithm-engine
+          port: 9090
+        - path: /api/v2/algorithm
+          service: algorithm-engine
+          port: 9090
+  tls:
+    enabled: true
+    secretName: uav-platform-tls

@@ -1,0 +1,19 @@
+apiVersion: v2
+name: uav-platform
+description: UAV Platform V2 - Kubernetes Helm Chart for production deployment
+type: application
+version: 2.0.0
+appVersion: "2.0.0"
+keywords:
+  - uav
+  - platform
+  - microservices
+  - spring-boot
+  - fastapi
+maintainers:
+  - name: UAV Platform Team
+    email: team@uav-platform.local
+home: https://github.com/602420232-dotcom/uav-platform-v2
+sources:
+  - https://github.com/602420232-dotcom/uav-platform-v2
+dependencies: []

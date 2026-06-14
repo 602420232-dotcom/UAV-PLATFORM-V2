@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: uav-platform
+  labels:
+    app.kubernetes.io/name: uav-platform
+    app.kubernetes.io/part-of: uav-platform
