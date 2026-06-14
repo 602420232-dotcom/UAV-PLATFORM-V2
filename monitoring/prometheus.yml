@@ -3,6 +3,7 @@
 # ============================================================
 # 采集目标: 8个Java微服务 + 1个Python算法引擎
 # 采集间隔: 15s
+# 端口说明: 使用Docker网络内容器端口（非宿主机映射端口）
 # 当前阶段: 无认证 (后续可添加 basic_auth)
 # ============================================================
 
@@ -35,6 +36,7 @@ scrape_configs:
 
   # ==========================================================
   # Java 微服务 (Spring Boot Actuator + Micrometer)
+  # 端口使用Docker容器内部端口
   # ==========================================================
 
   - job_name: 'api-gateway'
@@ -42,7 +44,7 @@ scrape_configs:
     scrape_interval: 15s
     static_configs:
       - targets:
-          - 'uav-gateway:8258'
+          - 'uav-gateway:8088'
         labels:
           service: 'api-gateway'
           language: 'java'
@@ -53,7 +55,7 @@ scrape_configs:
     scrape_interval: 15s
     static_configs:
       - targets:
-          - 'uav-platform-api:8251'
+          - 'uav-platform-api:8081'
         labels:
           service: 'platform-api'
           language: 'java'
@@ -64,7 +66,7 @@ scrape_configs:
     scrape_interval: 15s
     static_configs:
       - targets:
-          - 'uav-weather-api:8252'
+          - 'uav-weather-api:8082'
         labels:
           service: 'weather-api'
           language: 'java'
@@ -75,7 +77,7 @@ scrape_configs:
     scrape_interval: 15s
     static_configs:
       - targets:
-          - 'uav-assimilation-api:8253'
+          - 'uav-assimilation-api:8083'
         labels:
           service: 'assimilation-api'
           language: 'java'
@@ -86,7 +88,7 @@ scrape_configs:
     scrape_interval: 15s
     static_configs:
       - targets:
-          - 'uav-risk-api:8254'
+          - 'uav-risk-api:8084'
         labels:
           service: 'risk-api'
           language: 'java'
@@ -97,7 +99,7 @@ scrape_configs:
     scrape_interval: 15s
     static_configs:
       - targets:
-          - 'uav-observation-api:8255'
+          - 'uav-observation-api:8085'
         labels:
           service: 'observation-api'
           language: 'java'
@@ -108,7 +110,7 @@ scrape_configs:
     scrape_interval: 15s
     static_configs:
       - targets:
-          - 'uav-planning-api:8256'
+          - 'uav-planning-api:8086'
         labels:
           service: 'planning-api'
           language: 'java'
@@ -119,7 +121,7 @@ scrape_configs:
     scrape_interval: 15s
     static_configs:
       - targets:
-          - 'uav-utm-api:8259'
+          - 'uav-utm-api:8087'
         labels:
           service: 'utm-api'
           language: 'java'

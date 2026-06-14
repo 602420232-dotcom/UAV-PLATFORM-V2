@@ -524,13 +524,6 @@ def main() -> None:
         print(f"{Color.BOLD}{'=' * 80}{Color.RESET}")
         print()
 
-    # 选择要测试的端点
-    endpoints_to_test = (
-        {args.endpoint: ENDPOINTS[args.endpoint]}
-        if args.endpoint
-        else ENDPOINTS
-    )
-
     # 运行基准测试
     wall_start = time.monotonic()
     all_stats = run_all_benchmarks(

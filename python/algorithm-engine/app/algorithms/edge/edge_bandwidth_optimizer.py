@@ -116,7 +116,10 @@ class EdgeBandwidthOptimizer:
 
         elif scheduling_algorithm == "deadline":
             # 截止时间调度：紧急任务优先
-            sorted_by_deadline = sorted(data_streams, key=lambda s: s.get("deadline_ms", float("inf")))
+            sorted_by_deadline = sorted(
+                data_streams,
+                key=lambda s: s.get("deadline_ms", float("inf")),
+            )
             remaining_bw = total_bandwidth
             for stream in sorted_by_deadline:
                 sid = stream["id"]

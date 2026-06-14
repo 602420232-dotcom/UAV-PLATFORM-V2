@@ -1,0 +1,266 @@
+name: UAV Platform V2 CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  JAVA_VERSION: '21'
+  NODE_VERSION: '20'
+  PYTHON_VERSION: '3.12'
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: ${{ github.repository }}
+
+# 并发控制：同一分支的新推送取消旧的运行
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ============================================================
+  # Job 1: Java 编译构建（13 个模块）
+  # ============================================================
+  build-java:
+    name: Java Build (${{ matrix.module }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        module:
+          - common-core
+          - common-web
+          - common-kafka
+          - common-security
+          - common-resilience
+          - api-gateway
+          - platform-api
+          - weather-api
+          - assimilation-api
+          - risk-api
+          - observation-api
+          - planning-api
+          - utm-api
+      fail-fast: false
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+
+      - name: Cache Maven local repository
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: maven-${{ runner.os }}-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            maven-${{ runner.os }}-
+
+      - name: Build module
+        run: |
+          MODULE="${{ matrix.module }}"
+          case "$MODULE" in
+            common-*) MODULE_PATH="common/$MODULE" ;;
+            api-gateway) MODULE_PATH="gateway/api-gateway" ;;
+            *) MODULE_PATH="services/$MODULE" ;;
+          esac
+          mvn package -DskipTests -pl "$MODULE_PATH" -am -B
+
+      - name: Upload service artifact
+        if: matrix.module != 'common-core' && matrix.module != 'common-web' && matrix.module != 'common-kafka' && matrix.module != 'common-security' && matrix.module != 'common-resilience'
+        uses: actions/upload-artifact@v4
+        with:
+          name: java-${{ matrix.module }}-artifact
+          path: |
+            ${{ matrix.module == 'api-gateway' && 'gateway/api-gateway' || format('services/{0}', matrix.module) }}/target/*.jar
+            !**/target/*-original.jar
+          retention-days: 3
+
+  # ============================================================
+  # Job 2: Python 算法引擎测试
+  # ============================================================
+  build-python:
+    name: Python Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Cache pip packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-${{ runner.os }}-${{ hashFiles('python/algorithm-engine/requirements.txt', 'python/algorithm-engine/pyproject.toml') }}
+          restore-keys: |
+            pip-${{ runner.os }}-
+
+      - name: Install dependencies
+        working-directory: python/algorithm-engine
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          pip install pytest pytest-cov pytest-asyncio
+
+      - name: Run pytest
+        working-directory: python/algorithm-engine
+        run: pytest tests/ -v --tb=short --cov=app --cov-report=term-missing
+
+  # ============================================================
+  # Job 3: 前端构建
+  # ============================================================
+  build-frontend:
+    name: Frontend Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Cache npm dependencies
+        uses: actions/cache@v4
+        with:
+          path: console/node_modules
+          key: npm-${{ runner.os }}-${{ hashFiles('console/package-lock.json') }}
+          restore-keys: |
+            npm-${{ runner.os }}-
+
+      - name: Install dependencies
+        working-directory: console
+        run: npm ci
+
+      - name: Lint
+        working-directory: console
+        run: npm run lint
+        continue-on-error: true
+
+      - name: Build
+        working-directory: console
+        run: npm run build
+
+      - name: Upload dist artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: console/dist
+          retention-days: 3
+
+  # ============================================================
+  # Job 4: Docker 镜像构建（仅 main 分支）
+  # ============================================================
+  docker-build:
+    name: Docker Build (${{ matrix.service }})
+    needs: [build-java, build-python]
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      matrix:
+        service:
+          - platform-api
+          - algorithm-engine
+      fail-fast: false
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up JDK 21 for Maven build
+        if: matrix.service != 'algorithm-engine'
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+
+      - name: Download Java build artifact
+        if: matrix.service != 'algorithm-engine'
+        uses: actions/download-artifact@v4
+        with:
+          name: java-${{ matrix.service }}-artifact
+          path: target-artifacts
+
+      - name: Extract service JAR
+        if: matrix.service != 'algorithm-engine'
+        run: |
+          mkdir -p services/${{ matrix.service }}/target
+          find target-artifacts -name "${{ matrix.service }}*.jar" ! -name "*-original.jar" -exec cp {} services/${{ matrix.service }}/target/ \;
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/${{ matrix.service }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=sha,prefix=
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ${{ matrix.service == 'algorithm-engine' && 'python/algorithm-engine/Dockerfile' || 'Dockerfile.jre' }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            ${{ matrix.service != 'algorithm-engine' && format('SERVICE_NAME={0}', matrix.service) || '' }}
+            ${{ matrix.service != 'algorithm-engine' && format('JAR_FILE=services/{0}/target/{0}-2.0.0.jar', matrix.service) || '' }}
+
+  # ============================================================
+  # Job 5: E2E 灰度验证测试（仅 main 分支）
+  # ============================================================
+  e2e-test:
+    name: E2E Grayscale Verify
+    needs: [docker-build]
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests pytest httpx
+
+      - name: Run E2E grayscale verification
+        run: python scripts/grayscale-verify.py --mode mock --base-url http://localhost:8258
+        continue-on-error: true
+
+      - name: Upload E2E test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-test-results
+          path: e2e-results/
+          retention-days: 7

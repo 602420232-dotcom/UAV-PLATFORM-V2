@@ -124,7 +124,12 @@ class SmartAlgorithmScheduler:
 
         # 规则 1: 风险感知 -> 5DVAR
         if require_risk_aware and has_risk_field:
-            self._record("risk_aware", "命中", "需要风险场 + 存在 risk_field 参数", selected_algorithm=ALGORITHM_5DVAR)
+            self._record(
+                "risk_aware",
+                "命中",
+                "需要风险场 + 存在 risk_field 参数",
+                selected_algorithm=ALGORITHM_5DVAR,
+            )
             return self._make_result(
                 algorithm_id=ALGORITHM_5DVAR,
                 reason=(
@@ -210,7 +215,11 @@ class SmartAlgorithmScheduler:
                     f"但时间预算 {time_budget_seconds}s 不够",
                 )
         else:
-            self._record("many_obs_enkf", "未命中", f"观测数 {observation_count} 未超过 {_MANY_OBSERVATIONS_THRESHOLD}")
+            self._record(
+                "many_obs_enkf",
+                "未命中",
+                f"观测数 {observation_count} 未超过 {_MANY_OBSERVATIONS_THRESHOLD}",
+            )
 
         # 规则 4: 中等观测量 -> Hybrid
         if observation_count is not None and observation_count > _MODERATE_OBSERVATIONS_THRESHOLD:
@@ -232,7 +241,9 @@ class SmartAlgorithmScheduler:
                 },
             )
         self._record(
-            "moderate_obs_hybrid", "未命中", f"观测数 {observation_count} 未超过 {_MODERATE_OBSERVATIONS_THRESHOLD}"
+            "moderate_obs_hybrid",
+            "未命中",
+            f"观测数 {observation_count} 未超过 {_MODERATE_OBSERVATIONS_THRESHOLD}",
         )
 
         # 规则 5: 少量观测 + 紧迫时间 -> 3DVAR

@@ -77,10 +77,24 @@ jobs:
             maven-${{ runner.os }}-
 
       - name: Compile module
-        run: mvn compile -pl ${{ matrix.module }} -am -B
+        run: |
+          MODULE="${{ matrix.module }}"
+          case "$MODULE" in
+            common-*) MODULE_PATH="common/$MODULE" ;;
+            api-gateway) MODULE_PATH="gateway/api-gateway" ;;
+            *) MODULE_PATH="services/$MODULE" ;;
+          esac
+          mvn compile -pl "$MODULE_PATH" -am -B
 
       - name: Run Checkstyle
-        run: mvn checkstyle:check -pl ${{ matrix.module }} -B
+        run: |
+          MODULE="${{ matrix.module }}"
+          case "$MODULE" in
+            common-*) MODULE_PATH="common/$MODULE" ;;
+            api-gateway) MODULE_PATH="gateway/api-gateway" ;;
+            *) MODULE_PATH="services/$MODULE" ;;
+          esac
+          mvn checkstyle:check -pl "$MODULE_PATH" -B
         continue-on-error: true
 
       - name: Upload module artifact

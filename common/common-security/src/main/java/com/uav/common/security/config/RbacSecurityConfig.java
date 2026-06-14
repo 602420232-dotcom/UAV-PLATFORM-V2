@@ -1,18 +1,13 @@
 package com.uav.common.security.config;
 
-import com.uav.common.security.rbac.RbacAccessDecisionManager;
 import com.uav.common.security.rbac.RbacPermissionEvaluator;
 import com.uav.common.security.rbac.RbacUserDetailsService;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler;
 import org.springframework.security.access.expression.method.MethodSecurityExpressionHandler;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.scheduling.annotation.EnableAsync;
@@ -29,25 +24,12 @@ import org.springframework.scheduling.annotation.EnableAsync;
  *     <li>异步支持（审计日志异步写入）</li>
  * </ul>
  * <p>
- * 通过配置属性 {@code security.rbac.enabled=true} 激活。
- * <p>
- * 使用示例：
- * <pre>
- * &#64;PreAuthorize("hasRole('ADMIN')")
- * public Result&lt;TenantVO&gt; createTenant(...) { ... }
- *
- * &#64;PreAuthorize("hasPermission('api:v1:planning:POST:path', 'API')")
- * public Result&lt;PathResult&gt; planPath(...) { ... }
- *
- * &#64;PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
- * public Result&lt;Void&gt; approveFlightPlan(...) { ... }
- * </pre>
+ * 仅在 RbacUserRepository Bean 可用时激活（需要 Spring Data JPA + RBAC 数据库表）。
  */
 @Configuration
-@EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true)
 @EnableAsync
-@ConditionalOnProperty(prefix = "security.rbac", name = "enabled", havingValue = "true", matchIfMissing = false)
+@ConditionalOnBean(com.uav.common.security.rbac.RbacUserRepository.class)
 public class RbacSecurityConfig {
 
     private final RbacUserDetailsService rbacUserDetailsService;
@@ -60,19 +42,17 @@ public class RbacSecurityConfig {
     }
 
     /**
-     * 配置基于数据库的认证提供者
+     * 暴露 UserDetailsService Bean
      * <p>
-     * 使用 {@link RbacUserDetailsService} 从数据库加载用户信息，
-     * 使用 BCrypt 进行密码匹配。
+     * Spring Security 7.x 中 DaoAuthenticationProvider 构造器需要 UserDetailsService 参数，
+     * 且 setUserDetailsService() 方法已被移除。
+     * 这里直接暴露 UserDetailsService Bean，由 Spring Security 自动配置机制完成认证提供者的创建。
      *
-     * @return DaoAuthenticationProvider
+     * @return UserDetailsService
      */
-    @Bean
-    public DaoAuthenticationProvider daoAuthenticationProvider() {
-        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
-        provider.setUserDetailsService(rbacUserDetailsService);
-        provider.setPasswordEncoder(passwordEncoder());
-        return provider;
+    @Bean("rbacUserDetailsServiceBean")
+    public org.springframework.security.core.userdetails.UserDetailsService userDetailsService() {
+        return rbacUserDetailsService;
     }
 
     /**
@@ -83,18 +63,6 @@ public class RbacSecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
-    }
-
-    /**
-     * 认证管理器
-     *
-     * @param config 认证配置
-     * @return AuthenticationManager
-     * @throws Exception 配置异常
-     */
-    @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
-        return config.getAuthenticationManager();
     }
 
     /**

@@ -174,17 +174,26 @@ class PPOModel:
                     value_loss = np.mean((values - mb_returns) ** 2)
 
                     # 总损失
-                    total_loss = policy_loss + self.value_coef * value_loss - self.entropy_coef * entropy
+                    # fmt: off
+                    total_loss = (
+                        policy_loss
+                        + self.value_coef * value_loss
+                        - self.entropy_coef * entropy
+                    )
+                    # fmt: on
 
                     # KL散度
+                    # fmt: off
                     kl = float(
                         np.mean(
                             old_action_probs
                             * np.log(
-                                np.maximum(old_action_probs, 1e-8) / np.maximum(new_action_probs, 1e-8),
+                                np.maximum(old_action_probs, 1e-8)
+                                / np.maximum(new_action_probs, 1e-8),
                             )
                         )
                     )
+                    # fmt: on
 
                     # 模拟梯度更新
                     self._update_weights(total_loss)
@@ -195,7 +204,13 @@ class PPOModel:
                     training_stats["total_loss"].append(float(total_loss))
                     kl_history.append(kl)
 
-            episode_reward = float(np.sum(rewards[:20])) if len(rewards) >= 20 else float(np.sum(rewards))
+            # fmt: off
+            episode_reward = (
+                float(np.sum(rewards[:20]))
+                if len(rewards) >= 20
+                else float(np.sum(rewards))
+            )
+            # fmt: on
             training_stats["episode_reward"].append(episode_reward)
 
             if (episode + 1) % 10 == 0:
@@ -354,7 +369,12 @@ class PPOModel:
                 next_value = self._forward_value(next_s, self._value_weights)
 
             delta = rewards[t] + self.gamma * next_value * (1.0 - dones[t]) - value
-            last_advantage = delta + self.gamma * self.gae_lambda * (1.0 - dones[t]) * last_advantage
+            # fmt: off
+            last_advantage = (
+                delta
+                + self.gamma * self.gae_lambda * (1.0 - dones[t]) * last_advantage
+            )
+            # fmt: on
             advantages[t] = last_advantage
             returns[t] = advantages[t] + value
 

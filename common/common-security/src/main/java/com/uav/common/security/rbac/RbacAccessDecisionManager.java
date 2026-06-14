@@ -1,94 +1,88 @@
 package com.uav.common.security.rbac;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.access.AccessDecisionManager;
-import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.access.ConfigAttribute;
-import org.springframework.security.authentication.InsufficientAuthenticationException;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Component;
 
-import java.util.Collection;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
- * RBAC 访问决策管理器
+ * RBAC 权限检查工具类
  * <p>
- * 在 FilterSecurityInterceptor 中使用，对受保护的资源进行权限校验。
- * 支持三种决策模式：
- * <ul>
- *     <li>AFFIRMATIVE：只要有一个投票者通过即放行（默认）</li>
- *     <li>UNANIMOUS：所有投票者一致通过才放行</li>
- *     <li>MAJORITY：多数投票者通过才放行</li>
- * </ul>
+ * 提供静态方法用于权限校验，供 {@link RbacPermissionEvaluator} 和其他组件调用。
  * <p>
  * 当前实现采用 AFFIRMATIVE 模式，即用户拥有所需任一角色或权限即可访问。
+ * <p>
+ * 通过配置属性 {@code security.rbac.enabled=true} 激活。
  */
 @Slf4j
 @Component
-public class RbacAccessDecisionManager implements AccessDecisionManager {
+@ConditionalOnBean(RbacUserRepository.class)
+public class RbacAccessDecisionManager {
 
-    @Override
-    public void decide(Authentication authentication,
-                       Object object,
-                       Collection<ConfigAttribute> configAttributes)
-            throws AccessDeniedException, InsufficientAuthenticationException {
-
-        // 无需权限校验的资源配置，直接放行
-        if (configAttributes == null || configAttributes.isEmpty()) {
-            log.debug("无权限要求，直接放行");
-            return;
-        }
-
-        // 未认证用户拒绝访问
+    /**
+     * 检查认证用户是否拥有指定权限
+     *
+     * @param authentication       当前认证信息
+     * @param requiredPermission   所需权限字符串
+     * @param requestUri           请求URI（用于日志记录）
+     * @return 是否授权通过
+     */
+    public static boolean checkPermission(Authentication authentication, String requiredPermission, String requestUri) {
         if (authentication == null || !authentication.isAuthenticated()) {
-            log.warn("未认证用户尝试访问受保护资源");
-            throw new InsufficientAuthenticationException("用户未认证");
+            log.warn("未认证用户尝试访问受保护资源: {}", requestUri);
+            return false;
         }
 
-        for (ConfigAttribute configAttribute : configAttributes) {
-            String requiredPermission = configAttribute.getAttribute();
-
-            // 检查用户是否拥有所需权限
-            boolean hasPermission = authentication.getAuthorities().stream()
-                    .anyMatch(authority -> {
-                        String grantedAuthority = authority.getAuthority();
-
-                        // 角色匹配：ROLE_ADMIN
-                        if (grantedAuthority.equals(requiredPermission)) {
-                            return true;
-                        }
-
-                        // 通配符匹配：ROLE_ADMIN 可匹配所有权限
-                        if ("ROLE_ADMIN".equals(grantedAuthority)) {
-                            return true;
-                        }
-
-                        // 权限前缀匹配：API:* 匹配所有 API 权限
-                        if (requiredPermission.endsWith(":*")) {
-                            String prefix = requiredPermission.substring(0, requiredPermission.length() - 1);
-                            return grantedAuthority.startsWith(prefix);
-                        }
-
-                        return false;
-                    });
-
-            if (hasPermission) {
-                log.debug("权限校验通过 - required: {}, user: {}", requiredPermission, authentication.getName());
-                return;
-            }
+        if (requiredPermission == null || requiredPermission.isEmpty()) {
+            log.debug("无权限要求，直接放行: {}", requestUri);
+            return true;
         }
 
-        log.warn("权限校验失败 - user: {}, required: {}", authentication.getName(), configAttributes);
-        throw new AccessDeniedException("权限不足，无法访问该资源");
+        boolean hasPermission = authentication.getAuthorities().stream()
+                .anyMatch(authority -> {
+                    String grantedAuthority = authority.getAuthority();
+
+                    // 精确匹配
+                    if (grantedAuthority.equals(requiredPermission)) {
+                        return true;
+                    }
+
+                    // 超级管理员角色匹配所有权限
+                    if ("ROLE_ADMIN".equals(grantedAuthority)) {
+                        return true;
+                    }
+
+                    // 权限前缀匹配：API:* 匹配所有 API 权限
+                    if (requiredPermission.endsWith(":*")) {
+                        String prefix = requiredPermission.substring(0, requiredPermission.length() - 1);
+                        return grantedAuthority.startsWith(prefix);
+                    }
+
+                    return false;
+                });
+
+        if (hasPermission) {
+            log.debug("权限校验通过 - required: {}, user: {}", requiredPermission, authentication.getName());
+        } else {
+            log.warn("权限校验失败 - user: {}, required: {}", authentication.getName(), requiredPermission);
+        }
+
+        return hasPermission;
     }
 
-    @Override
-    public boolean supports(ConfigAttribute attribute) {
-        return true;
-    }
-
-    @Override
-    public boolean supports(Class<?> clazz) {
-        return true;
+    /**
+     * 检查认证用户是否拥有指定权限（基于 HttpServletRequest）
+     *
+     * @param authentication 当前认证信息
+     * @param request        HTTP 请求
+     * @return 是否授权通过
+     */
+    public static boolean checkPermission(Authentication authentication, HttpServletRequest request) {
+        Object requiredAttr = request.getAttribute("required_permission");
+        String requiredPermission = requiredAttr != null ? requiredAttr.toString() : null;
+        return checkPermission(authentication, requiredPermission, request.getRequestURI());
     }
 }

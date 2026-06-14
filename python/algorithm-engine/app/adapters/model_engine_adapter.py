@@ -65,7 +65,7 @@ class GPRUncertaintyAdapter(AlgorithmAdapter):
         )
 
         algo = GPRUncertaintyQuantifier(params.get("config"))
-        return algo.quantify(params)  # type: ignore[attr-defined]
+        return algo.predict(params)
 
 
 class BayesianNNAdapter(AlgorithmAdapter):

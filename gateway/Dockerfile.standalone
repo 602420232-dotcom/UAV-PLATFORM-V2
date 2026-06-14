@@ -1,0 +1,57 @@
+# ============================================================
+# API Gateway Standalone Dockerfile
+# ============================================================
+# Builds api-gateway independently with Spring Boot 3.4.5
+# (compatible with Spring Cloud Gateway 4.1.0),
+# separate from the root POM's Spring Boot 4.0.0.
+#
+# Build context: project root (Dockerfile.standalone is at gateway/)
+# ============================================================
+FROM eclipse-temurin:17-jdk AS builder
+
+WORKDIR /build
+
+# 1) Copy standalone POM files first (for dependency caching layer)
+COPY gateway/standalone-pom.xml ./standalone-pom.xml
+COPY gateway/api-gateway/standalone-module-pom.xml ./api-gateway/standalone-module-pom.xml
+
+# 2) Copy gateway source code
+COPY gateway/api-gateway/pom.xml ./api-gateway/pom.xml
+COPY gateway/api-gateway/src ./api-gateway/src
+
+# 3) Replace the main pom.xml with standalone-module-pom.xml for the build,
+#    then build using standalone-pom.xml as the parent
+RUN cp api-gateway/standalone-module-pom.xml api-gateway/pom.xml.standalone && \
+    cp api-gateway/pom.xml api-gateway/pom.xml.main-branch && \
+    cp api-gateway/pom.xml.standalone api-gateway/pom.xml && \
+    mvn clean package -f standalone-pom.xml -DskipTests -B && \
+    cp api-gateway/pom.xml.main-branch api-gateway/pom.xml || true
+
+FROM eclipse-temurin:17-jre-alpine
+
+LABEL maintainer="UAV Platform Team"
+LABEL description="UAV Platform V2 - API Gateway (Standalone, Spring Boot 3.4.5)"
+
+RUN apk add --no-cache curl tzdata && \
+    cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
+    echo "Asia/Shanghai" > /etc/timezone && \
+    apk del tzdata
+
+RUN addgroup -S uav && adduser -S uav -G uav
+
+WORKDIR /app
+
+COPY --from=builder /build/api-gateway/target/api-gateway*.jar app.jar
+
+RUN chown -R uav:uav /app
+
+USER uav
+
+ENV JAVA_OPTS="-Xms512m -Xmx1024m -XX:+UseG1GC -XX:+UseContainerSupport -Djava.security.egd=file:/dev/./urandom"
+
+EXPOSE 8088
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -sf http://localhost:8088/actuator/health || exit 1
+
+ENTRYPOINT ["sh", "-c", "java ${JAVA_OPTS} -jar app.jar"]

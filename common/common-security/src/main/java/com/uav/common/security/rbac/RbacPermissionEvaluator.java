@@ -1,8 +1,7 @@
 package com.uav.common.security.rbac;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.access.expression.SecurityExpressionRoot;
-import org.springframework.security.access.expression.method.MethodSecurityExpressionRoot;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Component;
@@ -23,6 +22,7 @@ import java.util.List;
  */
 @Slf4j
 @Component("rbacPermissionEvaluator")
+@ConditionalOnBean(RbacUserRepository.class)
 public class RbacPermissionEvaluator implements org.springframework.security.access.PermissionEvaluator {
 
     @Override

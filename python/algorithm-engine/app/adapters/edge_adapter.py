@@ -21,6 +21,7 @@
 - 边缘容错
 - 边缘带宽优化器
 - 边缘异常检测器
+- ONNX Runtime 推理
 """
 
 from __future__ import annotations
@@ -39,6 +40,7 @@ class FederatedLearningAdapter(AlgorithmAdapter):
 
     在边缘设备间进行分布式模型训练，
     支持 FedAvg 和 FedProx 聚合策略。
+    支持断点续训、通信压缩、学习率调度和早停。
     """
 
     def __init__(self) -> None:
@@ -48,17 +50,25 @@ class FederatedLearningAdapter(AlgorithmAdapter):
                 id="federated_learning",
                 name="FederatedLearning",
                 category="edge",
-                version="1.0.0",
-                description="边缘设备联邦学习，支持 FedAvg 和 FedProx 聚合策略",
+                version="2.0.0",
+                description="边缘设备联邦学习，支持 FedAvg/FedProx 聚合、断点续训、通信压缩",
                 input_schema={
                     "type": "object",
                     "required": ["client_updates"],
                     "properties": {
                         "client_updates": {"type": "array"},
-                        "strategy": {"type": "string"},
+                        "strategy": {"type": "string", "enum": ["fedavg", "fedprox"]},
                         "n_rounds": {"type": "integer"},
                         "n_clients": {"type": "integer"},
                         "learning_rate": {"type": "number"},
+                        "mu": {"type": "number", "description": "FedProx proximal term coefficient"},
+                        "lr_schedule": {"type": "string", "enum": ["constant", "step", "exponential"]},
+                        "lr_decay": {"type": "number"},
+                        "early_stop_patience": {"type": "integer"},
+                        "checkpoint_dir": {"type": "string"},
+                        "compression_method": {"type": "string", "enum": ["top_k", "fp16"]},
+                        "compression_k_ratio": {"type": "number"},
+                        "resume": {"type": "boolean"},
                     },
                 },
                 output_schema={
@@ -66,19 +76,80 @@ class FederatedLearningAdapter(AlgorithmAdapter):
                     "properties": {
                         "global_model": {"type": "array"},
                         "strategy": {"type": "string"},
-                        "n_rounds": {"type": "integer"},
+                        "n_rounds_completed": {"type": "integer"},
+                        "n_rounds_target": {"type": "integer"},
+                        "early_stopped": {"type": "boolean"},
+                        "best_metric": {"type": "number"},
                         "history": {"type": "array"},
                         "final_loss": {"type": "number"},
+                        "compression_stats": {"type": "object"},
                     },
                 },
             )
         )
 
     def execute(self, params: dict[str, Any]) -> dict[str, Any]:
-        from app.algorithms.edge.federated_learning import FederatedLearner
+        """Execute federated learning.
 
-        algo = FederatedLearner(params.get("config"))
-        return algo.train(params)
+        Supports two modes:
+        1. Legacy mode: when 'client_updates' contains raw weight arrays,
+           uses the legacy FederatedLearner interface.
+        2. New mode: when 'client_updates' contains dicts with 'model_update'
+           keys, uses FedAvgServer/FedProxServer.
+        """
+        strategy = params.get("strategy", "fedavg")
+        client_updates = params.get("client_updates", [])
+
+        # Detect mode: if client_updates are plain lists (legacy), use FederatedLearner
+        if client_updates and isinstance(client_updates[0], list):
+            from app.algorithms.edge.federated_learning import FederatedLearner
+
+            algo = FederatedLearner(params.get("config"))
+            return algo.train(params)
+
+        # New mode: use FedAvgServer or FedProxServer
+        if strategy == "fedprox":
+            from app.algorithms.edge.federated_learning import FedProxServer
+
+            server = FedProxServer(
+                model_shape=params.get("model_shape", (10,)),
+                n_rounds=params.get("n_rounds", 10),
+                learning_rate=params.get("learning_rate", 0.01),
+                mu=params.get("mu", 0.01),
+                lr_schedule=params.get("lr_schedule", "constant"),
+                lr_decay=params.get("lr_decay", 0.9),
+                early_stop_patience=params.get("early_stop_patience", 5),
+                checkpoint_dir=params.get("checkpoint_dir"),
+                compression_method=params.get("compression_method"),
+                compression_k_ratio=params.get("compression_k_ratio", 0.1),
+            )
+        else:
+            from app.algorithms.edge.federated_learning import FedAvgServer
+
+            server = FedAvgServer(
+                model_shape=params.get("model_shape", (10,)),
+                n_rounds=params.get("n_rounds", 10),
+                learning_rate=params.get("learning_rate", 0.01),
+                lr_schedule=params.get("lr_schedule", "constant"),
+                lr_decay=params.get("lr_decay", 0.9),
+                early_stop_patience=params.get("early_stop_patience", 5),
+                checkpoint_dir=params.get("checkpoint_dir"),
+                compression_method=params.get("compression_method"),
+                compression_k_ratio=params.get("compression_k_ratio", 0.1),
+            )
+
+        # Build client data list from params
+        client_data_list = []
+        for i, cu in enumerate(client_updates):
+            if isinstance(cu, dict):
+                client_data_list.append(cu)
+            else:
+                client_data_list.append({"client_id": f"client_{i}"})
+
+        return server.train(
+            client_data_list=client_data_list,
+            resume=params.get("resume", False),
+        )
 
 
 class ModelQuantizationAdapter(AlgorithmAdapter):
@@ -919,3 +990,83 @@ class EdgeAnomalyDetectorAdapter(AlgorithmAdapter):
 
         algo = EdgeAnomalyDetector(params.get("config"))
         return algo.detect(params)
+
+
+class OnnxRuntimeInferenceAdapter(AlgorithmAdapter):
+    """ONNX Runtime 推理后端适配器。
+
+    模拟 ONNX Runtime 推理流程，支持批量推理、
+    推理性能统计和内存占用估算。
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.set_metadata(
+            AlgorithmMetadata(
+                id="onnx_runtime_inference",
+                name="OnnxRuntimeInference",
+                category="edge",
+                version="1.0.0",
+                description="ONNX Runtime 推理后端，支持批量推理、性能统计和内存估算",
+                input_schema={
+                    "type": "object",
+                    "required": ["input_data"],
+                    "properties": {
+                        "input_data": {"type": "array"},
+                        "precision": {
+                            "type": "string",
+                            "enum": ["fp32", "fp16", "int8"],
+                        },
+                        "batch_size": {"type": "integer"},
+                        "model_name": {"type": "string"},
+                        "mode": {
+                            "type": "string",
+                            "enum": ["infer", "batch", "benchmark", "memory"],
+                        },
+                    },
+                },
+                output_schema={
+                    "type": "object",
+                    "properties": {
+                        "predictions": {"type": "array"},
+                        "inference_time": {"type": "number"},
+                        "memory_usage": {"type": "number"},
+                        "stats": {"type": "object"},
+                    },
+                },
+            )
+        )
+
+    def execute(self, params: dict[str, Any]) -> dict[str, Any]:
+        from app.algorithms.edge.onnx_runtime_inference import OnnxRuntimeInferencer
+
+        config = params.get("config", {})
+        algo = OnnxRuntimeInferencer(config)
+        mode = params.get("mode", "infer")
+
+        if mode == "benchmark":
+            stats = algo.benchmark(
+                input_shape=tuple(params.get("input_shape", [1, 64])),
+                n_warmup=params.get("n_warmup", 10),
+                n_runs=params.get("n_runs", 100),
+                batch_size=params.get("batch_size", 1),
+            )
+            return {"stats": stats.to_dict()}
+        elif mode == "memory":
+            mem = algo.estimate_memory(
+                input_shape=tuple(params.get("input_shape", [1, 64])),
+                output_shape=tuple(params.get("output_shape", [1, 10])),
+                batch_size=params.get("batch_size", 1),
+                precision=params.get("precision", "fp32"),
+                n_layers=params.get("n_layers", 4),
+            )
+            return {"memory": mem}
+        elif mode == "batch":
+            import numpy as np
+
+            input_data = np.asarray(params.get("input_data", []), dtype=np.float32)
+            batch_size = params.get("batch_size", 8)
+            _, stats = algo.run_batch(input_data, batch_size=batch_size)
+            return {"stats": stats.to_dict()}
+        else:
+            return algo.infer(params)

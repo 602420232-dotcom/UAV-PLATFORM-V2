@@ -106,10 +106,7 @@ services:
   api-gateway:
     build:
       context: .
-      dockerfile: Dockerfile.jre
-      args:
-        SERVICE_NAME: api-gateway
-        JAR_FILE: gateway/api-gateway/target/api-gateway-2.0.0.jar
+      dockerfile: gateway/Dockerfile.standalone
     container_name: uav-gateway
     ports:
       - "8258:8088"

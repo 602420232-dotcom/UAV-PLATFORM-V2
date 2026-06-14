@@ -2,6 +2,9 @@
 **/target/
 **/build/
 **/out/
+*.class
+*.jar
+*.war
 
 # IDE
 .idea/
@@ -12,10 +15,13 @@
 .classpath
 *.swp
 *.swo
+*.sublime-workspace
+*.sublime-project
 
 # OS
 .DS_Store
 Thumbs.db
+Desktop.ini
 
 # Python
 __pycache__/
@@ -24,10 +30,29 @@ __pycache__/
 .venv/
 venv/
 *.egg-info/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+*.coverage
+coverage.xml
+htmlcov/
+.local/
+pip-wheel-metadata/
+.cache/
 
 # Node
 node_modules/
 dist/
+
+# C++ build
+*.o
+*.obj
+*.a
+*.so
+*.dylib
+*.exe
+*.dll
+cmake-build-*/
 
 # Docker volumes
 mysql_data/
@@ -37,7 +62,36 @@ zookeeper_data/
 
 # Logs
 *.log
+logs/
 
 # Environment
 .env
 .env.local
+*.env.local
+
+# Maven wrapper (optional, keep if needed)
+# .mvn/wrapper/maven-wrapper.jar
+
+# JaCoCo
+**/jacoco.exec
+**/target/site/jacoco/
+
+# Test reports
+**/surefire-reports/
+**/test-results/
+
+# Monitoring data
+monitoring/grafana/data/
+monitoring/prometheus/data/
+
+# Dependency check
+**/dependency-check-reports/
+owasp-dependency-check/
+
+# JVM dumps
+*.hprof
+
+# Backup files
+*.bak
+*.backup
+*.orig

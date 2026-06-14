@@ -832,7 +832,6 @@ def _check_kafka_via_http(host: str, results: VerifyResult, category: str, verbo
                 if resp.status_code == 200:
                     resp_data = resp.json()
                     task_status = resp_data.get("status", "UNKNOWN")
-                    progress = resp_data.get("progress", 0)
 
                     if task_status in ("completed", "COMPLETED", "success", "SUCCESS", "done", "DONE"):
                         task_completed = True

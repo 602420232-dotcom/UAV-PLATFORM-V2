@@ -34,6 +34,7 @@ const menuItems = [
     ],
   },
   { index: '/algorithms', title: '算法管理', icon: 'Cpu' },
+  { index: '/sandbox', title: '科研沙箱', icon: 'Flask' },
 ]
 
 function handleSelect(index: string) {

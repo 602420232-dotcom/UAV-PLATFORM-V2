@@ -81,6 +81,12 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/views/AlgorithmList.vue'),
         meta: { title: '算法管理', icon: 'Cpu' },
       },
+      {
+        path: 'sandbox',
+        name: 'Sandbox',
+        component: () => import('@/views/SandboxView.vue'),
+        meta: { title: '科研沙箱', icon: 'Flask' },
+      },
     ],
   },
 ]
