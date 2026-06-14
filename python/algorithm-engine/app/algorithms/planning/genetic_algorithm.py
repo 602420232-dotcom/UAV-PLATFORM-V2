@@ -80,9 +80,10 @@ class GeneticAlgorithmPlanner:
 
         for gen in range(self.max_generations):
             # 评估适应度
-            fitness = np.array(
-                [self._evaluate(population[i], start, goal, obstacles) for i in range(self.population_size)]
-            )
+            fitness = np.array([
+                self._evaluate(population[i], start, goal, obstacles)
+                for i in range(self.population_size)
+            ])
 
             # 记录最优个体
             best_idx = np.argmin(fitness)
@@ -100,9 +101,10 @@ class GeneticAlgorithmPlanner:
             offspring = self._mutation(offspring, rows, cols)
 
             # 精英保留
-            worst_idx = np.argmax(
-                [self._evaluate(offspring[i], start, goal, obstacles) for i in range(self.population_size)]
-            )
+            worst_idx = np.argmax([
+                self._evaluate(offspring[i], start, goal, obstacles)
+                for i in range(self.population_size)
+            ])
             offspring[worst_idx] = best_chromosome
 
             population = offspring
@@ -141,7 +143,9 @@ class GeneticAlgorithmPlanner:
         smoothness = 0.0
         for i in range(1, len(diffs)):
             if np.linalg.norm(diffs[i]) > 1e-6 and np.linalg.norm(diffs[i - 1]) > 1e-6:
-                cos_angle = np.dot(diffs[i], diffs[i - 1]) / (np.linalg.norm(diffs[i]) * np.linalg.norm(diffs[i - 1]))
+                cos_angle = np.dot(diffs[i], diffs[i - 1]) / (
+                    np.linalg.norm(diffs[i]) * np.linalg.norm(diffs[i - 1])
+                )
                 cos_angle = np.clip(cos_angle, -1.0, 1.0)
                 smoothness += 1.0 - cos_angle
 

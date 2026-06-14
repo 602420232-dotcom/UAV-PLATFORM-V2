@@ -32,7 +32,10 @@ class ThreeDimensionalVarAdapter(AssimilationAdapter):
                 name="ThreeDimensionalVAR",
                 category="assimilation",
                 version="1.0.0",
-                description=("3D-VAR data assimilation using spatial covariance and variational optimization"),  # noqa: E501
+                description=(
+                    "3D-VAR data assimilation using spatial covariance "
+                    "and variational optimization"
+                ),
                 input_schema={
                     "type": "object",
                     "required": ["background_field", "observations"],

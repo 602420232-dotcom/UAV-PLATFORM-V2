@@ -1,7 +1,8 @@
 """3D-VAR Data Assimilation Algorithm.
 
 Migrated from:
-    data-assimilation-platform/algorithm_core/src/bayesian_assimilation/models/three_dimensional_var.py
+    data-assimilation-platform/algorithm_core/src/
+    bayesian_assimilation/models/three_dimensional_var.py
 
 Original: ThreeDimensionalVAR class with spatial covariance, variational optimization.
 Standalone version suitable for the algorithm engine.

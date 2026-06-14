@@ -66,7 +66,10 @@ async def list_algorithms_by_category(category: str):
     registry = get_registry()
     algorithms = registry.list_by_category(category)
     if not algorithms:
-        raise HTTPException(status_code=404, detail=f"No algorithms found in category '{category}'")
+        raise HTTPException(
+            status_code=404,
+            detail=f"No algorithms found in category '{category}'",
+        )
     return [m.model_dump() for m in algorithms]
 
 

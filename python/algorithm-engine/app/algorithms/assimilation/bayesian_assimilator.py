@@ -115,8 +115,15 @@ class BayesianAssimilator:
                     effective_likelihood_var = likelihood_var / max(weights.sum(), 1e-10)
 
                     # 贝叶斯更新
-                    posterior_var[idx] = prior_var * effective_likelihood_var / (prior_var + effective_likelihood_var)
-                    posterior_mean[idx] = (effective_likelihood_var * prior_mean[idx] + prior_var * y_eff) / (
+                    # fmt: off
+                    posterior_var[idx] = (
+                        prior_var * effective_likelihood_var
+                        / (prior_var + effective_likelihood_var)
+                    )
+                    # fmt: on
+                    posterior_mean[idx] = (
+                        effective_likelihood_var * prior_mean[idx] + prior_var * y_eff
+                    ) / (
                         prior_var + effective_likelihood_var
                     )
 

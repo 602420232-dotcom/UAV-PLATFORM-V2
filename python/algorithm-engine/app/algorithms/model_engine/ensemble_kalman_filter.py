@@ -109,7 +109,10 @@ class EnsembleKalmanFilterModel:
 
         analysis_ensemble = np.zeros_like(background_ensemble_inflated)
         for i in range(n_members):
-            analysis_ensemble[i] = background_ensemble_inflated[i] + Kalman_gain @ (observations - HXb[i])
+            analysis_ensemble[i] = (
+                background_ensemble_inflated[i]
+                + Kalman_gain @ (observations - HXb[i])
+            )
 
         xa_mean = analysis_ensemble.mean(axis=0)
         Xa_prime = analysis_ensemble - xa_mean

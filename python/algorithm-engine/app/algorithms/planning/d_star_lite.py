@@ -121,7 +121,12 @@ class DStarLitePlanner:
             # 终止条件：start局部一致
             start_rhs = self._rhs.get(start, float("inf"))
             start_g = self._g.get(start, float("inf"))
-            if start_rhs == start_g and (not self._U or self._top_key() >= self._calculate_key(start)):
+            # fmt: off
+            if (
+                start_rhs == start_g
+                and (not self._U or self._top_key() >= self._calculate_key(start))
+            ):
+                # fmt: on
                 break
 
         # 提取路径

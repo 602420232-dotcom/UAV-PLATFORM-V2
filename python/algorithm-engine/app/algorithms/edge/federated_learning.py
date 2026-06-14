@@ -1168,7 +1168,13 @@ class FederatedLearner:
             selected_indices = np.concatenate([indices_above, indices_at])
 
         # 量化
-        max_val = float(np.max(np.abs(flat[selected_indices]))) if len(selected_indices) > 0 else 1.0
+        # fmt: off
+        max_val = (
+            float(np.max(np.abs(flat[selected_indices])))
+            if len(selected_indices) > 0
+            else 1.0
+        )
+        # fmt: on
         if max_val == 0:
             max_val = 1.0
         quant_levels = 2 ** (quantize_bits - 1) - 1  # 有符号量化

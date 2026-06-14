@@ -41,7 +41,11 @@ class EnhancedBayesianAssimilation:
         xb = background.flatten()
         x = xb.copy()
 
-        y_obs, H = self._build_observation_operator(x, observations, background.shape)  # noqa: N806
+        # fmt: off
+        y_obs, H = self._build_observation_operator(  # noqa: N806
+            x, observations, background.shape
+        )
+        # fmt: on
 
         cost_history = []
         for i in range(self.max_iterations):

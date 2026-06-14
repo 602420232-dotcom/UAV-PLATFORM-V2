@@ -503,10 +503,18 @@ class ConflictDetector:
 
         for (uav_a, uav_b), pair_conflicts in pair_map.items():
             # 找到最严重的冲突
+            # fmt: off
             most_severe = min(
                 pair_conflicts,
-                key=lambda c: (0 if c["severity"] == "critical" else 1 if c["severity"] == "warning" else 2,),
+                key=lambda c: (
+                    0
+                    if c["severity"] == "critical"
+                    else 1
+                    if c["severity"] == "warning"
+                    else 2
+                ),
             )
+            # fmt: on
 
             conflict_type = most_severe["type"]
             severity = most_severe["severity"]

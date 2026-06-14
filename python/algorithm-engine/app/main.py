@@ -89,7 +89,6 @@ def _register_builtin_algorithms() -> None:
         LLMAssistedDecisionAdapter,
         ModelCompressorAdapter,
         ModelQuantizationAdapter,
-        OnnxRuntimeInferenceAdapter,
         SelfOrganizingNetworkAdapter,
         SplitLearningAdapter,
         V2XCommunicationAdapter,

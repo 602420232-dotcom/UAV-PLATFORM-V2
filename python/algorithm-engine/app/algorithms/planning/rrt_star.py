@@ -44,7 +44,10 @@ class RRTStarPlanner:
                     max(self.start[1], self.goal[1]) + 5,
                 )
                 rand_point = (random.uniform(*x_range), random.uniform(*y_range))
-            nearest_idx = min(range(len(nodes)), key=lambda i: self._distance(nodes[i], rand_point))
+            nearest_idx = min(
+                range(len(nodes)),
+                key=lambda i: self._distance(nodes[i], rand_point),
+            )
             nearest = np.array(nodes[nearest_idx])
             rand_arr = np.array(rand_point)
             diff = rand_arr - nearest
@@ -62,7 +65,14 @@ class RRTStarPlanner:
                 d = self._distance(nodes[i], tuple(new_point))
                 if d < self.rewire_radius:
                     c = costs[i] + d
-                    if c < best_cost and not self._check_line_collision(nodes[i], tuple(new_point)):
+                    # fmt: off
+                    if (
+                        c < best_cost
+                        and not self._check_line_collision(
+                            nodes[i], tuple(new_point)
+                        )
+                    ):
+                        # fmt: on
                         best_parent = i
                         best_cost = c
             parents[new_idx] = best_parent

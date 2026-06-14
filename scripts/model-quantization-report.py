@@ -22,7 +22,7 @@ _project_root = Path(__file__).resolve().parent.parent / "python" / "algorithm-e
 if str(_project_root) not in sys.path:
     sys.path.insert(0, str(_project_root))
 
-from app.algorithms.edge.model_quantization import ModelQuantizer, QuantizationReport
+from app.algorithms.edge.model_quantization import ModelQuantizer, QuantizationReport  # noqa: E402  # pyright: ignore[reportMissingImports]
 
 
 # ---------------------------------------------------------------------------
@@ -69,7 +69,7 @@ def generate_model_weights(shape: tuple[int, ...], seed: int = 42) -> np.ndarray
     使用 He 初始化方式生成符合实际分布的权重。
     """
     rng = np.random.RandomState(seed)
-    fan_in = shape[1] if len(shape) >= 2 else shape[0]
+    fan_in = shape[1] if len(shape) >= 2 else shape[0]  # pyright: ignore[reportGeneralTypeIssues]
     std = np.sqrt(2.0 / fan_in)
     return rng.randn(*shape).astype(np.float32) * std
 
@@ -138,8 +138,10 @@ def generate_markdown_report(results: list[dict[str, Any]]) -> str:
     # 概览表格
     lines.append("## 1. 量化概览")
     lines.append("")
+    # fmt: off
     lines.append("| 模型名称 | 描述 | 参数量 | 原始大小 (MB) | INT8 大小 (MB) | FP16 大小 (MB) | INT8 压缩比 | FP16 压缩比 |")
     lines.append("|:---------|:-----|-------:|-------------:|--------------:|--------------:|-----------:|-----------:|")
+    # fmt: on
 
     for r in results:
         m = r["model"]
@@ -157,8 +159,10 @@ def generate_markdown_report(results: list[dict[str, Any]]) -> str:
     # 推理延迟对比
     lines.append("## 2. 推理延迟对比")
     lines.append("")
+    # fmt: off
     lines.append("| 模型名称 | FP32 延迟 (ms) | INT8 延迟 (ms) | FP16 延迟 (ms) | INT8 延迟降低 | FP16 延迟降低 |")
     lines.append("|:---------|-------------:|-------------:|-------------:|-----------:|-----------:|")
+    # fmt: on
 
     for r in results:
         m = r["model"]
@@ -176,8 +180,10 @@ def generate_markdown_report(results: list[dict[str, Any]]) -> str:
     # 精度损失评估
     lines.append("## 3. 精度损失评估")
     lines.append("")
+    # fmt: off
     lines.append("| 模型名称 | INT8 RMSE | INT8 MAE | INT8 Cosine Sim | FP16 RMSE | FP16 MAE | FP16 Cosine Sim |")
     lines.append("|:---------|----------:|---------:|---------------:|----------:|---------:|---------------:|")
+    # fmt: on
 
     for r in results:
         m = r["model"]
@@ -224,7 +230,6 @@ def generate_markdown_report(results: list[dict[str, Any]]) -> str:
     for r in results:
         m = r["model"]
         int8_cr = r["int8"].compression_ratio
-        fp16_cr = r["fp16"].compression_ratio
         int8_rmse = r["int8"].rmse
         fp16_rmse = r["fp16"].rmse
 
@@ -286,8 +291,8 @@ def _cosine_similarity(
     cos_sim = float(
         np.dot(weights.flatten(), dequantized.flatten())
         / max(
-            np.linalg.norm(weights.flatten())
-            * np.linalg.norm(dequantized.flatten()),
+            float(np.linalg.norm(weights.flatten()))
+            * float(np.linalg.norm(dequantized.flatten())),
             1e-10,
         )
     )
@@ -316,7 +321,10 @@ def main() -> None:
     report_md = generate_markdown_report(results)
 
     # 输出到文件
-    report_path = Path(__file__).resolve().parent.parent / "scripts" / "model-quantization-report.md"
+    report_path = (
+        Path(__file__).resolve().parent.parent
+        / "scripts" / "model-quantization-report.md"
+    )
     report_path.write_text(report_md, encoding="utf-8")
     print(f"报告已生成: {report_path}")
 

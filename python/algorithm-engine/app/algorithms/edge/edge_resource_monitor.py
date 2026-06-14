@@ -104,7 +104,9 @@ class EdgeResourceMonitor:
             if resource in self.utilization_history:
                 self.utilization_history[resource].extend(samples.tolist())
                 if len(self.utilization_history[resource]) > self.history_length:
-                    self.utilization_history[resource] = self.utilization_history[resource][-self.history_length :]
+                    self.utilization_history[resource] = (
+                        self.utilization_history[resource][-self.history_length:]
+                    )
 
             resource_status[resource] = {
                 "current_usage": round(current_usage, 2),
@@ -129,7 +131,11 @@ class EdgeResourceMonitor:
                 )
 
         # 总体健康评估
-        all_current = [resource_status[r]["current_usage"] for r in resource_types if r in resource_status]
+        all_current = [
+            resource_status[r]["current_usage"]
+            for r in resource_types
+            if r in resource_status
+        ]
         overall_health = (
             "healthy"
             if all(v < 80 for v in all_current)

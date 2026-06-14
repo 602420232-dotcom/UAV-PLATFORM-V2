@@ -15,13 +15,12 @@ UAV Platform V2 - 算法精度验证脚本
 from __future__ import annotations
 
 import math
-import random
-import statistics
 import time
 from dataclasses import dataclass, field
 from typing import Any
 
 import numpy as np
+import pytest
 import requests
 
 # ---------------------------------------------------------------------------
@@ -156,7 +155,7 @@ def _poll_task(task_id: str, submit_start: float) -> TestCaseResult:
             # still pending/running
             time.sleep(poll_interval)
 
-        except Exception as e:
+        except Exception:
             time.sleep(poll_interval)
 
 
@@ -261,7 +260,10 @@ def generate_gpr_data(
     # GPR 的 cdist 需要 2D 输入，因此 train_x 和 test_x 使用 [[x]] 格式
     train_x = [[x] for x in rng.uniform(0, 10, n_train).tolist()]
     # 真实函数: sin(x) + 0.5*cos(2x)
-    true_func = lambda x: math.sin(x) + 0.5 * math.cos(2 * x)
+    def _true_func(x: float) -> float:
+        return math.sin(x) + 0.5 * math.cos(2 * x)
+
+    true_func = _true_func
     train_y = [true_func(x[0]) + rng.randn() * noise_std for x in train_x]
 
     # 生成测试数据
@@ -303,8 +305,6 @@ def generate_planning_data(
         for j in range(grid_size):
             if rng.random() < obstacle_ratio:
                 # 不在起点和终点附近放置障碍物
-                start_grid = (i, j)
-                goal_grid = (i, j)
                 if abs(i - (half - 1 + 1)) + abs(j - (half - 1 + 1)) > 3:
                     if abs(i - (half + half - 2)) + abs(j - (half + half - 2)) > 3:
                         obstacles.append([i, j])
@@ -434,7 +434,6 @@ def test_gpr_confidence_interval() -> ComparisonResult:
         res = result.result
         lower = res.get("confidence_95_lower", [])
         upper = res.get("confidence_95_upper", [])
-        mean_pred = res.get("mean", [])
 
         if len(lower) == len(upper) == len(test_y):
             for i in range(n_total):

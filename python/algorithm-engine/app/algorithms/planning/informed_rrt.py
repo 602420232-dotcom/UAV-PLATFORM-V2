@@ -123,7 +123,14 @@ class InformedRRTPlanner:
                 d = np.linalg.norm(nodes[i] - new_point)
                 if d < self.rewire_radius:
                     c = costs[i] + d
-                    if c < best_new_cost and not self._check_line_collision(nodes[i], new_point, obstacles):
+                    # fmt: off
+                    if (
+                        c < best_new_cost
+                        and not self._check_line_collision(
+                            nodes[i], new_point, obstacles
+                        )
+                    ):
+                        # fmt: on
                         best_parent = i
                         best_new_cost = c
 
@@ -136,7 +143,14 @@ class InformedRRTPlanner:
                 d = np.linalg.norm(nodes[i] - new_point)
                 if d < self.rewire_radius:
                     new_cost = costs[new_idx] + d
-                    if new_cost < costs[i] and not self._check_line_collision(nodes[i], new_point, obstacles):
+                    # fmt: off
+                    if (
+                        new_cost < costs[i]
+                        and not self._check_line_collision(
+                            nodes[i], new_point, obstacles
+                        )
+                    ):
+                        # fmt: on
                         parents[i] = new_idx
                         costs[i] = float(new_cost)
 

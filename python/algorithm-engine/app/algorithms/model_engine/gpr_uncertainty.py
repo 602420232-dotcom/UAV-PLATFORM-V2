@@ -31,7 +31,12 @@ class GPRUncertaintyQuantifier:
         test_x = np.asarray(params.get("test_x", np.zeros((5, 2))))
         n_train = len(train_x)
         n_test = len(test_x)
-        K = self._rbf_kernel(train_x, train_x) + self.noise_variance * np.eye(n_train)  # noqa: N806
+        # fmt: off
+        K = (
+            self._rbf_kernel(train_x, train_x)
+            + self.noise_variance * np.eye(n_train)
+        )  # noqa: N806
+        # fmt: on
         K_s = self._rbf_kernel(train_x, test_x)  # noqa: N806
         K_ss = self._rbf_kernel(test_x, test_x)  # noqa: N806
         try:

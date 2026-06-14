@@ -763,7 +763,14 @@ class PPOPlanner:
                 nx = int(np.clip(current[0] + dx, 0, rows - 1))
                 ny = int(np.clip(current[1] + dy, 0, cols - 1))
 
-                if (nx, ny) not in obstacles and (nx, ny) not in visited and 0 <= nx < rows and 0 <= ny < cols:
+                # fmt: off
+                if (
+                    (nx, ny) not in obstacles
+                    and (nx, ny) not in visited
+                    and 0 <= nx < rows
+                    and 0 <= ny < cols
+                ):
+                    # fmt: on
                     current = (nx, ny)
                     path.append([nx, ny])
                     visited.add(current)

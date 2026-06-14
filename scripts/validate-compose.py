@@ -17,8 +17,6 @@ UAV Platform V2 - Docker Compose 多环境验证脚本
 from __future__ import annotations
 
 import argparse
-import json
-import os
 import subprocess
 import sys
 from pathlib import Path
@@ -74,7 +72,7 @@ def try_parse_yaml_with_python(filepath: Path) -> dict[str, Any] | None:
     try:
         import yaml  # type: ignore
         with open(filepath, 'r', encoding='utf-8') as f:
-            return yaml.safe_load(f) or {}
+            return yaml.safe_load(f) or {}  # pyright: ignore[reportReturnType]
     except ImportError:
         return None
     except yaml.YAMLError as e:
@@ -500,7 +498,6 @@ def main() -> int:
     print_info(f"项目目录: {compose_dir}")
 
     total_errors = 0
-    total_warnings = 0
 
     # ============================================================
     # 1. 检查文件存在性

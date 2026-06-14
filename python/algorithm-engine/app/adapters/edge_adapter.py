@@ -61,8 +61,14 @@ class FederatedLearningAdapter(AlgorithmAdapter):
                         "n_rounds": {"type": "integer"},
                         "n_clients": {"type": "integer"},
                         "learning_rate": {"type": "number"},
-                        "mu": {"type": "number", "description": "FedProx proximal term coefficient"},
-                        "lr_schedule": {"type": "string", "enum": ["constant", "step", "exponential"]},
+                        "mu": {
+                            "type": "number",
+                            "description": "FedProx proximal term coefficient",
+                        },
+                        "lr_schedule": {
+                            "type": "string",
+                            "enum": ["constant", "step", "exponential"],
+                        },
                         "lr_decay": {"type": "number"},
                         "early_stop_patience": {"type": "integer"},
                         "checkpoint_dir": {"type": "string"},

@@ -254,15 +254,23 @@ class DQNModel:
             # 简单梯度更新（模拟SGD）
             for i in range(0, len(self._q_weights) - 2, 2):
                 grad_scale = self.learning_rate * td_error * 0.01
-                self._q_weights[i] += grad_scale * np.random.randn(*self._q_weights[i].shape) * 0.01
-                self._q_weights[i + 1] += grad_scale * np.random.randn(*self._q_weights[i + 1].shape) * 0.01
+                self._q_weights[i] += (
+                    grad_scale * np.random.randn(*self._q_weights[i].shape) * 0.01
+                )
+                self._q_weights[i + 1] += (
+                    grad_scale
+                    * np.random.randn(*self._q_weights[i + 1].shape)
+                    * 0.01
+                )
 
         return float(total_loss / max(len(batch), 1))
 
     def _update_target_network(self) -> None:
         """软更新目标网络权重."""
         for i in range(len(self._target_weights)):
-            self._target_weights[i] = 0.9 * self._target_weights[i] + 0.1 * self._q_weights[i].copy()
+            self._target_weights[i] = (
+                0.9 * self._target_weights[i] + 0.1 * self._q_weights[i].copy()
+            )
 
     def _generate_simulated_data(
         self,

@@ -99,9 +99,12 @@ class CompatibleAssimilator:
         )
 
         # ---- 第四步：混合原始分析和约束后分析 ----
+        # fmt: off
         x_compatible = (
-            self.compatibility_weight * (xb + constrained_increment) + (1.0 - self.compatibility_weight) * x_enkf
+            self.compatibility_weight * (xb + constrained_increment)
+            + (1.0 - self.compatibility_weight) * x_enkf
         )
+        # fmt: on
 
         analysis = x_compatible.reshape(shape)
 

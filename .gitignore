@@ -43,6 +43,9 @@ pip-wheel-metadata/
 # Node
 node_modules/
 dist/
+*.tsbuildinfo
+console/vite.config.js
+console/vite.config.d.ts
 
 # C++ build
 *.o

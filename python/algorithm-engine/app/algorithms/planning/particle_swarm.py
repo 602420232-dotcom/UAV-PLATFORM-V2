@@ -77,9 +77,10 @@ class ParticleSwarmOptimizer:
         velocities = np.random.randn(self.num_particles, dim) * 0.5
 
         # 评估初始适应度
-        fitness = np.array(
-            [self._fitness(positions[i], start, goal, obstacles, rows, cols) for i in range(self.num_particles)]
-        )
+        fitness = np.array([
+            self._fitness(positions[i], start, goal, obstacles, rows, cols)
+            for i in range(self.num_particles)
+        ])
 
         pbest_positions = positions.copy()
         pbest_fitness = fitness.copy()
@@ -106,9 +107,10 @@ class ParticleSwarmOptimizer:
             positions[:, 1::2] = np.clip(positions[:, 1::2], 0, cols - 1)
 
             # 评估适应度
-            fitness = np.array(
-                [self._fitness(positions[i], start, goal, obstacles, rows, cols) for i in range(self.num_particles)]
-            )
+            fitness = np.array([
+                self._fitness(positions[i], start, goal, obstacles, rows, cols)
+                for i in range(self.num_particles)
+            ])
 
             # 更新个体最优
             improved = fitness < pbest_fitness

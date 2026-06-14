@@ -127,7 +127,11 @@ class TestAlgorithmRegistry:
     def test_categories(self, registry):
         """Categories should return a sorted list of unique categories."""
         registry.register(algorithm_id="a1", algorithm_class=DummyAlgorithm, category="planning")
-        registry.register(algorithm_id="a2", algorithm_class=AnotherAlgorithm, category="assimilation")
+        registry.register(
+            algorithm_id="a2",
+            algorithm_class=AnotherAlgorithm,
+            category="assimilation",
+        )
         registry.register(algorithm_id="a3", algorithm_class=DummyAlgorithm, category="planning")
 
         cats = registry.categories()

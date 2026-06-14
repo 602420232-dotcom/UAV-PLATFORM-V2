@@ -96,7 +96,11 @@ class AdaptiveVarianceField:
         localized_variance_flat = np.maximum(localized_variance_flat, 1e-6)
 
         # ---- 使用优化后的方差场执行同化 ----
-        x_analysis = self._run_analysis_with_variance(xb, H, y_obs, np.sqrt(localized_variance_flat), m)
+        # fmt: off
+        x_analysis = self._run_analysis_with_variance(
+            xb, H, y_obs, np.sqrt(localized_variance_flat), m
+        )
+        # fmt: on
 
         analysis = x_analysis.reshape(shape)
 

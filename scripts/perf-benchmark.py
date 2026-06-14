@@ -353,6 +353,7 @@ def print_report(all_stats: list[BenchmarkStats], total_wall_time: float) -> Non
     grand_p99 = _percentile(all_response_times, 99) if all_response_times else 0.0
     grand_rps = grand_success / total_wall_time if total_wall_time > 0 else 0.0
 
+    # fmt: off
     print(f"  {Color.CYAN}--- 汇总 ---{Color.RESET}")
     print()
     print(f"    总请求数:   {grand_total}")
@@ -366,11 +367,13 @@ def print_report(all_stats: list[BenchmarkStats], total_wall_time: float) -> Non
     print(f"    吞吐量:     {grand_rps:.2f} RPS")
     print(f"    P99 达标:   {'YES' if grand_p99 < P99_TARGET_MS else 'NO'}")
     print()
+    # fmt: on
 
     # 各端点详情
     print(f"  {Color.CYAN}--- 各端点详情 ---{Color.RESET}")
     print()
 
+    # fmt: off
     for stats in all_stats:
         p99_tag = Color.GREEN if stats.meets_p99_target else Color.RED
         err_tag = Color.RED if stats.error_rate > 5 else Color.GREEN
@@ -394,16 +397,19 @@ def print_report(all_stats: list[BenchmarkStats], total_wall_time: float) -> Non
             error_str = ", ".join(f"{err}({cnt}x)" for err, cnt in top_errors)
             print(f"      主要错误:   {Color.DIM}{error_str}{Color.RESET}")
         print()
+    # fmt: on
 
     # 最终判定
     all_pass = all(s.meets_p99_target for s in all_stats if s.total > 0)
     print(f"{Color.BOLD}{'-' * 80}{Color.RESET}")
+    # fmt: off
     if all_pass and grand_error_rate == 0:
         print(f"  {Color.GREEN}{Color.BOLD}*** 基准测试结果: PASS (所有端点 P99 < {P99_TARGET_MS}ms, 零错误) ***{Color.RESET}")
     elif all_pass:
         print(f"  {Color.YELLOW}{Color.BOLD}*** 基准测试结果: PASS (所有端点 P99 < {P99_TARGET_MS}ms, 存在错误) ***{Color.RESET}")
     else:
         print(f"  {Color.RED}{Color.BOLD}*** 基准测试结果: FAIL (存在端点 P99 >= {P99_TARGET_MS}ms) ***{Color.RESET}")
+    # fmt: on
     print(f"{Color.BOLD}{'-' * 80}{Color.RESET}")
     print()
 

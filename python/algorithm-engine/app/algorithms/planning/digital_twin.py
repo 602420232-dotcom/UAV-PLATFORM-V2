@@ -384,7 +384,10 @@ class DigitalTwinPlanner:
 
         # 总距离
         positions = [np.array(t["position"]) for t in trajectory]
-        distances = [np.linalg.norm(positions[i + 1] - positions[i]) for i in range(len(positions) - 1)]
+        distances = [
+            np.linalg.norm(positions[i + 1] - positions[i])
+            for i in range(len(positions) - 1)
+        ]
         total_distance = float(np.sum(distances)) if distances else 0.0
 
         # 能耗估算（简化模型）

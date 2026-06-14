@@ -217,7 +217,6 @@ async function handleCreateExperiment() {
 // ============================================================
 
 const compareAlgorithms = ref<number[]>([])
-const compareDialogVisible = ref(false)
 
 const comparisonData = [
   { name: 'A* 路径规划', executionTime: 322, accuracy: 0.95, resourceUsage: 45 },

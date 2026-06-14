@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import logging
 import time as _time
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any, Optional
 
 import numpy as np
@@ -332,14 +332,16 @@ class ModelQuantizer:
 
         # 相对误差
         norm_original = np.linalg.norm(original_weights)
-        relative_error = float(np.linalg.norm(diff) / max(norm_original, 1e-10))
+        relative_error = float(np.linalg.norm(diff) / max(float(norm_original), 1e-10))
 
         # 余弦相似度
         cos_sim = float(
             np.dot(original_weights.flatten(), dequantized.flatten())
             / max(
-                np.linalg.norm(original_weights.flatten())
-                * np.linalg.norm(dequantized.flatten()),
+                float(
+                    np.linalg.norm(original_weights.flatten())
+                    * np.linalg.norm(dequantized.flatten())
+                ),
                 1e-10,
             )
         )
@@ -427,8 +429,10 @@ class ModelQuantizer:
             cos_sim = float(
                 np.dot(weights.flatten(), new_dequantized.flatten())
                 / max(
-                    np.linalg.norm(weights.flatten())
-                    * np.linalg.norm(new_dequantized.flatten()),
+                    float(
+                        np.linalg.norm(weights.flatten())
+                        * np.linalg.norm(new_dequantized.flatten())
+                    ),
                     1e-10,
                 )
             )
@@ -455,7 +459,7 @@ class ModelQuantizer:
         return {
             "qat_weights": best_w.tolist(),
             "quantized_weights": final_quantized.tolist(),
-            "loss_history": [round(l, 6) for l in loss_history],
+            "loss_history": [round(v, 6) for v in loss_history],
             "accuracy_history": [round(a, 6) for a in accuracy_history],
             "final_loss": round(best_loss, 6),
             "accuracy_recovery": round(accuracy_recovery, 4),

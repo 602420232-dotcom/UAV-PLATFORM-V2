@@ -48,7 +48,11 @@ class RedisCache:
 
     async def set_task_status(self, task_id: str, status: dict[str, Any]) -> None:
         """Cache task status with TTL."""
-        await self.client.set(f"task:{task_id}", json.dumps(status, default=str), ex=self._task_ttl)
+        await self.client.set(
+            f"task:{task_id}",
+            json.dumps(status, default=str),
+            ex=self._task_ttl,
+        )
 
     async def get_task_status(self, task_id: str) -> Optional[dict[str, Any]]:
         """Retrieve cached task status."""

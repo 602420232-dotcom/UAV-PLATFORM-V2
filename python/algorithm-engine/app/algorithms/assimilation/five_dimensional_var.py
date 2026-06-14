@@ -62,13 +62,20 @@ class FiveDimensionalVAR:
         self.observation_error_scale: float = self.config.get("observation_error_scale", 0.1)
 
         # Hybrid B 矩阵配置
+        self.hybrid_b_matrix: bool = self.config.get("hybrid_b_matrix", False)
         self.hybrid_alpha: float = self.config.get("hybrid_alpha", 0.7)
+        self.hybrid_weight: float = self.config.get("hybrid_weight", 0.5)
         self.nmc_weight: float = self.config.get("nmc_weight", 0.7)
         self.climatology_weight: float = 1.0 - self.nmc_weight
 
         # 循环同化配置
+        self.cycling_mode: bool = self.config.get("cycling_mode", False)
+        self.n_cycling_rounds: int = self.config.get("n_cycling_rounds", 4)
         self.cycling_window: int = self.config.get("cycling_window", 6)
         self.cycling_overlap: int = self.config.get("cycling_overlap", 1)
+
+        # 观测密度配置
+        self.observation_density: str = self.config.get("observation_density", "normal")
 
         # 增量分析配置
         self.incremental_resolution: int = self.config.get("incremental_resolution", 4)
@@ -186,7 +193,12 @@ class FiveDimensionalVAR:
                 # 梯度下降更新
                 x = x - self.learning_rate * grad
 
-                if len(cost_history) > 1 and abs(cost_history[-2] - cost_history[-1]) < self.tolerance:
+                # fmt: off
+                if (
+                    len(cost_history) > 1
+                    and abs(cost_history[-2] - cost_history[-1]) < self.tolerance
+                ):
+                    # fmt: on
                     logger.info("5D-VAR 外循环%d 内迭代%d 收敛", outer_iter, i)
                     break
 
@@ -303,7 +315,9 @@ class FiveDimensionalVAR:
             "grid_shape": list(background.shape),
             "diagnostics": {
                 "n_cycles_completed": n_windows,
-                "total_observations_assimilated": sum(r.get("n_observations", 0) for r in cycle_results),
+                "total_observations_assimilated": sum(
+                    r.get("n_observations", 0) for r in cycle_results
+                ),
                 "cycles_converged": sum(1 for r in cycle_results if r.get("converged", False)),
             },
         }
@@ -369,7 +383,11 @@ class FiveDimensionalVAR:
         try:
             eigenvalues, eigenvectors = np.linalg.eigh(B_hybrid)
             eigenvalues = np.maximum(eigenvalues, 1e-10)
-            B_inv_sqrt = eigenvectors @ np.diag(1.0 / np.sqrt(eigenvalues)) @ eigenvectors.T  # noqa: N806
+            # fmt: off
+            B_inv_sqrt = (
+                eigenvectors @ np.diag(1.0 / np.sqrt(eigenvalues)) @ eigenvectors.T
+            )  # noqa: N806
+            # fmt: on
         except np.linalg.LinAlgError:
             logger.warning("B矩阵特征分解失败，使用对角近似")
             B_inv_sqrt = np.eye(n) / self.sigma_b  # noqa: N806

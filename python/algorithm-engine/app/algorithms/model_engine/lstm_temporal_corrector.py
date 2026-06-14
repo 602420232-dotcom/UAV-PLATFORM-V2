@@ -89,7 +89,11 @@ class LSTMTemporalCorrector:
 
         # 初始化权重
         seq_len = input_sequence.shape[0]
-        feature_dim = int(input_sequence.shape[1] if input_sequence.ndim == 2 else np.prod(input_sequence.shape[1:]))
+        feature_dim = int(
+            input_sequence.shape[1]
+            if input_sequence.ndim == 2
+            else np.prod(input_sequence.shape[1:])
+        )
         self._initialize_weights(feature_dim)
 
         logger.info(
@@ -240,7 +244,12 @@ class LSTMTemporalCorrector:
             inp = x[t : t + 1]  # (1, features)
             for layer in range(self.num_layers):
                 weights = self._lstm_weights[layer]
-                gates = inp @ weights["W_ih"].T + weights["b_ih"] + h[layer] @ weights["W_hh"].T + weights["b_hh"]
+                gates = (
+                    inp @ weights["W_ih"].T
+                    + weights["b_ih"]
+                    + h[layer] @ weights["W_hh"].T
+                    + weights["b_hh"]
+                )
                 i_gate = self._sigmoid(gates[:, : self.hidden_size])
                 f_gate = self._sigmoid(gates[:, self.hidden_size : 2 * self.hidden_size])
                 o_gate = self._sigmoid(gates[:, 2 * self.hidden_size : 3 * self.hidden_size])

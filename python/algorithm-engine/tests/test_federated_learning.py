@@ -14,13 +14,10 @@ from __future__ import annotations
 
 import json
 import os
-import shutil
 import tempfile
-from typing import Any
 
 import numpy as np
 import pytest
-
 
 # ---------------------------------------------------------------------------
 # FedAvg Client Tests
@@ -367,7 +364,7 @@ class TestFedProxClient:
         model = np.random.randn(5)
         global_model = model.copy()
 
-        fedavg_client = FedAvgClient(
+        FedAvgClient(
             client_id="fedavg", model=model.copy(), learning_rate=0.01
         )
         fedprox_client = FedProxClient(
@@ -508,9 +505,7 @@ class TestCheckpointManager:
                 early_stop_patience=100,
             )
             client_data = [{"n_samples": 50} for _ in range(2)]
-            result1 = server1.train(client_data)
-
-            saved_model = np.array(result1["global_model"]).copy()
+            _result = server1.train(client_data)
 
             # Phase 2: Create new server and resume
             server2 = FedAvgServer(

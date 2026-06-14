@@ -196,7 +196,11 @@ class DataPipeline:
 
         在不同气压/高度层之间进行插值，支持线性和对数插值。
         """
-        data = np.asarray(input_data, dtype=float) if input_data is not None else np.zeros((10, 50, 50))
+        data = (
+            np.asarray(input_data, dtype=float)
+            if input_data is not None
+            else np.zeros((10, 50, 50))
+        )
 
         if data.ndim < 3:
             data = np.expand_dims(data, axis=0)
@@ -317,7 +321,11 @@ class DataPipeline:
 
         对时间序列数据进行降采样和统计聚合。
         """
-        data = np.asarray(input_data, dtype=float) if input_data is not None else np.zeros((24, 50, 50))
+        data = (
+            np.asarray(input_data, dtype=float)
+            if input_data is not None
+            else np.zeros((24, 50, 50))
+        )
 
         if data.ndim < 3:
             data = np.expand_dims(data, axis=0)

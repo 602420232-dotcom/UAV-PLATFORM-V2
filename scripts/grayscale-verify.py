@@ -541,7 +541,11 @@ def check_algorithm_registration(host: str, results: VerifyResult, verbose: bool
                     cat_summary = ", ".join(
                         f"{cat}={cnt}" for cat, cnt in sorted(category_counts.items())
                     )
-                    verbose_info = json.dumps(body[:5], indent=2, ensure_ascii=False) if verbose else ""
+                    verbose_info = (
+                        json.dumps(body[:5], indent=2, ensure_ascii=False)
+                        if verbose
+                        else ""
+                    )
 
                     if algo_count == EXPECTED_ALGORITHM_COUNT:
                         results.record(
@@ -726,7 +730,12 @@ KAFKA_POLL_TIMEOUT = 10  # HTTP 轮询等待任务完成的最大秒数
 KAFKA_POLL_INTERVAL = 1  # 轮询间隔秒数
 
 
-def _check_kafka_via_http(host: str, results: VerifyResult, category: str, verbose: bool = False) -> None:
+def _check_kafka_via_http(
+    host: str,
+    results: VerifyResult,
+    category: str,
+    verbose: bool = False,
+) -> None:
     """
     通过 HTTP 方式验证 Kafka 全链路:
       1. 通过 algorithm-engine REST API 提交算法任务
@@ -764,7 +773,11 @@ def _check_kafka_via_http(host: str, results: VerifyResult, category: str, verbo
                 task_id = resp_data.get("task_id")
                 algo_id = resp_data.get("algorithm_id")
                 status = resp_data.get("status")
-                verbose_info = json.dumps(resp_data, indent=2, ensure_ascii=False) if verbose else ""
+                verbose_info = (
+                    json.dumps(resp_data, indent=2, ensure_ascii=False)
+                    if verbose
+                    else ""
+                )
                 results.record(
                     category,
                     "7a. 提交算法任务 (A* 路径规划) [HTTP]",
@@ -833,14 +846,22 @@ def _check_kafka_via_http(host: str, results: VerifyResult, category: str, verbo
                     resp_data = resp.json()
                     task_status = resp_data.get("status", "UNKNOWN")
 
-                    if task_status in ("completed", "COMPLETED", "success", "SUCCESS", "done", "DONE"):
+                    # fmt: off
+                    if task_status in (
+                        "completed", "COMPLETED", "success", "SUCCESS", "done", "DONE"
+                    ):
                         task_completed = True
+                    # fmt: on
                         task_result = resp_data.get("result") or resp_data.get("data")
                         break
                     elif task_status in ("failed", "FAILED", "error", "ERROR"):
                         break
-                    elif task_status in ("pending", "PENDING", "running", "RUNNING", "queued", "QUEUED"):
+                    # fmt: off
+                    elif task_status in (
+                        "pending", "PENDING", "running", "RUNNING", "queued", "QUEUED"
+                    ):
                         time.sleep(KAFKA_POLL_INTERVAL)
+                    # fmt: on
                         continue
                     else:
                         # 未知状态，尝试继续轮询
@@ -856,7 +877,11 @@ def _check_kafka_via_http(host: str, results: VerifyResult, category: str, verbo
                 break
 
         duration = time.time() - sub_start
-        verbose_info = json.dumps(task_result, indent=2, ensure_ascii=False) if verbose and task_result else ""
+        verbose_info = (
+            json.dumps(task_result, indent=2, ensure_ascii=False)
+            if verbose and task_result
+            else ""
+        )
 
         if task_completed:
             results.record(
@@ -896,7 +921,13 @@ def _check_kafka_via_http(host: str, results: VerifyResult, category: str, verbo
         )
 
 
-def _check_kafka_via_consumer(host: str, results: VerifyResult, category: str, task_id: str, verbose: bool = False) -> None:
+def _check_kafka_via_consumer(
+    host: str,
+    results: VerifyResult,
+    category: str,
+    task_id: str,
+    verbose: bool = False,
+) -> None:
     """
     使用 kafka-python 原生 Consumer 验证 Kafka Topic 消息 (可选增强验证)。
     仅在 kafka-python 可用时调用。

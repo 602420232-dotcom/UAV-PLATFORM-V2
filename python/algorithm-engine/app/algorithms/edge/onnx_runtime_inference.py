@@ -191,7 +191,7 @@ class OnnxRuntimeInferencer:
             输出名称到输出数组的映射字典。
         """
         np.random.seed(42)
-        session = self.get_session()
+        self.get_session()
 
         # 模拟推理计算：矩阵乘法
         input_dim = input_data.shape[-1]

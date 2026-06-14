@@ -98,7 +98,11 @@ class SparseGPModel:
             proj_cov = K_ss - K_sm @ B  # (n_test, n_test)
 
             # 添加数据项贡献
-            diag_Knn = np.diag(self._compute_kernel(train_x, train_x, kernel_type, length_scale, signal_variance))
+            diag_Knn = np.diag(
+                self._compute_kernel(
+                    train_x, train_x, kernel_type, length_scale, signal_variance
+                )
+            )
             diag_Qnn = np.sum(K_nm * A.T, axis=1)  # 投影方差
             sigma2 = self.noise_variance
             Lambda_inv = 1.0 / (diag_Knn - diag_Qnn + sigma2 + 1e-8)  # (n,)

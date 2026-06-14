@@ -141,9 +141,15 @@ class CBBAPlanner:
                         if uav != uav_winner and task_idx in bundles[uav]:
                             bundles[uav].remove(task_idx)
                             # 从路径中移除
+                            # fmt: off
                             uav_paths[uav] = [
-                                p for p in uav_paths[uav] if not any(np.allclose(p, tasks[task_idx]) for _ in [1])
+                                p
+                                for p in uav_paths[uav]
+                                if not any(
+                                    np.allclose(p, tasks[task_idx]) for _ in [1]
+                                )
                             ]
+                            # fmt: on
                             # 重建路径
                             uav_paths[uav] = [uav_starts[uav].copy()]
                             for t_idx in bundles[uav]:
