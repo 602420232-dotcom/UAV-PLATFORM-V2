@@ -1,6 +1,5 @@
 package com.uav.utm.config;
 
-import com.uav.utm.ws.SubscriptionManager;
 import com.uav.utm.ws.UtmWebSocketHandler;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.socket.config.annotation.EnableWebSocket;

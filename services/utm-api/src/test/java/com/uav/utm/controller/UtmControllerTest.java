@@ -1,6 +1,5 @@
 package com.uav.utm.controller;
 
-import com.uav.utm.UtmApplication;
 import com.uav.utm.entity.Airspace;
 import com.uav.utm.service.AirspaceService;
 import org.junit.jupiter.api.DisplayName;

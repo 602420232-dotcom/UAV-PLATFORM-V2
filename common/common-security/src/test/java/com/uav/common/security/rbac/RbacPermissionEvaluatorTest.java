@@ -36,7 +36,6 @@ class RbacPermissionEvaluatorTest {
         evaluator = new RbacPermissionEvaluator();
     }
 
-    @SuppressWarnings("unchecked")
     private Collection<GrantedAuthority> authorities(String... authorityStrings) {
         List<GrantedAuthority> list = new ArrayList<>();
         for (String auth : authorityStrings) {
@@ -50,7 +49,7 @@ class RbacPermissionEvaluatorTest {
     void hasPermissionShouldReturnTrueWhenAuthorityMatches() {
         when(authentication.isAuthenticated()).thenReturn(true);
         when(authentication.getAuthorities()).thenReturn(
-                (Collection) authorities("API:api:v1:planning:POST:path")
+                authorities("API:api:v1:planning:POST:path")
         );
 
         boolean result = evaluator.hasPermission(authentication, "api:v1:planning:POST:path", "API");
@@ -64,7 +63,7 @@ class RbacPermissionEvaluatorTest {
     void hasPermissionShouldReturnFalseWhenAuthorityDoesNotMatch() {
         when(authentication.isAuthenticated()).thenReturn(true);
         when(authentication.getAuthorities()).thenReturn(
-                (Collection) authorities("API:api:v1:weather:GET:data")
+                authorities("API:api:v1:weather:GET:data")
         );
 
         boolean result = evaluator.hasPermission(authentication, "api:v1:planning:POST:path", "API");
@@ -96,7 +95,7 @@ class RbacPermissionEvaluatorTest {
     void hasPermissionFourArgsShouldReturnTrueWhenMatches() {
         when(authentication.isAuthenticated()).thenReturn(true);
         when(authentication.getAuthorities()).thenReturn(
-                (Collection) authorities("RESOURCE:READ")
+                authorities("RESOURCE:READ")
         );
 
         boolean result = evaluator.hasPermission(authentication, (Serializable) 1L, "RESOURCE", "READ");
@@ -109,7 +108,7 @@ class RbacPermissionEvaluatorTest {
     void hasPermissionFourArgsShouldReturnFalseWhenNotMatches() {
         when(authentication.isAuthenticated()).thenReturn(true);
         when(authentication.getAuthorities()).thenReturn(
-                (Collection) authorities("RESOURCE:WRITE")
+                authorities("RESOURCE:WRITE")
         );
 
         boolean result = evaluator.hasPermission(authentication, (Serializable) 1L, "RESOURCE", "READ");
@@ -122,7 +121,7 @@ class RbacPermissionEvaluatorTest {
     void hasAnyPermissionShouldReturnTrueWhenAnyMatches() {
         when(authentication.isAuthenticated()).thenReturn(true);
         when(authentication.getAuthorities()).thenReturn(
-                (Collection) authorities("API:read", "API:write")
+                authorities("API:read", "API:write")
         );
 
         List<String> permissions = List.of("API:delete", "API:write", "API:admin");
@@ -136,7 +135,7 @@ class RbacPermissionEvaluatorTest {
     void hasAnyPermissionShouldReturnFalseWhenNoneMatches() {
         when(authentication.isAuthenticated()).thenReturn(true);
         when(authentication.getAuthorities()).thenReturn(
-                (Collection) authorities("API:read")
+                authorities("API:read")
         );
 
         List<String> permissions = List.of("API:delete", "API:admin");
@@ -150,7 +149,7 @@ class RbacPermissionEvaluatorTest {
     void hasAnyPermissionShouldReturnFalseWhenPermissionListIsEmpty() {
         when(authentication.isAuthenticated()).thenReturn(true);
         when(authentication.getAuthorities()).thenReturn(
-                (Collection) authorities("API:read")
+                authorities("API:read")
         );
 
         boolean result = evaluator.hasAnyPermission(authentication, Collections.emptyList());
@@ -172,7 +171,7 @@ class RbacPermissionEvaluatorTest {
     void unknownResourceTypeShouldReturnFalse() {
         when(authentication.isAuthenticated()).thenReturn(true);
         when(authentication.getAuthorities()).thenReturn(
-                (Collection) authorities("UNKNOWN:some:resource")
+                authorities("UNKNOWN:some:resource")
         );
 
         boolean result = evaluator.hasPermission(authentication, "other:resource", "API");

@@ -85,7 +85,7 @@ public class TenantService extends ServiceImpl<TenantMapper, Tenant> {
             for (String sql : ddl.split(";")) {
                 String trimmed = sql.trim();
                 if (!trimmed.isEmpty()) {
-                    stmt.executeUpdate(trimmed);
+                    stmt.executeUpdate(trimmed + ";");
                 }
             }
             log.info("Created tenant tables in schema: {}", schemaName);

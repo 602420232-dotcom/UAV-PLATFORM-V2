@@ -3,8 +3,6 @@ package com.uav.assimilation.dto;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
-import java.util.Map;
-
 /**
  * GPR 后处理请求
  */

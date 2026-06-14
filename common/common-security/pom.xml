@@ -23,6 +23,12 @@
             <version>${project.version}</version>
         </dependency>
 
+        <!-- Spring Boot Starter（提供 spring-core、spring-beans 等基础组件） -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter</artifactId>
+        </dependency>
+
         <!-- Spring Security -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
