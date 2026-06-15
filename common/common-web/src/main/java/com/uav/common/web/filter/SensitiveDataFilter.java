@@ -44,7 +44,7 @@ public class SensitiveDataFilter extends OncePerRequestFilter {
             return;
         }
 
-        ContentCachingRequestWrapper wrappedRequest = new ContentCachingRequestWrapper(request);
+        ContentCachingRequestWrapper wrappedRequest = new ContentCachingRequestWrapper(request, MAX_PAYLOAD_SIZE);
         ContentCachingResponseWrapper wrappedResponse = new ContentCachingResponseWrapper(response);
 
         try {

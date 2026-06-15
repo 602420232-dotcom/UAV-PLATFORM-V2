@@ -1,6 +1,7 @@
 package com.uav.platform.interceptor;
 
 import com.baomidou.mybatisplus.extension.plugins.inner.InnerInterceptor;
+import com.uav.platform.config.DynamicDataSource;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.executor.Executor;
 import org.apache.ibatis.mapping.BoundSql;
@@ -17,7 +18,7 @@ public class TenantLineInnerInterceptor implements InnerInterceptor {
 
     @Override
     public void beforeQuery(Executor executor, MappedStatement ms, Object parameter,
-                            RowBounds rowBounds, ResultHandler<?> resultHandler, BoundSql boundSql) throws SQLException {
+                            RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql) throws SQLException {
         String schema = resolveSchema(parameter);
         if (schema != null) {
             DynamicDataSource.CONTEXT.set(schema);
