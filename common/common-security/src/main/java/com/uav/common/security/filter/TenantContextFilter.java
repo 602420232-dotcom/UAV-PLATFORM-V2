@@ -1,5 +1,6 @@
 package com.uav.common.security.filter;
 
+import com.uav.common.core.constant.CommonConstant;
 import com.uav.common.core.util.TenantContext;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -27,7 +28,6 @@ import java.io.IOException;
 public class TenantContextFilter extends OncePerRequestFilter {
 
     public static final String HEADER_TENANT_ID = "X-Tenant-Id";
-    public static final String HEADER_API_KEY = "X-Api-Key";
     public static final String HEADER_REQUEST_ID = "X-Request-Id";
     public static final String HEADER_EMERGENCY = "X-Emergency";
 
@@ -37,7 +37,7 @@ public class TenantContextFilter extends OncePerRequestFilter {
                                     FilterChain filterChain) throws ServletException, IOException {
         try {
             String tenantId = request.getHeader(HEADER_TENANT_ID);
-            String apiKey = request.getHeader(HEADER_API_KEY);
+            String apiKey = request.getHeader(CommonConstant.HEADER_API_KEY);
             String requestId = request.getHeader(HEADER_REQUEST_ID);
             String emergency = request.getHeader(HEADER_EMERGENCY);
 

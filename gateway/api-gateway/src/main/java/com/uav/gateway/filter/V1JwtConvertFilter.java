@@ -64,13 +64,19 @@ public class V1JwtConvertFilter implements GlobalFilter, Ordered {
     public V1JwtConvertFilter(
             @Value("${gateway.v1.jwt.secret:}") String v1Secret,
             @Value("${gateway.v2.jwt.secret:}") String v2Secret) {
-        this.v1SecretKey = deriveKey(v1Secret, "v1-default-secret-key-at-least-32-characters");
-        this.v2SecretKey = deriveKey(v2Secret, "default-v2-secret-key-at-least-32-characters-long");
+        if (!StringUtils.hasText(v1Secret)) {
+            log.warn("[JWT-CONVERT] V1 JWT secret not configured (gateway.v1.jwt.secret), V1 token conversion will be disabled");
+        }
+        if (!StringUtils.hasText(v2Secret)) {
+            throw new IllegalArgumentException("V2 JWT secret must be configured via gateway.v2.jwt.secret");
+        }
+        this.v1SecretKey = StringUtils.hasText(v1Secret) ? deriveKey(v1Secret) : null;
+        this.v2SecretKey = deriveKey(v2Secret);
     }
 
-    private SecretKey deriveKey(String secret, String fallback) {
-        String effectiveSecret = StringUtils.hasText(secret) ? secret : fallback;
+    private SecretKey deriveKey(String secret) {
         // Ensure key is at least 32 bytes for HS256
+        String effectiveSecret = secret;
         if (effectiveSecret.getBytes(StandardCharsets.UTF_8).length < 32) {
             effectiveSecret = String.format("%-32s", effectiveSecret).replace(' ', '0');
         }
@@ -157,6 +163,9 @@ public class V1JwtConvertFilter implements GlobalFilter, Ordered {
      * Check if token is V1 format by attempting to verify with V1 key
      */
     private boolean isV1Token(String token) {
+        if (v1SecretKey == null) {
+            return false;
+        }
         try {
             Jws<Claims> claims = Jwts.parser()
                     .verifyWith(v1SecretKey)

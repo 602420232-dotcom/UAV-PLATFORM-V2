@@ -73,6 +73,11 @@ public class TenantService extends ServiceImpl<TenantMapper, Tenant> {
     }
 
     private void createSchemaAndTables(String schemaName) {
+        // 校验 schemaName 只允许字母数字下划线
+        if (!schemaName.matches("^[a-zA-Z0-9_]+$")) {
+            throw new IllegalArgumentException("Invalid schema name: " + schemaName);
+        }
+
         try (Connection conn = dataSource.getConnection();
              Statement stmt = conn.createStatement()) {
 

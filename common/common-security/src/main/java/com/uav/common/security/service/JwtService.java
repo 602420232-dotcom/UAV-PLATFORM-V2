@@ -99,7 +99,7 @@ public class JwtService {
                 .issuer(issuer)
                 .issuedAt(now)
                 .expiration(expiry)
-                .signWith(getSigningKey(), Jwts.SIG.HS256)
+                .signWith(getSigningKey())
                 .compact();
     }
 
@@ -122,7 +122,7 @@ public class JwtService {
                 .issuer(issuer)
                 .issuedAt(now)
                 .expiration(expiry)
-                .signWith(getSigningKey(), Jwts.SIG.HS256)
+                .signWith(getSigningKey())
                 .compact();
     }
 
@@ -237,6 +237,9 @@ public class JwtService {
      * @return 签名密钥
      */
     private SecretKey getSigningKey() {
+        if (jwtSecret == null || jwtSecret.isBlank()) {
+            throw new IllegalStateException("security.jwt.secret is not configured");
+        }
         byte[] keyBytes = Decoders.BASE64.decode(jwtSecret);
         return Keys.hmacShaKeyFor(keyBytes);
     }

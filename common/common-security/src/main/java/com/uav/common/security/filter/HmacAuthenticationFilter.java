@@ -1,5 +1,6 @@
 package com.uav.common.security.filter;
 
+import com.uav.common.core.constant.CommonConstant;
 import com.uav.common.core.util.HmacUtil;
 import com.uav.common.security.annotation.RequireApiKey;
 import com.uav.common.security.service.ApiKeyService;
@@ -60,7 +61,7 @@ public class HmacAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        String apiKey = request.getHeader(HEADER_API_KEY);
+        String apiKey = request.getHeader(CommonConstant.HEADER_API_KEY);
         String timestamp = request.getHeader(HEADER_TIMESTAMP);
         String signature = request.getHeader(HEADER_SIGNATURE);
 
