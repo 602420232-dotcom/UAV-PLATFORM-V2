@@ -18,6 +18,7 @@ spring:
           max-idle: 8
           min-idle: 0
   datasource:
+    connection-fetch: lazy
     url: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3306}/uav_platform?useUnicode=true&characterEncoding=utf-8mb4&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
     username: ${MYSQL_USERNAME:root}
     password: ${MYSQL_PASSWORD}

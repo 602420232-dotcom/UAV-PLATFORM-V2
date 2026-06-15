@@ -12,7 +12,6 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -36,21 +35,20 @@ class RbacPermissionEvaluatorTest {
         evaluator = new RbacPermissionEvaluator();
     }
 
-    private Collection<GrantedAuthority> authorities(String... authorityStrings) {
+    @SuppressWarnings("unchecked")
+    private void mockAuthorities(String... authorityStrings) {
         List<GrantedAuthority> list = new ArrayList<>();
         for (String auth : authorityStrings) {
             list.add(new SimpleGrantedAuthority(auth));
         }
-        return list;
+        doReturn(list).when(authentication).getAuthorities();
     }
 
     @Test
     @DisplayName("hasPermission 应返回 true 当用户拥有匹配权限")
     void hasPermissionShouldReturnTrueWhenAuthorityMatches() {
         when(authentication.isAuthenticated()).thenReturn(true);
-        when(authentication.getAuthorities()).thenReturn(
-                authorities("API:api:v1:planning:POST:path")
-        );
+        mockAuthorities("API:api:v1:planning:POST:path");
 
         boolean result = evaluator.hasPermission(authentication, "api:v1:planning:POST:path", "API");
 
@@ -62,9 +60,7 @@ class RbacPermissionEvaluatorTest {
     @DisplayName("hasPermission 应返回 false 当用户权限不匹配")
     void hasPermissionShouldReturnFalseWhenAuthorityDoesNotMatch() {
         when(authentication.isAuthenticated()).thenReturn(true);
-        when(authentication.getAuthorities()).thenReturn(
-                authorities("API:api:v1:weather:GET:data")
-        );
+        mockAuthorities("API:api:v1:weather:GET:data");
 
         boolean result = evaluator.hasPermission(authentication, "api:v1:planning:POST:path", "API");
 
@@ -94,9 +90,7 @@ class RbacPermissionEvaluatorTest {
     @DisplayName("hasPermission 四参数版本应返回 true 当权限匹配")
     void hasPermissionFourArgsShouldReturnTrueWhenMatches() {
         when(authentication.isAuthenticated()).thenReturn(true);
-        when(authentication.getAuthorities()).thenReturn(
-                authorities("RESOURCE:READ")
-        );
+        mockAuthorities("RESOURCE:READ");
 
         boolean result = evaluator.hasPermission(authentication, (Serializable) 1L, "RESOURCE", "READ");
 
@@ -107,9 +101,7 @@ class RbacPermissionEvaluatorTest {
     @DisplayName("hasPermission 四参数版本应返回 false 当权限不匹配")
     void hasPermissionFourArgsShouldReturnFalseWhenNotMatches() {
         when(authentication.isAuthenticated()).thenReturn(true);
-        when(authentication.getAuthorities()).thenReturn(
-                authorities("RESOURCE:WRITE")
-        );
+        mockAuthorities("RESOURCE:WRITE");
 
         boolean result = evaluator.hasPermission(authentication, (Serializable) 1L, "RESOURCE", "READ");
 
@@ -120,9 +112,7 @@ class RbacPermissionEvaluatorTest {
     @DisplayName("hasAnyPermission 应返回 true 当拥有任意一个权限")
     void hasAnyPermissionShouldReturnTrueWhenAnyMatches() {
         when(authentication.isAuthenticated()).thenReturn(true);
-        when(authentication.getAuthorities()).thenReturn(
-                authorities("API:read", "API:write")
-        );
+        mockAuthorities("API:read", "API:write");
 
         List<String> permissions = List.of("API:delete", "API:write", "API:admin");
         boolean result = evaluator.hasAnyPermission(authentication, permissions);
@@ -134,9 +124,7 @@ class RbacPermissionEvaluatorTest {
     @DisplayName("hasAnyPermission 应返回 false 当没有任何权限匹配")
     void hasAnyPermissionShouldReturnFalseWhenNoneMatches() {
         when(authentication.isAuthenticated()).thenReturn(true);
-        when(authentication.getAuthorities()).thenReturn(
-                authorities("API:read")
-        );
+        mockAuthorities("API:read");
 
         List<String> permissions = List.of("API:delete", "API:admin");
         boolean result = evaluator.hasAnyPermission(authentication, permissions);
@@ -148,9 +136,7 @@ class RbacPermissionEvaluatorTest {
     @DisplayName("hasAnyPermission 应返回 false 当权限列表为空")
     void hasAnyPermissionShouldReturnFalseWhenPermissionListIsEmpty() {
         when(authentication.isAuthenticated()).thenReturn(true);
-        when(authentication.getAuthorities()).thenReturn(
-                authorities("API:read")
-        );
+        mockAuthorities("API:read");
 
         boolean result = evaluator.hasAnyPermission(authentication, Collections.emptyList());
 
@@ -170,9 +156,7 @@ class RbacPermissionEvaluatorTest {
     @DisplayName("未知资源类型权限检查应返回 false")
     void unknownResourceTypeShouldReturnFalse() {
         when(authentication.isAuthenticated()).thenReturn(true);
-        when(authentication.getAuthorities()).thenReturn(
-                authorities("UNKNOWN:some:resource")
-        );
+        mockAuthorities("UNKNOWN:some:resource");
 
         boolean result = evaluator.hasPermission(authentication, "other:resource", "API");
 
