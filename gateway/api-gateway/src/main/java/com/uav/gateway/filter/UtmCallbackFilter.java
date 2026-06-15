@@ -45,7 +45,7 @@ public class UtmCallbackFilter implements GlobalFilter, Ordered {
     @Value("${gateway.utm.whitelist:}")
     private String whitelistStr;
 
-    @Value("${gateway.utm.secret:default-secret-key}")
+    @Value("${gateway.utm.secret}")
     private String utmSecret;
 
     @Value("${gateway.utm.replay-window:300}")

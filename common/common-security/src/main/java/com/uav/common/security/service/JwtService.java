@@ -28,7 +28,7 @@ import java.util.function.Function;
 @Service
 public class JwtService {
 
-    @Value("${security.jwt.secret:uav-platform-default-secret-key-must-be-changed-in-production}")
+    @Value("${security.jwt.secret}")
     private String jwtSecret;
 
     /** Access Token 过期时间：30 分钟（1800000ms） */
