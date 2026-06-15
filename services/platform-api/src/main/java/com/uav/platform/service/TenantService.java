@@ -5,7 +5,6 @@ import com.uav.platform.entity.Tenant;
 import com.uav.platform.mapper.TenantMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,7 +20,6 @@ import java.time.LocalDateTime;
 public class TenantService extends ServiceImpl<TenantMapper, Tenant> {
 
     private final DataSource dataSource;
-    private final JdbcTemplate jdbcTemplate;
 
     private static final String TENANT_TABLES_DDL = """
         CREATE TABLE IF NOT EXISTS %s.sys_device (

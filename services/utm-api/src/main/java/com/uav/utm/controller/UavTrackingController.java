@@ -8,6 +8,7 @@ import com.uav.utm.entity.UavPosition;
 import com.uav.utm.service.UavTrackingService;
 import com.uav.utm.ws.SubscriptionManager;
 import jakarta.validation.Valid;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -26,11 +27,13 @@ public class UavTrackingController {
     }
 
     @PostMapping("/positions")
+    @PreAuthorize("hasAuthority('utm:track:write')")
     public Result<UavPosition> reportPosition(@Valid @RequestBody UavPositionReport report) {
         return Result.success(uavTrackingService.reportPosition(report));
     }
 
     @GetMapping("/uavs/{uavId}/position")
+    @PreAuthorize("hasAuthority('utm:track:read')")
     public Result<UavPosition> getCurrentPosition(@PathVariable String uavId) {
         return uavTrackingService.getCurrentPosition(uavId)
                 .map(Result::success)
@@ -38,11 +41,13 @@ public class UavTrackingController {
     }
 
     @GetMapping("/uavs/{uavId}/history")
+    @PreAuthorize("hasAuthority('utm:track:read')")
     public Result<List<UavPosition>> getTrackHistory(@PathVariable String uavId) {
         return Result.success(uavTrackingService.getTrackHistory(uavId));
     }
 
     @PostMapping("/conflicts/check")
+    @PreAuthorize("hasAuthority('utm:track:write')")
     public Result<List<ConflictAlert>> checkConflicts(@Valid @RequestBody ConflictCheckRequest request) {
         return Result.success(uavTrackingService.checkConflicts(request.getUavId()));
     }
@@ -56,6 +61,7 @@ public class UavTrackingController {
      * @return 订阅的频道集合
      */
     @GetMapping("/ws/subscriptions")
+    @PreAuthorize("hasAuthority('utm:track:read')")
     public Result<Set<String>> getSubscriptions(@RequestParam String sessionId) {
         Set<String> subscriptions = subscriptionManager.getSubscriptionsById(sessionId);
         return Result.success(subscriptions);

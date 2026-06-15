@@ -1,7 +1,6 @@
 package com.uav.observation.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.uav.common.core.constant.TaskStatus;
 import com.uav.common.core.context.MockContext;
 import com.uav.common.kafka.message.AlgorithmTaskMessage;
@@ -13,7 +12,6 @@ import com.uav.observation.mapper.ObservationTaskMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -21,9 +19,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -40,11 +36,9 @@ import java.util.concurrent.atomic.AtomicLong;
 public class ObservationService {
 
     private final RedisTemplate<String, Object> redisTemplate;
-    private final StringRedisTemplate stringRedisTemplate;
     private final ObservationTaskMapper taskMapper;
     private final AlgorithmTaskProducer algorithmTaskProducer;
     private final TaskStatusSyncService taskStatusSyncService;
-    private final ObjectMapper objectMapper;
 
     @Value("${uav.mock.enabled:true}")
     private boolean mockEnabled;
@@ -55,17 +49,13 @@ public class ObservationService {
     private final AtomicLong mockIdGenerator = new AtomicLong(1);
 
     public ObservationService(RedisTemplate<String, Object> redisTemplate,
-                              StringRedisTemplate stringRedisTemplate,
                               ObservationTaskMapper taskMapper,
                               AlgorithmTaskProducer algorithmTaskProducer,
-                              TaskStatusSyncService taskStatusSyncService,
-                              ObjectMapper objectMapper) {
+                              TaskStatusSyncService taskStatusSyncService) {
         this.redisTemplate = redisTemplate;
-        this.stringRedisTemplate = stringRedisTemplate;
         this.taskMapper = taskMapper;
         this.algorithmTaskProducer = algorithmTaskProducer;
         this.taskStatusSyncService = taskStatusSyncService;
-        this.objectMapper = objectMapper;
     }
 
     // ========== 公共方法 ==========

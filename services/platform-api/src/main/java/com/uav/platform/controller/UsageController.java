@@ -3,6 +3,7 @@ package com.uav.platform.controller;
 import com.uav.common.core.result.Result;
 import com.uav.platform.service.UsageService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,6 +25,7 @@ public class UsageController {
     private final UsageService usageService;
 
     @GetMapping("/daily")
+    @PreAuthorize("hasAuthority('platform:usage:read')")
     public Result<List<Map<String, Object>>> dailyAggregation(
             @RequestParam @NotNull Long tenantId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
@@ -32,6 +34,7 @@ public class UsageController {
     }
 
     @GetMapping("/api-path")
+    @PreAuthorize("hasAuthority('platform:usage:read')")
     public Result<List<Map<String, Object>>> apiPathAggregation(
             @RequestParam @NotNull Long tenantId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,

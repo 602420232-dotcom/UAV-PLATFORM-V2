@@ -4,6 +4,7 @@ import com.uav.common.core.result.Result;
 import com.uav.platform.entity.ApiKey;
 import com.uav.platform.service.ApiKeyServiceImpl;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,6 +28,7 @@ public class ApiKeyController {
     private final ApiKeyServiceImpl apiKeyService;
 
     @PostMapping
+    @PreAuthorize("hasAuthority('platform:apikey:write')")
     public Result<ApiKey> generate(@Valid @RequestBody GenerateApiKeyRequest request) {
         ApiKey apiKey = apiKeyService.generateApiKey(
                 request.getTenantId(),
@@ -38,28 +40,33 @@ public class ApiKeyController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('platform:apikey:read')")
     public Result<ApiKey> getById(@PathVariable Long id) {
         return Result.success(apiKeyService.getById(id));
     }
 
     @GetMapping("/tenant/{tenantId}")
+    @PreAuthorize("hasAuthority('platform:apikey:read')")
     public Result<List<ApiKey>> listByTenant(@PathVariable Long tenantId) {
         return Result.success(apiKeyService.listByTenant(tenantId));
     }
 
     @PostMapping("/{id}/enable")
+    @PreAuthorize("hasAuthority('platform:apikey:write')")
     public Result<Void> enable(@PathVariable Long id) {
         apiKeyService.enableApiKey(id);
         return Result.success();
     }
 
     @PostMapping("/{id}/disable")
+    @PreAuthorize("hasAuthority('platform:apikey:write')")
     public Result<Void> disable(@PathVariable Long id) {
         apiKeyService.disableApiKey(id);
         return Result.success();
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('platform:apikey:write')")
     public Result<Void> delete(@PathVariable Long id) {
         apiKeyService.removeApiKey(id);
         return Result.success();

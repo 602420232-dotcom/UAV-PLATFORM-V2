@@ -5,7 +5,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.uav.common.core.constant.TaskStatus;
 import com.uav.common.core.context.MockContext;
-import com.uav.common.core.result.ResultCode;
 import com.uav.common.core.statemachine.TaskStateMachine;
 import com.uav.common.core.util.IdUtil;
 import com.uav.common.kafka.message.AlgorithmTaskMessage;
@@ -22,7 +21,6 @@ import com.uav.planning.mapper.PlanningTaskMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -49,7 +47,6 @@ import java.util.concurrent.atomic.AtomicLong;
 @RequiredArgsConstructor
 public class PlanningService {
 
-    private final RedisTemplate<String, Object> redisTemplate;
     private final ObjectMapper objectMapper;
     private final PlanningTaskMapper taskMapper;
     private final PathResultMapper pathResultMapper;

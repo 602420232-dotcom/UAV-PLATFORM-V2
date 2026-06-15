@@ -22,6 +22,7 @@ import java.util.function.Function;
  * JWT 生成与验证服务
  * <p>
  * 基于 JJWT 0.12.6，支持 token 生成、解析、校验、刷新。
+ * Access Token 有效期 30 分钟，Refresh Token 有效期 7 天。
  */
 @Slf4j
 @Service
@@ -30,11 +31,20 @@ public class JwtService {
     @Value("${security.jwt.secret:uav-platform-default-secret-key-must-be-changed-in-production}")
     private String jwtSecret;
 
-    @Value("${security.jwt.expiration:86400000}")
+    /** Access Token 过期时间：30 分钟（1800000ms） */
+    @Value("${security.jwt.expiration:1800000}")
     private long jwtExpirationMs;
+
+    /** Refresh Token 过期时间：7 天（604800000ms） */
+    @Value("${security.jwt.refresh-expiration:604800000}")
+    private long jwtRefreshExpirationMs;
 
     @Value("${security.jwt.issuer:uav-platform}")
     private String issuer;
+
+    private static final String CLAIM_TOKEN_TYPE = "token_type";
+    private static final String TOKEN_TYPE_ACCESS = "access";
+    private static final String TOKEN_TYPE_REFRESH = "refresh";
 
     /**
      * 从 token 中提取用户名（subject）
@@ -60,28 +70,31 @@ public class JwtService {
     }
 
     /**
-     * 生成 JWT Token
+     * 生成 JWT Access Token
      *
      * @param username 用户名
-     * @return JWT token 字符串
+     * @return JWT access token 字符串
      */
     public String generateToken(String username) {
         return generateToken(new HashMap<>(), username);
     }
 
     /**
-     * 生成携带额外声明的 JWT Token
+     * 生成携带额外声明的 JWT Access Token
      *
      * @param extraClaims 额外声明
      * @param username    用户名
-     * @return JWT token 字符串
+     * @return JWT access token 字符串
      */
     public String generateToken(Map<String, Object> extraClaims, String username) {
+        Map<String, Object> claims = new HashMap<>(extraClaims);
+        claims.put(CLAIM_TOKEN_TYPE, TOKEN_TYPE_ACCESS);
+
         Date now = new Date();
         Date expiry = new Date(now.getTime() + jwtExpirationMs);
 
         return Jwts.builder()
-                .claims(extraClaims)
+                .claims(claims)
                 .subject(username)
                 .issuer(issuer)
                 .issuedAt(now)
@@ -91,7 +104,65 @@ public class JwtService {
     }
 
     /**
-     * 验证 token 是否有效（用户名匹配且未过期）
+     * 生成 JWT Refresh Token（有效期 7 天）
+     *
+     * @param username 用户名
+     * @return JWT refresh token 字符串
+     */
+    public String generateRefreshToken(String username) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put(CLAIM_TOKEN_TYPE, TOKEN_TYPE_REFRESH);
+
+        Date now = new Date();
+        Date expiry = new Date(now.getTime() + jwtRefreshExpirationMs);
+
+        return Jwts.builder()
+                .claims(claims)
+                .subject(username)
+                .issuer(issuer)
+                .issuedAt(now)
+                .expiration(expiry)
+                .signWith(getSigningKey(), Jwts.SIG.HS256)
+                .compact();
+    }
+
+    /**
+     * 验证 Refresh Token 是否有效
+     * <p>
+     * 校验签名、过期时间，并确认 token 类型为 refresh。
+     *
+     * @param token    JWT refresh token
+     * @param username 用户名
+     * @return 是否有效
+     */
+    public boolean validateRefreshToken(String token, String username) {
+        try {
+            final Claims claims = extractAllClaims(token);
+            String tokenType = claims.get(CLAIM_TOKEN_TYPE, String.class);
+
+            if (!TOKEN_TYPE_REFRESH.equals(tokenType)) {
+                log.warn("JWT token 类型不匹配: 期望 refresh, 实际 {}", tokenType);
+                return false;
+            }
+
+            String extractedUsername = claims.getSubject();
+            return extractedUsername.equals(username) && !claims.getExpiration().before(new Date());
+        } catch (ExpiredJwtException e) {
+            log.warn("JWT refresh token 已过期: {}", e.getMessage());
+        } catch (UnsupportedJwtException e) {
+            log.warn("不支持的 JWT refresh token: {}", e.getMessage());
+        } catch (MalformedJwtException e) {
+            log.warn("格式错误的 JWT refresh token: {}", e.getMessage());
+        } catch (SignatureException e) {
+            log.warn("JWT refresh token 签名验证失败: {}", e.getMessage());
+        } catch (IllegalArgumentException e) {
+            log.warn("JWT refresh token 为空或非法: {}", e.getMessage());
+        }
+        return false;
+    }
+
+    /**
+     * 验证 access token 是否有效（用户名匹配且未过期）
      *
      * @param token    JWT token
      * @param username 用户名

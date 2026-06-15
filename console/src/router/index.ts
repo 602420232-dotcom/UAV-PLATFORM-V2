@@ -108,4 +108,79 @@ router.beforeEach((to, _from, next) => {
   }
 })
 
+// 路由预加载策略：鼠标悬停时预加载目标路由组件
+const preloadMap = new Map<string, () => Promise<void>>()
+const preloadedRoutes = new Set<string>()
+
+function setupRoutePreloading() {
+  // 收集所有懒加载路由的预加载函数
+  routes.forEach((route) => {
+    collectPreloadFunctions(route)
+  })
+
+  // 在 document 上监听 mouseover 事件，匹配导航链接
+  document.addEventListener('mouseover', (event) => {
+    const target = event.target as HTMLElement
+    const anchor = target.closest('a[href]') as HTMLAnchorElement | null
+    if (!anchor) return
+
+    const href = anchor.getAttribute('href')
+    if (!href || href.startsWith('http') || href.startsWith('#')) return
+
+    // 解析路由名称
+    const routeName = resolveRouteName(href)
+    if (routeName && !preloadedRoutes.has(routeName)) {
+      const preloadFn = preloadMap.get(routeName)
+      if (preloadFn) {
+        preloadedRoutes.add(routeName)
+        preloadFn().catch(() => {
+          // 预加载失败不影响用户体验，静默处理
+          preloadedRoutes.delete(routeName)
+        })
+      }
+    }
+  })
+}
+
+function collectPreloadFunctions(route: RouteRecordRaw) {
+  if (route.name && typeof route.component === 'function') {
+    preloadMap.set(route.name as string, () =>
+      (route.component as () => Promise<any>)().catch(() => {})
+    )
+  }
+  route.children?.forEach((child) => collectPreloadFunctions(child))
+}
+
+function resolveRouteName(href: string): string | null {
+  // 处理相对路径，如 /dashboard, /planning 等
+  const path = href.replace(/^\.\//, '/')
+
+  // 扁平化搜索路由表
+  const allRoutes = flattenRoutes(routes)
+  const matched = allRoutes.find((r) => r.path === path || r.path.endsWith(path))
+  return matched?.name?.toString() ?? null
+}
+
+function flattenRoutes(
+  routes: RouteRecordRaw[],
+  parentPath = ''
+): (RouteRecordRaw & { fullPath: string })[] {
+  const result: (RouteRecordRaw & { fullPath: string })[] = []
+  for (const route of routes) {
+    const fullPath = parentPath
+      ? `${parentPath.replace(/\/$/, '')}/${route.path.replace(/^\//, '')}`
+      : route.path
+    result.push({ ...route, path: fullPath })
+    if (route.children) {
+      result.push(...flattenRoutes(route.children, fullPath))
+    }
+  }
+  return result
+}
+
+// 路由就绪后启动预加载
+router.isReady().then(() => {
+  setupRoutePreloading()
+})
+
 export default router

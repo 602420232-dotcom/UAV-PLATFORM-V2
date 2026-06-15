@@ -7,6 +7,7 @@ import com.uav.assimilation.service.GprPostprocessService;
 import com.uav.common.core.result.Result;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -32,6 +33,7 @@ public class GprPostprocessController {
      * @return 均值场 + 方差场 + 置信区间
      */
     @PostMapping("/gpr-postprocess")
+    @PreAuthorize("hasAuthority('assimilation:gpr:write')")
     public Result<GprPostprocessResponse> gprPostprocess(
             @Valid @RequestBody GprPostprocessRequest request) {
         GprPostprocessResponse response = gprPostprocessService.postprocess(request);
@@ -48,6 +50,7 @@ public class GprPostprocessController {
      * @return 不确定性分布 + 置信度统计
      */
     @GetMapping("/gpr/uncertainty")
+    @PreAuthorize("hasAuthority('assimilation:gpr:read')")
     public Result<GprUncertaintyResponse> queryUncertainty(
             @RequestParam("region") String region,
             @RequestParam("time") String time) {

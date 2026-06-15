@@ -7,6 +7,7 @@ import com.uav.observation.entity.ObservationDecision;
 import com.uav.observation.service.ObservationDecisionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,6 +28,7 @@ public class ObservationDecisionController {
      * 做出观测决策
      */
     @PostMapping
+    @PreAuthorize("hasAuthority('observation:decision:write')")
     public Result<ObservationDecision> makeDecision(@Valid @RequestBody ObservationDecisionRequest request) {
         return Result.success(observationDecisionService.makeDecision(request));
     }
@@ -47,6 +49,7 @@ public class ObservationDecisionController {
      * 获取决策历史
      */
     @GetMapping
+    @PreAuthorize("hasAuthority('observation:decision:read')")
     public Result<List<ObservationDecision>> getDecisionHistory() {
         return Result.success(observationDecisionService.getDecisionHistory());
     }

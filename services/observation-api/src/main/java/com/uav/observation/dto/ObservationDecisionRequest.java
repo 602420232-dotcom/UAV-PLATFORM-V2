@@ -3,8 +3,6 @@ package com.uav.observation.dto;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
-import java.util.List;
-
 /**
  * 观测决策请求
  */

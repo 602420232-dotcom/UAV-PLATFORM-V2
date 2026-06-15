@@ -6,6 +6,7 @@ import com.uav.risk.entity.AirworthinessAssessment;
 import com.uav.risk.service.AirworthinessService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -29,6 +30,7 @@ public class AirworthinessController {
      * 全维度适航评估
      */
     @PostMapping("/assess")
+    @PreAuthorize("hasAuthority('risk:airworthiness:write')")
     public Result<AirworthinessAssessment> assess(@Valid @RequestBody AirworthinessRequest request) {
         AirworthinessAssessment assessment = airworthinessService.assessAirworthiness(request);
         return Result.success(assessment);
@@ -38,6 +40,7 @@ public class AirworthinessController {
      * 获取适航标准
      */
     @GetMapping("/standards/{uavModel}")
+    @PreAuthorize("hasAuthority('risk:airworthiness:read')")
     public Result<Map<String, Object>> standards(@PathVariable String uavModel) {
         Map<String, Object> standard = airworthinessService.getAirworthinessStandard(uavModel);
         return Result.success(standard);

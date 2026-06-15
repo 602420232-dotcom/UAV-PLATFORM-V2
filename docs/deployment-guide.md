@@ -1,21 +1,98 @@
-# UAV Platform V2 部署运维手册
+# UAV Platform V2 部署手册
 
-> 最后更新：2026-06-14
+> 最后更新：2026-06-15
 
 ## 1. 环境要求
 
-| 组件 | 最低版本 | 说明 |
-|------|----------|------|
-| JDK | 21+ | 主项目 Spring Boot 4.0，Gateway 使用 JDK 17 (standalone) |
-| Maven | 3.9+ | 项目构建 |
-| Python | 3.12+ | algorithm-engine (FastAPI) |
-| Node.js | 20+ | 开发者控制台 (Vue 3) |
-| Docker | 24+ | 基础设施容器化 |
-| Docker Compose | 2.20+ | 编排 16 个容器 |
+| 组件 | 最低版本 | 推荐版本 | 说明 |
+|------|---------|---------|------|
+| JDK | 21+ | Eclipse Temurin 21 | 主项目 Spring Boot 4.0 |
+| Maven | 3.9+ | 3.9.6 | Java 项目构建 |
+| Python | 3.12+ | 3.12.x | algorithm-engine (FastAPI) |
+| Node.js | 20+ | 20 LTS | 开发者控制台 (Vue 3 + Vite 7) |
+| Docker | 24+ | 25.0+ | 基础设施容器化 |
+| Docker Compose | 2.20+ | 2.30+ | 编排 16 个容器 |
+| kubectl | 1.28+ | 1.30+ | K8s 部署（可选） |
+| Helm | 3.14+ | 3.15+ | K8s 包管理（可选） |
 
 **硬件最低要求**: 16GB RAM, 8 CPU cores（推荐 32GB RAM）
 
-## 2. Docker Compose 全栈部署（推荐）
+## 2. 本地开发环境搭建
+
+### 2.1 前置条件
+
+```bash
+# 检查各组件版本
+java -version      # JDK 21+
+mvn -version        # Maven 3.9+
+python --version    # Python 3.12+
+node -v             # Node.js 20+
+docker --version    # Docker 24+
+docker compose version  # Docker Compose 2.20+
+```
+
+### 2.2 克隆项目并构建
+
+```bash
+git clone https://github.com/your-org/uav-platform-v2.git
+cd uav-platform-v2
+
+# 构建 Java 微服务（跳过测试加速）
+mvn clean package -DskipTests
+
+# 构建 API Gateway（standalone 方式）
+cd gateway/api-gateway
+powershell -ExecutionPolicy Bypass -File build-standalone.ps1 -SkipTests
+cd ../..
+
+# 安装前端依赖
+cd console
+npm ci
+cd ..
+```
+
+### 2.3 启动基础设施
+
+```bash
+# 仅启动 MySQL、Redis、Kafka、Zookeeper、Nacos
+docker compose up -d mysql redis kafka zookeeper nacos
+
+# 等待健康检查通过
+docker compose ps
+```
+
+### 2.4 初始化数据库
+
+```bash
+# Nacos schema（首次部署必须执行）
+docker cp docker/init-db/nacos-schema.sql uav-mysql:/tmp/
+docker compose exec mysql mysql -unacos -pnacos nacos -e "source /tmp/nacos-schema.sql"
+
+# 业务数据库（MySQL 容器启动时通过 init-db.sql 自动创建）
+```
+
+### 2.5 启动业务服务
+
+```bash
+# 终端 1: API Gateway
+cd gateway/api-gateway
+java -jar target/api-gateway-2.0.0.jar --spring.profiles.active=dev
+
+# 终端 2: 启动需要的 Java 微服务（IDE 或命令行）
+java -jar services/weather-api/target/weather-api-2.0.0.jar --spring.profiles.active=dev
+java -jar services/planning-api/target/planning-api-2.0.0.jar --spring.profiles.active=dev
+
+# 终端 3: Python 算法引擎
+cd python/algorithm-engine
+pip install -r requirements.txt
+uvicorn app.main:app --host 0.0.0.0 --port 9090 --reload
+
+# 终端 4: 前端控制台
+cd console
+npm run dev  # http://localhost:3000
+```
+
+## 3. Docker Compose 全栈部署（推荐）
 
 ### 2.1 启动全部服务
 
@@ -612,4 +689,129 @@ docker compose down -v
 
 # 仅停止业务服务（保留基础设施）
 docker compose stop api-gateway platform-api weather-api assimilation-api risk-api observation-api planning-api utm-api algorithm-engine console
+```
+
+## 12. Kubernetes 部署（Helm）
+
+### 12.1 前置条件
+
+- Kubernetes 集群 1.28+
+- kubectl 已配置并连接到目标集群
+- Helm 3.14+
+- 容器镜像已推送到镜像仓库
+
+### 12.2 镜像构建与推送
+
+```bash
+# 设置镜像仓库地址
+export REGISTRY=ghcr.io/602420232-dotcom
+export TAG=v2.0.0
+
+# 构建并推送 Java 微服务镜像
+mvn clean package -DskipTests
+docker build -f Dockerfile.jre --build-arg JAR_FILE=services/weather-api/target/weather-api-2.0.0.jar --build-arg SERVICE_NAME=weather-api -t ${REGISTRY}/weather-api:${TAG} .
+docker push ${REGISTRY}/weather-api:${TAG}
+
+# 对其他服务重复上述步骤...
+
+# 构建并推送 Python 算法引擎
+docker build -f python/algorithm-engine/Dockerfile -t ${REGISTRY}/algorithm-engine:${TAG} ./python/algorithm-engine
+docker push ${REGISTRY}/algorithm-engine:${TAG}
+
+# 构建并推送前端控制台
+docker build -f console/Dockerfile -t ${REGISTRY}/console:${TAG} ./console
+docker push ${REGISTRY}/console:${TAG}
+```
+
+### 12.3 使用 Helm 部署
+
+```bash
+# 创建命名空间
+kubectl create namespace uav-platform
+
+# 查看可配置项
+helm show values helm/uav-platform
+
+# 使用默认值部署
+helm install uav-platform helm/uav-platform \
+  --namespace uav-platform \
+  --set secrets.mysqlPassword=<strong_password> \
+  --set secrets.redisPassword=<redis_password> \
+  --set secrets.jwtSecret=<jwt_secret> \
+  --set secrets.nacosPassword=<nacos_password>
+
+# 使用 staging 配置部署
+helm install uav-platform helm/uav-platform \
+  --namespace uav-platform \
+  -f helm/uav-platform/values-staging.yaml \
+  --set secrets.mysqlPassword=<strong_password>
+
+# 使用 production 配置部署
+helm install uav-platform helm/uav-platform \
+  --namespace uav-platform \
+  -f helm/uav-platform/values-prod.yaml \
+  --set secrets.mysqlPassword=<strong_password>
+```
+
+### 12.4 Helm 常用操作
+
+```bash
+# 查看部署状态
+helm status uav-platform -n uav-platform
+
+# 查看所有 Pod 状态
+kubectl get pods -n uav-platform
+
+# 升级部署
+helm upgrade uav-platform helm/uav-platform \
+  --namespace uav-platform \
+  --set global.imageTag=v2.0.1
+
+# 回滚到上一版本
+helm rollback uav-platform -n uav-platform
+
+# 卸载
+helm uninstall uav-platform -n uav-platform
+```
+
+### 12.5 K8s 资源说明
+
+Helm Chart 会创建以下资源：
+
+| 资源类型 | 数量 | 说明 |
+|---------|------|------|
+| Deployment | 9 | 各微服务 + 算法引擎 |
+| Service | 9 | ClusterIP 服务 |
+| Ingress | 1 | Nginx Ingress 入口 |
+| HPA | 3 | API Gateway、Platform API、Algorithm Engine 自动扩缩容 |
+| ConfigMap | 1 | 全局配置 |
+| Secret | 1 | 敏感信息（密码、Token） |
+
+### 12.6 环境变量覆盖
+
+通过 Helm values 覆盖环境变量：
+
+```yaml
+# my-values.yaml
+global:
+  imageRegistry: my-registry.example.com
+  imageTag: "v2.0.0"
+  springProfilesActive: "prod"
+
+secrets:
+  mysqlPassword: "prod-mysql-password"
+  redisPassword: "prod-redis-password"
+  jwtSecret: "prod-jwt-secret"
+
+apiGateway:
+  replicaCount: 3
+
+algorithmEngine:
+  replicaCount: 2
+```
+
+```bash
+helm install uav-platform helm/uav-platform \
+  -n uav-platform \
+  -f my-values.yaml
 ```

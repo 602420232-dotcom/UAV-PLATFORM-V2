@@ -9,6 +9,7 @@ import com.uav.common.core.annotation.Idempotent;
 import com.uav.common.core.result.Result;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -34,6 +35,7 @@ public class AssimilationController {
      * 查询任务状态
      */
     @GetMapping("/tasks/{id}")
+    @PreAuthorize("hasAuthority('assimilation:read')")
     public Result<AssimilationTask> getTaskStatus(@PathVariable("id") Long id) {
         return assimilationService.getTaskStatus(id);
     }
@@ -42,6 +44,7 @@ public class AssimilationController {
      * 查询任务结果
      */
     @GetMapping("/tasks/{id}/result")
+    @PreAuthorize("hasAuthority('assimilation:read')")
     public Result<AssimilationResult> getTaskResult(@PathVariable("id") Long id) {
         return assimilationService.getTaskResult(id);
     }
@@ -50,6 +53,7 @@ public class AssimilationController {
      * 查询任务列表
      */
     @GetMapping("/tasks")
+    @PreAuthorize("hasAuthority('assimilation:read')")
     public Result<?> listTasks(TaskQueryRequest request) {
         return assimilationService.listTasks(request);
     }
@@ -58,6 +62,7 @@ public class AssimilationController {
      * 取消任务
      */
     @PostMapping("/tasks/{id}/cancel")
+    @PreAuthorize("hasAuthority('assimilation:write')")
     public Result<Void> cancelTask(@PathVariable("id") Long id) {
         return assimilationService.cancelTask(id);
     }

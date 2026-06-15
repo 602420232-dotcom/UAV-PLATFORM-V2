@@ -254,12 +254,7 @@ public class MpcService {
 
     private String submitMpcPlanningMock(String taskId, MpcPlanRequest request) {
         MpcTaskContext ctx = new MpcTaskContext();
-        ctx.taskId = taskId;
-        ctx.uavId = request.getUavId();
         ctx.waypoints = request.getWaypoints();
-        ctx.constraints = request.getConstraints();
-        ctx.optimizationTarget = request.getOptimizationTarget() != null
-                ? request.getOptimizationTarget() : "RISK";
         ctx.replanIntervalSeconds = request.getConstraints().getReplanIntervalSeconds() != null
                 ? request.getConstraints().getReplanIntervalSeconds() : 30.0;
         ctx.horizonSteps = request.getConstraints().getHorizonSteps() != null
@@ -453,11 +448,7 @@ public class MpcService {
      * MPC 任务运行时上下文（mock 模式使用）
      */
     private static class MpcTaskContext {
-        String taskId;
-        String uavId;
         List<MpcPlanRequest.Waypoint> waypoints;
-        MpcPlanRequest.MpcConstraints constraints;
-        String optimizationTarget;
         double replanIntervalSeconds;
         int horizonSteps;
         TaskStatus status;

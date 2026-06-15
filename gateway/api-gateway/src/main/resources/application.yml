@@ -17,7 +17,7 @@ spring:
       globalcors:
         cors-configurations:
           '[/**]':
-            allowedOriginPatterns: "*"
+            allowedOriginPatterns: ${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://localhost:3000}
             allowedMethods: "*"
             allowedHeaders: "*"
             allowCredentials: true
@@ -268,7 +268,7 @@ spring:
 gateway:
   utm:
     whitelist: ${UTM_WHITELIST:127.0.0.1,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16}
-    secret: ${UTM_SECRET:uav-platform-utm-secret-key-2024}
+    secret: ${UTM_SECRET}
     replay-window: 300
 
   rate-limit:

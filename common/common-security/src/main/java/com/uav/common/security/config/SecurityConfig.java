@@ -7,6 +7,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.Profiles;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -30,14 +32,17 @@ public class SecurityConfig {
 
     private final TenantContextFilter tenantContextFilter;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final Environment environment;
 
     @Autowired(required = false)
     private HmacAuthenticationFilter hmacAuthenticationFilter;
 
     public SecurityConfig(TenantContextFilter tenantContextFilter,
-                          JwtAuthenticationFilter jwtAuthenticationFilter) {
+                          JwtAuthenticationFilter jwtAuthenticationFilter,
+                          Environment environment) {
         this.tenantContextFilter = tenantContextFilter;
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        this.environment = environment;
     }
 
     @Bean
@@ -53,19 +58,27 @@ public class SecurityConfig {
             )
 
             // 配置请求授权
-            .authorizeHttpRequests(auth -> auth
-                // 放行健康检查、Swagger、公开端点
-                .requestMatchers(
+            .authorizeHttpRequests(auth -> {
+                // 放行健康检查、公开端点
+                auth.requestMatchers(
                     "/health",
                     "/actuator/**",
-                    "/swagger-ui/**",
-                    "/v3/api-docs/**",
                     "/api/v1/auth/**",
                     "/public/**"
-                ).permitAll()
+                ).permitAll();
+
+                // Swagger/OpenAPI 端点仅在非生产环境放行
+                boolean isProd = environment.acceptsProfiles(Profiles.of("prod", "production"));
+                if (!isProd) {
+                    auth.requestMatchers(
+                        "/swagger-ui/**",
+                        "/v3/api-docs/**"
+                    ).permitAll();
+                }
+
                 // 其他请求需要认证
-                .anyRequest().authenticated()
-            )
+                auth.anyRequest().authenticated();
+            })
 
             // 禁用默认表单登录和 HTTP Basic
             .formLogin(AbstractHttpConfigurer::disable)
