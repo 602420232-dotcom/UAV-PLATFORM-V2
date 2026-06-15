@@ -4,8 +4,6 @@ server:
 spring:
   application:
     name: platform-api
-  autoconfigure:
-    exclude: org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
   datasource:
     connection-fetch: lazy
     driver-class-name: com.mysql.cj.jdbc.Driver
