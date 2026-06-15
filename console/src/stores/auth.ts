@@ -2,18 +2,11 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { authApi } from '@/api/auth'
 import { getToken, setToken, removeToken, getUserInfo, setUserInfo, removeUserInfo } from '@/utils/auth'
-
-export interface UserInfo {
-  id: number
-  username: string
-  role: string
-  tenantId?: number
-  tenantName?: string
-}
+import type { StoredUserInfo } from '@/utils/auth'
 
 export const useAuthStore = defineStore('auth', () => {
   const token = ref<string>(getToken() || '')
-  const userInfo = ref<UserInfo | null>(getUserInfo())
+  const userInfo = ref<StoredUserInfo | null>(getUserInfo())
 
   const isAuthenticated = computed(() => !!token.value)
   const username = computed(() => userInfo.value?.username ?? '')

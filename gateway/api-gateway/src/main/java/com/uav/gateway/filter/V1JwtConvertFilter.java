@@ -229,7 +229,9 @@ public class V1JwtConvertFilter implements GlobalFilter, Ordered {
         ServerHttpResponse response = exchange.getResponse();
         response.setStatusCode(status);
         response.getHeaders().add("Content-Type", "application/json");
-        String body = String.format("{\"code\":%d,\"message\":\"%s\"}", status.value(), message);
+        // Escape message to prevent JSON injection
+        String safeMessage = message.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n");
+        String body = String.format("{\"code\":%d,\"message\":\"%s\"}", status.value(), safeMessage);
         DataBuffer buffer = response.bufferFactory().wrap(body.getBytes(StandardCharsets.UTF_8));
         return response.writeWith(Mono.just(buffer));
     }

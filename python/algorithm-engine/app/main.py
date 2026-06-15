@@ -303,7 +303,7 @@ def _update_registered_metrics() -> None:
     from app.core.metrics import update_registered_count
 
     registry = get_registry()
-    category_counts = Counter(e.category for e in registry._entries.values())
+    category_counts = Counter(e.category for e in registry.get_entries().values())
     for category, count in category_counts.items():
         update_registered_count(category, count)
 

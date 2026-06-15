@@ -77,12 +77,15 @@ async function generateHmacHeaders(
   const signContent = `${timestamp}${method.toUpperCase()}${path}${bodyHash}`
   const signature = await hmacSha256(apiKeySecret, signContent)
 
-  return {
+  const headers: Record<string, string> = {
     'X-Timestamp': timestamp,
     'X-Signature': signature,
     'X-Signature-Method': 'HMAC-SHA256',
-    'X-Body-Hash': bodyHash || undefined as unknown as string,
-  } as Record<string, string>
+  }
+  if (bodyHash) {
+    headers['X-Body-Hash'] = bodyHash
+  }
+  return headers
 }
 
 const service: AxiosInstance = axios.create({

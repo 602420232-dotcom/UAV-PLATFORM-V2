@@ -11,7 +11,11 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * Nacos discovery is disabled by default in application.yml.
  * Re-enable by setting spring.cloud.nacos.discovery.enabled=true when Nacos is available.
  */
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import com.uav.gateway.config.V1PathMappingConfig;
+
 @SpringBootApplication(scanBasePackages = {"com.uav.gateway"})
+@EnableConfigurationProperties(V1PathMappingConfig.class)
 public class GatewayApplication {
 
     public static void main(String[] args) {

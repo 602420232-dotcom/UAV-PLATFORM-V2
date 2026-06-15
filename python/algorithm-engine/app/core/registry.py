@@ -107,6 +107,10 @@ class AlgorithmRegistry:
             return entry.to_metadata()
         return None
 
+    def get_entries(self) -> dict[str, AlgorithmEntry]:
+        """Return a copy of all registered entries."""
+        return self._entries.copy()
+
     def __len__(self) -> int:
         return len(self._entries)
 

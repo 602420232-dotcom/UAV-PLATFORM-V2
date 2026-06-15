@@ -376,7 +376,10 @@ export function useWebSocket(options: WebSocketOptions) {
     return ws?.readyState === WebSocket.OPEN
   }
 
-  // 组件挂载时自动连接（可选，根据业务需求决定是否自动连接）
+  /**
+   * 注意：此 composable 必须在 setup() 中使用。
+   * onMounted / onUnmounted 仅在 Vue 组件的 setup 上下文内有效。
+   */
   onMounted(() => {
     // 默认不自动连接，由调用方决定
   })

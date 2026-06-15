@@ -1,5 +1,7 @@
 package com.uav.gateway.filter;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -53,6 +55,7 @@ public class GrayReleaseFilter implements GlobalFilter, Ordered {
     private static final String REDIS_GLOBAL_KEY = "gray:release:global";
 
     private final ReactiveStringRedisTemplate redisTemplate;
+    private final ObjectMapper objectMapper;
 
     @Value("${gateway.gray-release.enabled:false}")
     private boolean grayReleaseEnabled;
@@ -90,8 +93,9 @@ public class GrayReleaseFilter implements GlobalFilter, Ordered {
         MODULE_PATH_MAP.put("flight", "/api/v1/flight/");
     }
 
-    public GrayReleaseFilter(ReactiveStringRedisTemplate redisTemplate) {
+    public GrayReleaseFilter(ReactiveStringRedisTemplate redisTemplate, ObjectMapper objectMapper) {
         this.redisTemplate = redisTemplate;
+        this.objectMapper = objectMapper;
     }
 
     @PostConstruct
@@ -127,28 +131,37 @@ public class GrayReleaseFilter implements GlobalFilter, Ordered {
 
         exchange.getAttributes().put(GRAY_MODULE_ATTR, module);
 
-        // Check if this module has gray release enabled
-        GrayModuleConfig config = getModuleConfig(module);
-        if (config == null || !config.isEnabled()) {
-            log.debug("[GRAY-RELEASE] Module {} gray release not enabled, routing to V1 | id={}", module, requestId);
-            exchange.getAttributes().put(GRAY_ROUTE_ATTR, false);
-            return chain.filter(exchange);
-        }
+        // Reactive chain: get config -> evaluate rules -> route
+        return getModuleConfig(module)
+                .flatMap(config -> {
+                    if (!config.isEnabled()) {
+                        log.debug("[GRAY-RELEASE] Module {} gray release not enabled, routing to V1 | id={}",
+                                module, requestId);
+                        exchange.getAttributes().put(GRAY_ROUTE_ATTR, false);
+                        return chain.filter(exchange);
+                    }
 
-        // Evaluate gray release rules
-        boolean routeToV2 = evaluateGrayRules(request, config);
+                    // Evaluate gray release rules
+                    boolean routeToV2 = evaluateGrayRules(request, config);
+                    log.info("[GRAY-RELEASE] Decision | module={} | routeToV2={} | id={}",
+                            module, routeToV2, requestId);
 
-        log.info("[GRAY-RELEASE] Decision | module={} | routeToV2={} | id={}", module, routeToV2, requestId);
+                    exchange.getAttributes().put(GRAY_ROUTE_ATTR, routeToV2);
 
-        exchange.getAttributes().put(GRAY_ROUTE_ATTR, routeToV2);
+                    // Add gray route headers for downstream services
+                    ServerHttpRequest mutatedRequest = request.mutate()
+                            .header("X-Gray-Route-To-V2", String.valueOf(routeToV2))
+                            .header("X-Gray-Module", module)
+                            .build();
 
-        // Add gray route headers for downstream services
-        ServerHttpRequest mutatedRequest = request.mutate()
-                .header("X-Gray-Route-To-V2", String.valueOf(routeToV2))
-                .header("X-Gray-Module", module)
-                .build();
-
-        return chain.filter(exchange.mutate().request(mutatedRequest).build());
+                    return chain.filter(exchange.mutate().request(mutatedRequest).build());
+                })
+                .switchIfEmpty(Mono.defer(() -> {
+                    log.debug("[GRAY-RELEASE] No config for module={}, routing to V1 | id={}",
+                            module, requestId);
+                    exchange.getAttributes().put(GRAY_ROUTE_ATTR, false);
+                    return chain.filter(exchange);
+                }));
     }
 
     /**
@@ -164,34 +177,40 @@ public class GrayReleaseFilter implements GlobalFilter, Ordered {
     }
 
     /**
-     * Get module configuration (from cache or Redis)
+     * Get module configuration (from cache or Redis) - Reactive
      */
-    private GrayModuleConfig getModuleConfig(String module) {
+    private Mono<GrayModuleConfig> getModuleConfig(String module) {
         // First check in-memory cache
-        GrayModuleConfig config = cachedConfigs.get(module);
-        if (config != null) {
-            return config;
+        GrayModuleConfig cached = cachedConfigs.get(module);
+        if (cached != null) {
+            return Mono.just(cached);
         }
 
         // If Redis is available, try to fetch dynamic config
-        if (redisTemplate != null) {
-            try {
-                String redisKey = REDIS_CONFIG_PREFIX + module;
-                String configJson = redisTemplate.opsForValue().get(redisKey).block();
-                if (StringUtils.hasText(configJson)) {
-                    // Simple parsing - in production use Jackson ObjectMapper
-                    config = parseSimpleConfig(configJson);
-                    if (config != null) {
-                        cachedConfigs.put(module, config);
-                        return config;
-                    }
-                }
-            } catch (Exception e) {
-                log.warn("[GRAY-RELEASE] Failed to load config from Redis for module={}", module, e);
-            }
+        if (redisTemplate == null) {
+            return Mono.empty();
         }
 
-        return null;
+        String redisKey = REDIS_CONFIG_PREFIX + module;
+        return redisTemplate.opsForValue().get(redisKey)
+                .flatMap(configJson -> {
+                    if (!StringUtils.hasText(configJson)) {
+                        return Mono.empty();
+                    }
+                    try {
+                        GrayModuleConfig config = objectMapper.readValue(configJson, GrayModuleConfig.class);
+                        cachedConfigs.put(module, config);
+                        log.info("[GRAY-RELEASE] Loaded config for module={} from Redis", module);
+                        return Mono.just(config);
+                    } catch (JsonProcessingException e) {
+                        log.warn("[GRAY-RELEASE] Failed to parse config JSON for module={}: {}", module, configJson, e);
+                        return Mono.empty();
+                    }
+                })
+                .switchIfEmpty(Mono.defer(() -> {
+                    log.debug("[GRAY-RELEASE] No Redis config for module={}", module);
+                    return Mono.empty();
+                }));
     }
 
     /**
@@ -304,18 +323,19 @@ public class GrayReleaseFilter implements GlobalFilter, Ordered {
     }
 
     /**
-     * Hash user ID to a number for percentage-based routing
+     * Hash user ID to a non-negative number for percentage-based routing
      */
     private int hashUserId(String userId) {
         try {
             MessageDigest md = MessageDigest.getInstance("SHA-256");
             byte[] hash = md.digest(userId.getBytes(StandardCharsets.UTF_8));
-            // Use first 4 bytes as positive int
-            return ((hash[0] & 0xFF) << 24) | ((hash[1] & 0xFF) << 16)
+            // Use first 4 bytes as non-negative int (mask sign bit)
+            int value = ((hash[0] & 0xFF) << 24) | ((hash[1] & 0xFF) << 16)
                     | ((hash[2] & 0xFF) << 8) | (hash[3] & 0xFF);
+            return value & 0x7FFFFFFF; // Ensure non-negative
         } catch (NoSuchAlgorithmException e) {
-            // Fallback to hashCode
-            return Math.abs(userId.hashCode());
+            // Fallback to hashCode, ensure non-negative
+            return Math.abs(userId.hashCode()) & 0x7FFFFFFF;
         }
     }
 
@@ -340,44 +360,6 @@ public class GrayReleaseFilter implements GlobalFilter, Ordered {
     }
 
     /**
-     * Simple config parser for Redis JSON (production: use Jackson)
-     */
-    private GrayModuleConfig parseSimpleConfig(String json) {
-        try {
-            GrayModuleConfig config = new GrayModuleConfig();
-            // Very simple JSON parsing - in production use ObjectMapper
-            config.setEnabled(json.contains("\"enabled\":true"));
-
-            int pctIdx = json.indexOf("\"percentage\":");
-            if (pctIdx >= 0) {
-                int endIdx = json.indexOf(",", pctIdx);
-                if (endIdx < 0) endIdx = json.indexOf("}", pctIdx);
-                String pctStr = json.substring(pctIdx + 14, endIdx).trim();
-                config.setPercentage(Integer.parseInt(pctStr));
-            }
-
-            int hkIdx = json.indexOf("\"header-key\":");
-            if (hkIdx >= 0) {
-                int start = json.indexOf('"', hkIdx + 13) + 1;
-                int end = json.indexOf('"', start);
-                config.setHeaderKey(json.substring(start, end));
-            }
-
-            int hvIdx = json.indexOf("\"header-value\":");
-            if (hvIdx >= 0) {
-                int start = json.indexOf('"', hvIdx + 15) + 1;
-                int end = json.indexOf('"', start);
-                config.setHeaderValue(json.substring(start, end));
-            }
-
-            return config;
-        } catch (Exception e) {
-            log.warn("[GRAY-RELEASE] Failed to parse config JSON: {}", json, e);
-            return null;
-        }
-    }
-
-    /**
      * Refresh configuration from Redis (can be called by scheduled task or admin endpoint)
      */
     public Mono<Void> refreshConfigFromRedis() {
@@ -389,11 +371,15 @@ public class GrayReleaseFilter implements GlobalFilter, Ordered {
                 .flatMap(key -> {
                     String module = key.substring(REDIS_CONFIG_PREFIX.length());
                     return redisTemplate.opsForValue().get(key)
-                            .doOnNext(json -> {
-                                GrayModuleConfig config = parseSimpleConfig(json);
-                                if (config != null) {
+                            .flatMap(json -> {
+                                try {
+                                    GrayModuleConfig config = objectMapper.readValue(json, GrayModuleConfig.class);
                                     cachedConfigs.put(module, config);
                                     log.info("[GRAY-RELEASE] Refreshed config for module={} from Redis", module);
+                                    return Mono.just(config);
+                                } catch (JsonProcessingException e) {
+                                    log.warn("[GRAY-RELEASE] Failed to parse config for module={}: {}", module, json, e);
+                                    return Mono.empty();
                                 }
                             });
                 })
