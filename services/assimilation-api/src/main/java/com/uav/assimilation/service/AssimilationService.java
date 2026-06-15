@@ -25,7 +25,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -405,9 +404,10 @@ public class AssimilationService {
 
     private void cacheTaskStatus(Long taskId, String status, Integer progress) {
         try {
-            redisTemplate.opsForValue().set(TASK_STATUS_KEY_PREFIX + taskId, status,
+            String taskIdStr = String.valueOf(taskId);
+            redisTemplate.opsForValue().set(TASK_STATUS_KEY_PREFIX + taskIdStr, status,
                     TASK_STATUS_TTL_SECONDS, TimeUnit.SECONDS);
-            redisTemplate.opsForValue().set(TASK_STATUS_KEY_PREFIX + taskId + ":progress",
+            redisTemplate.opsForValue().set(TASK_STATUS_KEY_PREFIX + taskIdStr + ":progress",
                     String.valueOf(progress != null ? progress : 0),
                     TASK_STATUS_TTL_SECONDS, TimeUnit.SECONDS);
         } catch (Exception e) {

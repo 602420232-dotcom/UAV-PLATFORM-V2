@@ -7,7 +7,7 @@ import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
-import org.springframework.data.redis.core.script.RedisScript;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
@@ -53,10 +53,13 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
             "redis.call('EXPIRE', key, window)\n" +
             "return {1, current + 1}\n";
 
-    private static final RedisScript<List<Long>> RATE_LIMIT_SCRIPT = RedisScript.of(
-            RATE_LIMIT_LUA,
-            (Class<List<Long>>) (Class<?>) List.class
-    );
+    @SuppressWarnings("unchecked")
+    private static final DefaultRedisScript<List<Long>> RATE_LIMIT_SCRIPT = new DefaultRedisScript<>();
+
+    static {
+        RATE_LIMIT_SCRIPT.setScriptText(RATE_LIMIT_LUA);
+        RATE_LIMIT_SCRIPT.setResultType((Class<List<Long>>) (Class<?>) List.class);
+    }
 
     private static final String TENANT_HEADER = "X-Tenant-ID";
     private static final String API_KEY_HEADER = "X-API-Key";

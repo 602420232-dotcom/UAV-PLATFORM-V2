@@ -64,6 +64,20 @@ spring:
             allowedHeaders: "*"
             allowCredentials: true
       routes:
+        # V1 Legacy System Proxy Routes (Phase 1: Full Proxy)
+        # 这些路由将旧系统请求转发到原项目
+        # 优先级高于 V2 路由，确保旧路径先匹配
+        - id: v1-legacy-proxy
+          uri: ${V1_BASE_URL:http://localhost:8080}
+          predicates:
+            - Path=/api/v1/weather/**, /api/v1/planning/**, /api/v1/risk/**, /api/v1/observation/**, /api/v1/assimilation/**, /api/v1/utm/**, /api/v1/tenants/**, /api/v1/api-keys/**, /api/v1/usage/**, /api/v1/platform/**, /api/v1/flight/**
+          filters:
+            - StripPrefix=0
+            - name: Retry
+              args:
+                retries: 2
+                statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+
         # Platform API (tenants, api-keys, usage, platform management)
         - id: platform-api
           uri: lb://platform-api

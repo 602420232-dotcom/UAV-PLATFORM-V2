@@ -1,7 +1,6 @@
 package com.uav.assimilation.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.uav.assimilation.dto.GprPostprocessRequest;
 import com.uav.assimilation.dto.GprPostprocessResponse;
@@ -92,11 +91,11 @@ public class GprPostprocessService {
         }
 
         Map<String, Object> paramSummary = new HashMap<>();
-        paramSummary.put("kernel_type", request.getKernelType());
-        paramSummary.put("length_scale", request.getLengthScale());
-        paramSummary.put("n_samples", request.getNSamples());
-        paramSummary.put("signal_variance", request.getSignalVariance());
-        paramSummary.put("noise_variance", request.getNoiseVariance());
+        putIfNotNull(paramSummary, "kernel_type", request.getKernelType());
+        putIfNotNull(paramSummary, "length_scale", request.getLengthScale());
+        putIfNotNull(paramSummary, "n_samples", request.getNSamples());
+        putIfNotNull(paramSummary, "signal_variance", request.getSignalVariance());
+        putIfNotNull(paramSummary, "noise_variance", request.getNoiseVariance());
 
         return GprPostprocessResponse.builder()
                 .meanField(meanField)
@@ -230,9 +229,11 @@ public class GprPostprocessService {
 
             // 缓存结果
             try {
-                redisTemplate.opsForValue().set(cacheKey,
-                        objectMapper.writeValueAsString(uncertaintyResponse),
-                        UNCERTAINTY_CACHE_TTL_SECONDS, TimeUnit.SECONDS);
+                String jsonValue = objectMapper.writeValueAsString(uncertaintyResponse);
+                if (jsonValue != null) {
+                    redisTemplate.opsForValue().set(cacheKey, jsonValue,
+                            UNCERTAINTY_CACHE_TTL_SECONDS, TimeUnit.SECONDS);
+                }
             } catch (JsonProcessingException e) {
                 log.warn("缓存不确定性数据失败, region={}, time={}", region, time);
             }
@@ -262,11 +263,11 @@ public class GprPostprocessService {
         double confidenceLevel = request.getConfidenceLevel() != null ? request.getConfidenceLevel() : 0.95;
 
         Map<String, Object> paramSummary = new HashMap<>();
-        paramSummary.put("kernel_type", request.getKernelType());
-        paramSummary.put("length_scale", request.getLengthScale());
-        paramSummary.put("n_samples", request.getNSamples());
-        paramSummary.put("signal_variance", request.getSignalVariance());
-        paramSummary.put("noise_variance", request.getNoiseVariance());
+        putIfNotNull(paramSummary, "kernel_type", request.getKernelType());
+        putIfNotNull(paramSummary, "length_scale", request.getLengthScale());
+        putIfNotNull(paramSummary, "n_samples", request.getNSamples());
+        putIfNotNull(paramSummary, "signal_variance", request.getSignalVariance());
+        putIfNotNull(paramSummary, "noise_variance", request.getNoiseVariance());
 
         return GprPostprocessResponse.builder()
                 .meanField(meanField)
@@ -375,5 +376,11 @@ public class GprPostprocessService {
         if (confidenceLevel >= 0.90) return 1.645;
         if (confidenceLevel >= 0.80) return 1.282;
         return 1.0;
+    }
+
+    private void putIfNotNull(Map<String, Object> map, String key, Object value) {
+        if (value != null) {
+            map.put(key, value);
+        }
     }
 }

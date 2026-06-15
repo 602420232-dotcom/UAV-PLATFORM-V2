@@ -1,7 +1,6 @@
 package com.uav.observation.consumer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.uav.common.core.constant.TaskStatus;
 import com.uav.common.kafka.consumer.AbstractAlgorithmResultConsumer;
 import com.uav.common.kafka.message.AlgorithmResultMessage;
 import com.uav.common.kafka.service.TaskStatusSyncService;
@@ -13,7 +12,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDateTime;
 import java.util.Map;
 
 /**
