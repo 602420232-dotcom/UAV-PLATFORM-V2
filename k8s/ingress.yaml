@@ -34,9 +34,10 @@ spec:
   ingressClassName: nginx
   tls:
     - hosts:
+        - api.uav-platform.com
         - uav-platform.local
         - api.uav-platform.local
-      secretName: uav-platform-tls
+      secretName: uav-platform-tls-secret
   rules:
     # Main API routes -> Gateway
     - host: uav-platform.local

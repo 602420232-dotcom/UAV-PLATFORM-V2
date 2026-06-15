@@ -1,0 +1,348 @@
+# ============================================================
+# UAV Platform V2 - Chaos Engineering Experiments
+# 使用 Chaos Mesh (https://chaos-mesh.org/) 进行故障注入
+# ============================================================
+
+apiVersion: chaos-mesh.org/v1alpha1
+kind: Workflow
+metadata:
+  name: uav-platform-chaos-experiments
+  namespace: uav-platform
+  labels:
+    app: uav-platform
+    tier: chaos-engineering
+spec:
+  entry: pod-failure-experiment
+  templates:
+    # ---------------------------
+    # 1. Pod 故障注入（随机删除 Pod）
+    # ---------------------------
+    - name: pod-failure-experiment
+      templateType: Schedule
+      deadline: 10m
+      schedule:
+        schedule: "*/5 * * * *"  # 每 5 分钟执行一次
+        concurrencyPolicy: Allow
+        type: PodChaos
+        podChaos:
+          action: pod-failure
+          mode: one  # 每次随机选择一个 Pod
+          selector:
+            namespaces:
+              - uav-platform
+            labelSelectors:
+              app.kubernetes.io/part-of: uav-platform
+          duration: 2m  # Pod 保持故障状态 2 分钟
+
+    # ---------------------------
+    # 2. 网络延迟注入（增加 100ms 延迟）
+    # ---------------------------
+    - name: network-delay-experiment
+      templateType: Schedule
+      deadline: 10m
+      schedule:
+        schedule: "*/3 * * * *"  # 每 3 分钟执行一次
+        concurrencyPolicy: Allow
+        type: NetworkChaos
+        networkChaos:
+          action: delay
+          mode: all
+          selector:
+            namespaces:
+              - uav-platform
+            labelSelectors:
+              app.kubernetes.io/part-of: uav-platform
+          delay:
+            latency: 100ms
+            correlation: 50  # 50% 的相关性
+            jitter: 20ms       # 20ms 抖动
+          duration: 3m
+
+    # ---------------------------
+    # 3. 网络分区（隔离服务间通信）
+    # ---------------------------
+    - name: network-partition-experiment
+      templateType: Schedule
+      deadline: 5m
+      schedule:
+        schedule: "0 */2 * * *"  # 每 2 小时执行一次
+        concurrencyPolicy: Allow
+        type: NetworkChaos
+        networkChaos:
+          action: partition
+          mode: all
+          selector:
+            namespaces:
+              - uav-platform
+            labelSelectors:
+              app: platform-api
+          direction: both
+          target:
+            mode: all
+            selector:
+              namespaces:
+                - uav-platform
+              labelSelectors:
+                app: weather-api
+          duration: 2m
+
+    # ---------------------------
+    # 4. CPU 压力（增加 80% CPU 负载）
+    # ---------------------------
+    - name: cpu-stress-experiment
+      templateType: Schedule
+      deadline: 10m
+      schedule:
+        schedule: "*/10 * * * *"  # 每 10 分钟执行一次
+        concurrencyPolicy: Allow
+        type: StressChaos
+        stressChaos:
+          stressors:
+            cpu:
+              workers: 4
+              load: 80  # 80% CPU 负载
+          mode: one
+          selector:
+            namespaces:
+              - uav-platform
+            labelSelectors:
+              app.kubernetes.io/part-of: uav-platform
+          duration: 5m
+
+    # ---------------------------
+    # 5. 内存压力（增加 80% 内存负载）
+    # ---------------------------
+    - name: memory-stress-experiment
+      templateType: Schedule
+      deadline: 10m
+      schedule:
+        schedule: "*/15 * * * *"  # 每 15 分钟执行一次
+        concurrencyPolicy: Allow
+        type: StressChaos
+        stressChaos:
+          stressors:
+            memory:
+              workers: 2
+              size: 80%  # 80% 内存占用
+          mode: one
+          selector:
+            namespaces:
+              - uav-platform
+            labelSelectors:
+              app.kubernetes.io/part-of: uav-platform
+          duration: 5m
+
+    # ---------------------------
+    # 6. HTTP 故障注入（模拟 API 异常响应）
+    # ---------------------------
+    - name: http-fault-experiment
+      templateType: Schedule
+      deadline: 10m
+      schedule:
+        schedule: "*/7 * * * *"  # 每 7 分钟执行一次
+        concurrencyPolicy: Allow
+        type: HTTPChaos
+        httpChaos:
+          target: Request
+          mode: all
+          selector:
+            namespaces:
+              - uav-platform
+            labelSelectors:
+              app: api-gateway
+          abort: true
+          port: 8080
+          duration: 2m
+
+    # ---------------------------
+    # 7. IO 压力（磁盘 I/O 延迟）
+    # ---------------------------
+    - name: io-stress-experiment
+      templateType: Schedule
+      deadline: 10m
+      schedule:
+        schedule: "0 */6 * * *"  # 每 6 小时执行一次
+        concurrencyPolicy: Allow
+        type: IOChaos
+        ioChaos:
+          action: latency
+          mode: one
+          selector:
+            namespaces:
+              - uav-platform
+            labelSelectors:
+              app: assimilation-api
+          delay: 200ms
+          duration: 10m
+
+    # ---------------------------
+    # 8. 时间偏移（模拟时钟不同步）
+    # ---------------------------
+    - name: time-shift-experiment
+      templateType: Schedule
+      deadline: 5m
+      schedule:
+        schedule: "0 2 * * *"  # 每天凌晨 2 点执行
+        concurrencyPolicy: Allow
+        type: TimeChaos
+        timeChaos:
+          mode: one
+          selector:
+            namespaces:
+              - uav-platform
+            labelSelectors:
+              app: planning-api
+          timeOffset: 300s  # 时间偏移 5 分钟
+          duration: 5m
+
+    # ---------------------------
+    # 9. JVM 故障注入（Java 服务异常）
+    # ---------------------------
+    - name: jvm-fault-experiment
+      templateType: Schedule
+      deadline: 5m
+      schedule:
+        schedule: "0 */4 * * *"  # 每 4 小时执行一次
+        concurrencyPolicy: Allow
+        type: JVMChaos
+        jvmChaos:
+          mode: one
+          selector:
+            namespaces:
+              - uav-platform
+            labelSelectors:
+              app: platform-api
+          action: gc
+          duration: 3m
+
+    # ---------------------------
+    # 10. 组合实验：级联故障
+    # ---------------------------
+    - name: cascading-failure-experiment
+      templateType: Serial
+      deadline: 15m
+      children:
+        - name: step-1-network-delay
+          templateType: NetworkChaos
+          networkChaos:
+            action: delay
+            mode: all
+            selector:
+              namespaces:
+                - uav-platform
+              labelSelectors:
+                app: api-gateway
+            delay:
+              latency: 500ms
+            duration: 5m
+        - name: step-2-pod-failure
+          templateType: PodChaos
+          podChaos:
+            action: pod-kill
+            mode: one
+            selector:
+              namespaces:
+                - uav-platform
+              labelSelectors:
+                app: weather-api
+            duration: 2m
+        - name: step-3-cpu-stress
+          templateType: StressChaos
+          stressChaos:
+            stressors:
+              cpu:
+                workers: 4
+                load: 90
+            mode: one
+            selector:
+              namespaces:
+                - uav-platform
+              labelSelectors:
+                app: assimilation-api
+            duration: 5m
+
+---
+# ============================================================
+# 混沌实验安全边界 - 自动终止条件
+# ============================================================
+apiVersion: chaos-mesh.org/v1alpha1
+kind: Workflow
+metadata:
+  name: uav-platform-safety-boundary
+  namespace: uav-platform
+spec:
+  entry: safety-check
+  templates:
+    - name: safety-check
+      templateType: Task
+      task:
+        container:
+          name: safety-checker
+          image: busybox:1.36
+          command:
+            - /bin/sh
+            - -c
+            - |
+              echo "Safety boundary check:"
+              echo "- Max pod failure rate: 20%"
+              echo "- Max network delay: 500ms"
+              echo "- Max CPU stress: 90%"
+              echo "- Max memory stress: 90%"
+              echo "- Auto-rollback if P99 latency > 5s"
+              echo "- Auto-rollback if error rate > 10%"
+              sleep 10
+
+---
+# ============================================================
+# 混沌实验监控告警规则
+# ============================================================
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: chaos-experiment-alerts
+  namespace: uav-platform
+  labels:
+    app: uav-platform
+    tier: chaos-engineering
+spec:
+  groups:
+    - name: chaos-experiment
+      rules:
+        - alert: ChaosExperimentHighErrorRate
+          expr: |
+            (
+              sum(rate(http_requests_total{status=~"5.."}[5m]))
+              /
+              sum(rate(http_requests_total[5m]))
+            ) > 0.1
+          for: 2m
+          labels:
+            severity: warning
+            team: platform
+          annotations:
+            summary: "混沌实验期间错误率过高"
+            description: "错误率超过 10%，建议立即终止实验并检查服务状态"
+
+        - alert: ChaosExperimentHighLatency
+          expr: |
+            histogram_quantile(0.99,
+              sum(rate(http_request_duration_seconds_bucket[5m])) by (le)
+            ) > 5
+          for: 2m
+          labels:
+            severity: warning
+            team: platform
+          annotations:
+            summary: "混沌实验期间 P99 延迟过高"
+            description: "P99 延迟超过 5 秒，建议检查服务性能或终止实验"
+
+        - alert: ChaosExperimentPodCrashLoop
+          expr: |
+            rate(kube_pod_container_status_restarts_total[10m]) > 0.1
+          for: 3m
+          labels:
+            severity: critical
+            team: platform
+          annotations:
+            summary: "Pod 进入 CrashLoopBackOff"
+            description: "Pod 重启频率过高，建议立即终止实验"

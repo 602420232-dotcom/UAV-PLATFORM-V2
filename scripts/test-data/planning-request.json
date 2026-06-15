@@ -1,0 +1,25 @@
+{
+  "start": {
+    "longitude": 116.397,
+    "latitude": 39.908,
+    "altitude": 100
+  },
+  "end": {
+    "longitude": 116.410,
+    "latitude": 39.915,
+    "altitude": 150
+  },
+  "algorithm": "astar",
+  "constraints": {
+    "max_altitude": 200,
+    "min_altitude": 50,
+    "max_distance": 5000,
+    "avoid_no_fly_zones": true,
+    "weather_aware": true
+  },
+  "uav_profile": {
+    "max_speed": 15.0,
+    "max_climb_rate": 5.0,
+    "battery_capacity": 5000
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "base_url": "http://localhost:8260",
+  "endpoints": [
+    {
+      "name": "algorithm-list",
+      "method": "GET",
+      "path": "/api/v1/algorithm/list",
+      "description": "算法列表查询",
+      "category": "查询",
+      "headers": {"Authorization": "Bearer ${JWT_TOKEN}"}
+    },
+    {
+      "name": "health-check",
+      "method": "GET",
+      "path": "/actuator/health",
+      "description": "健康检查",
+      "category": "基础设施"
+    },
+    {
+      "name": "weather-point",
+      "method": "POST",
+      "path": "/api/v1/weather/point",
+      "description": "气象点查询",
+      "category": "数据服务",
+      "body_file": "test-data/weather-request.json"
+    },
+    {
+      "name": "planning-path",
+      "method": "POST",
+      "path": "/api/v1/planning/path",
+      "description": "路径规划",
+      "category": "核心算法",
+      "body_file": "test-data/planning-request.json"
+    },
+    {
+      "name": "assimilation-task",
+      "method": "POST",
+      "path": "/api/v1/assimilation/task",
+      "description": "同化任务",
+      "category": "核心算法",
+      "body_file": "test-data/assimilation-request.json"
+    },
+    {
+      "name": "risk-assessment",
+      "method": "POST",
+      "path": "/api/v1/risk/assess",
+      "description": "风险评估",
+      "category": "数据服务",
+      "body_file": "test-data/risk-request.json"
+    }
+  ],
+  "concurrency_levels": [10, 50, 100, 500],
+  "duration": 60,
+  "ramp_up": false,
+  "peak_test": false,
+  "peak_concurrency": 1000,
+  "p99_target_ms": 500,
+  "sla_availability": 99.9
+}

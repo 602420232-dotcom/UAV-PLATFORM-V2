@@ -1,0 +1,25 @@
+{
+  "flight_plan": {
+    "waypoints": [
+      {"longitude": 116.397, "latitude": 39.908, "altitude": 100},
+      {"longitude": 116.405, "latitude": 39.912, "altitude": 120},
+      {"longitude": 116.410, "latitude": 39.915, "altitude": 150}
+    ],
+    "departure_time": "2025-01-15T08:00:00Z",
+    "estimated_duration_minutes": 30
+  },
+  "weather_conditions": {
+    "wind_speed": 8.5,
+    "wind_gust": 12.0,
+    "visibility": 8000,
+    "precipitation_probability": 0.2
+  },
+  "terrain_data": {
+    "max_elevation": 350,
+    "obstacles": [
+      {"type": "building", "height": 80, "location": {"longitude": 116.400, "latitude": 39.910}}
+    ]
+  },
+  "risk_factors": ["weather", "terrain", "airspace", "equipment"],
+  "assessment_depth": "detailed"
+}

@@ -1,22 +1,28 @@
 #!/usr/bin/env python3
 """
-UAV Platform V2 - 多并发级别压力测试脚本
+UAV Platform V2 - 增强型多并发级别压力测试脚本
 
 使用 Python 标准库 (urllib + concurrent.futures) 对平台各端点进行多级并发压测，
-输出 QPS、P50/P95/P99 延迟、错误率、吞吐量等指标，支持 JSON + Markdown 报告。
+支持从配置文件读取参数、自定义请求头、POST 请求体模板、阶梯式负载、峰值测试，
+输出 QPS、P50/P95/P99 延迟、错误率、吞吐量等指标，支持 JSON + Markdown + JUnit XML 报告。
 
-测试端点:
-  1. GET  /api/v1/algorithm/list        - 算法列表查询
-  2. GET  /actuator/health              - 健康检查
-  3. POST /api/v1/weather/point         - 气象点查询
-  4. POST /api/v1/planning/path         - 路径规划
+增强功能:
+  - 支持从 JSON/YAML 配置文件读取测试参数
+  - 支持自定义请求头 (Authorization、Content-Type 等)
+  - 支持 POST 请求体模板 (JSON 文件)
+  - 支持阶梯式负载 (逐步增加并发)
+  - 支持峰值测试 (突发高并发)
+  - 输出 JUnit XML 格式测试结果 (便于 CI/CD 集成)
 
 用法:
     python scripts/load-test.py
+    python scripts/load-test.py --config scripts/load-test-config.json
     python scripts/load-test.py --base-url http://192.168.1.100:8260
     python scripts/load-test.py --concurrency-levels 10 50 100 --duration 30
     python scripts/load-test.py --json-output > report.json
     python scripts/load-test.py --markdown-output report.md
+    python scripts/load-test.py --junit-xml report.xml
+    python scripts/load-test.py --ramp-up --peak-test
     python scripts/load-test.py --no-color
 """
 
@@ -26,14 +32,17 @@ import argparse
 import json
 import math
 import os
+import re
 import statistics
 import sys
 import time
 import urllib.error
 import urllib.request
+import xml.etree.ElementTree as ET
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any
 
 
@@ -80,7 +89,7 @@ REQUEST_TIMEOUT = 15  # 单个请求超时秒数
 P99_TARGET_MS = 500  # P99 成功标准 (毫秒)
 SLA_AVAILABILITY = 99.9  # SLA 可用性目标 (%)
 
-# 端点定义
+# 端点定义 (可被配置文件覆盖)
 ENDPOINTS = {
     "algorithm-list": {
         "method": "GET",
@@ -257,6 +266,90 @@ class ConcurrencyLevelResult:
 
 
 # ============================================================
+# Configuration Loading
+# ============================================================
+
+def _resolve_env_vars(value: Any) -> Any:
+    """递归解析字符串中的 ${ENV_VAR} 环境变量引用"""
+    if isinstance(value, str):
+        pattern = re.compile(r'\$\{([^}]+)\}')
+        def replacer(match: re.Match) -> str:
+            env_var = match.group(1)
+            env_val = os.environ.get(env_var, '')
+            return env_val
+        return pattern.sub(replacer, value)
+    elif isinstance(value, dict):
+        return {k: _resolve_env_vars(v) for k, v in value.items()}
+    elif isinstance(value, list):
+        return [_resolve_env_vars(v) for v in value]
+    return value
+
+
+def load_config(config_path: str) -> dict[str, Any]:
+    """从 JSON 或 YAML 文件加载配置"""
+    path = Path(config_path)
+    if not path.exists():
+        raise FileNotFoundError(f"配置文件不存在: {config_path}")
+
+    with open(path, 'r', encoding='utf-8') as f:
+        content = f.read()
+
+    # 尝试 YAML
+    if path.suffix in ('.yaml', '.yml'):
+        try:
+            import yaml
+            config = yaml.safe_load(content)
+        except ImportError:
+            raise ImportError("加载 YAML 配置文件需要 PyYAML，请安装: pip install pyyaml")
+    else:
+        config = json.loads(content)
+
+    # 解析环境变量
+    config = _resolve_env_vars(config)
+    return config
+
+
+def apply_config(config: dict[str, Any]) -> tuple[str, list[int], int, dict[str, Any]]:
+    """应用配置文件，返回 (base_url, concurrency_levels, duration, endpoints)"""
+    base_url = config.get('base_url', DEFAULT_BASE_URL)
+    concurrency_levels = config.get('concurrency_levels', DEFAULT_CONCURRENCY_LEVELS)
+    duration = config.get('duration', DEFAULT_DURATION)
+
+    # 合并端点配置
+    merged_endpoints = dict(ENDPOINTS)
+    for ep in config.get('endpoints', []):
+        name = ep.get('name')
+        if not name:
+            continue
+        merged_endpoints[name] = {
+            "method": ep.get('method', 'GET'),
+            "path": ep.get('path', '/'),
+            "description": ep.get('description', name),
+            "category": ep.get('category', '未分类'),
+            "payload": None,
+            "headers": ep.get('headers', {}),
+            "body_file": ep.get('body_file', None),
+        }
+
+    return base_url, concurrency_levels, duration, merged_endpoints
+
+
+def _load_body_file(body_file: str, base_dir: str) -> dict[str, Any] | None:
+    """从 JSON 文件加载请求体"""
+    if not body_file:
+        return None
+    path = Path(base_dir) / body_file
+    if not path.exists():
+        # 尝试相对路径
+        path = Path(body_file)
+    if not path.exists():
+        print(f"{Color.YELLOW}警告: 请求体文件不存在: {body_file}{Color.RESET}")
+        return None
+    with open(path, 'r', encoding='utf-8') as f:
+        return json.load(f)
+
+
+# ============================================================
 # Utility Functions
 # ============================================================
 
@@ -275,16 +368,37 @@ def _percentile(data: list[float], pct: float) -> float:
     return d0 + d1
 
 
-def _send_request(base_url: str, endpoint_key: str, config: dict) -> RequestResult:
-    """使用 urllib 发送单个 HTTP 请求"""
+def _send_request(
+    base_url: str,
+    endpoint_key: str,
+    config: dict,
+    extra_headers: dict[str, str] | None = None,
+) -> RequestResult:
+    """使用 urllib 发送单个 HTTP 请求，支持自定义请求头"""
     url = f"{base_url}{config['path']}"
     method = config["method"]
     payload = config.get("payload")
+    body_file = config.get("body_file")
+    endpoint_headers = config.get("headers", {})
+
+    # 如果有 body_file，从文件加载请求体
+    if body_file and not payload:
+        payload = _load_body_file(body_file, os.path.dirname(os.path.abspath(__file__)))
 
     start = time.monotonic()
     try:
         data = None
-        headers = {"Content-Type": "application/json", "Accept": "application/json"}
+        headers = {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+        }
+        # 合并端点自定义请求头
+        for k, v in endpoint_headers.items():
+            headers[k] = v
+        # 合并额外请求头
+        if extra_headers:
+            for k, v in extra_headers.items():
+                headers[k] = v
 
         if payload and method == "POST":
             data = json.dumps(payload).encode("utf-8")
@@ -352,6 +466,7 @@ def run_endpoint_test(
     config: dict,
     concurrency: int,
     duration_s: float,
+    extra_headers: dict[str, str] | None = None,
 ) -> EndpointStats:
     """对单个端点在指定并发级别下运行持续测试"""
     stats = EndpointStats(
@@ -371,7 +486,7 @@ def run_endpoint_test(
         while time.monotonic() < deadline:
             # 补充工作线程到满并发
             while len(active_futures) < concurrency and time.monotonic() < deadline:
-                future = executor.submit(_send_request, base_url, endpoint_key, config)
+                future = executor.submit(_send_request, base_url, endpoint_key, config, extra_headers)
                 active_futures[future] = None
 
             if not active_futures:
@@ -427,18 +542,21 @@ def run_concurrency_level(
     base_url: str,
     concurrency: int,
     duration_s: float,
+    endpoints: dict[str, Any],
+    extra_headers: dict[str, str] | None = None,
 ) -> ConcurrencyLevelResult:
     """在指定并发级别下测试所有端点"""
     result = ConcurrencyLevelResult(concurrency=concurrency)
     wall_start = time.monotonic()
 
-    for endpoint_key, config in ENDPOINTS.items():
+    for endpoint_key, config in endpoints.items():
         stats = run_endpoint_test(
             base_url=base_url,
             endpoint_key=endpoint_key,
             config=config,
             concurrency=concurrency,
             duration_s=duration_s,
+            extra_headers=extra_headers,
         )
         result.endpoints[endpoint_key] = stats
 
@@ -446,19 +564,69 @@ def run_concurrency_level(
     return result
 
 
+def run_ramp_up_test(
+    base_url: str,
+    concurrency_levels: list[int],
+    duration_s: float,
+    endpoints: dict[str, Any],
+    extra_headers: dict[str, str] | None = None,
+) -> list[ConcurrencyLevelResult]:
+    """阶梯式负载测试: 逐步增加并发"""
+    all_results: list[ConcurrencyLevelResult] = []
+    print(f"\n{Color.CYAN}{Color.BOLD}>>> 阶梯式负载测试 (Ramp-Up) <<<{Color.RESET}")
+    for i, level in enumerate(concurrency_levels):
+        if i > 0:
+            ramp_delay = 5  # 每级之间等待 5 秒
+            print(f"  {Color.DIM}等待 {ramp_delay}s 后进入下一级...{Color.RESET}")
+            time.sleep(ramp_delay)
+        print(f"\n{Color.CYAN}{Color.BOLD}>>> 并发级别: {level} <<<{Color.RESET}")
+        result = run_concurrency_level(base_url, level, duration_s, endpoints, extra_headers)
+        all_results.append(result)
+        _print_level_summary(result)
+    return all_results
+
+
+def run_peak_test(
+    base_url: str,
+    peak_concurrency: int,
+    duration_s: float,
+    endpoints: dict[str, Any],
+    extra_headers: dict[str, str] | None = None,
+) -> ConcurrencyLevelResult:
+    """峰值测试: 突发高并发"""
+    print(f"\n{Color.CYAN}{Color.BOLD}>>> 峰值测试 (Peak Test): {peak_concurrency} 并发 <<<{Color.RESET}")
+    print(f"  {Color.YELLOW}突发高并发，持续 {duration_s}s{Color.RESET}")
+    result = run_concurrency_level(base_url, peak_concurrency, duration_s, endpoints, extra_headers)
+    _print_level_summary(result)
+    return result
+
+
 def run_all_tests(
     base_url: str,
     concurrency_levels: list[int],
     duration_s: float,
+    endpoints: dict[str, Any],
+    extra_headers: dict[str, str] | None = None,
+    ramp_up: bool = False,
+    peak_test: bool = False,
+    peak_concurrency: int | None = None,
 ) -> list[ConcurrencyLevelResult]:
     """运行所有并发级别的测试"""
     all_results: list[ConcurrencyLevelResult] = []
 
-    for level in concurrency_levels:
-        print(f"\n{Color.CYAN}{Color.BOLD}>>> 并发级别: {level} <<<{Color.RESET}")
-        result = run_concurrency_level(base_url, level, duration_s)
-        all_results.append(result)
-        _print_level_summary(result)
+    if ramp_up:
+        all_results = run_ramp_up_test(base_url, concurrency_levels, duration_s, endpoints, extra_headers)
+    else:
+        for level in concurrency_levels:
+            print(f"\n{Color.CYAN}{Color.BOLD}>>> 并发级别: {level} <<<{Color.RESET}")
+            result = run_concurrency_level(base_url, level, duration_s, endpoints, extra_headers)
+            all_results.append(result)
+            _print_level_summary(result)
+
+    if peak_test:
+        peak = peak_concurrency or max(concurrency_levels) * 2
+        peak_result = run_peak_test(base_url, peak, duration_s, endpoints, extra_headers)
+        all_results.append(peak_result)
 
     return all_results
 
@@ -493,7 +661,7 @@ def _print_level_summary(result: ConcurrencyLevelResult) -> None:
     print(f"  总耗时: {result.wall_time_s:.1f}s")
 
 
-def print_full_report(all_results: list[ConcurrencyLevelResult]) -> None:
+def print_full_report(all_results: list[ConcurrencyLevelResult], endpoints: dict[str, Any]) -> None:
     """打印完整的彩色终端报告"""
     print()
     print(f"{Color.BOLD}{'=' * 80}{Color.RESET}")
@@ -506,8 +674,8 @@ def print_full_report(all_results: list[ConcurrencyLevelResult]) -> None:
     # ── 汇总表 ──
     print(f"\n{Color.CYAN}{Color.BOLD}  [1] 各端点性能汇总{Color.RESET}\n")
 
-    for key in ENDPOINTS:
-        print(f"  {Color.BOLD}{ENDPOINTS[key]['description']}{Color.RESET} ({key})")
+    for key in endpoints:
+        print(f"  {Color.BOLD}{endpoints[key]['description']}{Color.RESET} ({key})")
         print(
             f"  {'并发':>6} {'QPS':>10} {'P50(ms)':>10} {'P95(ms)':>10} "
             f"{'P99(ms)':>10} {'错误率(%)':>10} {'可用性(%)':>10} {'SLA':>6}"
@@ -601,7 +769,7 @@ def print_full_report(all_results: list[ConcurrencyLevelResult]) -> None:
 # JSON Report
 # ============================================================
 
-def generate_json_report(all_results: list[ConcurrencyLevelResult]) -> dict[str, Any]:
+def generate_json_report(all_results: list[ConcurrencyLevelResult], endpoints: dict[str, Any]) -> dict[str, Any]:
     """生成完整的 JSON 格式报告"""
     summary_data = []
     for result in all_results:
@@ -629,7 +797,7 @@ def generate_json_report(all_results: list[ConcurrencyLevelResult]) -> dict[str,
             "p99_target_ms": P99_TARGET_MS,
             "sla_availability_pct": SLA_AVAILABILITY,
             "request_timeout_s": REQUEST_TIMEOUT,
-            "endpoints_tested": list(ENDPOINTS.keys()),
+            "endpoints_tested": list(endpoints.keys()),
         },
         "summary_by_concurrency": summary_data,
         "details": [r.to_dict() for r in all_results],
@@ -640,7 +808,7 @@ def generate_json_report(all_results: list[ConcurrencyLevelResult]) -> dict[str,
 # Markdown Report
 # ============================================================
 
-def generate_markdown_report(all_results: list[ConcurrencyLevelResult]) -> str:
+def generate_markdown_report(all_results: list[ConcurrencyLevelResult], endpoints: dict[str, Any]) -> str:
     """生成 Markdown 格式报告"""
     lines: list[str] = []
     ts = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
@@ -652,7 +820,7 @@ def generate_markdown_report(all_results: list[ConcurrencyLevelResult]) -> str:
     lines.append(f"> P99 目标: <{P99_TARGET_MS}ms | SLA 可用性: >= {SLA_AVAILABILITY}%\n")
 
     # 各端点详细表格
-    for key, config in ENDPOINTS.items():
+    for key, config in endpoints.items():
         lines.append(f"## {config['description']} (`{key}`)\n")
         lines.append(f"**分类:** {config['category']} | **方法:** {config['method']} {config['path']}\n")
         lines.append(
@@ -732,23 +900,135 @@ def generate_markdown_report(all_results: list[ConcurrencyLevelResult]) -> str:
 
 
 # ============================================================
+# JUnit XML Report
+# ============================================================
+
+def generate_junit_xml_report(
+    all_results: list[ConcurrencyLevelResult],
+    endpoints: dict[str, Any],
+    output_file: str | None = None,
+) -> str:
+    """生成 JUnit XML 格式报告，便于 CI/CD 集成"""
+    testsuites = ET.Element("testsuites")
+    testsuites.set("name", "UAV-Platform-V2-Load-Test")
+    testsuites.set("timestamp", datetime.now(timezone.utc).isoformat())
+
+    total_tests = 0
+    total_failures = 0
+    total_time = 0.0
+
+    for result in all_results:
+        for key, stats in result.endpoints.items():
+            total_tests += 1
+            total_time += stats.wall_time_s
+            if not stats.meets_p99_target or not stats.meets_sla or stats.error_rate >= 1:
+                total_failures += 1
+
+    testsuites.set("tests", str(total_tests))
+    testsuites.set("failures", str(total_failures))
+    testsuites.set("time", f"{total_time:.3f}")
+
+    for result in all_results:
+        for key, stats in result.endpoints.items():
+            config = endpoints.get(key, {})
+            testcase = ET.SubElement(testsuites, "testcase")
+            testcase.set("name", f"{config.get('description', key)} @ {stats.concurrency}并发")
+            testcase.set("classname", f"loadtest.{key}")
+            testcase.set("time", f"{stats.wall_time_s:.3f}")
+
+            # 失败判定
+            failures = []
+            if not stats.meets_p99_target:
+                failures.append(
+                    f"P99 延迟不达标: {stats.p99_ms:.1f}ms >= {P99_TARGET_MS}ms (目标: <{P99_TARGET_MS}ms)"
+                )
+            if not stats.meets_sla:
+                failures.append(
+                    f"可用性不达标: {stats.availability:.2f}% < {SLA_AVAILABILITY}%"
+                )
+            if stats.error_rate >= 1:
+                failures.append(
+                    f"错误率过高: {stats.error_rate:.2f}% >= 1%"
+                )
+
+            if failures:
+                failure_elem = ET.SubElement(testcase, "failure")
+                failure_elem.set("message", "; ".join(failures))
+                failure_elem.text = (
+                    f"端点: {key}\n"
+                    f"并发: {stats.concurrency}\n"
+                    f"QPS: {stats.qps:.1f}\n"
+                    f"P50: {stats.p50_ms:.1f}ms\n"
+                    f"P95: {stats.p95_ms:.1f}ms\n"
+                    f"P99: {stats.p99_ms:.1f}ms\n"
+                    f"错误率: {stats.error_rate:.2f}%\n"
+                    f"可用性: {stats.availability:.2f}%\n"
+                    f"总请求: {stats.total}\n"
+                    f"成功: {stats.success}\n"
+                    f"失败: {stats.failed}\n"
+                    f"错误样本: {', '.join(stats.errors[:5])}"
+                )
+
+            # 性能属性
+            properties = ET.SubElement(testcase, "properties")
+            for prop_name, prop_value in [
+                ("concurrency", str(stats.concurrency)),
+                ("qps", f"{stats.qps:.2f}"),
+                ("p50_ms", f"{stats.p50_ms:.2f}"),
+                ("p95_ms", f"{stats.p95_ms:.2f}"),
+                ("p99_ms", f"{stats.p99_ms:.2f}"),
+                ("error_rate_pct", f"{stats.error_rate:.2f}"),
+                ("availability_pct", f"{stats.availability:.2f}"),
+                ("total_requests", str(stats.total)),
+                ("success_requests", str(stats.success)),
+                ("failed_requests", str(stats.failed)),
+            ]:
+                prop = ET.SubElement(properties, "property")
+                prop.set("name", prop_name)
+                prop.set("value", prop_value)
+
+    # 格式化 XML
+    ET.indent(testsuites, space="  ")
+    xml_str = ET.tostring(testsuites, encoding="unicode")
+    xml_declaration = '<?xml version="1.0" encoding="UTF-8"?>\n'
+    full_xml = xml_declaration + xml_str
+
+    if output_file:
+        with open(output_file, 'w', encoding='utf-8') as f:
+            f.write(full_xml)
+
+    return full_xml
+
+
+# ============================================================
 # Main
 # ============================================================
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="UAV Platform V2 - 多级并发压力测试",
+        description="UAV Platform V2 - 增强型多级并发压力测试",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 示例:
   %(prog)s                                    # 默认配置运行
+  %(prog)s --config scripts/load-test-config.json  # 从配置文件读取
   %(prog)s --base-url http://10.0.0.1:8260   # 指定目标地址
   %(prog)s --concurrency-levels 10 50 100    # 自定义并发级别
   %(prog)s --duration 30                      # 每级 30 秒
+  %(prog)s --ramp-up                          # 阶梯式负载
+  %(prog)s --peak-test                      # 峰值测试
   %(prog)s --json-output                     # 输出 JSON
   %(prog)s --markdown-output report.md       # 输出 Markdown
+  %(prog)s --junit-xml report.xml            # 输出 JUnit XML
   %(prog)s --no-color                         # 禁用颜色
         """,
+    )
+    parser.add_argument(
+        "--config",
+        type=str,
+        default=None,
+        metavar="FILE",
+        help="从 JSON/YAML 配置文件读取测试参数",
     )
     parser.add_argument(
         "--base-url",
@@ -759,13 +1039,13 @@ def main() -> None:
         "--concurrency-levels",
         type=int,
         nargs="+",
-        default=DEFAULT_CONCURRENCY_LEVELS,
+        default=None,
         help=f"并发级别列表 (default: {' '.join(str(x) for x in DEFAULT_CONCURRENCY_LEVELS)})",
     )
     parser.add_argument(
         "--duration",
         type=int,
-        default=DEFAULT_DURATION,
+        default=None,
         help=f"每个并发级别的测试持续时间/秒 (default: {DEFAULT_DURATION})",
     )
     parser.add_argument(
@@ -788,6 +1068,38 @@ def main() -> None:
         help="输出 JSON 报告到指定文件",
     )
     parser.add_argument(
+        "--junit-xml",
+        type=str,
+        default=None,
+        metavar="FILE",
+        help="输出 JUnit XML 报告到指定文件 (CI/CD 集成)",
+    )
+    parser.add_argument(
+        "--ramp-up",
+        action="store_true",
+        help="启用阶梯式负载测试 (逐步增加并发)",
+    )
+    parser.add_argument(
+        "--peak-test",
+        action="store_true",
+        help="启用峰值测试 (突发高并发)",
+    )
+    parser.add_argument(
+        "--peak-concurrency",
+        type=int,
+        default=None,
+        metavar="N",
+        help="峰值测试并发数 (默认: 最大并发级别 x2)",
+    )
+    parser.add_argument(
+        "--header",
+        type=str,
+        action="append",
+        default=[],
+        metavar="KEY:VALUE",
+        help="添加自定义请求头，可多次使用 (例: --header 'Authorization:Bearer xxx')",
+    )
+    parser.add_argument(
         "--no-color",
         action="store_true",
         help="禁用彩色终端输出",
@@ -797,43 +1109,80 @@ def main() -> None:
     if args.no_color or args.json_output:
         Color.disable()
 
+    # 加载配置
+    endpoints = dict(ENDPOINTS)
+    base_url = args.base_url
+    concurrency_levels = args.concurrency_levels or DEFAULT_CONCURRENCY_LEVELS
+    duration = args.duration or DEFAULT_DURATION
+
+    if args.config:
+        try:
+            config = load_config(args.config)
+            base_url, concurrency_levels, duration, endpoints = apply_config(config)
+            if not args.json_output:
+                print(f"{Color.GREEN}已加载配置文件: {args.config}{Color.RESET}")
+        except Exception as e:
+            print(f"{Color.RED}加载配置文件失败: {e}{Color.RESET}")
+            sys.exit(1)
+
+    # 解析自定义请求头
+    extra_headers: dict[str, str] = {}
+    for h in args.header:
+        if ':' in h:
+            key, value = h.split(':', 1)
+            extra_headers[key.strip()] = value.strip()
+        else:
+            print(f"{Color.YELLOW}警告: 请求头格式错误，跳过: {h}{Color.RESET}")
+
     # 打印配置
     if not args.json_output:
         print(f"\n{Color.BOLD}{'=' * 80}{Color.RESET}")
-        print(f"{Color.BOLD}  UAV Platform V2 - 多级并发压力测试{Color.RESET}")
+        print(f"{Color.BOLD}  UAV Platform V2 - 增强型多级并发压力测试{Color.RESET}")
         print(f"{Color.BOLD}{'=' * 80}{Color.RESET}")
-        print(f"  目标地址:     {args.base_url}")
-        print(f"  并发级别:     {args.concurrency_levels}")
-        print(f"  每级持续时间: {args.duration}s")
+        print(f"  目标地址:     {base_url}")
+        print(f"  并发级别:     {concurrency_levels}")
+        print(f"  每级持续时间: {duration}s")
         print(f"  请求超时:     {REQUEST_TIMEOUT}s")
         print(f"  P99 目标:     <{P99_TARGET_MS}ms")
         print(f"  SLA 可用性:   >= {SLA_AVAILABILITY}%")
-        print(f"  测试端点:     {len(ENDPOINTS)} 个")
-        for key, cfg in ENDPOINTS.items():
+        if args.ramp_up:
+            print(f"  阶梯负载:     启用")
+        if args.peak_test:
+            peak = args.peak_concurrency or max(concurrency_levels) * 2
+            print(f"  峰值测试:     启用 (并发={peak})")
+        if extra_headers:
+            print(f"  自定义请求头: {list(extra_headers.keys())}")
+        print(f"  测试端点:     {len(endpoints)} 个")
+        for key, cfg in endpoints.items():
             print(f"    - {cfg['method']} {cfg['path']}  ({cfg['description']})")
         print(f"{Color.BOLD}{'=' * 80}{Color.RESET}")
 
     # 运行测试
     total_start = time.monotonic()
     all_results = run_all_tests(
-        base_url=args.base_url,
-        concurrency_levels=args.concurrency_levels,
-        duration_s=args.duration,
+        base_url=base_url,
+        concurrency_levels=concurrency_levels,
+        duration_s=duration,
+        endpoints=endpoints,
+        extra_headers=extra_headers if extra_headers else None,
+        ramp_up=args.ramp_up,
+        peak_test=args.peak_test,
+        peak_concurrency=args.peak_concurrency,
     )
     total_time = time.monotonic() - total_start
 
     # 输出结果
     if args.json_output:
-        report = generate_json_report(all_results)
+        report = generate_json_report(all_results, endpoints)
         report["total_wall_time_s"] = round(total_time, 2)
         print(json.dumps(report, indent=2, ensure_ascii=False))
     else:
-        print_full_report(all_results)
+        print_full_report(all_results, endpoints)
         print(f"{Color.DIM}  总测试耗时: {total_time:.1f}s{Color.RESET}\n")
 
     # 写入文件
     if args.json_file:
-        report = generate_json_report(all_results)
+        report = generate_json_report(all_results, endpoints)
         report["total_wall_time_s"] = round(total_time, 2)
         with open(args.json_file, "w", encoding="utf-8") as f:
             json.dump(report, f, indent=2, ensure_ascii=False)
@@ -841,11 +1190,16 @@ def main() -> None:
             print(f"  JSON 报告已保存: {args.json_file}")
 
     if args.markdown_output:
-        md = generate_markdown_report(all_results)
+        md = generate_markdown_report(all_results, endpoints)
         with open(args.markdown_output, "w", encoding="utf-8") as f:
             f.write(md)
         if not args.json_output:
             print(f"  Markdown 报告已保存: {args.markdown_output}")
+
+    if args.junit_xml:
+        generate_junit_xml_report(all_results, endpoints, args.junit_xml)
+        if not args.json_output:
+            print(f"  JUnit XML 报告已保存: {args.junit_xml}")
 
     # 退出码
     has_failure = any(

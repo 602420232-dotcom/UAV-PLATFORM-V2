@@ -1,0 +1,36 @@
+{
+  "task_type": "4dvar",
+  "observation_data": [
+    {
+      "station_id": "OBS-001",
+      "timestamp": "2025-01-15T08:00:00Z",
+      "variables": {
+        "temperature": 15.2,
+        "wind_speed": 5.5,
+        "wind_direction": 270
+      }
+    },
+    {
+      "station_id": "OBS-002",
+      "timestamp": "2025-01-15T08:00:00Z",
+      "variables": {
+        "temperature": 14.8,
+        "wind_speed": 6.2,
+        "wind_direction": 265
+      }
+    }
+  ],
+  "background_field": "gfs",
+  "domain": {
+    "north": 40.5,
+    "south": 39.0,
+    "east": 117.5,
+    "west": 115.5,
+    "resolution": 0.01
+  },
+  "parameters": {
+    "max_iterations": 50,
+    "convergence_threshold": 1e-5,
+    "time_window_hours": 6
+  }
+}

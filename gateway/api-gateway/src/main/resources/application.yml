@@ -1,7 +1,40 @@
 server:
   port: 8088
+  ssl:
+    enabled: ${SSL_ENABLED:false}
+    key-store: ${SSL_KEYSTORE:classpath:keystore.p12}
+    key-store-password: ${SSL_KEYSTORE_PASSWORD:}
+    key-store-type: ${SSL_KEYSTORE_TYPE:PKCS12}
+    key-alias: ${SSL_KEY_ALIAS:uav-platform}
+    protocol: TLS
+    enabled-protocols: TLSv1.3,TLSv1.2
 
+# HTTP to HTTPS redirect configuration (when SSL is enabled)
+  http:
+    port: ${HTTP_PORT:8080}
+
+# Spring Boot 4.1.0 SSL Bundle for service-to-service mTLS
 spring:
+  ssl:
+    bundle:
+      pem:
+        client:
+          keystore:
+            certificate: ${MTLS_CLIENT_CERT:classpath:client-cert.pem}
+            private-key: ${MTLS_CLIENT_KEY:classpath:client-key.pem}
+          truststore:
+            certificate: ${MTLS_TRUST_CERT:classpath:truststore.pem}
+      jks:
+        client:
+          keystore:
+            location: ${MTLS_KEYSTORE:classpath:client-keystore.jks}
+            password: ${MTLS_KEYSTORE_PASSWORD:}
+            type: JKS
+          truststore:
+            location: ${MTLS_TRUSTSTORE:classpath:client-truststore.jks}
+            password: ${MTLS_TRUSTSTORE_PASSWORD:}
+            type: JKS
+
   application:
     name: api-gateway
   http:

@@ -1,0 +1,7 @@
+{
+  "longitude": 116.397,
+  "latitude": 39.908,
+  "altitude": 100,
+  "timestamp": "2025-01-15T08:00:00Z",
+  "variables": ["temperature", "wind_speed", "wind_direction", "pressure", "humidity"]
+}
