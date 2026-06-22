@@ -172,7 +172,8 @@ async function loadAlgorithms() {
       algorithms.value = (data as { records?: Algorithm[] }).records ?? []
       total.value = (data as { total?: number }).total ?? algorithms.value.length
     }
-  } catch {
+  } catch (error) {
+    console.error('Failed to load algorithms:', error)
   } finally {
     loading.value = false
   }
