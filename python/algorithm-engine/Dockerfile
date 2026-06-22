@@ -25,11 +25,12 @@ RUN groupadd -r uav && useradd -r -g uav -d /app -s /sbin/nologin uav
 WORKDIR /app
 
 # 先复制依赖文件以利用 Docker 缓存层
-COPY requirements.txt .
+# 注意：构建 context 是根目录，需要指定相对于根目录的路径
+COPY python/algorithm-engine/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # 复制应用代码
-COPY . .
+COPY python/algorithm-engine/ .
 
 # 设置文件权限
 RUN chown -R uav:uav /app
