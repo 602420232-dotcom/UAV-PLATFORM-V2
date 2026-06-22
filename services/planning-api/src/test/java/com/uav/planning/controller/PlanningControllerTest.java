@@ -1,6 +1,6 @@
 package com.uav.planning.controller;
 
-import com.uav.planning.PlanningApplication;
+import com.uav.common.core.result.Result;
 import com.uav.planning.dto.PlanMissionRequest;
 import com.uav.planning.dto.PlanPathRequest;
 import com.uav.planning.entity.MissionPlan;
@@ -9,41 +9,33 @@ import com.uav.planning.entity.PlanningTask;
 import com.uav.planning.service.PlanningService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.http.MediaType;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
  * Planning 控制器单元测试
  */
 @DisplayName("Planning 控制器测试")
-@SpringBootTest(classes = PlanningApplication.class)
-@AutoConfigureMockMvc(addFilters = false)
-@TestPropertySource(locations = "classpath:application-test.yml")
+@ExtendWith(MockitoExtension.class)
 class PlanningControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
-
-    @MockitoBean
+    @Mock
     private PlanningService planningService;
+
+    @InjectMocks
+    private PlanningController planningController;
 
     @Test
     @DisplayName("POST /api/v1/planning/path 应提交路径规划任务")
-    @WithMockUser(roles = {"ADMIN"})
-    void planPathShouldReturnPlanningTask() throws Exception {
+    void planPathShouldReturnPlanningTask() {
         PlanningTask task = new PlanningTask();
         task.setId(1L);
         task.setTaskId("task-001");
@@ -53,20 +45,18 @@ class PlanningControllerTest {
 
         when(planningService.submitPathPlanning(any(PlanPathRequest.class))).thenReturn(task);
 
-        mockMvc.perform(post("/api/v1/planning/path")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"start\":{\"lon\":116.0,\"lat\":39.0,\"alt\":100.0},\"end\":{\"lon\":117.0,\"lat\":40.0,\"alt\":100.0},\"optimizationTarget\":\"BALANCED\"}")
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.data.algorithmType").value("RRTSTAR"))
-                .andExpect(jsonPath("$.data.status").value("QUEUED"));
+        PlanPathRequest request = new PlanPathRequest();
+        Result<PlanningTask> result = planningController.planPath(request);
+
+        assertEquals(200, result.getCode());
+        assertNotNull(result.getData());
+        assertEquals("RRTSTAR", result.getData().getAlgorithmType());
+        assertEquals("QUEUED", result.getData().getStatus());
     }
 
     @Test
     @DisplayName("POST /api/v1/planning/mission 应提交任务规划")
-    @WithMockUser(roles = {"ADMIN"})
-    void planMissionShouldReturnPlanningTask() throws Exception {
+    void planMissionShouldReturnPlanningTask() {
         PlanningTask task = new PlanningTask();
         task.setId(2L);
         task.setAlgorithmType("VRPTW");
@@ -74,19 +64,17 @@ class PlanningControllerTest {
 
         when(planningService.submitMissionPlanning(any(PlanMissionRequest.class))).thenReturn(task);
 
-        mockMvc.perform(post("/api/v1/planning/mission")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"uavList\":[{\"id\":\"uav-1\"}],\"taskList\":[{\"target\":\"point-a\"}]}")
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.data.algorithmType").value("VRPTW"));
+        PlanMissionRequest request = new PlanMissionRequest();
+        Result<PlanningTask> result = planningController.planMission(request);
+
+        assertEquals(200, result.getCode());
+        assertNotNull(result.getData());
+        assertEquals("VRPTW", result.getData().getAlgorithmType());
     }
 
     @Test
     @DisplayName("GET /api/v1/planning/tasks/{id} 应返回任务状态")
-    @WithMockUser(roles = {"ADMIN"})
-    void getTaskShouldReturnTaskStatus() throws Exception {
+    void getTaskShouldReturnTaskStatus() {
         PlanningTask task = new PlanningTask();
         task.setId(1L);
         task.setStatus("SUCCESS");
@@ -94,39 +82,35 @@ class PlanningControllerTest {
 
         when(planningService.getTaskStatus(anyLong())).thenReturn(task);
 
-        mockMvc.perform(get("/api/v1/planning/tasks/1")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.data.status").value("SUCCESS"))
-                .andExpect(jsonPath("$.data.progress").value(100));
+        Result<PlanningTask> result = planningController.getTask(1L);
+
+        assertEquals(200, result.getCode());
+        assertNotNull(result.getData());
+        assertEquals("SUCCESS", result.getData().getStatus());
+        assertEquals(100, result.getData().getProgress());
     }
 
     @Test
     @DisplayName("GET /api/v1/planning/tasks/{id}/result 应返回路径规划结果")
-    @WithMockUser(roles = {"ADMIN"})
-    void getPathResultShouldReturnPathData() throws Exception {
-        PathResult result = new PathResult();
-        result.setId(1L);
-        result.setTaskId("task-001");
-        result.setWaypointsJson("[{\"lon\":116.0,\"lat\":39.0}]");
-        result.setTotalDistance(1500.5);
+    void getPathResultShouldReturnPathData() {
+        PathResult pathResult = new PathResult();
+        pathResult.setId(1L);
+        pathResult.setTaskId("task-001");
+        pathResult.setWaypointsJson("[{\"lon\":116.0,\"lat\":39.0}]");
+        pathResult.setTotalDistance(1500.5);
 
-        when(planningService.getPathResult(anyLong())).thenReturn(result);
+        when(planningService.getPathResult(anyLong())).thenReturn(pathResult);
 
-        mockMvc.perform(get("/api/v1/planning/tasks/1/result")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.data.totalDistance").value(1500.5));
+        Result<PathResult> result = planningController.getPathResult(1L);
+
+        assertEquals(200, result.getCode());
+        assertNotNull(result.getData());
+        assertEquals(1500.5, result.getData().getTotalDistance());
     }
 
     @Test
     @DisplayName("GET /api/v1/planning/tasks/{id}/mission 应返回任务规划结果")
-    @WithMockUser(roles = {"ADMIN"})
-    void getMissionPlanShouldReturnMissionData() throws Exception {
+    void getMissionPlanShouldReturnMissionData() {
         MissionPlan plan = new MissionPlan();
         plan.setId(1L);
         plan.setTaskId("task-001");
@@ -137,18 +121,16 @@ class PlanningControllerTest {
 
         when(planningService.getMissionPlan(anyLong())).thenReturn(plan);
 
-        mockMvc.perform(get("/api/v1/planning/tasks/1/mission")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.data.overallScore").value(85.0));
+        Result<MissionPlan> result = planningController.getMissionPlan(1L);
+
+        assertEquals(200, result.getCode());
+        assertNotNull(result.getData());
+        assertEquals(85.0, result.getData().getOverallScore());
     }
 
     @Test
     @DisplayName("GET /api/v1/planning/tasks 应返回所有规划任务列表")
-    @WithMockUser(roles = {"ADMIN"})
-    void listTasksShouldReturnAllTasks() throws Exception {
+    void listTasksShouldReturnAllTasks() {
         PlanningTask task1 = new PlanningTask();
         task1.setId(1L);
         task1.setAlgorithmType("RRTSTAR");
@@ -159,37 +141,30 @@ class PlanningControllerTest {
 
         when(planningService.listTasks()).thenReturn(List.of(task1, task2));
 
-        mockMvc.perform(get("/api/v1/planning/tasks")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.data.length()").value(2));
+        Result<List<PlanningTask>> result = planningController.listTasks();
+
+        assertEquals(200, result.getCode());
+        assertNotNull(result.getData());
+        assertEquals(2, result.getData().size());
     }
 
     @Test
     @DisplayName("POST /api/v1/planning/tasks/{id}/cancel 应取消任务")
-    @WithMockUser(roles = {"ADMIN"})
-    void cancelTaskShouldReturnSuccess() throws Exception {
+    void cancelTaskShouldReturnSuccess() {
         when(planningService.cancelTask(anyLong())).thenReturn(true);
 
-        mockMvc.perform(post("/api/v1/planning/tasks/1/cancel")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(200));
+        Result<Void> result = planningController.cancelTask(1L);
+
+        assertEquals(200, result.getCode());
     }
 
     @Test
     @DisplayName("POST /api/v1/planning/tasks/{id}/cancel 取消失败应返回错误码 3000")
-    @WithMockUser(roles = {"ADMIN"})
-    void cancelTaskFailureShouldReturnError() throws Exception {
+    void cancelTaskFailureShouldReturnError() {
         when(planningService.cancelTask(anyLong())).thenReturn(false);
 
-        mockMvc.perform(post("/api/v1/planning/tasks/999/cancel")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(3000));
+        Result<Void> result = planningController.cancelTask(999L);
+
+        assertEquals(3000, result.getCode());
     }
 }

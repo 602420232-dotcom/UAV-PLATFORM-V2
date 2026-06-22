@@ -25,7 +25,8 @@ public class ResilienceConfig {
                 .failureRateThreshold(50)
                 .slowCallRateThreshold(80)
                 .slowCallDurationThreshold(Duration.ofSeconds(2))
-                .waitDurationInOpenState(Duration.ofSeconds(30))
+                .waitIntervalFunctionInOpenState(
+                        io.github.resilience4j.core.IntervalFunction.of(Duration.ofSeconds(30)))
                 .permittedNumberOfCallsInHalfOpenState(5)
                 .slidingWindowSize(10)
                 .minimumNumberOfCalls(5)
@@ -38,7 +39,8 @@ public class ResilienceConfig {
     public RetryRegistry retryRegistry() {
         RetryConfig defaultConfig = RetryConfig.custom()
                 .maxAttempts(3)
-                .waitDuration(Duration.ofMillis(500))
+                .intervalFunction(
+                        io.github.resilience4j.core.IntervalFunction.of(Duration.ofMillis(500)))
                 .retryExceptions(Throwable.class)
                 .ignoreExceptions(com.uav.common.core.exception.BizException.class)
                 .build();

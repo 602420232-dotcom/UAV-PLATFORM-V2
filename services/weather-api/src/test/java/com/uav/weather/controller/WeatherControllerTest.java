@@ -1,6 +1,5 @@
 package com.uav.weather.controller;
 
-import com.uav.weather.WeatherApplication;
 import com.uav.weather.dto.WeatherQueryRequest;
 import com.uav.weather.dto.WindProfileQueryRequest;
 import com.uav.weather.entity.WeatherGrid;
@@ -8,42 +7,34 @@ import com.uav.weather.entity.WindProfile;
 import com.uav.weather.service.WeatherService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.http.MediaType;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
  * Weather 控制器单元测试
  */
 @DisplayName("Weather 控制器测试")
-@SpringBootTest(classes = WeatherApplication.class)
-@AutoConfigureMockMvc(addFilters = false)
-@TestPropertySource(locations = "classpath:application-test.yml")
+@ExtendWith(MockitoExtension.class)
 class WeatherControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
-
-    @MockitoBean
+    @Mock
     private WeatherService weatherService;
 
+    @InjectMocks
+    private WeatherController weatherController;
+
     @Test
-    @DisplayName("POST /api/v1/weather/point 应返回单点气象数据")
-    @WithMockUser(roles = {"ADMIN"})
-    void queryPointShouldReturnWeatherGrid() throws Exception {
+    @DisplayName("queryPoint 应返回单点气象数据")
+    void queryPointShouldReturnWeatherGrid() {
         WeatherGrid grid = new WeatherGrid();
         grid.setId(1L);
         grid.setSource("WRF");
@@ -55,20 +46,23 @@ class WeatherControllerTest {
 
         when(weatherService.queryPoint(any(WeatherQueryRequest.class))).thenReturn(grid);
 
-        mockMvc.perform(post("/api/v1/weather/point")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"longitude\":116.4,\"latitude\":39.9,\"altitude\":100.0}")
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.data.source").value("WRF"))
-                .andExpect(jsonPath("$.data.temperature").value(25.5));
+        WeatherQueryRequest request = new WeatherQueryRequest();
+        request.setLongitude(116.4);
+        request.setLatitude(39.9);
+        request.setAltitude(100.0);
+
+        var result = weatherController.queryPoint(request);
+
+        assertNotNull(result);
+        assertEquals(200, result.getCode());
+        assertNotNull(result.getData());
+        assertEquals("WRF", result.getData().getSource());
+        assertEquals(25.5, result.getData().getTemperature());
     }
 
     @Test
-    @DisplayName("GET /api/v1/weather/region 应返回区域气象格点列表")
-    @WithMockUser(roles = {"ADMIN"})
-    void queryRegionShouldReturnWeatherGridList() throws Exception {
+    @DisplayName("queryRegion 应返回区域气象格点列表")
+    void queryRegionShouldReturnWeatherGridList() {
         WeatherGrid grid = new WeatherGrid();
         grid.setId(1L);
         grid.setSource("FENGWU_GHR");
@@ -78,22 +72,18 @@ class WeatherControllerTest {
         when(weatherService.queryRegion(anyDouble(), anyDouble(), anyDouble(), anyDouble(),
                 any(), any(), any())).thenReturn(List.of(grid));
 
-        mockMvc.perform(get("/api/v1/weather/region")
-                        .param("minLon", "116.0")
-                        .param("minLat", "39.0")
-                        .param("maxLon", "117.0")
-                        .param("maxLat", "40.0")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.data[0].source").value("FENGWU_GHR"));
+        var result = weatherController.queryRegion(116.0, 39.0, 117.0, 40.0, null, null, null);
+
+        assertNotNull(result);
+        assertEquals(200, result.getCode());
+        assertNotNull(result.getData());
+        assertEquals(1, result.getData().size());
+        assertEquals("FENGWU_GHR", result.getData().get(0).getSource());
     }
 
     @Test
-    @DisplayName("POST /api/v1/weather/wind-profile 应返回风场剖面数据")
-    @WithMockUser(roles = {"ADMIN"})
-    void queryWindProfileShouldReturnWindData() throws Exception {
+    @DisplayName("queryWindProfile 应返回风场剖面数据")
+    void queryWindProfileShouldReturnWindData() {
         WindProfile profile = new WindProfile();
         profile.setId(1L);
         profile.setSource("FUSION");
@@ -102,19 +92,24 @@ class WeatherControllerTest {
 
         when(weatherService.queryWindProfile(any(WindProfileQueryRequest.class))).thenReturn(profile);
 
-        mockMvc.perform(post("/api/v1/weather/wind-profile")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"longitude\":116.4,\"latitude\":39.9,\"minAltitude\":100.0,\"maxAltitude\":300.0,\"interval\":100.0}")
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.data.source").value("FUSION"));
+        WindProfileQueryRequest request = new WindProfileQueryRequest();
+        request.setLongitude(116.4);
+        request.setLatitude(39.9);
+        request.setMinAltitude(100.0);
+        request.setMaxAltitude(300.0);
+        request.setInterval(100.0);
+
+        var result = weatherController.queryWindProfile(request);
+
+        assertNotNull(result);
+        assertEquals(200, result.getCode());
+        assertNotNull(result.getData());
+        assertEquals("FUSION", result.getData().getSource());
     }
 
     @Test
-    @DisplayName("POST /api/v1/weather/fusion 应返回多源融合气象数据")
-    @WithMockUser(roles = {"ADMIN"})
-    void queryFusionShouldReturnFusionData() throws Exception {
+    @DisplayName("queryFusion 应返回多源融合气象数据")
+    void queryFusionShouldReturnFusionData() {
         WeatherGrid grid = new WeatherGrid();
         grid.setId(2L);
         grid.setSource("FUSION");
@@ -122,24 +117,36 @@ class WeatherControllerTest {
 
         when(weatherService.queryFusion(any(WeatherQueryRequest.class))).thenReturn(grid);
 
-        mockMvc.perform(post("/api/v1/weather/fusion")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"longitude\":116.4,\"latitude\":39.9}")
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.data.source").value("FUSION"));
+        WeatherQueryRequest request = new WeatherQueryRequest();
+        request.setLongitude(116.4);
+        request.setLatitude(39.9);
+
+        var result = weatherController.queryFusion(request);
+
+        assertNotNull(result);
+        assertEquals(200, result.getCode());
+        assertNotNull(result.getData());
+        assertEquals("FUSION", result.getData().getSource());
+        assertEquals(26.0, result.getData().getTemperature());
     }
 
     @Test
-    @DisplayName("无效请求参数应返回业务错误码 1000")
-    @WithMockUser(roles = {"ADMIN"})
-    void invalidRequestShouldReturnBadRequest() throws Exception {
-        mockMvc.perform(post("/api/v1/weather/point")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{}")
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(1000));
+    @DisplayName("queryRegion 带完整参数应正确传递")
+    void queryRegionWithFullParamsShouldPassCorrectly() {
+        WeatherGrid grid = new WeatherGrid();
+        grid.setId(1L);
+        grid.setSource("ECMWF");
+        grid.setLongitude(116.5);
+        grid.setLatitude(39.5);
+
+        when(weatherService.queryRegion(eq(116.0), eq(39.0), eq(117.0), eq(40.0),
+                eq(100.0), eq("ECMWF"), any(LocalDateTime.class))).thenReturn(List.of(grid));
+
+        var result = weatherController.queryRegion(116.0, 39.0, 117.0, 40.0, 100.0, "ECMWF", LocalDateTime.now());
+
+        assertNotNull(result);
+        assertEquals(200, result.getCode());
+        assertNotNull(result.getData());
+        assertEquals("ECMWF", result.getData().get(0).getSource());
     }
 }

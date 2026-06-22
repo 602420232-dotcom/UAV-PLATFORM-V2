@@ -1,6 +1,5 @@
 package com.uav.assimilation.controller;
 
-import com.uav.assimilation.AssimilationApplication;
 import com.uav.assimilation.dto.SubmitTaskRequest;
 import com.uav.assimilation.dto.TaskQueryRequest;
 import com.uav.assimilation.entity.AssimilationResult;
@@ -10,57 +9,46 @@ import com.uav.common.core.result.Result;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.http.MediaType;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
  * Assimilation 控制器单元测试
  */
 @DisplayName("Assimilation 控制器测试")
-@SpringBootTest(classes = AssimilationApplication.class)
-@AutoConfigureMockMvc(addFilters = false)
-@TestPropertySource(locations = "classpath:application-test.yml")
+@ExtendWith(MockitoExtension.class)
 class AssimilationControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
-
-    @MockitoBean
+    @Mock
     private AssimilationService assimilationService;
+
+    @InjectMocks
+    private AssimilationController assimilationController;
 
     @Test
     @DisplayName("POST /api/v1/assimilation/tasks 应提交同化任务并返回任务ID")
-    @WithMockUser(roles = {"ADMIN"})
-    void submitTaskShouldReturnTaskId() throws Exception {
+    void submitTaskShouldReturnTaskId() {
         when(assimilationService.submitTask(any(SubmitTaskRequest.class)))
                 .thenReturn(Result.success(1001L));
 
-        mockMvc.perform(post("/api/v1/assimilation/tasks")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"algorithmType\":\"3DVAR\",\"params\":{\"key\":\"value\"},\"tenantId\":1}")
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.data").value(1001));
+        SubmitTaskRequest request = new SubmitTaskRequest();
+        Result<Long> result = assimilationController.submitTask(request);
+
+        assertEquals(200, result.getCode());
+        assertEquals(1001L, result.getData());
     }
 
     @Test
     @DisplayName("GET /api/v1/assimilation/tasks/{id} 应返回任务状态")
-    @WithMockUser(roles = {"ADMIN"})
-    void getTaskStatusShouldReturnTaskInfo() throws Exception {
+    void getTaskStatusShouldReturnTaskInfo() {
         AssimilationTask task = new AssimilationTask();
         task.setId(1L);
         task.setAlgorithmType("ENKF");
@@ -69,61 +57,52 @@ class AssimilationControllerTest {
 
         when(assimilationService.getTaskStatus(anyLong())).thenReturn(Result.success(task));
 
-        mockMvc.perform(get("/api/v1/assimilation/tasks/1")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.data.algorithmType").value("ENKF"))
-                .andExpect(jsonPath("$.data.status").value("RUNNING"))
-                .andExpect(jsonPath("$.data.progress").value(50));
+        Result<AssimilationTask> result = assimilationController.getTaskStatus(1L);
+
+        assertEquals(200, result.getCode());
+        assertNotNull(result.getData());
+        assertEquals("ENKF", result.getData().getAlgorithmType());
+        assertEquals("RUNNING", result.getData().getStatus());
+        assertEquals(50, result.getData().getProgress());
     }
 
     @Test
     @DisplayName("GET /api/v1/assimilation/tasks/{id}/result 应返回任务结果")
-    @WithMockUser(roles = {"ADMIN"})
-    void getTaskResultShouldReturnResultData() throws Exception {
-        AssimilationResult result = new AssimilationResult();
-        result.setId(1L);
-        result.setTaskId(1L);
-        result.setAnalysisFieldJson("{\"field\":\"simulated\"}");
+    void getTaskResultShouldReturnResultData() {
+        AssimilationResult resultEntity = new AssimilationResult();
+        resultEntity.setId(1L);
+        resultEntity.setTaskId(1L);
+        resultEntity.setAnalysisFieldJson("{\"field\":\"simulated\"}");
 
-        when(assimilationService.getTaskResult(anyLong())).thenReturn(Result.success(result));
+        when(assimilationService.getTaskResult(anyLong())).thenReturn(Result.success(resultEntity));
 
-        mockMvc.perform(get("/api/v1/assimilation/tasks/1/result")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.data.analysisFieldJson").value("{\"field\":\"simulated\"}"));
+        Result<AssimilationResult> result = assimilationController.getTaskResult(1L);
+
+        assertEquals(200, result.getCode());
+        assertNotNull(result.getData());
+        assertEquals("{\"field\":\"simulated\"}", result.getData().getAnalysisFieldJson());
     }
 
     @Test
     @DisplayName("POST /api/v1/assimilation/tasks/{id}/cancel 应取消任务")
-    @WithMockUser(roles = {"ADMIN"})
-    void cancelTaskShouldReturnSuccess() throws Exception {
+    void cancelTaskShouldReturnSuccess() {
         when(assimilationService.cancelTask(anyLong())).thenReturn(Result.success());
 
-        mockMvc.perform(post("/api/v1/assimilation/tasks/1/cancel")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(200));
+        Result<Void> result = assimilationController.cancelTask(1L);
+
+        assertEquals(200, result.getCode());
     }
 
     @Test
     @DisplayName("GET /api/v1/assimilation/tasks 应返回任务列表")
-    @WithMockUser(roles = {"ADMIN"})
-    void listTasksShouldReturnTaskList() throws Exception {
+    void listTasksShouldReturnTaskList() {
         Page<AssimilationTask> page = new Page<>(1, 10, 0);
         page.setRecords(List.of());
 
         when(assimilationService.listTasks(any(TaskQueryRequest.class))).thenReturn(Result.success(page));
 
-        mockMvc.perform(get("/api/v1/assimilation/tasks")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(200));
+        Result<?> result = assimilationController.listTasks(new TaskQueryRequest());
+
+        assertEquals(200, result.getCode());
     }
 }

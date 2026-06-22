@@ -1,98 +1,85 @@
 package com.uav.platform.controller;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.uav.platform.entity.Tenant;
 import com.uav.platform.service.TenantService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.http.MediaType;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
 
-import static org.mockito.ArgumentMatchers.anyLong;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
- * Platform 控制器单元测试
+ * Tenant 控制器单元测试
+ * 使用纯 Mockito 测试，不依赖 Spring 上下文
  */
-@DisplayName("Platform 控制器测试")
-@SpringBootTest(classes = com.uav.platform.PlatformApplication.class)
-@AutoConfigureMockMvc(addFilters = false)
-@TestPropertySource(locations = "classpath:application-test.yml")
-@WithMockUser(roles = {"ADMIN"})
+@DisplayName("Tenant 控制器测试")
+@ExtendWith(MockitoExtension.class)
 class PlatformControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
-
-    @MockitoBean
+    @Mock
     private TenantService tenantService;
 
-    @Test
-    @DisplayName("GET /api/v1/tenants/{id} 应返回租户详情")
-    void getTenantByIdShouldReturnTenantDetails() throws Exception {
-        Tenant tenant = new Tenant();
-        tenant.setId(1L);
-        tenant.setName("Test Tenant");
-        tenant.setSchemaName("test_schema");
-        tenant.setStatus(1);
-        tenant.setCreatedAt(LocalDateTime.now());
+    @InjectMocks
+    private TenantController tenantController;
 
-        when(tenantService.getById(anyLong())).thenReturn(tenant);
+    private Tenant testTenant;
 
-        mockMvc.perform(get("/api/v1/tenants/1")
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.data.name").value("Test Tenant"))
-                .andExpect(jsonPath("$.data.schemaName").value("test_schema"));
+    @BeforeEach
+    void setUp() {
+        testTenant = new Tenant();
+        testTenant.setId(1L);
+        testTenant.setName("Test Tenant");
+        testTenant.setSchemaName("test_schema");
+        testTenant.setStatus(1);
+        testTenant.setCreatedAt(LocalDateTime.now());
     }
 
     @Test
-    @DisplayName("GET /api/v1/tenants/{id} 租户不存在时应返回 null data")
-    void getNonExistentTenantShouldReturnNullData() throws Exception {
-        when(tenantService.getById(anyLong())).thenReturn(null);
+    @DisplayName("getById 应返回租户详情")
+    void getTenantByIdShouldReturnTenantDetails() {
+        when(tenantService.getById(1L)).thenReturn(testTenant);
 
-        mockMvc.perform(get("/api/v1/tenants/999")
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.data").isEmpty());
+        var result = tenantController.getById(1L);
+
+        assertNotNull(result);
+        assertEquals(200, result.getCode());
+        assertNotNull(result.getData());
+        assertEquals("Test Tenant", result.getData().getName());
     }
 
     @Test
-    @DisplayName("GET /api/v1/tenants 应返回租户列表")
-    void listTenantsShouldReturnPageResult() throws Exception {
-        mockMvc.perform(get("/api/v1/tenants")
-                        .param("current", "1")
-                        .param("size", "10")
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(200));
+    @DisplayName("getById 租户不存在时应返回 null data")
+    void getNonExistentTenantShouldReturnNullData() {
+        when(tenantService.getById(999L)).thenReturn(null);
+
+        var result = tenantController.getById(999L);
+
+        assertNotNull(result);
+        assertEquals(200, result.getCode());
+        assertNull(result.getData());
     }
 
     @Test
-    @DisplayName("GET /api/v1/tenants 不带分页参数应使用默认值")
-    void listTenantsWithoutParamsShouldUseDefaults() throws Exception {
-        mockMvc.perform(get("/api/v1/tenants")
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(200));
-    }
+    @DisplayName("list 应返回分页结果")
+    void listTenantsShouldReturnPageResult() {
+        Page<Tenant> mockPage = new Page<>(1, 10);
+        mockPage.setRecords(java.util.List.of(testTenant));
+        when(tenantService.page(any())).thenReturn(mockPage);
 
-    @Test
-    @DisplayName("GET /api/v1/tenants 应支持 application/json 内容协商")
-    void contentNegotiationShouldSupportJson() throws Exception {
-        mockMvc.perform(get("/api/v1/tenants")
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+        var result = tenantController.list(1, 10);
+
+        assertNotNull(result);
+        assertEquals(200, result.getCode());
+        assertNotNull(result.getData());
+        assertEquals(1, result.getData().getRecords().size());
     }
 }

@@ -6,9 +6,9 @@ import com.uav.platform.mapper.ExperimentMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -28,7 +28,6 @@ class ExperimentServiceTest {
     @Mock
     private ExperimentMapper experimentMapper;
 
-    @InjectMocks
     private ExperimentService experimentService;
 
     private ExperimentCreateRequest createRequest;
@@ -36,6 +35,8 @@ class ExperimentServiceTest {
 
     @BeforeEach
     void setUp() {
+        experimentService = new ExperimentService();
+        ReflectionTestUtils.setField(experimentService, "baseMapper", experimentMapper);
         createRequest = new ExperimentCreateRequest();
         createRequest.setExperimentName("测试实验-A*算法");
         createRequest.setAlgorithmName("A_STAR");
@@ -194,9 +195,11 @@ class ExperimentServiceTest {
         exp2.setDurationMs(8000L);
         exp2.setMetricsJson("{\"rmse\":0.3}");
 
-        when(experimentMapper.selectByIds(anyList())).thenReturn(List.of(exp1, exp2));
+        // 使用 spy 来 mock listByIds 方法（因为 ServiceImpl 内部调用链复杂）
+        ExperimentService spyService = spy(experimentService);
+        doReturn(List.of(exp1, exp2)).when(spyService).listByIds(anyList());
 
-        ExperimentCompareResult result = experimentService.compareExperiments(List.of(1L, 2L));
+        ExperimentCompareResult result = spyService.compareExperiments(List.of(1L, 2L));
 
         assertNotNull(result);
         assertEquals(2, result.getExperiments().size());
