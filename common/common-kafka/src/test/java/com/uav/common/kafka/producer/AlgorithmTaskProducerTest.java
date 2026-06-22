@@ -7,7 +7,6 @@ import com.uav.common.kafka.message.AlgorithmTaskMessage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -31,13 +30,13 @@ class AlgorithmTaskProducerTest {
     @Mock
     private ObjectMapper objectMapper;
 
-    @InjectMocks
     private AlgorithmTaskProducer producer;
 
     private AlgorithmTaskMessage testMessage;
 
     @BeforeEach
     void setUp() {
+        producer = new AlgorithmTaskProducer(kafkaTemplate, objectMapper, false);
         testMessage = AlgorithmTaskMessage.builder()
                 .taskId("task-001")
                 .algorithmId("weather-forecast")
