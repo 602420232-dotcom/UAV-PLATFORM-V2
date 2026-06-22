@@ -5,11 +5,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.uav.common.core.constant.TaskStatus;
 import com.uav.common.kafka.message.AlgorithmResultMessage;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -33,14 +33,18 @@ public class TaskStatusSyncService {
     private static final String TASK_KEY_PREFIX = "task:";
     private static final String RESULT_KEY_PREFIX = "result:";
 
-    @Autowired
-    private StringRedisTemplate redisTemplate;
+    private final StringRedisTemplate redisTemplate;
+    private final ObjectMapper objectMapper;
+    private final int taskStatusTtl;
 
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    @Value("${uav.kafka.task-status-ttl:3600}")
-    private int taskStatusTtl;
+    public TaskStatusSyncService(
+            StringRedisTemplate redisTemplate,
+            ObjectMapper objectMapper,
+            @Value("${uav.kafka.task-status-ttl:3600}") int taskStatusTtl) {
+        this.redisTemplate = redisTemplate;
+        this.objectMapper = objectMapper;
+        this.taskStatusTtl = taskStatusTtl;
+    }
 
     /**
      * 初始化任务状态（Java 提交任务后调用）
@@ -60,7 +64,7 @@ public class TaskStatusSyncService {
         try {
             String json = objectMapper.writeValueAsString(status);
             redisTemplate.opsForValue().set(
-                    TASK_KEY_PREFIX + taskId, json, taskStatusTtl, TimeUnit.SECONDS);
+                    TASK_KEY_PREFIX + taskId, json, Duration.ofSeconds(taskStatusTtl));
             log.debug("任务状态已初始化, taskId={}, status={}", taskId, TaskStatus.QUEUED.getName());
         } catch (JsonProcessingException e) {
             log.error("序列化任务状态失败, taskId={}", taskId, e);
@@ -84,7 +88,7 @@ public class TaskStatusSyncService {
         try {
             String json = objectMapper.writeValueAsString(status);
             redisTemplate.opsForValue().set(
-                    TASK_KEY_PREFIX + message.getTaskId(), json, taskStatusTtl, TimeUnit.SECONDS);
+                    TASK_KEY_PREFIX + message.getTaskId(), json, Duration.ofSeconds(taskStatusTtl));
             log.debug("任务状态已更新, taskId={}, status={}", message.getTaskId(), message.getStatus());
         } catch (JsonProcessingException e) {
             log.error("序列化任务状态失败, taskId={}", message.getTaskId(), e);
@@ -100,7 +104,7 @@ public class TaskStatusSyncService {
         try {
             String json = objectMapper.writeValueAsString(message);
             redisTemplate.opsForValue().set(
-                    RESULT_KEY_PREFIX + message.getTaskId(), json, taskStatusTtl, TimeUnit.SECONDS);
+                    RESULT_KEY_PREFIX + message.getTaskId(), json, Duration.ofSeconds(taskStatusTtl));
         } catch (JsonProcessingException e) {
             log.error("缓存算法结果失败, taskId={}", message.getTaskId(), e);
         }

@@ -3,16 +3,12 @@ package com.uav.common.security.rbac;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
-
-import java.util.List;
 
 /**
  * 用户 Repository
  * <p>
  * 提供基于 JPA 的用户数据访问，支持关联查询角色和权限。
  */
-@Repository
 public interface RbacUserRepository extends JpaRepository<com.uav.common.security.rbac.RbacUser, Long> {
 
     /**

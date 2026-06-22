@@ -180,6 +180,7 @@ class AuthFilterTest {
 
     @Test
     @DisplayName("POST 请求应正确通过过滤器")
+    @SuppressWarnings("null")
     void postRequestShouldPassThroughFilter() {
         MockServerHttpRequest request = MockServerHttpRequest
                 .method(HttpMethod.POST, URI.create("/api/v1/risk/assess"))

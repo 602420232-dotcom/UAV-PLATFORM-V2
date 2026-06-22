@@ -1,5 +1,11 @@
 name: UAV Platform V2 CI/CD Pipeline
 
+# ============================================================
+# 主CI Workflow: 负责构建、测试、Docker镜像、部署
+# 触发条件: push(main/develop), pull_request(main), 手动触发
+# 与 ci-cd.yml 互补: ci-cd.yml 专注于 E2E 灰度验证和性能压测
+# ============================================================
+
 on:
   push:
     branches: [main, develop]
@@ -172,6 +178,10 @@ jobs:
       - name: Lint
         working-directory: console
         run: npm run lint
+
+      - name: Run unit tests
+        working-directory: console
+        run: npm run test
 
       - name: Build
         working-directory: console

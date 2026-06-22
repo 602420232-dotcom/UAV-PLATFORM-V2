@@ -3,12 +3,10 @@ package com.uav.common.security.config;
 import com.uav.common.security.filter.HmacAuthenticationFilter;
 import com.uav.common.security.filter.JwtAuthenticationFilter;
 import com.uav.common.security.filter.TenantContextFilter;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.annotation.Nullable;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
-import org.springframework.core.env.Environment;
-import org.springframework.core.env.Profiles;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -18,6 +16,8 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 /**
  * Spring Security 配置
@@ -32,17 +32,15 @@ public class SecurityConfig {
 
     private final TenantContextFilter tenantContextFilter;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
-    private final Environment environment;
-
-    @Autowired(required = false)
-    private HmacAuthenticationFilter hmacAuthenticationFilter;
+    @Nullable
+    private final HmacAuthenticationFilter hmacAuthenticationFilter;
 
     public SecurityConfig(TenantContextFilter tenantContextFilter,
                           JwtAuthenticationFilter jwtAuthenticationFilter,
-                          Environment environment) {
+                          @Nullable HmacAuthenticationFilter hmacAuthenticationFilter) {
         this.tenantContextFilter = tenantContextFilter;
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
-        this.environment = environment;
+        this.hmacAuthenticationFilter = hmacAuthenticationFilter;
     }
 
     @Bean
@@ -58,27 +56,16 @@ public class SecurityConfig {
             )
 
             // 配置请求授权
-            .authorizeHttpRequests(auth -> {
-                // 放行健康检查、公开端点
-                auth.requestMatchers(
-                    "/health",
-                    "/actuator/**",
-                    "/api/v1/auth/**",
-                    "/public/**"
-                ).permitAll();
-
-                // Swagger/OpenAPI 端点仅在非生产环境放行
-                boolean isProd = environment.acceptsProfiles(Profiles.of("prod", "production"));
-                if (!isProd) {
-                    auth.requestMatchers(
-                        "/swagger-ui/**",
-                        "/v3/api-docs/**"
-                    ).permitAll();
-                }
-
-                // 其他请求需要认证
-                auth.anyRequest().authenticated();
-            })
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/health").permitAll()
+                .requestMatchers("/actuator/health").permitAll()
+                .requestMatchers("/api/v1/auth/**").permitAll()
+                .requestMatchers("/api/v1/dashboard/global").permitAll()
+                .requestMatchers("/api/v1/weather/point", "/api/v1/weather/region", "/api/v1/weather/wind-profile").permitAll()
+                .requestMatchers("/api/v1/system/config/demo-mode").permitAll()
+                .requestMatchers("/public/**").permitAll()
+                .anyRequest().authenticated()
+            )
 
             // 禁用默认表单登录和 HTTP Basic
             .formLogin(AbstractHttpConfigurer::disable)
@@ -99,5 +86,10 @@ public class SecurityConfig {
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
     }
 }

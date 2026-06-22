@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { riskApi } from '@/api/risk'
 import type { RiskAssessment } from '@/api/risk'
 import { formatDateTime } from '@/utils/format'
+import { useDemoModeStore } from '@/stores/demoMode'
 
 const loading = ref(false)
 const historyRecords = ref<RiskAssessment[]>([])
+const demoModeStore = useDemoModeStore()
 
 // 风险评估表单
 const assessDialogVisible = ref(false)
@@ -22,6 +24,16 @@ const assessResult = ref<RiskAssessment | null>(null)
 const resultDialogVisible = ref(false)
 
 async function loadHistory() {
+  if (demoModeStore.isDemoMode) {
+    historyRecords.value = [
+      { id: 1, type: 'weather', riskLevel: 'LOW', score: 0.25, factors: [{ name: '风速', value: 3.2, weight: 0.3, level: 'LOW' }, { name: '能见度', value: 18.5, weight: 0.2, level: 'LOW' }], lon: 116.4, lat: 39.9, altitude: 100, assessedAt: '2025-06-18T08:00:00Z' },
+      { id: 2, type: 'terrain', riskLevel: 'MEDIUM', score: 0.55, factors: [{ name: '地形复杂度', value: 6.8, weight: 0.4, level: 'MEDIUM' }, { name: '障碍物密度', value: 5.0, weight: 0.3, level: 'MEDIUM' }], lon: 117.0, lat: 40.0, altitude: 200, assessedAt: '2025-06-18T09:00:00Z' },
+      { id: 3, type: 'weather', riskLevel: 'HIGH', score: 0.82, factors: [{ name: '风速', value: 15.6, weight: 0.3, level: 'HIGH' }, { name: '雷暴概率', value: 0.7, weight: 0.5, level: 'HIGH' }], lon: 115.5, lat: 39.5, altitude: 150, assessedAt: '2025-06-18T10:00:00Z' },
+      { id: 4, type: 'airworthiness', riskLevel: 'LOW', score: 0.18, factors: [{ name: '设备状态', value: 2.0, weight: 0.4, level: 'LOW' }, { name: '电池余量', value: 85, weight: 0.3, level: 'LOW' }], lon: 116.8, lat: 40.2, altitude: 80, assessedAt: '2025-06-18T11:00:00Z' },
+      { id: 5, type: 'weather', riskLevel: 'MEDIUM', score: 0.48, factors: [{ name: '风速', value: 8.3, weight: 0.3, level: 'MEDIUM' }, { name: '湿度', value: 88, weight: 0.2, level: 'MEDIUM' }], lon: 116.2, lat: 39.7, altitude: 120, assessedAt: '2025-06-18T12:00:00Z' },
+    ]
+    return
+  }
   loading.value = true
   try {
     historyRecords.value = await riskApi.getHistory({ limit: 50 })
@@ -61,7 +73,12 @@ function getRiskLevelColor(level: string): string {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
+  await demoModeStore.fetchStatus()
+  loadHistory()
+})
+
+watch(() => demoModeStore.isDemoMode, () => {
   loadHistory()
 })
 </script>
@@ -70,7 +87,7 @@ onMounted(() => {
   <div class="risk-page">
     <div class="page-header">
       <h2>风险/适航评估</h2>
-      <el-button type="primary" @click="assessDialogVisible = true">
+      <el-button type="primary" :disabled="demoModeStore.isDemoMode" @click="assessDialogVisible = true">
         <el-icon><Plus /></el-icon>
         发起评估
       </el-button>

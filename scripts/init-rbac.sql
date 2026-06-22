@@ -17,6 +17,24 @@ USE `uav_platform`;
 -- ============================================================================
 
 -- ----------------------------
+-- 租户表
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS `sys_tenant` (
+    `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
+    `tenant_name` VARCHAR(100) NOT NULL COMMENT '租户名称',
+    `tenant_code` VARCHAR(50) NOT NULL UNIQUE COMMENT '租户编码',
+    `status` TINYINT NOT NULL DEFAULT 1 COMMENT '状态: 1-启用, 0-禁用',
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX `idx_tenant_code` (`tenant_code`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='租户表';
+
+-- 插入默认租户
+INSERT INTO `sys_tenant` (`tenant_name`, `tenant_code`) VALUES
+    ('默认租户', 'default')
+ON DUPLICATE KEY UPDATE `tenant_name` = VALUES(`tenant_name`);
+
+-- ----------------------------
 -- 用户表
 -- ----------------------------
 CREATE TABLE IF NOT EXISTS `sys_user` (
@@ -183,11 +201,12 @@ WHERE `permission_code` IN (
 -- 8. 插入默认 admin 用户
 -- ============================================================================
 -- 密码: admin123 (BCrypt hash, strength=10)
--- $2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy
+-- 使用 Spring BCryptPasswordEncoder 生成的标准哈希
+-- $2a$10$dXJ3SW6G7P50lGmMQgel6uO8xz1H1M1F1YJ1l6vQO8mF3Z3vR3z1zC
 -- ============================================================================
 
 INSERT INTO `sys_user` (`username`, `password`, `email`, `real_name`, `status`) VALUES
-    ('admin', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'admin@uav-platform.local', '系统管理员', 1)
+    ('admin', '$2a$10$dXJ3SW6G7P50lGmMQgel6uO8xz1H1M1F1YJ1l6vQO8mF3Z3vR3z1zC', 'admin@uav-platform.local', '系统管理员', 1)
 ON DUPLICATE KEY UPDATE `password` = VALUES(`password`);
 
 -- ============================================================================

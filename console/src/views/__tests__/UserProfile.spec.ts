@@ -1,7 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
-import ElementPlus from 'element-plus'
 import { useAuthStore } from '@/stores/auth'
 
 // Mock auth API

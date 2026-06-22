@@ -11,7 +11,6 @@ import com.uav.planning.entity.PlanningTask;
 import com.uav.planning.mapper.MissionPlanMapper;
 import com.uav.planning.mapper.PathResultMapper;
 import com.uav.planning.mapper.PlanningTaskMapper;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -24,14 +23,25 @@ import java.time.LocalDateTime;
  */
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class PlanningResultConsumer extends AbstractAlgorithmResultConsumer {
 
     private final PlanningTaskMapper taskMapper;
     private final PathResultMapper pathResultMapper;
     private final MissionPlanMapper missionPlanMapper;
     private final TaskStatusSyncService taskStatusSyncService;
-    private final ObjectMapper objectMapper;
+
+    public PlanningResultConsumer(
+            ObjectMapper objectMapper,
+            PlanningTaskMapper taskMapper,
+            PathResultMapper pathResultMapper,
+            MissionPlanMapper missionPlanMapper,
+            TaskStatusSyncService taskStatusSyncService) {
+        super(objectMapper);
+        this.taskMapper = taskMapper;
+        this.pathResultMapper = pathResultMapper;
+        this.missionPlanMapper = missionPlanMapper;
+        this.taskStatusSyncService = taskStatusSyncService;
+    }
 
     @Override
     protected void onResult(AlgorithmResultMessage message) {

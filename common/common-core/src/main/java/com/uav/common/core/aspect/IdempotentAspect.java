@@ -16,7 +16,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
-import java.util.concurrent.TimeUnit;
+import java.time.Duration;
 
 /**
  * 幂等控制切面
@@ -80,7 +80,7 @@ public class IdempotentAspect {
 
         // 标记为处理中（短 TTL 防止死锁）
         redisTemplate.opsForValue().set(processingKey, "1",
-                Math.min(idempotent.ttlSeconds(), 300), TimeUnit.SECONDS);
+                Duration.ofSeconds(Math.min(idempotent.ttlSeconds(), 300)));
 
         try {
             // 执行目标方法
@@ -88,7 +88,7 @@ public class IdempotentAspect {
 
             // 方法执行成功，标记幂等 Key 为已完成
             redisTemplate.opsForValue().set(idempotentKey, "done",
-                    idempotent.ttlSeconds(), TimeUnit.SECONDS);
+                    Duration.ofSeconds(idempotent.ttlSeconds()));
             redisTemplate.delete(processingKey);
 
             return result;

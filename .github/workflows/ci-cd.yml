@@ -1,5 +1,12 @@
 name: UAV Platform V2 CI/CD
 
+# ============================================================
+# 部署专用 Workflow: 专注于 E2E 灰度验证和性能压测
+# 触发条件: push(main), pull_request(main)
+# 与 ci.yml 互补: ci.yml 负责构建、单元测试、Docker镜像、部署
+# 本 workflow 在 ci.yml 构建完成后，执行端到端验证和性能基准测试
+# ============================================================
+
 on:
   push:
     branches: [main]

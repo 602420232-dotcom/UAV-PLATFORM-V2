@@ -65,7 +65,6 @@ public class VaultSecretProvider {
     @Value("${spring.profiles.active:dev}")
     private String activeProfile;
 
-    private static final Duration DEFAULT_CACHE_TTL = Duration.ofMinutes(5);
     private static final String VAULT_API_VERSION = "v1";
 
     private final RestTemplate restTemplate;

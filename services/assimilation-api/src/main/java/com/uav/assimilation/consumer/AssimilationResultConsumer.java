@@ -9,7 +9,6 @@ import com.uav.assimilation.mapper.AssimilationTaskMapper;
 import com.uav.common.kafka.consumer.AbstractAlgorithmResultConsumer;
 import com.uav.common.kafka.message.AlgorithmResultMessage;
 import com.uav.common.kafka.service.TaskStatusSyncService;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -22,13 +21,22 @@ import java.time.LocalDateTime;
  */
 @Component
 @Slf4j
-@RequiredArgsConstructor
 public class AssimilationResultConsumer extends AbstractAlgorithmResultConsumer {
 
     private final AssimilationTaskMapper taskMapper;
     private final AssimilationResultMapper resultMapper;
     private final TaskStatusSyncService taskStatusSyncService;
-    private final ObjectMapper objectMapper;
+
+    public AssimilationResultConsumer(
+            ObjectMapper objectMapper,
+            AssimilationTaskMapper taskMapper,
+            AssimilationResultMapper resultMapper,
+            TaskStatusSyncService taskStatusSyncService) {
+        super(objectMapper);
+        this.taskMapper = taskMapper;
+        this.resultMapper = resultMapper;
+        this.taskStatusSyncService = taskStatusSyncService;
+    }
 
     @Override
     protected void onResult(AlgorithmResultMessage message) {

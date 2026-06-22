@@ -12,7 +12,10 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 /**
@@ -155,17 +158,28 @@ public class AlgorithmRegistryService extends ServiceImpl<AlgorithmRegistrationM
     /**
      * 分页查询算法列表
      *
-     * @param current  当前页
-     * @param size     每页大小
-     * @param type     算法类型（可选筛选）
-     * @param status   状态（可选筛选）
+     * @param current        当前页
+     * @param size           每页大小
+     * @param type           算法类型（可选筛选）
+     * @param status         状态（可选筛选）
+     * @param keyword        关键词搜索（匹配 name 或 description）
+     * @param algorithmType  算法子类型（模糊匹配 name）
+     * @param algorithmLevel 算法等级（模糊匹配 description）
      * @return 分页结果
      */
-    public Page<AlgorithmRegistration> listAlgorithms(Integer current, Integer size, String type, Integer status) {
+    public Page<AlgorithmRegistration> listAlgorithms(Integer current, Integer size, String type, Integer status,
+                                                       String keyword, String algorithmType, String algorithmLevel) {
         Page<AlgorithmRegistration> page = new Page<>(current, size);
         return lambdaQuery()
                 .eq(type != null && !type.isEmpty(), AlgorithmRegistration::getType, type)
                 .eq(status != null, AlgorithmRegistration::getStatus, status)
+                .and(keyword != null && !keyword.isEmpty(),
+                        w -> w.like(AlgorithmRegistration::getName, keyword)
+                                .or().like(AlgorithmRegistration::getDescription, keyword))
+                .like(algorithmType != null && !algorithmType.isEmpty(),
+                        AlgorithmRegistration::getName, algorithmType)
+                .like(algorithmLevel != null && !algorithmLevel.isEmpty(),
+                        AlgorithmRegistration::getDescription, algorithmLevel)
                 .orderByDesc(AlgorithmRegistration::getUpdatedAt)
                 .page(page);
     }
@@ -237,6 +251,122 @@ public class AlgorithmRegistryService extends ServiceImpl<AlgorithmRegistrationM
                 log.error("批量健康检查异常: {} v{}", algorithm.getName(), algorithm.getVersion(), e);
             }
         }
+    }
+
+    /**
+     * 按分类统计算法数量
+     *
+     * @return 各分类的算法数量统计
+     */
+    public Map<String, Object> getCategoryStats() {
+        Map<String, Object> stats = new LinkedHashMap<>();
+        long total = count();
+        stats.put("total", total);
+
+        for (String type : SUPPORTED_TYPES) {
+            long count = lambdaQuery()
+                    .eq(AlgorithmRegistration::getType, type)
+                    .eq(AlgorithmRegistration::getStatus, 1)
+                    .count();
+            stats.put(type, count);
+        }
+        return stats;
+    }
+
+    /**
+     * 按分类查询算法列表（仅已启用的）
+     *
+     * @param category 算法分类
+     * @return 该分类下的算法列表
+     */
+    public List<AlgorithmRegistration> listByCategory(String category) {
+        if (category == null || category.isEmpty()) {
+            throw new IllegalArgumentException("分类参数不能为空");
+        }
+        if (!SUPPORTED_TYPES.contains(category.toLowerCase())) {
+            throw new IllegalArgumentException("不支持的分类: " + category);
+        }
+        return lambdaQuery()
+                .eq(AlgorithmRegistration::getType, category.toLowerCase())
+                .eq(AlgorithmRegistration::getStatus, 1)
+                .orderByDesc(AlgorithmRegistration::getUpdatedAt)
+                .list();
+    }
+
+    /**
+     * 启用/禁用算法
+     *
+     * @param id     算法ID
+     * @param enable true-启用，false-禁用
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public void toggleStatus(Long id, boolean enable) {
+        AlgorithmRegistration registration = getById(id);
+        if (registration == null) {
+            throw new IllegalArgumentException("算法不存在: " + id);
+        }
+
+        int newStatus = enable ? 1 : 0;
+        registration.setStatus(newStatus);
+        registration.setUpdatedAt(LocalDateTime.now());
+        updateById(registration);
+        log.info("算法状态切换: {} v{} -> {}",
+                registration.getName(), registration.getVersion(),
+                enable ? "启用" : "禁用");
+    }
+
+    /**
+     * 测试运行算法
+     * 向算法端点发送测试请求，返回执行结果
+     *
+     * @param id     算法ID
+     * @param params 测试参数（可选）
+     * @return 测试运行结果
+     */
+    public Map<String, Object> testAlgorithm(Long id, Map<String, Object> params) {
+        AlgorithmRegistration registration = getById(id);
+        if (registration == null) {
+            throw new IllegalArgumentException("算法不存在: " + id);
+        }
+        if (registration.getStatus() != 1) {
+            throw new IllegalStateException("算法未启用，无法测试: " + registration.getName());
+        }
+
+        String testEndpoint = registration.getEndpoint() + "/test";
+        Map<String, Object> result = new LinkedHashMap<>();
+        long startTime = System.currentTimeMillis();
+
+        try {
+            Map<String, Object> requestBody = new HashMap<>();
+            if (params != null) {
+                requestBody.putAll(params);
+            }
+
+            @SuppressWarnings("rawtypes")
+            ResponseEntity<Map> response = restTemplate.postForEntity(
+                    testEndpoint, requestBody, Map.class);
+
+            long elapsed = System.currentTimeMillis() - startTime;
+            result.put("success", response.getStatusCode().is2xxSuccessful());
+            result.put("executionTime", elapsed + "ms");
+            result.put("output", response.getBody());
+            result.put("algorithmName", registration.getName());
+            result.put("algorithmVersion", registration.getVersion());
+
+            log.info("算法测试运行完成: {} v{} - 耗时 {}ms",
+                    registration.getName(), registration.getVersion(), elapsed);
+        } catch (Exception e) {
+            long elapsed = System.currentTimeMillis() - startTime;
+            result.put("success", false);
+            result.put("executionTime", elapsed + "ms");
+            result.put("error", e.getMessage());
+            result.put("algorithmName", registration.getName());
+            result.put("algorithmVersion", registration.getVersion());
+
+            log.warn("算法测试运行失败: {} v{} - {}",
+                    registration.getName(), registration.getVersion(), e.getMessage());
+        }
+        return result;
     }
 
     /**

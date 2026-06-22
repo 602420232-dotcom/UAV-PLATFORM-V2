@@ -12,7 +12,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
@@ -53,12 +52,16 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
             "redis.call('EXPIRE', key, window)\n" +
             "return {1, current + 1}\n";
 
-    @SuppressWarnings("unchecked")
     private static final DefaultRedisScript<List<Long>> RATE_LIMIT_SCRIPT = new DefaultRedisScript<>();
 
     static {
         RATE_LIMIT_SCRIPT.setScriptText(RATE_LIMIT_LUA);
-        RATE_LIMIT_SCRIPT.setResultType((Class<List<Long>>) (Class<?>) List.class);
+        RATE_LIMIT_SCRIPT.setResultType(uncheckedCast(List.class));
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <T> Class<T> uncheckedCast(Class<?> clazz) {
+        return (Class<T>) clazz;
     }
 
     private static final String TENANT_HEADER = "X-Tenant-ID";
@@ -87,19 +90,19 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
         // Determine rate limit type and key
         String tenantId = request.getHeaders().getFirst(TENANT_HEADER);
         String apiKey = request.getHeaders().getFirst(API_KEY_HEADER);
-        boolean isWebSocket = path.startsWith(WS_PATH_PREFIX);
+        boolean isWebSocket = path != null && path.startsWith(WS_PATH_PREFIX);
 
         if (isWebSocket) {
             return checkWebSocketLimit(exchange, chain, requestId, tenantId);
         }
 
         // Check API Key limit first (more specific)
-        if (StringUtils.hasText(apiKey)) {
+        if (apiKey != null && !apiKey.isEmpty()) {
             return checkRateLimit(exchange, chain, "apikey:" + apiKey, DEFAULT_API_KEY_QPS, requestId, "API_KEY");
         }
 
         // Check Tenant limit
-        if (StringUtils.hasText(tenantId)) {
+        if (tenantId != null && !tenantId.isEmpty()) {
             return checkRateLimit(exchange, chain, "tenant:" + tenantId, DEFAULT_TENANT_QPS, requestId, "TENANT");
         }
 
@@ -107,6 +110,7 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
         return checkRateLimit(exchange, chain, "anonymous:" + getClientIp(request), 10, requestId, "ANONYMOUS");
     }
 
+    @SuppressWarnings("null")
     private Mono<Void> checkRateLimit(ServerWebExchange exchange, GatewayFilterChain chain,
                                        String key, long limit, String requestId, String type) {
         long now = Instant.now().toEpochMilli();
@@ -122,8 +126,14 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
         return redisTemplate.execute(RATE_LIMIT_SCRIPT, keys, args)
                 .next()
                 .flatMap(result -> {
-                    boolean allowed = result.get(0) == 1;
-                    long current = result.get(1);
+                    if (result == null || result.size() < 2) {
+                        log.warn("[RATE-LIMIT] Unexpected result from Lua script, allowing request id={}", requestId);
+                        return chain.filter(exchange);
+                    }
+                    Long allowedLong = result.get(0);
+                    Long currentLong = result.get(1);
+                    boolean allowed = allowedLong != null && allowedLong == 1;
+                    long current = currentLong != null ? currentLong : 0;
 
                     // Add rate limit headers
                     exchange.getResponse().getHeaders().add("X-RateLimit-Limit", String.valueOf(limit));
@@ -148,14 +158,18 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
                 });
     }
 
+    @SuppressWarnings("null")
     private Mono<Void> checkWebSocketLimit(ServerWebExchange exchange, GatewayFilterChain chain,
                                             String requestId, String tenantId) {
-        String wsKey = "ws:" + (StringUtils.hasText(tenantId) ? tenantId : "anonymous");
+        String wsKey = "ws:" + (tenantId != null && !tenantId.isEmpty() ? tenantId : "anonymous");
 
         return redisTemplate.opsForValue()
                 .increment(wsKey)
                 .flatMap(count -> {
-                    // Set expiry if this is the first connection
+                    if (count == null) {
+                        log.warn("[RATE-LIMIT] WS increment returned null, allowing request id={}", requestId);
+                        return chain.filter(exchange);
+                    }
                     if (count == 1) {
                         return redisTemplate.expire(wsKey, java.time.Duration.ofHours(1))
                                 .thenReturn(count);
@@ -163,13 +177,14 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
                     return Mono.just(count);
                 })
                 .flatMap(count -> {
-                    if (count > DEFAULT_WS_CONNECTIONS) {
-                        log.warn("[RATE-LIMIT] WS connection limit exceeded id={} | count={}", requestId, count);
+                    long connectionCount = count instanceof Long ? (Long) count : 0L;
+                    if (connectionCount > DEFAULT_WS_CONNECTIONS) {
+                        log.warn("[RATE-LIMIT] WS connection limit exceeded id={} | count={}", requestId, connectionCount);
                         return reject(exchange, HttpStatus.TOO_MANY_REQUESTS,
                                 "WebSocket connection limit exceeded");
                     }
                     log.debug("[RATE-LIMIT] WS connection allowed id={} | count={}/{}",
-                            requestId, count, DEFAULT_WS_CONNECTIONS);
+                            requestId, connectionCount, DEFAULT_WS_CONNECTIONS);
                     return chain.filter(exchange);
                 })
                 .onErrorResume(e -> {
@@ -181,13 +196,18 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
     private String getClientIp(ServerHttpRequest request) {
         String ip = request.getHeaders().getFirst("X-Forwarded-For");
         if (ip == null || ip.isEmpty()) {
-            ip = request.getRemoteAddress() != null
-                    ? request.getRemoteAddress().getAddress().getHostAddress()
+            var remoteAddr = request.getRemoteAddress();
+            ip = remoteAddr != null && remoteAddr.getAddress() != null
+                    ? remoteAddr.getAddress().getHostAddress()
                     : "unknown";
         }
-        return ip.split(",")[0].trim();
+        if (ip.contains(",")) {
+            ip = ip.split(",")[0].trim();
+        }
+        return ip;
     }
 
+    @SuppressWarnings("null")
     private Mono<Void> reject(ServerWebExchange exchange, HttpStatus status, String message) {
         ServerHttpResponse response = exchange.getResponse();
         response.setStatusCode(status);

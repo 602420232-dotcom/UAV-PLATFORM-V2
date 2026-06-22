@@ -1,6 +1,6 @@
 # UAV Platform V2 运维手册
 
-> 最后更新：2026-06-15
+> 最后更新：2026-06-16
 
 ## 1. 服务健康检查
 
@@ -403,27 +403,157 @@ docker compose exec mysql mysql -uroot -prootpass \
 5. 如消息丢失，确认是否需要手动补偿
 ```
 
-## 7. 运维检查清单
+## 7. 灰度发布运维
 
-### 7.1 每日检查
+### 7.1 灰度配置管理
+
+#### 查看当前灰度状态
+
+```bash
+# 查看所有模块灰度配置
+curl http://localhost:8258/actuator/gateway/globalfilters | grep -i gray
+
+# 直接查看 Redis 中的灰度配置
+redis-cli KEYS "gray:release:*"
+redis-cli GET "gray:release:weather"
+redis-cli GET "gray:release:planning"
+```
+
+#### 调整灰度比例
+
+```bash
+# 热更新灰度比例（无需重启 Gateway）
+redis-cli SET gray:release:weather '{"enabled":true,"percentage":10}'
+redis-cli SET gray:release:planning '{"enabled":true,"percentage":5}'
+
+# 关闭某模块灰度（流量全部回退 V1）
+redis-cli SET gray:release:weather '{"enabled":true,"percentage":0}'
+
+# 完全禁用某模块灰度
+curl -X POST http://localhost:8258/actuator/gateway/refresh
+```
+
+#### 灰度发布操作流程
+
+```
+1. 准备阶段
+   - 确认 V2 目标模块服务健康
+   - 在 staging 环境验证功能完整性
+   - 备份当前 Gateway 配置
+
+2. 开启灰度（0% → 5%）
+   - redis-cli SET gray:release:<module> '{"enabled":true,"percentage":5}'
+   - 观察 30 分钟，确认错误率 < 0.1%
+
+3. 逐步放量
+   - 5% → 10% → 25% → 50% → 100%
+   - 每个阶段观察至少 24 小时
+   - 关键指标：P99 延迟 < 2s，错误率 < 0.5%
+
+4. 完成切换
+   - 达到 100% 且稳定运行 3 天
+   - 从 V1 代理路由 Path 中移除该模块路径
+   - 清理 Redis 灰度配置
+   - 更新文档标记该模块迁移完成
+```
+
+### 7.2 灰度监控指标
+
+| 指标名称 | 类型 | 告警阈值 | 说明 |
+|----------|------|----------|------|
+| `gateway.gray.route.v2` | Counter | - | 路由到 V2 的请求数 |
+| `gateway.gray.route.v1` | Counter | - | 路由到 V1 的请求数 |
+| `gateway.jwt.convert.count` | Counter | - | JWT 转换次数 |
+| `gateway.jwt.convert.errors` | Counter | > 5/分钟 | JWT 转换失败数 |
+| `gateway.v1.proxy.requests` | Counter | - | V1 代理请求总数 |
+| `gateway.v1.proxy.errors` | Counter | > 10/分钟 | V1 代理错误数 |
+
+### 7.3 JWT 转换监控
+
+```bash
+# 查看 JWT 转换日志
+docker compose logs api-gateway 2>&1 | grep "\[JWT-CONVERT\]"
+
+# 统计转换成功率
+docker compose logs api-gateway 2>&1 | grep "\[JWT-CONVERT\]" | \
+  awk '{success+=/success/; fail+=/fail/} END {printf "成功: %d, 失败: %d, 成功率: %.2f%%\n", success, fail, success/(success+fail)*100}'
+```
+
+## 8. Vault 密钥管理运维
+
+### 8.1 Vault 状态检查
+
+```bash
+# 检查 Vault 服务状态
+vault status
+
+# 查看已挂载的密钥路径
+vault kv list secret/uav-platform/prod
+
+# 验证密钥可读性
+vault kv get secret/uav-platform/prod/jwt
+```
+
+### 8.2 密钥轮换流程
+
+```bash
+# 1. 生成新密钥
+openssl rand -base64 32
+
+# 2. 写入 Vault 新版本
+vault kv put secret/uav-platform/prod/jwt secret="<new-key>"
+
+# 3. 滚动重启 Gateway（触发密钥热加载）
+kubectl rollout restart deployment/api-gateway -n uav-platform
+
+# 4. 验证新密钥生效
+curl -H "Authorization: Bearer <test-token>" http://localhost:8258/api/v2/tenants
+
+# 5. 确认旧版本密钥可清理（保留 3 个版本）
+vault kv metadata get secret/uav-platform/prod/jwt
+```
+
+### 8.3 Vault 故障应急
+
+```bash
+# Vault 不可用时，确认回退文件可用
+cat vault-secrets.json
+
+# 临时切换到环境变量模式
+export VAULT_ENABLED=false
+export JWT_SECRET="<backup-key>"
+
+# 重启受影响服务
+docker compose restart api-gateway platform-api
+```
+
+## 9. 运维检查清单
+
+### 9.1 每日检查
 
 - [ ] 全服务健康检查通过
 - [ ] Prometheus 无 critical 告警
 - [ ] Kafka 消费者 lag < 100
 - [ ] 磁盘使用率 < 80%
+- [ ] 灰度流量比例与预期一致
+- [ ] JWT 转换错误率 < 0.1%
 
-### 7.2 每周检查
+### 9.2 每周检查
 
 - [ ] 慢查询分析
 - [ ] 数据库连接池使用率
 - [ ] Redis 内存使用率
 - [ ] 备份完整性验证
 - [ ] 证书有效期检查
+- [ ] Vault 密钥版本审计
+- [ ] 灰度模块迁移进度回顾
 
-### 7.3 每月检查
+### 9.3 每月检查
 
 - [ ] 数据归档执行
 - [ ] 索引使用分析
 - [ ] 日志轮转正常
 - [ ] 容量规划评估
 - [ ] 安全补丁更新
+- [ ] 密钥轮换执行
+- [ ] V1 代理流量趋势分析（评估下线时机）

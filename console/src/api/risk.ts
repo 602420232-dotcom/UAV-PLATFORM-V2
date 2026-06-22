@@ -76,6 +76,6 @@ export const riskApi = {
 
   /** 适航评估 */
   assessAirworthiness(data: AirworthinessRequest): Promise<AirworthinessAssessment> {
-    return post<AirworthinessAssessment>('/v1/risk/airworthiness', data)
+    return post<AirworthinessAssessment>('/v1/airworthiness/assess', data)
   },
 }

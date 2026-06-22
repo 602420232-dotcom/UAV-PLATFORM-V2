@@ -7,6 +7,7 @@ import type { PlanningTask, PathResult } from '@/api/planning'
 import type { Algorithm } from '@/api/algorithm'
 import StatusBadge from '@/components/common/StatusBadge.vue'
 import { formatDateTime } from '@/utils/format'
+import { useDemoModeStore } from '@/stores/demoMode'
 import * as echarts from 'echarts/core'
 import { LineChart as LineChartSeries, ScatterChart } from 'echarts/charts'
 import {
@@ -38,6 +39,7 @@ const tasks = ref<PlanningTask[]>([])
 const selectedTask = ref<PlanningTask | null>(null)
 const pathResult = ref<PathResult | null>(null)
 const planningAlgorithms = ref<Algorithm[]>([])
+const demoModeStore = useDemoModeStore()
 
 // 创建路径规划对话框
 const createDialogVisible = ref(false)
@@ -103,6 +105,14 @@ const canCancel = (plan: FlightPlan) => ['DRAFT', 'SUBMITTED', 'APPROVED'].inclu
 
 // ========== 数据加载 ==========
 async function loadTasks() {
+  if (demoModeStore.isDemoMode) {
+    tasks.value = [
+      { id: 1, type: 'A*', status: 'COMPLETED', createdAt: '2025-06-18T10:00:00Z', completedAt: '2025-06-18T10:05:00Z', errorMessage: null },
+      { id: 2, type: 'Dijkstra', status: 'RUNNING', createdAt: '2025-06-18T11:00:00Z', completedAt: null, errorMessage: null },
+      { id: 3, type: 'RRT', status: 'PENDING', createdAt: '2025-06-18T12:00:00Z', completedAt: null, errorMessage: null },
+    ]
+    return
+  }
   loading.value = true
   try {
     tasks.value = await planningApi.listTasks()
@@ -377,10 +387,15 @@ function handleTrajectoryResize() {
 }
 
 // ========== 生命周期 ==========
-onMounted(() => {
+onMounted(async () => {
+  await demoModeStore.fetchStatus()
   loadTasks()
   loadPlanningAlgorithms()
   window.addEventListener('resize', handleTrajectoryResize)
+})
+
+watch(() => demoModeStore.isDemoMode, () => {
+  loadTasks()
 })
 
 onUnmounted(() => {
@@ -397,7 +412,7 @@ watch(tasks, () => {
   <div class="planning-page">
     <div class="page-header">
       <h2>飞行计划管理</h2>
-      <el-button type="primary" @click="createDialogVisible = true">
+      <el-button type="primary" :disabled="demoModeStore.isDemoMode" @click="createDialogVisible = true">
         <el-icon><Plus /></el-icon>
         新建路径规划
       </el-button>

@@ -106,8 +106,8 @@ export const utmApi = {
     return post<ConflictAlert[]>('/v1/flight-plans/conflict-check', data)
   },
 
-  /** 获取冲突告警列表 */
+  /** 获取冲突告警列表 - 后端待实现 */
   listConflictAlerts(): Promise<ConflictAlert[]> {
-    return get<ConflictAlert[]>('/v1/conflict-alerts')
+    return get<ConflictAlert[]>('/v1/utm/conflict-alerts')
   },
 }

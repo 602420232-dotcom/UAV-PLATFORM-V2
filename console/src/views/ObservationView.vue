@@ -1,13 +1,15 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { observationApi } from '@/api/observation'
 import type { ObservationTask, ObservationDecision } from '@/api/observation'
 import StatusBadge from '@/components/common/StatusBadge.vue'
 import { formatDateTime } from '@/utils/format'
+import { useDemoModeStore } from '@/stores/demoMode'
 
 const loading = ref(false)
 const tasks = ref<ObservationTask[]>([])
+const demoModeStore = useDemoModeStore()
 
 // 创建任务对话框
 const createDialogVisible = ref(false)
@@ -35,6 +37,15 @@ const decisionForm = ref({
 })
 
 async function loadTasks() {
+  if (demoModeStore.isDemoMode) {
+    tasks.value = [
+      { id: 1, type: 'meteorological', status: 'COMPLETED', priority: 8, region: { minLon: 115.0, minLat: 39.0, maxLon: 118.0, maxLat: 41.0 }, targetVariables: ['temperature', 'wind', 'humidity'], platform: 'UAV-001', createdAt: '2025-06-18T08:00:00Z', completedAt: '2025-06-18T09:30:00Z' },
+      { id: 2, type: 'environmental', status: 'RUNNING', priority: 5, region: { minLon: 116.0, minLat: 39.5, maxLon: 117.5, maxLat: 40.5 }, targetVariables: ['pressure', 'visibility'], platform: 'UAV-002', createdAt: '2025-06-18T10:00:00Z', completedAt: null },
+      { id: 3, type: 'reconnaissance', status: 'PENDING', priority: 3, region: { minLon: 115.5, minLat: 39.2, maxLon: 117.0, maxLat: 40.8 }, targetVariables: ['temperature', 'wind'], platform: '', createdAt: '2025-06-18T11:00:00Z', completedAt: null },
+      { id: 4, type: 'meteorological', status: 'FAILED', priority: 7, region: { minLon: 116.5, minLat: 39.8, maxLon: 118.0, maxLat: 41.0 }, targetVariables: ['humidity', 'pressure'], platform: 'UAV-003', createdAt: '2025-06-18T12:00:00Z', completedAt: null },
+    ]
+    return
+  }
   loading.value = true
   try {
     tasks.value = await observationApi.listTasks()
@@ -91,7 +102,12 @@ function getPriorityTag(priority: number): 'success' | 'warning' | 'danger' | 'i
   return 'success'
 }
 
-onMounted(() => {
+onMounted(async () => {
+  await demoModeStore.fetchStatus()
+  loadTasks()
+})
+
+watch(() => demoModeStore.isDemoMode, () => {
   loadTasks()
 })
 </script>
@@ -101,11 +117,11 @@ onMounted(() => {
     <div class="page-header">
       <h2>观测决策</h2>
       <div class="header-actions">
-        <el-button @click="getDecision">
+        <el-button :disabled="demoModeStore.isDemoMode" @click="getDecision">
           <el-icon><MagicStick /></el-icon>
           获取决策建议
         </el-button>
-        <el-button type="primary" @click="createDialogVisible = true">
+        <el-button type="primary" :disabled="demoModeStore.isDemoMode" @click="createDialogVisible = true">
           <el-icon><Plus /></el-icon>
           创建观测任务
         </el-button>

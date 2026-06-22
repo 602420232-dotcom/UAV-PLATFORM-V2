@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
-import java.util.concurrent.TimeUnit;
+import java.time.Duration;
 import java.util.stream.Collectors;
 
 /**
@@ -69,7 +69,7 @@ public class GprPostprocessService {
         List<List<Double>> meanField = generateMockField(gridSize, 25.0, 5.0);
         List<List<Double>> varianceField = generateMockField(gridSize, 1.0, 0.3);
         List<List<Double>> stdField = varianceField.stream()
-                .map(row -> row.stream().map(Math::sqrt).collect(Collectors.toList()))
+                .map(row -> row.stream().map(d -> Math.sqrt(d)).collect(Collectors.toList()))
                 .collect(Collectors.toList());
 
         double confidenceLevel = request.getConfidenceLevel() != null ? request.getConfidenceLevel() : 0.95;
@@ -116,7 +116,7 @@ public class GprPostprocessService {
         List<List<Double>> meanField = generateMockField(gridSize, 25.0, 5.0);
         List<List<Double>> varianceField = generateMockField(gridSize, 1.0, 0.3);
         List<List<Double>> stdField = varianceField.stream()
-                .map(row -> row.stream().map(Math::sqrt).collect(Collectors.toList()))
+                .map(row -> row.stream().map(d -> Math.sqrt(d)).collect(Collectors.toList()))
                 .collect(Collectors.toList());
 
         double zScore = 1.96; // 95% confidence
@@ -232,7 +232,7 @@ public class GprPostprocessService {
                 String jsonValue = objectMapper.writeValueAsString(uncertaintyResponse);
                 if (jsonValue != null) {
                     redisTemplate.opsForValue().set(cacheKey, jsonValue,
-                            UNCERTAINTY_CACHE_TTL_SECONDS, TimeUnit.SECONDS);
+                            Duration.ofSeconds(UNCERTAINTY_CACHE_TTL_SECONDS));
                 }
             } catch (JsonProcessingException e) {
                 log.warn("缓存不确定性数据失败, region={}, time={}", region, time);

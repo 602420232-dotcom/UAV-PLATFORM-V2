@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import Any
 
@@ -217,3 +218,84 @@ async def smart_select_assimilation(request: dict[str, Any]):
     )
     result["decision_explanation"] = scheduler.get_decision_explanation()
     return result
+
+
+@router.post("/test")
+async def test_algorithm(request: dict[str, Any]):
+    """Test endpoint for Java backend to execute an algorithm with given parameters.
+
+    This endpoint is called by platform-api's AlgorithmRegistryService.testAlgorithm().
+    It looks up the algorithm by name from the request params and executes it.
+    """
+    registry = get_registry()
+    params = request.get("params", request)
+
+    # Try to find algorithm by various identifiers in params
+    algorithm_id = params.get("algorithm_id") if isinstance(params, dict) else None
+    algorithm_name = params.get("algorithm_name") if isinstance(params, dict) else None
+
+    # If no specific algorithm requested, use a default assimilation algorithm
+    if not algorithm_id and not algorithm_name:
+        # Try to find any registered assimilation algorithm
+        for entry in registry.list_all():
+            if entry.category == "assimilation":
+                algorithm_id = entry.id
+                break
+        if not algorithm_id:
+            algorithm_id = next(iter(registry.get_entries().keys())) if registry else None
+
+    if not algorithm_id and algorithm_name:
+        # Find by name
+        for entry in registry.list_all():
+            if entry.name == algorithm_name or entry.id == algorithm_name:
+                algorithm_id = entry.id
+                break
+
+    if not algorithm_id or algorithm_id not in registry:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Algorithm not found. Registered: {[e.id for e in registry.list_all()]}",
+        )
+
+    if _scheduler is None:
+        raise HTTPException(status_code=503, detail="Task scheduler not available")
+
+    import time
+    start = time.perf_counter()
+    try:
+        task_id = await _scheduler.submit(
+            algorithm_id=algorithm_id,
+            params=params if isinstance(params, dict) else {},
+            priority=10,
+        )
+        # Wait for task completion (synchronous-like for the test endpoint)
+        max_wait = 30  # seconds
+        waited = 0
+        while waited < max_wait:
+            status = await _scheduler.get_status(task_id)
+            if status and status.status in ("completed", "failed", "cancelled"):
+                break
+            await asyncio.sleep(0.5)
+            waited += 0.5
+
+        result = await _scheduler.get_result(task_id)
+        elapsed = (time.perf_counter() - start) * 1000
+
+        entry = registry.get_entry(algorithm_id)
+        return {
+            "success": status.status == "completed" if status else False,
+            "executionTime": f"{elapsed:.0f}ms",
+            "output": result or {},
+            "algorithmName": entry.algorithm_class.__name__ if entry else algorithm_id,
+            "algorithmVersion": entry.version if entry else "1.0.0",
+        }
+    except Exception as e:
+        elapsed = (time.perf_counter() - start) * 1000
+        logger.exception("Test algorithm execution failed")
+        return {
+            "success": False,
+            "executionTime": f"{elapsed:.0f}ms",
+            "error": str(e),
+            "algorithmName": algorithm_id,
+            "algorithmVersion": "1.0.0",
+        }

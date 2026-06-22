@@ -15,6 +15,7 @@ from fastapi import FastAPI
 
 from app.api.routes import router, set_scheduler
 from app.config import get_settings
+from app.core.error_handler import register_error_handlers
 from app.core.registry import get_registry
 from app.core.scheduler import TaskScheduler
 
@@ -316,3 +317,6 @@ app = FastAPI(
 )
 
 app.include_router(router)
+
+# 注册全局异常处理器
+register_error_handlers(app)

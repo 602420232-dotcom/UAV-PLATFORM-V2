@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { tenantApi } from '@/api/tenant'
@@ -8,9 +8,11 @@ import type { Tenant } from '@/api/tenant'
 import type { ApiKey } from '@/api/apiKey'
 import StatusBadge from '@/components/common/StatusBadge.vue'
 import { formatDateTime, maskApiKey } from '@/utils/format'
+import { useDemoModeStore } from '@/stores/demoMode'
 
 const route = useRoute()
 const router = useRouter()
+const demoModeStore = useDemoModeStore()
 
 const tenantId = Number(route.params.id)
 const loading = ref(false)
@@ -27,6 +29,23 @@ const editForm = ref({
 async function loadTenant() {
   loading.value = true
   try {
+    if (demoModeStore.isDemoMode) {
+      tenant.value = {
+        id: tenantId || 1,
+        name: '默认租户',
+        schemaName: 'tenant_default',
+        status: 1,
+        quotaConfig: '{"quota": 100, "maxUsers": 50, "maxFlights": 200}',
+        createdAt: '2025-01-01T00:00:00Z',
+        updatedAt: '2025-06-01T00:00:00Z',
+      } as Tenant
+      apiKeys.value = [
+        { id: 1, tenantId: tenantId || 1, name: '生产环境密钥', keyValue: 'uav_demo_prod_key_xxxxxxxxx', status: 1, rateLimit: 100, createdAt: '2025-02-01T08:00:00Z', expiresAt: null } as ApiKey,
+        { id: 2, tenantId: tenantId || 1, name: '测试环境密钥', keyValue: 'uav_demo_test_key_xxxxxxxxx', status: 1, rateLimit: 50, createdAt: '2025-03-15T10:00:00Z', expiresAt: '2026-03-15T10:00:00Z' } as ApiKey,
+        { id: 3, tenantId: tenantId || 1, name: '已禁用密钥', keyValue: 'uav_demo_disabled_key_xxxxx', status: 0, rateLimit: 0, createdAt: '2025-01-20T09:00:00Z', expiresAt: null } as ApiKey,
+      ] as ApiKey[]
+      return
+    }
     const [tenantData, keysData] = await Promise.all([
       tenantApi.getById(tenantId),
       apiKeyApi.listByTenant(tenantId),
@@ -99,7 +118,12 @@ function goBack() {
   router.push('/tenants')
 }
 
-onMounted(() => {
+onMounted(async () => {
+  await demoModeStore.fetchStatus()
+  loadTenant()
+})
+
+watch(() => demoModeStore.isDemoMode, () => {
   loadTenant()
 })
 </script>
@@ -115,17 +139,18 @@ onMounted(() => {
         <h2>租户详情</h2>
       </div>
       <div class="header-right">
-        <el-button type="primary" @click="handleEdit">
+        <el-button type="primary" :disabled="demoModeStore.isDemoMode" @click="handleEdit">
           <el-icon><Edit /></el-icon>
           编辑
         </el-button>
         <el-button
           :type="tenant?.status === 1 ? 'warning' : 'success'"
+          :disabled="demoModeStore.isDemoMode"
           @click="handleToggleStatus"
         >
           {{ tenant?.status === 1 ? '禁用' : '启用' }}
         </el-button>
-        <el-button type="danger" @click="handleDelete">
+        <el-button type="danger" :disabled="demoModeStore.isDemoMode" @click="handleDelete">
           <el-icon><Delete /></el-icon>
           删除
         </el-button>
@@ -192,7 +217,7 @@ onMounted(() => {
       </el-form>
       <template #footer>
         <el-button @click="editDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="submitEdit">保存</el-button>
+        <el-button type="primary" :disabled="demoModeStore.isDemoMode" @click="submitEdit">保存</el-button>
       </template>
     </el-dialog>
   </div>

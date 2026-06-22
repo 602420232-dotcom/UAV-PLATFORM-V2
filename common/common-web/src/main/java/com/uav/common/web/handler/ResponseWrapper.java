@@ -34,7 +34,6 @@ public class ResponseWrapper implements ResponseBodyAdvice<Object> {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public Object beforeBodyWrite(Object body,
                                   MethodParameter returnType,
                                   MediaType selectedContentType,

@@ -1,10 +1,13 @@
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue'
+import { onMounted, reactive, ref, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { apiKeyApi } from '@/api/apiKey'
 import type { ApiKey } from '@/api/apiKey'
 import StatusBadge from '@/components/common/StatusBadge.vue'
 import { formatDateTime, maskApiKey } from '@/utils/format'
+import { useDemoModeStore } from '@/stores/demoMode'
+
+const demoModeStore = useDemoModeStore()
 
 const loading = ref(false)
 const apiKeys = ref<ApiKey[]>([])
@@ -30,6 +33,15 @@ const showKeyDialogVisible = ref(false)
 async function loadApiKeys() {
   loading.value = true
   try {
+    if (demoModeStore.isDemoMode) {
+      apiKeys.value = [
+        { id: 1, tenantId: 1, name: '生产环境密钥', keyValue: 'uav_pk_live_a1b2c3d4e5f6g7h8', status: 1, rateLimit: 100, createdAt: '2025-02-01T08:00:00Z', expiresAt: null } as ApiKey,
+        { id: 2, tenantId: 1, name: '测试环境密钥', keyValue: 'uav_pk_test_x9y8z7w6v5u4t3s2', status: 1, rateLimit: 50, createdAt: '2025-03-15T10:00:00Z', expiresAt: '2026-03-15T10:00:00Z' } as ApiKey,
+        { id: 3, tenantId: 1, name: '数据分析专用', keyValue: 'uav_pk_data_m1n2o3p4q5r6s7t', status: 1, rateLimit: 200, createdAt: '2025-05-20T14:00:00Z', expiresAt: null } as ApiKey,
+        { id: 4, tenantId: 1, name: '已过期密钥', keyValue: 'uav_pk_old_k1l2m3n4o5p6q7r', status: 0, rateLimit: 0, createdAt: '2024-06-01T09:00:00Z', expiresAt: '2025-06-01T09:00:00Z' } as ApiKey,
+      ] as ApiKey[]
+      return
+    }
     // 如果有租户上下文，按租户加载；否则展示所有
     // 此处默认加载租户 ID=1 的 keys（实际应根据 authStore.currentTenantId）
     const tenantId = createForm.tenantId || 1
@@ -106,7 +118,12 @@ async function copyToClipboard(text: string, label: string) {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
+  await demoModeStore.fetchStatus()
+  loadApiKeys()
+})
+
+watch(() => demoModeStore.isDemoMode, () => {
   loadApiKeys()
 })
 </script>
@@ -115,7 +132,7 @@ onMounted(() => {
   <div class="api-key-list-page">
     <div class="page-header">
       <h2>API Key 管理</h2>
-      <el-button type="primary" @click="handleCreate">
+      <el-button type="primary" :disabled="demoModeStore.isDemoMode" @click="handleCreate">
         <el-icon><Plus /></el-icon>
         创建 API Key
       </el-button>
@@ -161,11 +178,12 @@ onMounted(() => {
               :type="row.status === 1 ? 'warning' : 'success'"
               link
               size="small"
+              :disabled="demoModeStore.isDemoMode"
               @click="handleToggleStatus(row)"
             >
               {{ row.status === 1 ? '禁用' : '启用' }}
             </el-button>
-            <el-button type="danger" link size="small" @click="handleDelete(row)">
+            <el-button type="danger" link size="small" :disabled="demoModeStore.isDemoMode" @click="handleDelete(row)">
               删除
             </el-button>
           </template>

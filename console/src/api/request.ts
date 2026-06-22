@@ -3,6 +3,7 @@ import type { AxiosInstance, AxiosRequestConfig, InternalAxiosRequestConfig, Axi
 import { ElMessage } from 'element-plus'
 import { getToken, removeToken, getUserInfo } from '@/utils/auth'
 import router from '@/router'
+import { useDemoModeStore } from '@/stores/demoMode'
 
 /** 后端统一响应结构 Result<T> */
 export interface Result<T = unknown> {
@@ -96,6 +97,19 @@ const service: AxiosInstance = axios.create({
   },
 })
 
+/** 不需要登录即可访问的公开接口 */
+const PUBLIC_PATHS = [
+  '/v1/auth/',
+  '/v1/dashboard/global',
+  '/v1/dashboard/api-ops',
+  '/v1/dashboard/research',
+  '/v1/system/config/demo-mode',
+]
+
+function isPublicPath(url: string): boolean {
+  return PUBLIC_PATHS.some(path => url.includes(path))
+}
+
 // 请求拦截器
 service.interceptors.request.use(
   async (config: InternalAxiosRequestConfig) => {
@@ -108,9 +122,15 @@ service.interceptors.request.use(
       config.headers['Authorization'] = `Bearer ${token}`
     }
 
+    // 未登录且非公开接口
+    const url = config.url || ''
+    if (!token && !isPublicPath(url)) {
+      return Promise.reject(new Error('UNAUTHORIZED_SKIP'))
+    }
+
     // 附加 HMAC 签名（如果用户有 API Key Secret）
     const method = (config.method || 'GET').toUpperCase()
-    const fullUrl = (config.baseURL || '') + (config.url || '')
+    const fullUrl = (config.baseURL || '') + url
     const hmacHeaders = await generateHmacHeaders(method, fullUrl, config.data)
     Object.entries(hmacHeaders).forEach(([key, value]) => {
       if (value !== undefined) {
@@ -140,6 +160,11 @@ service.interceptors.response.use(
     return Promise.reject(new Error(res.message || '请求失败'))
   },
   (error) => {
+    // 静默跳过未登录时的非公开接口请求（避免 403 弹窗轰炸）
+    if (error.message === 'UNAUTHORIZED_SKIP') {
+      return Promise.reject(error)
+    }
+
     if (error.response) {
       const { status, data } = error.response
       if (status === 401) {
@@ -147,6 +172,13 @@ service.interceptors.response.use(
         router.push('/login')
         ElMessage.error('登录已过期，请重新登录')
       } else if (status === 403) {
+        // 演示模式下静默处理 403，不弹窗
+        try {
+          const demoModeStore = useDemoModeStore()
+          if (demoModeStore.isDemoMode) {
+            return Promise.reject(error)
+          }
+        } catch { /* ignore */ }
         ElMessage.error('没有权限执行此操作')
       } else if (status === 404) {
         ElMessage.error('请求的资源不存在')

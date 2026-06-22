@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.uav.common.kafka.config.KafkaTopicConfig;
 import com.uav.common.kafka.message.AlgorithmTaskMessage;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
@@ -24,14 +23,18 @@ import java.util.concurrent.CompletableFuture;
 @Slf4j
 public class AlgorithmTaskProducer {
 
-    @Autowired
-    private KafkaTemplate<String, String> kafkaTemplate;
+    private final KafkaTemplate<String, String> kafkaTemplate;
+    private final ObjectMapper objectMapper;
+    private final boolean mockMode;
 
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    @Value("${uav.kafka.mock:false}")
-    private boolean mockMode;
+    public AlgorithmTaskProducer(
+            KafkaTemplate<String, String> kafkaTemplate,
+            ObjectMapper objectMapper,
+            @Value("${uav.kafka.mock:false}") boolean mockMode) {
+        this.kafkaTemplate = kafkaTemplate;
+        this.objectMapper = objectMapper;
+        this.mockMode = mockMode;
+    }
 
     /**
      * 发送算法任务到 Python 引擎

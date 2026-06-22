@@ -17,6 +17,7 @@ import java.sql.SQLException;
 public class TenantLineInnerInterceptor implements InnerInterceptor {
 
     @Override
+    @SuppressWarnings("rawtypes")
     public void beforeQuery(Executor executor, MappedStatement ms, Object parameter,
                             RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql) throws SQLException {
         String schema = resolveSchema(parameter);

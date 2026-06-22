@@ -2,6 +2,7 @@ services:
   # ============================================================
   # 基础设施
   # ============================================================
+  # 注意：敏感密钥必须通过 .env 文件传入，请参考 .env.example 创建
   nacos:
     image: nacos/nacos-server:v3.2.0
     container_name: uav-nacos
@@ -18,7 +19,7 @@ services:
       - NACOS_AUTH_IDENTITY_KEY=serverIdentity
       - NACOS_AUTH_IDENTITY_VALUE=security
     ports:
-      - "8950:8848"
+      - "127.0.0.1:8950:8848"
       - "9848:9848"
     depends_on:
       mysql:
@@ -40,7 +41,7 @@ services:
       - MYSQL_USER=nacos
       - MYSQL_PASSWORD=nacos
     ports:
-      - "3306:3306"
+      - "127.0.0.1:3307:3306"
     volumes:
       - mysql_data:/var/lib/mysql
       - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
@@ -56,8 +57,8 @@ services:
     image: redis:7.2-alpine
     container_name: uav-redis
     ports:
-      - "6379:6379"
-    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+      - "127.0.0.1:6380:6379"
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru --requirepass ${REDIS_PASSWORD}
     volumes:
       - redis_data:/data
     healthcheck:
@@ -79,7 +80,7 @@ services:
       - KAFKA_LOG_RETENTION_HOURS=24
       - KAFKA_AUTO_CREATE_TOPICS_ENABLE=true
     ports:
-      - "19092:9092"
+      - "127.0.0.1:19092:9092"
     depends_on:
       zookeeper:
         condition: service_started
@@ -106,7 +107,7 @@ services:
   api-gateway:
     build:
       context: .
-      dockerfile: gateway/Dockerfile.standalone
+      dockerfile: gateway/Dockerfile.simple
     container_name: uav-gateway
     ports:
       - "8258:8088"
@@ -145,13 +146,16 @@ services:
       - MYSQL_HOST=mysql
       - MYSQL_PORT=3306
       - MYSQL_USER=root
-      - MYSQL_PASSWORD=rootpass
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - SPRING_DATA_REDIS_HOST=redis
       - SPRING_DATA_REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - SPRING_DATA_REDIS_PASSWORD=${REDIS_PASSWORD}
       - ALGORITHM_ENGINE_URL=http://algorithm-engine:9090
       - KAFKA_MOCK=false
+      - JWT_SECRET=${JWT_SECRET}
       - JAVA_OPTS=-Xms256m -Xmx512m -XX:+UseG1GC
     depends_on:
       nacos:
@@ -426,7 +430,7 @@ services:
       dockerfile: Dockerfile
     container_name: uav-console
     ports:
-      - "3000:80"
+      - "3002:80"
     depends_on:
       - api-gateway
     healthcheck:
@@ -445,7 +449,7 @@ services:
     image: prom/prometheus:v2.50.0
     container_name: uav-prometheus
     ports:
-      - "19091:9090"
+      - "127.0.0.1:19091:9090"
     volumes:
       - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
       - ./monitoring/alert_rules.yml:/etc/prometheus/alert_rules.yml
@@ -469,10 +473,10 @@ services:
     image: grafana/grafana:10.4.0
     container_name: uav-grafana
     ports:
-      - "3001:3000"
+      - "127.0.0.1:3001:3000"
     environment:
       - GF_SECURITY_ADMIN_USER=admin
-      - GF_SECURITY_ADMIN_PASSWORD=${GF_ADMIN_PASSWORD:-admin123}
+      - GF_SECURITY_ADMIN_PASSWORD=${GF_SECURITY_ADMIN_PASSWORD}
       - GF_USERS_ALLOW_SIGN_UP=false
       - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-piechart-panel
       - GF_DATABASE_TYPE=sqlite3
@@ -497,7 +501,7 @@ services:
     image: prom/alertmanager:v0.27.0
     container_name: uav-alertmanager
     ports:
-      - "19093:9093"
+      - "127.0.0.1:19093:9093"
     volumes:
       - ./monitoring/alertmanager.yml:/etc/alertmanager/alertmanager.yml
       - alertmanager_data:/alertmanager

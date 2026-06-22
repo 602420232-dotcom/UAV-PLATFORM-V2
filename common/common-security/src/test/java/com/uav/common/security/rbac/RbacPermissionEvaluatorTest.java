@@ -35,7 +35,6 @@ class RbacPermissionEvaluatorTest {
         evaluator = new RbacPermissionEvaluator();
     }
 
-    @SuppressWarnings("unchecked")
     private void mockAuthorities(String... authorityStrings) {
         List<GrantedAuthority> list = new ArrayList<>();
         for (String auth : authorityStrings) {

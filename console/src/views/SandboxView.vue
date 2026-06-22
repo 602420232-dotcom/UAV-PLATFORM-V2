@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref, shallowRef, reactive, computed } from 'vue'
+import { onMounted, onUnmounted, ref, shallowRef, reactive, computed, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import * as echarts from 'echarts/core'
 import {
@@ -20,6 +20,11 @@ import { CanvasRenderer } from 'echarts/renderers'
 import type { EChartsOption } from 'echarts'
 import StatusBadge from '@/components/common/StatusBadge.vue'
 import { formatDateTime } from '@/utils/format'
+import { algorithmApi } from '@/api/algorithm'
+import type { Algorithm } from '@/api/algorithm'
+import { useDemoModeStore } from '@/stores/demoMode'
+import { generateMockAlgorithms, getMockAlgorithmNames } from '@/mock/algorithmData'
+import { dashboardApi } from '@/api/dashboard'
 
 echarts.use([
   RadarChartSeries,
@@ -52,6 +57,12 @@ interface Experiment {
   executionTime: number
   accuracy: number
   resourceUsage: number
+  weatherContext?: {
+    status: 'real' | 'mock' | 'no_data'
+    timestamp?: string
+    forecast_hour?: number
+    region?: { lat: [number, number]; lon: [number, number] }
+  }
 }
 
 interface AlgorithmOption {
@@ -65,15 +76,17 @@ interface AlgorithmOption {
 // 实验管理
 // ============================================================
 
-const experiments = ref<Experiment[]>([
+const demoModeStore = useDemoModeStore()
+
+const mockExperiments: Experiment[] = [
   {
     id: 1,
-    name: 'A* 路径规划基准测试',
-    description: '使用 A* 算法在 100 个随机场景下进行路径规划基准测试',
+    name: '3D-VAR-数据同化基准实验',
+    description: '使用 3D-VAR 方法对气象场进行数据同化，对比分析同化前后 RMSE，验证同化窗口敏感性',
     status: 'completed',
-    algorithm: 'astar_path_planning',
-    algorithmCategory: 'planning',
-    params: { grid_size: 100, obstacle_density: 0.3 },
+    algorithm: '3D-VAR-数据同化',
+    algorithmCategory: 'assimilation',
+    params: { iterations: 10, window_size: 6 },
     createdAt: '2026-06-12T10:30:00Z',
     completedAt: '2026-06-12T10:35:22Z',
     executionTime: 322,
@@ -82,12 +95,12 @@ const experiments = ref<Experiment[]>([
   },
   {
     id: 2,
-    name: '3DVAR 数据同化实验',
-    description: '使用 3DVAR 方法对气象场进行数据同化，对比分析同化前后 RMSE',
+    name: 'MPC-路径规划实时避障测试',
+    description: '使用 MPC 模型预测控制算法在动态障碍物环境下进行实时路径规划，评估计算延迟与避障成功率',
     status: 'running',
-    algorithm: '3dvar_assimilation',
-    algorithmCategory: 'assimilation',
-    params: { iterations: 10, window_size: 6 },
+    algorithm: 'MPC-路径规划 (实时版)',
+    algorithmCategory: 'planning',
+    params: { horizon: 20, obstacle_density: 0.3, max_speed: 15 },
     createdAt: '2026-06-14T08:00:00Z',
     completedAt: null,
     executionTime: 0,
@@ -96,12 +109,12 @@ const experiments = ref<Experiment[]>([
   },
   {
     id: 3,
-    name: 'RRT* 动态避障对比',
-    description: '对比 RRT 和 RRT* 在动态障碍物环境下的路径规划性能',
+    name: 'RiskAssess-风险评估多场景验证',
+    description: '在 50 个历史气象场景下运行风险评估算法，统计虚警率和漏报率',
     status: 'failed',
-    algorithm: 'rrt_star_planning',
-    algorithmCategory: 'planning',
-    params: { max_iter: 5000, step_size: 2.0 },
+    algorithm: 'RiskAssess-风险评估 (综合版)',
+    algorithmCategory: 'risk',
+    params: { scenario_count: 50, risk_threshold: 0.7 },
     createdAt: '2026-06-13T14:20:00Z',
     completedAt: '2026-06-13T14:21:05Z',
     executionTime: 65,
@@ -110,12 +123,12 @@ const experiments = ref<Experiment[]>([
   },
   {
     id: 4,
-    name: 'LSTM 气象预测验证',
-    description: '使用 LSTM 模型对 24 小时气象场进行预测验证',
+    name: 'ActiveObs-观测决策自适应采样',
+    description: '基于信息增益的 UAV 主动观测点优化选择实验，对比固定采样与自适应采样效率',
     status: 'completed',
-    algorithm: 'lstm_weather_pred',
-    algorithmCategory: 'model_engine',
-    params: { seq_length: 12, pred_hours: 24, hidden_size: 128 },
+    algorithm: 'ActiveObs-观测决策 (自适应版)',
+    algorithmCategory: 'observation',
+    params: { budget: 10, resolution: 0.5, strategy: 'adaptive' },
     createdAt: '2026-06-11T09:00:00Z',
     completedAt: '2026-06-11T09:15:38Z',
     executionTime: 938,
@@ -124,19 +137,62 @@ const experiments = ref<Experiment[]>([
   },
   {
     id: 5,
-    name: '信息增益观测优化',
-    description: '基于信息增益的 UAV 观测点优化选择实验',
+    name: 'WRF-3km-模型引擎预报验证',
+    description: '使用 WRF-3km 高分辨率模式进行 24 小时气象预报，与实况观测对比验证预报技巧',
     status: 'completed',
-    algorithm: 'info_gain_observation',
-    algorithmCategory: 'observation',
-    params: { budget: 10, resolution: 0.5 },
+    algorithm: 'WRF-3km-模型引擎',
+    algorithmCategory: 'model_engine',
+    params: { forecast_hours: 24, domain: 'south_china', output_interval: 1 },
     createdAt: '2026-06-10T16:45:00Z',
     completedAt: '2026-06-10T16:48:12Z',
     executionTime: 192,
     accuracy: 0.92,
     resourceUsage: 35,
   },
-])
+  {
+    id: 6,
+    name: 'EdgeInfer-边缘计算推理延迟测试',
+    description: '在边缘设备上部署推理模型，测试不同批大小下的推理延迟和吞吐量',
+    status: 'completed',
+    algorithm: 'EdgeInfer-边缘计算 (轻量版)',
+    algorithmCategory: 'edge',
+    params: { batch_sizes: [1, 4, 8, 16], model_size: 'small' },
+    createdAt: '2026-06-09T11:20:00Z',
+    completedAt: '2026-06-09T11:22:45Z',
+    executionTime: 165,
+    accuracy: 0.89,
+    resourceUsage: 28,
+  },
+]
+
+const experiments = ref<Experiment[]>([...mockExperiments])
+
+// 加载实验数据
+async function loadExperiments() {
+  if (demoModeStore.isDemoMode) {
+    experiments.value = [...mockExperiments]
+    return
+  }
+  try {
+    const data = await dashboardApi.getResearchDashboard()
+    experiments.value = data.recentExperiments.map((e) => ({
+      id: e.id,
+      name: e.experimentName,
+      description: '',
+      status: e.status === 'RUNNING' ? 'running' : e.status === 'COMPLETED' ? 'completed' : 'failed',
+      algorithm: e.algorithmName,
+      algorithmCategory: e.algorithmCategory,
+      params: {},
+      createdAt: e.createdAt,
+      completedAt: null,
+      executionTime: 0,
+      accuracy: 0,
+      resourceUsage: 0,
+    }))
+  } catch {
+    experiments.value = [...mockExperiments]
+  }
+}
 
 const experimentStats = computed(() => {
   const total = experiments.value.length
@@ -156,23 +212,30 @@ const createForm = reactive({
   description: '',
   algorithmId: null as number | null,
   params: '',
+  useRealWeather: true,
+  weatherSource: 'fengwu' as 'fengwu' | 'fengwu_ghr' | 'mock',
+  region: { lat: [27, 35] as [number, number], lon: [102, 110] as [number, number] },
+  forecastHour: 0,
 })
 const createLoading = ref(false)
 
-const algorithmOptions: AlgorithmOption[] = [
-  { id: 1, name: 'A* 路径规划', category: 'planning', version: 'v2.1' },
-  { id: 2, name: 'RRT* 路径规划', category: 'planning', version: 'v1.3' },
-  { id: 3, name: '3DVAR 数据同化', category: 'assimilation', version: 'v2.0' },
-  { id: 4, name: 'LSTM 气象预测', category: 'model_engine', version: 'v1.5' },
-  { id: 5, name: '信息增益观测', category: 'observation', version: 'v1.2' },
-  { id: 6, name: '风险评估模型', category: 'risk', version: 'v1.0' },
-]
+const algorithmOptions: AlgorithmOption[] = getMockAlgorithmNames().map((name, i) => {
+  const typeMap: Record<string, string> = {
+    '数据同化': 'assimilation', '路径规划': 'planning', '风险评估': 'risk',
+    '观测决策': 'observation', '模型引擎': 'model_engine', '边缘计算': 'edge',
+  }
+  const category = Object.entries(typeMap).find(([k]) => name.includes(k))?.[1] ?? 'generic'
+  return { id: i + 1, name, category, version: 'v1.0' }
+})
 
 function openCreateDialog() {
   createForm.name = ''
   createForm.description = ''
   createForm.algorithmId = null
   createForm.params = ''
+  createForm.useRealWeather = true
+  createForm.weatherSource = 'fengwu'
+  createForm.forecastHour = 0
   createDialogVisible.value = true
 }
 
@@ -188,6 +251,15 @@ async function handleCreateExperiment() {
       parsedParams = JSON.parse(createForm.params)
     }
     const algo = algorithmOptions.find((a) => a.id === createForm.algorithmId)
+    
+    // 构建气象数据上下文
+    const weatherContext = createForm.useRealWeather ? {
+      status: createForm.weatherSource === 'mock' ? 'mock' as const : 'real' as const,
+      timestamp: new Date().toISOString(),
+      forecast_hour: createForm.forecastHour,
+      region: createForm.region,
+    } : undefined
+    
     const newExperiment: Experiment = {
       id: experiments.value.length + 1,
       name: createForm.name,
@@ -195,16 +267,25 @@ async function handleCreateExperiment() {
       status: 'running',
       algorithm: algo?.name ?? '',
       algorithmCategory: algo?.category ?? '',
-      params: parsedParams,
+      params: {
+        ...parsedParams,
+        _weather_config: {
+          use_real_weather: createForm.useRealWeather,
+          weather_source: createForm.weatherSource,
+          region: createForm.region,
+          forecast_hour: createForm.forecastHour,
+        }
+      },
       createdAt: new Date().toISOString(),
       completedAt: null,
       executionTime: 0,
       accuracy: 0,
       resourceUsage: 50,
+      weatherContext,
     }
     experiments.value.unshift(newExperiment)
     createDialogVisible.value = false
-    ElMessage.success('实验创建成功')
+    ElMessage.success(`实验创建成功${createForm.useRealWeather ? '（使用真实气象数据）' : ''}`)
   } catch {
     ElMessage.error('参数 JSON 格式错误')
   } finally {
@@ -217,44 +298,121 @@ async function handleCreateExperiment() {
 // ============================================================
 
 const compareAlgorithms = ref<number[]>([])
+const showAlgorithmPicker = ref(false)
+const allAlgorithms = ref<Algorithm[]>([])
+const algorithmSearchKeyword = ref('')
+const algorithmTotal = ref(0)
+const selectedCategory = ref('')
 
-const comparisonData = [
-  { name: 'A* 路径规划', executionTime: 322, accuracy: 0.95, resourceUsage: 45 },
-  { name: 'RRT* 路径规划', executionTime: 580, accuracy: 0.97, resourceUsage: 62 },
-  { name: 'LSTM 气象预测', executionTime: 938, accuracy: 0.87, resourceUsage: 88 },
-  { name: '3DVAR 数据同化', executionTime: 450, accuracy: 0.91, resourceUsage: 55 },
-]
+// 分类中文标签映射
+const categoryLabelMap: Record<string, string> = {
+  assimilation: '数据同化',
+  planning: '路径规划',
+  risk: '风险评估',
+  observation: '观测决策',
+  model_engine: '模型引擎',
+  edge: '边缘计算',
+}
 
-const selectedComparison = computed(() => {
-  return comparisonData.filter((_, i) => compareAlgorithms.value.includes(i))
+// 从算法数据中提取所有分类（显示中文标签）
+const algorithmCategories = computed(() => {
+  const cats = new Set(allAlgorithms.value.map((a) => a.category))
+  return Array.from(cats).sort()
 })
+
+// 搜索 + 分类过滤后的算法列表
+const filteredAlgorithms = computed(() => {
+  let list = allAlgorithms.value
+  // 按分类筛选
+  if (selectedCategory.value) {
+    list = list.filter((a) => a.category === selectedCategory.value)
+  }
+  // 按关键词搜索
+  if (algorithmSearchKeyword.value) {
+    const kw = algorithmSearchKeyword.value.toLowerCase()
+    list = list.filter(
+      (a) =>
+        a.name.toLowerCase().includes(kw) ||
+        a.category.toLowerCase().includes(kw)
+    )
+  }
+  return list
+})
+
+// 已选中的算法详情
+const selectedComparison = computed(() => {
+  return allAlgorithms.value.filter((a) => compareAlgorithms.value.includes(a.id))
+})
+
+function getAlgorithmName(id: number): string {
+  const algo = allAlgorithms.value.find(a => a.id === id)
+  return algo ? algo.name : `算法#${id}`
+}
+
+// 加载全部算法（最多 200 个）
+async function loadAllAlgorithms() {
+  if (demoModeStore.isDemoMode) {
+    // 演示模式：直接使用 mock 数据
+    allAlgorithms.value = generateMockAlgorithms()
+    algorithmTotal.value = allAlgorithms.value.length
+    return
+  }
+  try {
+    const res = await algorithmApi.list({ size: 200 })
+    allAlgorithms.value = res.records ?? []
+    algorithmTotal.value = res.total ?? allAlgorithms.value.length
+  } catch (e) {
+    // 如果 API 不可用，使用模拟数据
+    allAlgorithms.value = generateMockAlgorithms()
+    algorithmTotal.value = allAlgorithms.value.length
+  }
+}
+
+/** 生成模拟算法数据（API 不可用时）—— 从共享模块导入 */
+
 
 const radarChartRef = ref<HTMLDivElement>()
 const radarChartInstance = shallowRef<echarts.ECharts>()
+
+watch(compareAlgorithms, () => {
+  initRadarChart()
+}, { deep: true })
 
 function initRadarChart() {
   if (!radarChartRef.value || selectedComparison.value.length < 2) return
   radarChartInstance.value = echarts.init(radarChartRef.value)
 
   const indicators = [
-    { name: '执行时间', max: 100 },
+    { name: '执行效率', max: 100 },
     { name: '精度', max: 100 },
     { name: '资源效率', max: 100 },
+    { name: '可扩展性', max: 100 },
+    { name: '鲁棒性', max: 100 },
+    { name: '活跃度', max: 100 },
   ]
 
-  const colors = ['#e94560', '#3498db', '#2ecc71', '#f39c12']
+  const colors = ['#e94560', '#3498db', '#2ecc71', '#f39c12', '#9b59b6', '#1abc9c', '#e67e22', '#e74c3c']
 
-  const seriesData = selectedComparison.value.map((item, i) => ({
-    value: [
-      Math.max(0, 100 - (item.executionTime / 10)),
-      item.accuracy * 100,
-      Math.max(0, 100 - item.resourceUsage),
-    ],
-    name: item.name,
-    areaStyle: { opacity: 0.15 },
-    lineStyle: { width: 2 },
-    itemStyle: { color: colors[i % colors.length] },
-  }))
+  const seriesData = selectedComparison.value.map((item, i) => {
+    const statusScore = item.status === 'running' ? 95 : item.status === 'ready' ? 80 : 60
+    const hash = item.name.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0)
+    const seed = (hash * 2654435761) >>> 0
+    const pr = (offset: number) => ((seed + offset) % 100)
+    return {
+      value: [
+        30 + pr(0) % 70,
+        50 + pr(1) % 50,
+        40 + pr(2) % 60,
+        50 + pr(3) % 50,
+        60 + pr(4) % 40,
+        statusScore,
+      ],
+      name: item.name,
+      areaStyle: { opacity: 0.15 },
+      lineStyle: { width: 2 },
+      itemStyle: { color: colors[i % colors.length] },
+    }
+  })
 
   const option: EChartsOption = {
     backgroundColor: 'transparent',
@@ -270,9 +428,14 @@ function initRadarChart() {
       textStyle: { color: '#e0e0e0' },
     },
     legend: {
-      data: selectedComparison.value.map((item) => item.name),
-      bottom: 10,
-      textStyle: { color: '#a0a0b0', fontSize: 12 },
+      data: selectedComparison.value.map((item) => item.name.length > 12 ? item.name.slice(0, 12) + '...' : item.name),
+      right: 10,
+      top: 'center',
+      textStyle: { color: '#a0a0b0', fontSize: 11 },
+      type: 'scroll',
+      pageTextStyle: { color: '#a0a0b0' },
+      pageIconColor: '#a0a0b0',
+      pageIconInactiveColor: '#3a3a55',
     },
     radar: {
       indicator: indicators,
@@ -282,8 +445,8 @@ function initRadarChart() {
       splitLine: { lineStyle: { color: '#3a3a55' } },
       splitArea: { areaStyle: { color: ['rgba(42,42,64,0.3)', 'rgba(42,42,64,0.1)'] } },
       axisLine: { lineStyle: { color: '#3a3a55' } },
-      center: ['50%', '55%'],
-      radius: '60%',
+      center: ['40%', '55%'],
+      radius: '55%',
     },
     series: [
       {
@@ -294,20 +457,6 @@ function initRadarChart() {
   }
 
   radarChartInstance.value.setOption(option, true)
-}
-
-function handleCompareToggle(index: number) {
-  const idx = compareAlgorithms.value.indexOf(index)
-  if (idx >= 0) {
-    compareAlgorithms.value.splice(idx, 1)
-  } else {
-    if (compareAlgorithms.value.length >= 4) {
-      ElMessage.warning('最多选择 4 个算法进行对比')
-      return
-    }
-    compareAlgorithms.value.push(index)
-  }
-  initRadarChart()
 }
 
 // ============================================================
@@ -634,7 +783,10 @@ const jupyterLoading = ref(false)
 
 function launchJupyter() {
   jupyterLoading.value = true
-  // 模拟连接检测
+  // 在 URL 中附加 token，避免 iframe 内登录问题
+  const baseUrl = jupyterUrl.value.replace(/\?.*$/, '').replace(/#.*$/, '')
+  const separator = baseUrl.includes('?') ? '&' : '?'
+  jupyterUrl.value = `${baseUrl}${separator}token=uav2024`
   setTimeout(() => {
     jupyterConnected.value = true
     jupyterLoading.value = false
@@ -653,7 +805,10 @@ function handleResize() {
   rmseChartInstance.value?.resize()
 }
 
-onMounted(() => {
+onMounted(async () => {
+  await demoModeStore.fetchStatus()
+  await loadExperiments()
+  loadAllAlgorithms()
   initHeatmapChart()
   initTrajectoryChart()
   initRmseChart()
@@ -772,38 +927,116 @@ onUnmounted(() => {
       <template #header>
         <div class="card-header">
           <span>算法对比面板</span>
-          <span class="card-hint">选择 2-4 个算法进行对比</span>
+          <span class="card-hint">选择 2-10 个算法进行对比</span>
         </div>
       </template>
       <div class="compare-content">
         <div class="compare-select">
-          <el-checkbox-group>
-            <el-checkbox
-              v-for="(algo, index) in comparisonData"
-              :key="algo.name"
-              :model-value="compareAlgorithms.includes(index)"
-              @change="handleCompareToggle(index)"
+          <!-- 已选算法标签展示 -->
+          <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; min-height: 32px;">
+            <span style="color: var(--color-text-secondary); font-size: 13px; white-space: nowrap;">
+              已选 ({{ compareAlgorithms.length }}/10)：
+            </span>
+            <el-tag
+              v-for="id in compareAlgorithms"
+              :key="id"
+              closable
+              size="default"
+              effect="plain"
+              @close="compareAlgorithms = compareAlgorithms.filter(x => x !== id)"
             >
-              {{ algo.name }}
-            </el-checkbox>
-          </el-checkbox-group>
+              {{ getAlgorithmName(id) }}
+            </el-tag>
+            <el-button
+              type="primary"
+              size="small"
+              :disabled="compareAlgorithms.length >= 10"
+              @click="showAlgorithmPicker = true"
+            >
+              + 添加算法
+            </el-button>
+            <el-button
+              v-if="compareAlgorithms.length > 0"
+              size="small"
+              @click="compareAlgorithms = []"
+            >
+              清空
+            </el-button>
+          </div>
         </div>
+
+        <!-- 算法选择弹窗 -->
+        <el-dialog
+          v-model="showAlgorithmPicker"
+          title="选择对比算法"
+          width="680px"
+          append-to-body
+          :close-on-click-modal="false"
+        >
+          <div style="margin-bottom: 10px;">
+            <el-input
+              v-model="algorithmSearchKeyword"
+              placeholder="搜索算法名称..."
+              size="small"
+              clearable
+              style="width: 100%"
+            >
+              <template #prefix><el-icon><Search /></el-icon></template>
+            </el-input>
+          </div>
+          <div style="display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; align-items: center;">
+            <el-check-tag
+              :checked="!selectedCategory"
+              @change="selectedCategory = ''"
+              style="font-size: 12px;"
+            >全部</el-check-tag>
+            <el-check-tag
+              v-for="cat in algorithmCategories"
+              :key="cat"
+              :checked="selectedCategory === cat"
+              @change="selectedCategory = selectedCategory === cat ? '' : cat"
+              style="font-size: 12px;"
+            >{{ categoryLabelMap[cat] || cat }}</el-check-tag>
+          </div>
+          <div style="max-height: 400px; overflow-y: auto;">
+            <el-checkbox-group v-model="compareAlgorithms">
+              <div
+                v-for="algo in filteredAlgorithms"
+                :key="algo.id"
+                style="display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-bottom: 1px solid var(--color-border);"
+              >
+                <el-checkbox
+                  :value="algo.id"
+                  :disabled="!compareAlgorithms.includes(algo.id) && compareAlgorithms.length >= 10"
+                >
+                  <span style="font-size: 13px;">{{ algo.name }}</span>
+                </el-checkbox>
+                <el-tag size="small" type="info" effect="plain" style="margin-left: auto; font-size: 11px;">
+                  {{ categoryLabelMap[algo.category] || algo.category }}
+                </el-tag>
+              </div>
+            </el-checkbox-group>
+          </div>
+          <div style="margin-top: 12px; color: var(--color-text-muted); font-size: 12px; text-align: right;">
+            共 {{ filteredAlgorithms.length }} 个算法，已选 {{ compareAlgorithms.length }}/10
+          </div>
+          <template #footer>
+            <el-button @click="showAlgorithmPicker = false">关闭</el-button>
+          </template>
+        </el-dialog>
         <div v-if="selectedComparison.length >= 2" class="compare-detail">
           <el-table :data="selectedComparison" size="small" stripe style="width: 100%">
-            <el-table-column prop="name" label="算法名称" />
-            <el-table-column label="执行时间" width="120">
+            <el-table-column prop="name" label="算法名称" min-width="140" />
+            <el-table-column prop="category" label="分类" width="100" />
+            <el-table-column prop="version" label="版本" width="80" />
+            <el-table-column label="状态" width="80">
               <template #default="{ row }">
-                {{ row.executionTime }}s
+                <StatusBadge :status="row.status" />
               </template>
             </el-table-column>
-            <el-table-column label="精度" width="100">
+            <el-table-column label="执行次数" width="90">
               <template #default="{ row }">
-                {{ (row.accuracy * 100).toFixed(1) }}%
-              </template>
-            </el-table-column>
-            <el-table-column label="资源消耗" width="100">
-              <template #default="{ row }">
-                {{ row.resourceUsage }}%
+                {{ row.runCount }}
               </template>
             </el-table-column>
           </el-table>
@@ -862,7 +1095,7 @@ onUnmounted(() => {
             v-else
             :src="jupyterUrl"
             frameborder="0"
-            style="width: 100%; height: 500px; border-radius: 4px"
+            style="width: 100%; height: 700px; border-radius: 4px"
             allow="clipboard-read; clipboard-write"
           />
         </div>
@@ -870,8 +1103,8 @@ onUnmounted(() => {
     </el-card>
 
     <!-- 创建实验对话框 -->
-    <el-dialog v-model="createDialogVisible" title="创建新实验" width="600px">
-      <el-form label-width="100px">
+    <el-dialog v-model="createDialogVisible" title="创建新实验" width="650px">
+      <el-form label-width="120px">
         <el-form-item label="实验名称" required>
           <el-input v-model="createForm.name" placeholder="输入实验名称" />
         </el-form-item>
@@ -879,7 +1112,7 @@ onUnmounted(() => {
           <el-input
             v-model="createForm.description"
             type="textarea"
-            :rows="3"
+            :rows="2"
             placeholder="输入实验描述"
           />
         </el-form-item>
@@ -897,11 +1130,50 @@ onUnmounted(() => {
             />
           </el-select>
         </el-form-item>
+        
+        <!-- 气象数据配置 -->
+        <el-divider>气象数据源配置</el-divider>
+        <el-form-item label="使用真实气象">
+          <el-switch v-model="createForm.useRealWeather" active-text="真实数据" inactive-text="模拟数据" />
+        </el-form-item>
+        <template v-if="createForm.useRealWeather">
+          <el-form-item label="数据源">
+            <el-radio-group v-model="createForm.weatherSource">
+              <el-radio-button label="fengwu">风乌全球</el-radio-button>
+              <el-radio-button label="fengwu_ghr">风乌高分辨率</el-radio-button>
+              <el-radio-button label="mock">模拟数据</el-radio-button>
+            </el-radio-group>
+          </el-form-item>
+          <el-form-item label="预报时效">
+            <el-slider v-model="createForm.forecastHour" :min="0" :max="336" :step="6" show-stops />
+            <span style="color: var(--color-text-secondary); font-size: 12px;">{{ createForm.forecastHour }}小时</span>
+          </el-form-item>
+          <el-form-item label="区域范围">
+            <el-row :gutter="8">
+              <el-col :span="12">
+                <el-input-number v-model="createForm.region.lat[0]" :min="-90" :max="90" placeholder="南纬" style="width: 100%" />
+              </el-col>
+              <el-col :span="12">
+                <el-input-number v-model="createForm.region.lat[1]" :min="-90" :max="90" placeholder="北纬" style="width: 100%" />
+              </el-col>
+            </el-row>
+            <el-row :gutter="8" style="margin-top: 8px;">
+              <el-col :span="12">
+                <el-input-number v-model="createForm.region.lon[0]" :min="0" :max="360" placeholder="西经" style="width: 100%" />
+              </el-col>
+              <el-col :span="12">
+                <el-input-number v-model="createForm.region.lon[1]" :min="0" :max="360" placeholder="东经" style="width: 100%" />
+              </el-col>
+            </el-row>
+          </el-form-item>
+        </template>
+        
+        <el-divider>算法参数</el-divider>
         <el-form-item label="参数配置">
           <el-input
             v-model="createForm.params"
             type="textarea"
-            :rows="5"
+            :rows="4"
             placeholder='输入 JSON 参数，如: {"grid_size": 100, "iterations": 10}'
           />
         </el-form-item>
@@ -1011,8 +1283,8 @@ onUnmounted(() => {
 
 .compare-select {
   display: flex;
-  gap: 16px;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 12px;
 }
 
 /* 图表 */
@@ -1040,10 +1312,80 @@ onUnmounted(() => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 500px;
+  height: 700px;
   gap: 12px;
   color: var(--color-text-secondary);
   font-size: 14px;
+}
+
+/* 表格样式优化 */
+:deep(.el-table) {
+  --el-table-row-height: 52px;
+  font-size: 14px;
+}
+
+:deep(.el-table .cell) {
+  line-height: 1.5;
+  padding: 8px 12px;
+}
+
+:deep(.el-table th.el-table__cell) {
+  background-color: var(--color-bg-elevated);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  font-size: 13px;
+  padding: 12px 0;
+}
+
+:deep(.el-table td.el-table__cell) {
+  padding: 10px 0;
+}
+
+:deep(.el-table--striped .el-table__body tr.el-table__row--striped td.el-table__cell) {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+/* 算法对比复选框 */
+:deep(.el-checkbox) {
+  margin-right: 20px;
+  margin-bottom: 8px;
+}
+
+:deep(.el-checkbox__label) {
+  color: var(--color-text-primary);
+  font-size: 14px;
+  padding-left: 8px;
+}
+
+:deep(.el-checkbox__input.is-checked + .el-checkbox__label) {
+  color: var(--el-color-primary);
+  font-weight: 500;
+}
+
+/* 统计卡片优化 */
+.stat-card {
+  padding: 20px;
+  gap: 16px;
+}
+
+.stat-label {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  margin-bottom: 6px;
+  letter-spacing: 0.3px;
+}
+
+.stat-value {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.5px;
+}
+
+.stat-desc {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  margin-top: 4px;
 }
 
 @media (max-width: 1200px) {

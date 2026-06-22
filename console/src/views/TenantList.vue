@@ -1,13 +1,15 @@
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue'
+import { onMounted, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { tenantApi } from '@/api/tenant'
 import type { Tenant } from '@/api/tenant'
 import StatusBadge from '@/components/common/StatusBadge.vue'
 import { formatDateTime } from '@/utils/format'
+import { useDemoModeStore } from '@/stores/demoMode'
 
 const router = useRouter()
+const demoModeStore = useDemoModeStore()
 
 const loading = ref(false)
 const tenants = ref<Tenant[]>([])
@@ -34,6 +36,16 @@ const createRules = {
 async function loadTenants() {
   loading.value = true
   try {
+    if (demoModeStore.isDemoMode) {
+      tenants.value = [
+        { id: 1, name: '默认租户', schemaName: 'tenant_default', status: 1, quotaConfig: '{"quota": 100}', createdAt: '2025-01-01T00:00:00Z', updatedAt: '2025-06-01T00:00:00Z' } as Tenant,
+        { id: 2, name: '气象服务中心', schemaName: 'tenant_weather', status: 1, quotaConfig: '{"quota": 200}', createdAt: '2025-02-15T08:00:00Z', updatedAt: '2025-05-20T10:00:00Z' } as Tenant,
+        { id: 3, name: '科研院所', schemaName: 'tenant_research', status: 1, quotaConfig: '{"quota": 150}', createdAt: '2025-03-10T09:00:00Z', updatedAt: '2025-06-10T14:00:00Z' } as Tenant,
+        { id: 4, name: '应急救援队', schemaName: 'tenant_emergency', status: 0, quotaConfig: '{"quota": 80}', createdAt: '2025-04-20T11:30:00Z', updatedAt: '2025-05-15T16:00:00Z' } as Tenant,
+      ] as Tenant[]
+      total.value = tenants.value.length
+      return
+    }
     const data = await tenantApi.list(queryParams.current, queryParams.size)
     tenants.value = data.records
     total.value = data.total
@@ -113,7 +125,12 @@ async function handleDelete(row: Tenant) {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
+  await demoModeStore.fetchStatus()
+  loadTenants()
+})
+
+watch(() => demoModeStore.isDemoMode, () => {
   loadTenants()
 })
 </script>
@@ -122,7 +139,7 @@ onMounted(() => {
   <div class="tenant-list-page">
     <div class="page-header">
       <h2>租户管理</h2>
-      <el-button type="primary" @click="handleCreate">
+      <el-button type="primary" :disabled="demoModeStore.isDemoMode" @click="handleCreate">
         <el-icon><Plus /></el-icon>
         新建租户
       </el-button>
@@ -157,11 +174,12 @@ onMounted(() => {
               :type="row.status === 1 ? 'warning' : 'success'"
               link
               size="small"
+              :disabled="demoModeStore.isDemoMode"
               @click="handleToggleStatus(row)"
             >
               {{ row.status === 1 ? '禁用' : '启用' }}
             </el-button>
-            <el-button type="danger" link size="small" @click="handleDelete(row)">
+            <el-button type="danger" link size="small" :disabled="demoModeStore.isDemoMode" @click="handleDelete(row)">
               删除
             </el-button>
           </template>

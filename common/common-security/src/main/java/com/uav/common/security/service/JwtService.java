@@ -9,12 +9,15 @@ import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SignatureException;
 import lombok.extern.slf4j.Slf4j;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -43,8 +46,35 @@ public class JwtService {
     private String issuer;
 
     private static final String CLAIM_TOKEN_TYPE = "token_type";
+    private static final String CLAIM_ROLES = "roles";
     private static final String TOKEN_TYPE_ACCESS = "access";
     private static final String TOKEN_TYPE_REFRESH = "refresh";
+
+    @PostConstruct
+    public void validateConfig() {
+        if (!StringUtils.hasText(jwtSecret)) {
+            throw new IllegalStateException(
+                "JWT_SECRET must be configured via environment variable. " +
+                "Please set JWT_SECRET to a secure random string (min 256 bits)."
+            );
+        }
+        try {
+            byte[] keyBytes = Decoders.BASE64.decode(jwtSecret);
+            if (keyBytes.length < 32) {
+                throw new IllegalStateException(
+                    "JWT_SECRET must be at least 256 bits (32 bytes). " +
+                    "Current decoded length: " + keyBytes.length + " bytes. " +
+                    "Please generate a new secret with: openssl rand -base64 48"
+                );
+            }
+        } catch (IllegalArgumentException e) {
+            throw new IllegalStateException(
+                "JWT_SECRET must be a valid Base64-encoded string. " +
+                "Please generate a new secret with: openssl rand -base64 48"
+            );
+        }
+        log.info("JWT configuration validated successfully");
+    }
 
     /**
      * 从 token 中提取用户名（subject）
@@ -77,6 +107,19 @@ public class JwtService {
      */
     public String generateToken(String username) {
         return generateToken(new HashMap<>(), username);
+    }
+
+    /**
+     * 生成携带角色信息的 JWT Access Token
+     *
+     * @param username 用户名
+     * @param roles    用户角色列表
+     * @return JWT access token 字符串
+     */
+    public String generateToken(String username, List<String> roles) {
+        Map<String, Object> extraClaims = new HashMap<>();
+        extraClaims.put(CLAIM_ROLES, roles);
+        return generateToken(extraClaims, username);
     }
 
     /**
@@ -229,6 +272,23 @@ public class JwtService {
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
+    }
+
+    /**
+     * 从 token 中提取角色列表
+     *
+     * @param token JWT token
+     * @return 角色列表
+     */
+    @SuppressWarnings("unchecked")
+    public List<String> extractRoles(String token) {
+        try {
+            Claims claims = extractAllClaims(token);
+            return claims.get(CLAIM_ROLES, List.class);
+        } catch (Exception e) {
+            log.warn("Failed to extract roles from token: {}", e.getMessage());
+            return null;
+        }
     }
 
     /**

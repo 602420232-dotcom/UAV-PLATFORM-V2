@@ -22,16 +22,16 @@ export interface RegisterRequest {
 export const authApi = {
   /** 登录 */
   login(username: string, password: string): Promise<LoginResponse> {
-    return post<LoginResponse>('/v1/platform/auth/login', { username, password })
+    return post<LoginResponse>('/v1/auth/login', { username, password })
   },
 
-  /** 注册 */
+  /** 注册 - 后端待实现 */
   register(data: RegisterRequest): Promise<void> {
-    return post<void>('/v1/platform/auth/register', data)
+    return post<void>('/v1/auth/register', data)
   },
 
   /** 刷新 Token */
   refreshToken(refreshToken: string): Promise<LoginResponse> {
-    return post<LoginResponse>('/v1/platform/auth/refresh', { refreshToken })
+    return post<LoginResponse>('/v1/auth/refresh', { refreshToken })
   },
 }

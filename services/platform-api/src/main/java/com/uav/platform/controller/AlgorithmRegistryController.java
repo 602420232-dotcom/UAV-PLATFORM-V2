@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -20,6 +21,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 算法注册中心控制器
@@ -38,7 +40,7 @@ public class AlgorithmRegistryController {
      * POST /api/v1/algorithms/register
      */
     @PostMapping("/register")
-    @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ALGORITHM_ADMIN', 'OPERATOR')")
     public Result<AlgorithmRegistration> register(@Valid @RequestBody RegisterAlgorithmRequest request) {
         AlgorithmRegistration registration = new AlgorithmRegistration();
         registration.setName(request.getName());
@@ -56,14 +58,17 @@ public class AlgorithmRegistryController {
      * 列出所有已注册算法（支持分页和筛选）
      * GET /api/v1/algorithms
      */
-    @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR', 'USER')")
+    @GetMapping({"", "/list"})
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ALGORITHM_ADMIN', 'OPERATOR', 'TENANT_ADMIN')")
     public Result<Page<AlgorithmRegistration>> list(
             @RequestParam(defaultValue = "1") Integer current,
-            @RequestParam(defaultValue = "10") Integer size,
+            @RequestParam(defaultValue = "20") Integer size,
             @RequestParam(required = false) String type,
-            @RequestParam(required = false) Integer status) {
-        Page<AlgorithmRegistration> page = algorithmRegistryService.listAlgorithms(current, size, type, status);
+            @RequestParam(required = false) Integer status,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String algorithmType,
+            @RequestParam(required = false) String algorithmLevel) {
+        Page<AlgorithmRegistration> page = algorithmRegistryService.listAlgorithms(current, size, type, status, keyword, algorithmType, algorithmLevel);
         return Result.success(page);
     }
 
@@ -72,7 +77,7 @@ public class AlgorithmRegistryController {
      * GET /api/v1/algorithms/{id}
      */
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR', 'USER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ALGORITHM_ADMIN', 'OPERATOR', 'TENANT_ADMIN')")
     public Result<AlgorithmRegistration> getById(@PathVariable Long id) {
         AlgorithmRegistration registration = algorithmRegistryService.getById(id);
         if (registration == null) {
@@ -86,7 +91,7 @@ public class AlgorithmRegistryController {
      * DELETE /api/v1/algorithms/{id}
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ALGORITHM_ADMIN')")
     public Result<Void> delete(@PathVariable Long id) {
         algorithmRegistryService.unregister(id);
         return Result.success();
@@ -97,7 +102,7 @@ public class AlgorithmRegistryController {
      * POST /api/v1/algorithms/{id}/versions
      */
     @PostMapping("/{id}/versions")
-    @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ALGORITHM_ADMIN', 'OPERATOR')")
     public Result<AlgorithmRegistration> publishVersion(
             @PathVariable Long id,
             @Valid @RequestBody PublishVersionRequest request) {
@@ -111,7 +116,7 @@ public class AlgorithmRegistryController {
      * GET /api/v1/algorithms/{id}/versions
      */
     @GetMapping("/{id}/versions")
-    @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR', 'USER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ALGORITHM_ADMIN', 'OPERATOR', 'TENANT_ADMIN')")
     public Result<List<AlgorithmRegistration>> getVersions(@PathVariable Long id) {
         AlgorithmRegistration base = algorithmRegistryService.getById(id);
         if (base == null) {
@@ -126,7 +131,7 @@ public class AlgorithmRegistryController {
      * POST /api/v1/algorithms/{id}/health-check
      */
     @PostMapping("/{id}/health-check")
-    @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ALGORITHM_ADMIN', 'OPERATOR')")
     public Result<Boolean> healthCheck(@PathVariable Long id) {
         boolean healthy = algorithmRegistryService.healthCheck(id);
         return Result.success(healthy);
@@ -137,10 +142,60 @@ public class AlgorithmRegistryController {
      * POST /api/v1/algorithms/health-check-all
      */
     @PostMapping("/health-check-all")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ALGORITHM_ADMIN')")
     public Result<Void> healthCheckAll() {
         algorithmRegistryService.healthCheckAll();
         return Result.success();
+    }
+
+    // ==================== Phase 8 新增端点 ====================
+
+    /**
+     * 算法统计（按分类统计数量）
+     * GET /api/v1/algorithms/registry/stats
+     */
+    @GetMapping("/registry/stats")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ALGORITHM_ADMIN', 'OPERATOR', 'TENANT_ADMIN')")
+    public Result<Map<String, Object>> getRegistryStats() {
+        Map<String, Object> stats = algorithmRegistryService.getCategoryStats();
+        return Result.success(stats);
+    }
+
+    /**
+     * 按分类查询算法列表
+     * GET /api/v1/algorithms/registry/{category}
+     */
+    @GetMapping("/registry/{category}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ALGORITHM_ADMIN', 'OPERATOR', 'TENANT_ADMIN')")
+    public Result<List<AlgorithmRegistration>> listByCategory(@PathVariable String category) {
+        List<AlgorithmRegistration> list = algorithmRegistryService.listByCategory(category);
+        return Result.success(list);
+    }
+
+    /**
+     * 启用/禁用算法
+     * PUT /api/v1/algorithms/registry/{id}/status
+     */
+    @PutMapping("/registry/{id}/status")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ALGORITHM_ADMIN')")
+    public Result<Void> toggleStatus(
+            @PathVariable Long id,
+            @RequestParam boolean enable) {
+        algorithmRegistryService.toggleStatus(id, enable);
+        return Result.success();
+    }
+
+    /**
+     * 测试算法运行（调用Python引擎）
+     * POST /api/v1/algorithms/registry/{id}/test
+     */
+    @PostMapping("/registry/{id}/test")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ALGORITHM_ADMIN', 'OPERATOR')")
+    public Result<Map<String, Object>> testAlgorithm(
+            @PathVariable Long id,
+            @RequestBody(required = false) Map<String, Object> params) {
+        Map<String, Object> result = algorithmRegistryService.testAlgorithm(id, params);
+        return Result.success(result);
     }
 
     /**
@@ -148,7 +203,7 @@ public class AlgorithmRegistryController {
      * POST /api/v1/algorithms/{id}/status
      */
     @PostMapping("/{id}/status")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ALGORITHM_ADMIN')")
     public Result<Void> updateStatus(
             @PathVariable Long id,
             @RequestParam Integer status) {

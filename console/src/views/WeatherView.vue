@@ -3,6 +3,7 @@ import { ref, onMounted, onUnmounted, watch, shallowRef, nextTick } from 'vue'
 import { ElMessage } from 'element-plus'
 import { weatherApi } from '@/api/weather'
 import type { WeatherGrid } from '@/api/weather'
+import { useDemoModeStore } from '@/stores/demoMode'
 import * as echarts from 'echarts/core'
 import { ScatterChart, HeatmapChart, EffectScatterChart } from 'echarts/charts'
 import {
@@ -39,6 +40,7 @@ const weatherData = ref<WeatherGrid | null>(null)
 const regionData = ref<WeatherGrid[]>([])
 const activeTab = ref<'point' | 'region'>('point')
 const vizMode = ref<VisualizationMode>('wind')
+const demoModeStore = useDemoModeStore()
 
 // 单点查询表单
 const queryForm = ref({
@@ -377,6 +379,24 @@ watch(regionData, () => {
 }, { deep: true })
 
 async function queryPoint() {
+  if (demoModeStore.isDemoMode) {
+    weatherData.value = {
+      lon: queryForm.value.lon,
+      lat: queryForm.value.lat,
+      altitude: queryForm.value.altitude,
+      windSpeed: 5.2,
+      windDirection: 225,
+      temperature: 26.3,
+      humidity: 62.5,
+      pressure: 1013,
+      visibility: 15.0,
+      weatherCode: 1,
+      source: 'DEMO',
+      forecastTime: new Date().toISOString(),
+    }
+    ElMessage.success('查询成功（演示数据）')
+    return
+  }
   loading.value = true
   try {
     weatherData.value = await weatherApi.queryPoint({
@@ -395,6 +415,31 @@ async function queryPoint() {
 }
 
 async function queryRegion() {
+  if (demoModeStore.isDemoMode) {
+    const grid: WeatherGrid[] = []
+    for (let i = 0; i < 5; i++) {
+      for (let j = 0; j < 5; j++) {
+        grid.push({
+          lon: regionForm.value.minLon + (regionForm.value.maxLon - regionForm.value.minLon) * (i / 4),
+          lat: regionForm.value.minLat + (regionForm.value.maxLat - regionForm.value.minLat) * (j / 4),
+          altitude: regionForm.value.altitude,
+          windSpeed: 3 + Math.random() * 8,
+          windDirection: 180 + Math.random() * 180,
+          temperature: 20 + Math.random() * 10,
+          humidity: 40 + Math.random() * 40,
+          pressure: 1000 + Math.random() * 20,
+          visibility: 10 + Math.random() * 15,
+          weatherCode: Math.floor(Math.random() * 5),
+          source: 'DEMO',
+          forecastTime: new Date().toISOString(),
+        })
+      }
+    }
+    regionData.value = grid
+    ElMessage.success(`查询成功，获取 ${grid.length} 个格点数据（演示数据）`)
+    nextTick(() => updateChart())
+    return
+  }
   regionLoading.value = true
   try {
     regionData.value = await weatherApi.queryRegion({
@@ -431,9 +476,17 @@ function getWindDirectionName(dir: number): string {
   return directions[index] ?? '北'
 }
 
-onMounted(() => {
+onMounted(async () => {
+  await demoModeStore.fetchStatus()
   initChart()
   window.addEventListener('resize', handleResize)
+})
+
+watch(() => demoModeStore.isDemoMode, (val) => {
+  if (!val) {
+    weatherData.value = null
+    regionData.value = []
+  }
 })
 
 onUnmounted(() => {

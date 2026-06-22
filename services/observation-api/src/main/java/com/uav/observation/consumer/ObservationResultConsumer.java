@@ -7,7 +7,6 @@ import com.uav.common.kafka.service.TaskStatusSyncService;
 import com.uav.observation.entity.ObservationTask;
 import com.uav.observation.mapper.ObservationTaskMapper;
 import com.uav.observation.service.ObservationService;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
@@ -22,14 +21,25 @@ import java.util.Map;
  */
 @Component
 @Slf4j
-@RequiredArgsConstructor
 public class ObservationResultConsumer extends AbstractAlgorithmResultConsumer {
 
     private final ObservationTaskMapper taskMapper;
     private final TaskStatusSyncService taskStatusSyncService;
-    private final ObjectMapper objectMapper;
     private final RedisTemplate<String, Object> redisTemplate;
     private final ObservationService observationService;
+
+    public ObservationResultConsumer(
+            ObjectMapper objectMapper,
+            ObservationTaskMapper taskMapper,
+            TaskStatusSyncService taskStatusSyncService,
+            RedisTemplate<String, Object> redisTemplate,
+            ObservationService observationService) {
+        super(objectMapper);
+        this.taskMapper = taskMapper;
+        this.taskStatusSyncService = taskStatusSyncService;
+        this.redisTemplate = redisTemplate;
+        this.observationService = observationService;
+    }
 
     @Override
     protected void onResult(AlgorithmResultMessage message) {

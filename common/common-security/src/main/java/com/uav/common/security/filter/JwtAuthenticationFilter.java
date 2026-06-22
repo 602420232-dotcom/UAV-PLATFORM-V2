@@ -20,6 +20,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * JWT 认证过滤器
@@ -71,9 +72,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             // 如果当前上下文未认证，则设置认证信息
             if (SecurityContextHolder.getContext().getAuthentication() == null) {
-                List<SimpleGrantedAuthority> authorities = Collections.singletonList(
-                        new SimpleGrantedAuthority("ROLE_USER")
-                );
+                // 从Token中提取角色
+                List<String> roles = jwtService.extractRoles(jwt);
+                List<SimpleGrantedAuthority> authorities;
+                if (roles != null && !roles.isEmpty()) {
+                    authorities = roles.stream()
+                            .map(role -> role.startsWith("ROLE_") ? role : "ROLE_" + role)
+                            .map(SimpleGrantedAuthority::new)
+                            .collect(Collectors.toList());
+                } else {
+                    authorities = Collections.singletonList(
+                            new SimpleGrantedAuthority("ROLE_USER")
+                    );
+                }
 
                 UserDetails userDetails = User.builder()
                         .username(username)
@@ -90,7 +101,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authToken);
 
-                log.debug("JWT 认证成功 - user: {}, uri: {}", username, request.getRequestURI());
+                log.debug("JWT 认证成功 - user: {}, roles: {}, uri: {}", 
+                        username, authorities, request.getRequestURI());
             }
         } catch (Exception e) {
             log.error("JWT 认证过程中发生异常", e);

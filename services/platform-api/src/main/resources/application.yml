@@ -45,6 +45,11 @@ mybatis-plus:
 security:
   rbac:
     enabled: true
+  jwt:
+    secret: ${JWT_SECRET}
+    expiration: 1800000
+    refresh-expiration: 604800000
+    issuer: uav-platform
 
 logging:
   level:

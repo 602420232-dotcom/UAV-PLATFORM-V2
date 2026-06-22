@@ -23,11 +23,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.concurrent.TimeUnit;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
+import java.time.Duration;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -406,10 +408,10 @@ public class AssimilationService {
         try {
             String taskIdStr = String.valueOf(taskId);
             redisTemplate.opsForValue().set(TASK_STATUS_KEY_PREFIX + taskIdStr, status,
-                    TASK_STATUS_TTL_SECONDS, TimeUnit.SECONDS);
+                    Duration.ofSeconds(TASK_STATUS_TTL_SECONDS));
             redisTemplate.opsForValue().set(TASK_STATUS_KEY_PREFIX + taskIdStr + ":progress",
                     String.valueOf(progress != null ? progress : 0),
-                    TASK_STATUS_TTL_SECONDS, TimeUnit.SECONDS);
+                    Duration.ofSeconds(TASK_STATUS_TTL_SECONDS));
         } catch (Exception e) {
             log.warn("缓存任务状态失败, taskId={}", taskId, e);
         }

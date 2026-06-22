@@ -27,7 +27,7 @@ RUN cp api-gateway/standalone-module-pom.xml api-gateway/pom.xml.standalone && \
     mvn clean package -f standalone-pom.xml -DskipTests -B && \
     cp api-gateway/pom.xml.main-branch api-gateway/pom.xml || true
 
-FROM eclipse-temurin:17-jre-alpine
+FROM eclipse-temurin:21-jre-alpine
 
 LABEL maintainer="UAV Platform Team"
 LABEL description="UAV Platform V2 - API Gateway (Standalone, Spring Boot 3.4.5)"

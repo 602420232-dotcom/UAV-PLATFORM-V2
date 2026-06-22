@@ -32,7 +32,7 @@ public class TenantController {
      * 创建租户 - 仅 ADMIN 角色可操作
      */
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'TENANT_ADMIN')")
     public Result<Tenant> create(@Valid @RequestBody CreateTenantRequest request) {
         Tenant tenant = tenantService.createTenant(
                 request.getName(),
@@ -46,7 +46,7 @@ public class TenantController {
      * 查询租户详情 - ADMIN 或 OPERATOR 可查看
      */
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'TENANT_ADMIN', 'OPERATOR')")
     public Result<Tenant> getById(@PathVariable Long id) {
         return Result.success(tenantService.getById(id));
     }
@@ -55,7 +55,7 @@ public class TenantController {
      * 分页查询租户列表 - ADMIN 或 OPERATOR 可查看
      */
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'TENANT_ADMIN', 'OPERATOR')")
     public Result<Page<Tenant>> list(
             @RequestParam(defaultValue = "1") Integer current,
             @RequestParam(defaultValue = "10") Integer size) {
@@ -67,7 +67,7 @@ public class TenantController {
      * 更新租户 - 仅 ADMIN 角色可操作
      */
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'TENANT_ADMIN')")
     public Result<Void> update(@PathVariable Long id, @Valid @RequestBody UpdateTenantRequest request) {
         Tenant tenant = new Tenant();
         tenant.setId(id);
@@ -81,7 +81,7 @@ public class TenantController {
      * 禁用租户 - 仅 ADMIN 角色可操作
      */
     @PostMapping("/{id}/disable")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'TENANT_ADMIN')")
     public Result<Void> disable(@PathVariable Long id) {
         tenantService.disableTenant(id);
         return Result.success();
@@ -91,7 +91,7 @@ public class TenantController {
      * 启用租户 - 仅 ADMIN 角色可操作
      */
     @PostMapping("/{id}/enable")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'TENANT_ADMIN')")
     public Result<Void> enable(@PathVariable Long id) {
         tenantService.enableTenant(id);
         return Result.success();
@@ -101,7 +101,7 @@ public class TenantController {
      * 删除租户 - 仅 ADMIN 角色（SUPER_ADMIN 权限）可操作
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'TENANT_ADMIN')")
     public Result<Void> delete(@PathVariable Long id) {
         tenantService.removeById(id);
         return Result.success();

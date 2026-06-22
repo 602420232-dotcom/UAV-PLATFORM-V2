@@ -1,7 +1,6 @@
 package com.uav.common.security.audit;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import jakarta.annotation.Nullable;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -18,9 +17,12 @@ import org.springframework.stereotype.Service;
 @Service
 public class AuditLogService {
 
-    @Autowired(required = false)
     @Nullable
-    private AuditLogRepository auditLogRepository;
+    private final AuditLogRepository auditLogRepository;
+
+    public AuditLogService(@Nullable AuditLogRepository auditLogRepository) {
+        this.auditLogRepository = auditLogRepository;
+    }
 
     /**
      * 异步保存审计日志

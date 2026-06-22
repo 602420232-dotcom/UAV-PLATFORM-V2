@@ -5,7 +5,6 @@ import com.uav.common.kafka.config.KafkaTopicConfig;
 import com.uav.common.kafka.message.AlgorithmResultMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.kafka.support.KafkaHeaders;
@@ -31,8 +30,11 @@ import org.springframework.messaging.handler.annotation.Payload;
 @Slf4j
 public abstract class AbstractAlgorithmResultConsumer {
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    protected final ObjectMapper objectMapper;
+
+    protected AbstractAlgorithmResultConsumer(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+    }
 
     /**
      * 消费 Python 引擎返回的算法结果

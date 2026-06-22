@@ -11,7 +11,6 @@ import org.springframework.core.Ordered;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
@@ -46,13 +45,10 @@ import java.util.concurrent.ConcurrentHashMap;
 @Component
 public class GrayReleaseFilter implements GlobalFilter, Ordered {
 
-    private static final String GRAY_HEADER_KEY = "X-Version";
-    private static final String GRAY_HEADER_VALUE = "v2";
     private static final String GRAY_ROUTE_ATTR = "grayRouteToV2";
     private static final String GRAY_MODULE_ATTR = "grayModule";
 
     private static final String REDIS_CONFIG_PREFIX = "gray:release:";
-    private static final String REDIS_GLOBAL_KEY = "gray:release:global";
 
     private final ReactiveStringRedisTemplate redisTemplate;
     private final ObjectMapper objectMapper;
@@ -100,9 +96,11 @@ public class GrayReleaseFilter implements GlobalFilter, Ordered {
 
     @PostConstruct
     public void init() {
-        if (moduleConfigs != null) {
+        if (moduleConfigs != null && !moduleConfigs.isEmpty()) {
             cachedConfigs.putAll(moduleConfigs);
             log.info("[GRAY-RELEASE] Loaded {} module configs from YAML", moduleConfigs.size());
+        } else {
+            log.info("[GRAY-RELEASE] No module configs from YAML, using empty default");
         }
         log.info("[GRAY-RELEASE] Filter initialized | enabled={} | defaultPercentage={}",
                 grayReleaseEnabled, defaultPercentage);
@@ -191,13 +189,13 @@ public class GrayReleaseFilter implements GlobalFilter, Ordered {
             return Mono.empty();
         }
 
-        String redisKey = REDIS_CONFIG_PREFIX + module;
-        return redisTemplate.opsForValue().get(redisKey)
-                .flatMap(configJson -> {
-                    if (!StringUtils.hasText(configJson)) {
-                        return Mono.empty();
-                    }
-                    try {
+                String redisKey = REDIS_CONFIG_PREFIX + module;
+                return redisTemplate.opsForValue().get(redisKey)
+                        .flatMap(configJson -> {
+                            if (configJson == null || configJson.isEmpty()) {
+                                return Mono.empty();
+                            }
+                            try {
                         GrayModuleConfig config = objectMapper.readValue(configJson, GrayModuleConfig.class);
                         cachedConfigs.put(module, config);
                         log.info("[GRAY-RELEASE] Loaded config for module={} from Redis", module);
@@ -218,49 +216,60 @@ public class GrayReleaseFilter implements GlobalFilter, Ordered {
      */
     private boolean evaluateGrayRules(ServerHttpRequest request, GrayModuleConfig config) {
         // Priority 1: Header-based routing (explicit opt-in)
-        String headerVal = request.getHeaders().getFirst(config.getHeaderKey() != null ? config.getHeaderKey() : headerKey);
-        if (StringUtils.hasText(headerVal)) {
-            String expectedValue = config.getHeaderValue() != null ? config.getHeaderValue() : headerValue;
-            if (expectedValue.equalsIgnoreCase(headerVal)) {
-                log.debug("[GRAY-RELEASE] Matched header rule: {}={}", config.getHeaderKey(), headerVal);
-                return true;
+        String effectiveHeaderKey = config.getHeaderKey() != null ? config.getHeaderKey() : headerKey;
+        if (effectiveHeaderKey != null) {
+            String headerVal = request.getHeaders().getFirst(effectiveHeaderKey);
+            if (headerVal != null && !headerVal.isEmpty()) {
+                String expectedValue = config.getHeaderValue() != null ? config.getHeaderValue() : headerValue;
+                if (expectedValue != null && expectedValue.equalsIgnoreCase(headerVal)) {
+                    log.debug("[GRAY-RELEASE] Matched header rule: {}={}", effectiveHeaderKey, headerVal);
+                    return true;
+                }
             }
         }
 
         // Priority 2: API Key / Tenant-based routing
         String apiKey = request.getHeaders().getFirst("X-API-Key");
-        if (StringUtils.hasText(apiKey) && config.getApiKeys() != null && config.getApiKeys().contains(apiKey)) {
+        if (apiKey != null && !apiKey.isEmpty() && config.getApiKeys() != null && config.getApiKeys().contains(apiKey)) {
             log.debug("[GRAY-RELEASE] Matched API Key rule: {}", apiKey);
             return true;
         }
 
         String tenantId = request.getHeaders().getFirst("X-Tenant-ID");
-        if (StringUtils.hasText(tenantId) && config.getTenants() != null && config.getTenants().contains(tenantId)) {
+        if (tenantId != null && !tenantId.isEmpty() && config.getTenants() != null && config.getTenants().contains(tenantId)) {
             log.debug("[GRAY-RELEASE] Matched Tenant rule: {}", tenantId);
             return true;
         }
 
         // Priority 3: Cookie-based routing
-        String cookieValue = extractCookie(request, config.getCookieKey());
-        if (StringUtils.hasText(cookieValue) && config.getCookieValue() != null
-                && config.getCookieValue().equalsIgnoreCase(cookieValue)) {
-            log.debug("[GRAY-RELEASE] Matched cookie rule: {}={}", config.getCookieKey(), cookieValue);
-            return true;
+        String cookieKey = config.getCookieKey();
+        if (cookieKey != null && !cookieKey.isEmpty()) {
+            String cookieValue = extractCookie(request, cookieKey);
+            String expectedCookieValue = config.getCookieValue();
+            if (cookieValue != null && !cookieValue.isEmpty() && expectedCookieValue != null
+                    && expectedCookieValue.equalsIgnoreCase(cookieValue)) {
+                log.debug("[GRAY-RELEASE] Matched cookie rule: {}={}", cookieKey, cookieValue);
+                return true;
+            }
         }
 
         // Priority 4: Query parameter-based routing
-        String queryValue = request.getQueryParams().getFirst(config.getQueryParamKey());
-        if (StringUtils.hasText(queryValue) && config.getQueryParamValue() != null
-                && config.getQueryParamValue().equalsIgnoreCase(queryValue)) {
-            log.debug("[GRAY-RELEASE] Matched query param rule: {}={}", config.getQueryParamKey(), queryValue);
-            return true;
+        String queryParamKey = config.getQueryParamKey();
+        if (queryParamKey != null && !queryParamKey.isEmpty()) {
+            String queryValue = request.getQueryParams().getFirst(queryParamKey);
+            String expectedQueryParamValue = config.getQueryParamValue();
+            if (queryValue != null && !queryValue.isEmpty() && expectedQueryParamValue != null
+                    && expectedQueryParamValue.equalsIgnoreCase(queryValue)) {
+                log.debug("[GRAY-RELEASE] Matched query param rule: {}={}", queryParamKey, queryValue);
+                return true;
+            }
         }
 
         // Priority 5: Percentage-based routing (user_id hash)
         int percentage = config.getPercentage() >= 0 ? config.getPercentage() : defaultPercentage;
         if (percentage > 0) {
             String userId = extractUserId(request);
-            if (StringUtils.hasText(userId)) {
+            if (userId != null && !userId.isEmpty()) {
                 int hash = hashUserId(userId);
                 boolean inGray = (hash % 100) < percentage;
                 log.debug("[GRAY-RELEASE] Percentage check | userId={} | hash={} | percentage={} | inGray={}",
@@ -278,13 +287,13 @@ public class GrayReleaseFilter implements GlobalFilter, Ordered {
     private String extractUserId(ServerHttpRequest request) {
         // Try X-User-ID header first
         String userId = request.getHeaders().getFirst("X-User-ID");
-        if (StringUtils.hasText(userId)) {
+        if (userId != null && !userId.isEmpty()) {
             return userId;
         }
 
         // Try to extract from Authorization header (JWT sub claim)
         String authHeader = request.getHeaders().getFirst("Authorization");
-        if (StringUtils.hasText(authHeader) && authHeader.startsWith("Bearer ")) {
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7);
             // Simple extraction - in production parse JWT properly
             try {
@@ -309,13 +318,13 @@ public class GrayReleaseFilter implements GlobalFilter, Ordered {
 
         // Fallback to API key as identity
         String apiKey = request.getHeaders().getFirst("X-API-Key");
-        if (StringUtils.hasText(apiKey)) {
+        if (apiKey != null && !apiKey.isEmpty()) {
             return apiKey;
         }
 
         // Fallback to tenant ID
         String tenantId = request.getHeaders().getFirst("X-Tenant-ID");
-        if (StringUtils.hasText(tenantId)) {
+        if (tenantId != null && !tenantId.isEmpty()) {
             return tenantId;
         }
 
@@ -343,11 +352,11 @@ public class GrayReleaseFilter implements GlobalFilter, Ordered {
      * Extract cookie value by name
      */
     private String extractCookie(ServerHttpRequest request, String cookieName) {
-        if (!StringUtils.hasText(cookieName)) {
+        if (cookieName == null || cookieName.isEmpty()) {
             return null;
         }
         String cookieHeader = request.getHeaders().getFirst("Cookie");
-        if (!StringUtils.hasText(cookieHeader)) {
+        if (cookieHeader == null || cookieHeader.isEmpty()) {
             return null;
         }
         for (String cookie : cookieHeader.split(";")) {
@@ -369,6 +378,9 @@ public class GrayReleaseFilter implements GlobalFilter, Ordered {
 
         return redisTemplate.keys(REDIS_CONFIG_PREFIX + "*")
                 .flatMap(key -> {
+                    if (key == null || key.length() <= REDIS_CONFIG_PREFIX.length()) {
+                        return Mono.empty();
+                    }
                     String module = key.substring(REDIS_CONFIG_PREFIX.length());
                     return redisTemplate.opsForValue().get(key)
                             .flatMap(json -> {

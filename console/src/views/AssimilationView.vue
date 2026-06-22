@@ -1,15 +1,17 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { assimilationApi } from '@/api/assimilation'
 import type { AssimilationTask, AssimilationResult } from '@/api/assimilation'
 import StatusBadge from '@/components/common/StatusBadge.vue'
 import { formatDateTime } from '@/utils/format'
+import { useDemoModeStore } from '@/stores/demoMode'
 
 const loading = ref(false)
 const tasks = ref<AssimilationTask[]>([])
 const selectedResult = ref<AssimilationResult | null>(null)
 const resultDialogVisible = ref(false)
+const demoModeStore = useDemoModeStore()
 
 // 同化类型选项（13种同化算法）
 const assimilationTypeOptions = [
@@ -42,6 +44,14 @@ const createForm = ref({
 })
 
 async function loadTasks() {
+  if (demoModeStore.isDemoMode) {
+    tasks.value = [
+      { id: 1, type: '3DVAR', status: 'COMPLETED', algorithm: '3DVAR', createdAt: '2025-06-18T08:00:00Z', completedAt: '2025-06-18T08:30:00Z', errorMessage: null },
+      { id: 2, type: 'EnKF', status: 'RUNNING', algorithm: 'EnKF', createdAt: '2025-06-18T09:00:00Z', completedAt: null, errorMessage: null },
+      { id: 3, type: '4DVAR', status: 'FAILED', algorithm: '4DVAR', createdAt: '2025-06-18T10:00:00Z', completedAt: null, errorMessage: '收敛失败：迭代次数超限' },
+    ]
+    return
+  }
   loading.value = true
   try {
     const data = await assimilationApi.listTasks({ page: 1, size: 50 })
@@ -101,7 +111,12 @@ async function handleCancel(row: AssimilationTask) {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
+  await demoModeStore.fetchStatus()
+  loadTasks()
+})
+
+watch(() => demoModeStore.isDemoMode, () => {
   loadTasks()
 })
 </script>
@@ -110,7 +125,7 @@ onMounted(() => {
   <div class="assimilation-page">
     <div class="page-header">
       <h2>数据同化</h2>
-      <el-button type="primary" @click="createDialogVisible = true">
+      <el-button type="primary" :disabled="demoModeStore.isDemoMode" @click="createDialogVisible = true">
         <el-icon><Plus /></el-icon>
         提交同化任务
       </el-button>

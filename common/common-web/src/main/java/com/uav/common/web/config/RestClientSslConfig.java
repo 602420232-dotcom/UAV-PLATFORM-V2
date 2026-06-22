@@ -1,9 +1,17 @@
 package com.uav.common.web.config;
 
+import io.netty.channel.ChannelOption;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.hc.client5.http.config.ConnectionConfig;
+import org.apache.hc.client5.http.config.RequestConfig;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder;
+import org.apache.hc.client5.http.io.HttpClientConnectionManager;
+import org.apache.hc.client5.http.ssl.DefaultClientTlsStrategy;
+import org.apache.hc.core5.util.Timeout;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.ssl.SslBundle;
@@ -46,13 +54,26 @@ public class RestClientSslConfig {
         SslBundle sslBundle = sslBundles.getBundle(SSL_BUNDLE_NAME);
         javax.net.ssl.SSLContext sslContext = sslBundle.createSslContext();
 
-        org.apache.hc.client5.http.impl.classic.HttpClient httpClient = 
-                org.apache.hc.client5.http.impl.classic.HttpClientBuilder.create()
-                        .setConnectionTimeToLive(CONNECT_TIMEOUT_MS, java.util.concurrent.TimeUnit.MILLISECONDS)
-                        .build();
+        ConnectionConfig connConfig = ConnectionConfig.custom()
+                .setConnectTimeout(Timeout.ofMilliseconds(CONNECT_TIMEOUT_MS))
+                .setSocketTimeout(Timeout.ofMilliseconds(READ_TIMEOUT_MS))
+                .build();
 
-        org.springframework.http.client.HttpComponentsClientHttpRequestFactory factory = 
-                new org.springframework.http.client.HttpComponentsClientHttpRequestFactory(httpClient);
+        HttpClientConnectionManager cm = PoolingHttpClientConnectionManagerBuilder.create()
+                .setTlsSocketStrategy(new DefaultClientTlsStrategy(sslContext))
+                .setDefaultConnectionConfig(connConfig)
+                .build();
+
+        RequestConfig requestConfig = RequestConfig.custom()
+                .setResponseTimeout(Timeout.ofMilliseconds(READ_TIMEOUT_MS))
+                .build();
+
+        org.springframework.http.client.HttpComponentsClientHttpRequestFactory factory =
+                new org.springframework.http.client.HttpComponentsClientHttpRequestFactory(
+                        HttpClients.custom()
+                                .setConnectionManager(cm)
+                                .setDefaultRequestConfig(requestConfig)
+                                .build());
 
         log.info("mTLS RestTemplate configured with SSL Bundle: {}", SSL_BUNDLE_NAME);
         return new RestTemplate(factory);
@@ -65,13 +86,25 @@ public class RestClientSslConfig {
     @Primary
     @ConditionalOnProperty(name = "MTLS_ENABLED", havingValue = "false", matchIfMissing = true)
     public RestTemplate defaultRestTemplate() {
-        org.apache.hc.client5.http.impl.classic.HttpClient httpClient = 
-                org.apache.hc.client5.http.impl.classic.HttpClientBuilder.create()
-                        .setConnectionTimeToLive(CONNECT_TIMEOUT_MS, java.util.concurrent.TimeUnit.MILLISECONDS)
-                        .build();
+        ConnectionConfig connConfig = ConnectionConfig.custom()
+                .setConnectTimeout(Timeout.ofMilliseconds(CONNECT_TIMEOUT_MS))
+                .setSocketTimeout(Timeout.ofMilliseconds(READ_TIMEOUT_MS))
+                .build();
 
-        org.springframework.http.client.HttpComponentsClientHttpRequestFactory factory = 
-                new org.springframework.http.client.HttpComponentsClientHttpRequestFactory(httpClient);
+        HttpClientConnectionManager cm = PoolingHttpClientConnectionManagerBuilder.create()
+                .setDefaultConnectionConfig(connConfig)
+                .build();
+
+        RequestConfig requestConfig = RequestConfig.custom()
+                .setResponseTimeout(Timeout.ofMilliseconds(READ_TIMEOUT_MS))
+                .build();
+
+        org.springframework.http.client.HttpComponentsClientHttpRequestFactory factory =
+                new org.springframework.http.client.HttpComponentsClientHttpRequestFactory(
+                        HttpClients.custom()
+                                .setConnectionManager(cm)
+                                .setDefaultRequestConfig(requestConfig)
+                                .build());
         return new RestTemplate(factory);
     }
 
@@ -83,30 +116,34 @@ public class RestClientSslConfig {
     @Primary
     @ConditionalOnProperty(name = "MTLS_ENABLED", havingValue = "true")
     public WebClient mTlsWebClient(SslBundles sslBundles) {
-        SslBundle sslBundle = sslBundles.getBundle(SSL_BUNDLE_NAME);
+        try {
+            SslBundle sslBundle = sslBundles.getBundle(SSL_BUNDLE_NAME);
 
-        SslContextBuilder sslContextBuilder = SslContextBuilder.forClient();
-        javax.net.ssl.KeyManager[] keyManagers = sslBundle.getManagers().getKeyManagers();
-        javax.net.ssl.TrustManager[] trustManagers = sslBundle.getManagers().getTrustManagers();
+            SslContextBuilder sslContextBuilder = SslContextBuilder.forClient();
+            javax.net.ssl.KeyManager[] keyManagers = sslBundle.getManagers().getKeyManagers();
+            javax.net.ssl.TrustManager[] trustManagers = sslBundle.getManagers().getTrustManagers();
 
-        sslContextBuilder.keyManager(keyManagers[0]);
-        if (trustManagers != null && trustManagers.length > 0) {
-            sslContextBuilder.trustManager((X509Certificate) trustManagers[0]);
+            sslContextBuilder.keyManager(keyManagers[0]);
+            if (trustManagers != null && trustManagers.length > 0) {
+                sslContextBuilder.trustManager((X509Certificate) trustManagers[0]);
+            }
+
+            SslContext sslContext = sslContextBuilder.build();
+
+            WebClient webClient = WebClient.builder()
+                    .clientConnector(new ReactorClientHttpConnector(
+                            reactor.netty.http.client.HttpClient.create()
+                                    .secure(spec -> spec.sslContext(sslContext))
+                                    .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, CONNECT_TIMEOUT_MS)
+                                    .responseTimeout(Duration.ofMillis(READ_TIMEOUT_MS))))
+                    .build();
+
+            log.info("mTLS WebClient configured with SSL Bundle: {}", SSL_BUNDLE_NAME);
+            return webClient;
+        } catch (javax.net.ssl.SSLException e) {
+            log.error("Failed to create mTLS WebClient SSL context", e);
+            throw new RuntimeException("Failed to create mTLS WebClient", e);
         }
-
-        SslContext sslContext = sslContextBuilder.build();
-
-        reactor.netty.http.client.HttpClient httpClient = reactor.netty.http.client.HttpClient.create()
-                .secure(spec -> spec.sslContext(sslContext))
-                .responseTimeout(Duration.ofMillis(READ_TIMEOUT_MS))
-                .connectTimeout(Duration.ofMillis(CONNECT_TIMEOUT_MS));
-
-        WebClient webClient = WebClient.builder()
-                .clientConnector(new ReactorClientHttpConnector(httpClient))
-                .build();
-
-        log.info("mTLS WebClient configured with SSL Bundle: {}", SSL_BUNDLE_NAME);
-        return webClient;
     }
 
     /**
@@ -116,12 +153,11 @@ public class RestClientSslConfig {
     @Primary
     @ConditionalOnProperty(name = "MTLS_ENABLED", havingValue = "false", matchIfMissing = true)
     public WebClient defaultWebClient() {
-        reactor.netty.http.client.HttpClient httpClient = reactor.netty.http.client.HttpClient.create()
-                .responseTimeout(Duration.ofMillis(READ_TIMEOUT_MS))
-                .connectTimeout(Duration.ofMillis(CONNECT_TIMEOUT_MS));
-
         return WebClient.builder()
-                .clientConnector(new ReactorClientHttpConnector(httpClient))
+                .clientConnector(new ReactorClientHttpConnector(
+                        reactor.netty.http.client.HttpClient.create()
+                                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, CONNECT_TIMEOUT_MS)
+                                .responseTimeout(Duration.ofMillis(READ_TIMEOUT_MS))))
                 .build();
     }
 
@@ -137,14 +173,13 @@ public class RestClientSslConfig {
                     .trustManager(InsecureTrustManagerFactory.INSTANCE)
                     .build();
 
-            reactor.netty.http.client.HttpClient httpClient = reactor.netty.http.client.HttpClient.create()
-                    .secure(spec -> spec.sslContext(sslContext))
-                    .responseTimeout(Duration.ofMillis(READ_TIMEOUT_MS))
-                    .connectTimeout(Duration.ofMillis(CONNECT_TIMEOUT_MS));
-
             log.warn("Development WebClient created with INSECURE trust manager - DO NOT USE IN PRODUCTION");
             return WebClient.builder()
-                    .clientConnector(new ReactorClientHttpConnector(httpClient))
+                    .clientConnector(new ReactorClientHttpConnector(
+                            reactor.netty.http.client.HttpClient.create()
+                                    .secure(spec -> spec.sslContext(sslContext))
+                                    .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, CONNECT_TIMEOUT_MS)
+                                    .responseTimeout(Duration.ofMillis(READ_TIMEOUT_MS))))
                     .build();
         } catch (Exception e) {
             log.error("Failed to create dev WebClient", e);

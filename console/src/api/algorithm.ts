@@ -1,21 +1,28 @@
-import { get, post } from './request'
+import { get, post, put } from './request'
 
 export interface Algorithm {
   id: number
   name: string
   category: string
   version: string
-  status: string
+  status: string | number
   description: string
   registeredAt: string
   lastRunAt: string | null
   runCount: number
   config: string | null
+  type: string
+  endpoint: string
+  paramSchema: string | null
+  createdAt: string
+  updatedAt: string
 }
 
 export interface AlgorithmListParams {
   category?: string
   keyword?: string
+  algorithmType?: string
+  algorithmLevel?: string
   page?: number
   size?: number
 }
@@ -36,6 +43,10 @@ export interface AlgorithmCategoryStats {
   edge: number
   risk: number
   observation: number
+  weather: number
+  fusion: number
+  generic: number
+  [key: string]: number
 }
 
 export interface AlgorithmExecuteParams {
@@ -46,6 +57,9 @@ export interface AlgorithmExecuteResult {
   success: boolean
   executionTime: string
   output: Record<string, unknown>
+  algorithmName?: string
+  algorithmVersion?: string
+  error?: string
 }
 
 export const algorithmApi = {
@@ -59,18 +73,33 @@ export const algorithmApi = {
     return get<Algorithm>(`/v1/algorithms/${id}`)
   },
 
-  /** 获取算法分类统计 */
-  getCategoryStats(): Promise<AlgorithmCategoryStats> {
-    return get<AlgorithmCategoryStats>('/v1/algorithms/stats')
+  /** 获取算法分类统计（registry端点） */
+  getRegistryStats(): Promise<AlgorithmCategoryStats> {
+    return get<AlgorithmCategoryStats>('/v1/algorithms/registry/stats')
   },
 
-  /** 执行算法 */
-  execute(id: number, data?: AlgorithmExecuteParams): Promise<AlgorithmExecuteResult> {
-    return post<AlgorithmExecuteResult>(`/v1/algorithms/${id}/execute`, data)
+  /** 按分类查询算法列表（registry端点） */
+  listByCategory(category: string): Promise<Algorithm[]> {
+    return get<Algorithm[]>(`/v1/algorithms/registry/${category}`)
+  },
+
+  /** 启用/禁用算法 */
+  toggleStatus(id: number, enable: boolean): Promise<void> {
+    return put<void>(`/v1/algorithms/registry/${id}/status?enable=${enable}`)
+  },
+
+  /** 测试算法运行 */
+  testAlgorithm(id: number, params?: Record<string, unknown>): Promise<AlgorithmExecuteResult> {
+    return post<AlgorithmExecuteResult>(`/v1/algorithms/registry/${id}/test`, params)
+  },
+
+  /** 执行算法（科研沙箱/算法实验室使用） */
+  execute(id: number, payload?: Record<string, unknown>): Promise<AlgorithmExecuteResult> {
+    return post<AlgorithmExecuteResult>(`/v1/algorithms/registry/${id}/test`, payload)
   },
 
   /** 获取指定分类的算法列表（用于路径规划算法选择） */
-  listByCategory(category: string): Promise<Algorithm[]> {
+  listByCategoryLegacy(category: string): Promise<Algorithm[]> {
     return get<Algorithm[]>('/v1/algorithms/list', { category, size: 200 })
   },
 }
