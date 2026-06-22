@@ -8,12 +8,13 @@ FROM node:20-alpine AS builder
 WORKDIR /build
 
 # 先复制依赖文件以利用 Docker 缓存层
-COPY package.json package-lock.json* ./
+# 注意：构建 context 是根目录，需要指定相对于根目录的路径
+COPY console/package.json console/package-lock.json* ./
 
 RUN npm ci
 
 # 复制源代码
-COPY . .
+COPY console/ .
 
 # 构建
 RUN npm run build
@@ -37,7 +38,7 @@ RUN rm -rf /usr/share/nginx/html/*
 COPY --from=builder /build/dist /usr/share/nginx/html
 
 # 复制 Nginx 配置
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY console/nginx.conf /etc/nginx/conf.d/default.conf
 
 # 暴露端口
 EXPOSE 80
