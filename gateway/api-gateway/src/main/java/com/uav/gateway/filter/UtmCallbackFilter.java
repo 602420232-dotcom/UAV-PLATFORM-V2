@@ -10,12 +10,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
-import jakarta.annotation.PostConstruct;
-import jakarta.annotation.PreDestroy;
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.net.InetAddress;
@@ -143,7 +142,7 @@ public class UtmCallbackFilter implements GlobalFilter, Ordered {
 
         // 3. Nonce Check (prevent replay)
         String nonce = request.getHeaders().getFirst(NONCE_HEADER);
-        if (!StringUtils.hasText(nonce) || usedNonces.containsKey(nonce)) {
+        if (nonce == null || nonce.isEmpty() || usedNonces.containsKey(nonce)) {
             log.warn("[UTM] Invalid or reused nonce: id={}", requestId);
             return reject(exchange, HttpStatus.BAD_REQUEST, "Invalid or reused nonce");
         }
@@ -153,7 +152,7 @@ public class UtmCallbackFilter implements GlobalFilter, Ordered {
         String method = request.getMethod().name();
         String expectedSignature = generateHmac(method, path, timestampStr, nonce);
 
-        if (!StringUtils.hasText(signature) || !signature.equals(expectedSignature)) {
+        if (signature == null || signature.isEmpty() || !signature.equals(expectedSignature)) {
             log.warn("[UTM] Invalid signature: id={}", requestId);
             return reject(exchange, HttpStatus.UNAUTHORIZED, "Invalid signature");
         }
@@ -166,7 +165,7 @@ public class UtmCallbackFilter implements GlobalFilter, Ordered {
     }
 
     private boolean isIpWhitelisted(String clientIp) {
-        if (!StringUtils.hasText(whitelistStr)) {
+        if (whitelistStr == null || whitelistStr.isEmpty()) {
             return true; // Allow all if no whitelist configured
         }
         List<String> whitelist = Arrays.asList(whitelistStr.split(","));
@@ -231,7 +230,7 @@ public class UtmCallbackFilter implements GlobalFilter, Ordered {
     }
 
     private boolean isValidTimestamp(String timestampStr) {
-        if (!StringUtils.hasText(timestampStr)) {
+        if (timestampStr == null || timestampStr.isEmpty()) {
             return false;
         }
         try {
@@ -260,13 +259,15 @@ public class UtmCallbackFilter implements GlobalFilter, Ordered {
     private String getClientIp(ServerHttpRequest request) {
         String ip = request.getHeaders().getFirst("X-Forwarded-For");
         if (ip == null || ip.isEmpty()) {
-            ip = request.getRemoteAddress() != null
-                    ? request.getRemoteAddress().getAddress().getHostAddress()
+            var remoteAddress = request.getRemoteAddress();
+            ip = remoteAddress != null
+                    ? remoteAddress.getAddress().getHostAddress()
                     : "unknown";
         }
         return ip.split(",")[0].trim();
     }
 
+    @SuppressWarnings("null")
     private Mono<Void> reject(ServerWebExchange exchange, HttpStatus status, String message) {
         ServerHttpResponse response = exchange.getResponse();
         response.setStatusCode(status);

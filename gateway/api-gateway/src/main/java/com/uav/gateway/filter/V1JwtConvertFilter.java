@@ -15,7 +15,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
@@ -61,17 +60,24 @@ public class V1JwtConvertFilter implements GlobalFilter, Ordered {
     private final SecretKey v1SecretKey;
     private final SecretKey v2SecretKey;
 
+    private final boolean enabled;
+
     public V1JwtConvertFilter(
             @Value("${gateway.v1.jwt.secret:}") String v1Secret,
             @Value("${gateway.v2.jwt.secret:}") String v2Secret) {
-        if (!StringUtils.hasText(v1Secret)) {
+        if (v1Secret == null || v1Secret.isEmpty()) {
             log.warn("[JWT-CONVERT] V1 JWT secret not configured (gateway.v1.jwt.secret), V1 token conversion will be disabled");
         }
-        if (!StringUtils.hasText(v2Secret)) {
-            throw new IllegalArgumentException("V2 JWT secret must be configured via gateway.v2.jwt.secret");
+        if (v2Secret == null || v2Secret.isEmpty()) {
+            log.warn("[JWT-CONVERT] V2 JWT secret not configured (gateway.v2.jwt.secret), JWT conversion filter will be disabled");
+            this.enabled = false;
+            this.v1SecretKey = null;
+            this.v2SecretKey = null;
+            return;
         }
-        this.v1SecretKey = StringUtils.hasText(v1Secret) ? deriveKey(v1Secret) : null;
-        this.v2SecretKey = deriveKey(v2Secret);
+        this.enabled = true;
+        this.v1SecretKey = v1Secret != null && !v1Secret.isEmpty() ? deriveKey(v1Secret) : null;
+        this.v2SecretKey = v2Secret != null && !v2Secret.isEmpty() ? deriveKey(v2Secret) : null;
     }
 
     private SecretKey deriveKey(String secret) {
@@ -85,12 +91,15 @@ public class V1JwtConvertFilter implements GlobalFilter, Ordered {
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
+        if (!enabled) {
+            return chain.filter(exchange);
+        }
         ServerHttpRequest request = exchange.getRequest();
         String requestId = request.getHeaders().getFirst("X-Request-ID");
         String authHeader = request.getHeaders().getFirst(AUTHORIZATION_HEADER);
 
         // No token, pass through (may be public endpoint)
-        if (!StringUtils.hasText(authHeader) || !authHeader.startsWith(BEARER_PREFIX)) {
+        if (authHeader == null || authHeader.isEmpty() || !authHeader.startsWith(BEARER_PREFIX)) {
             log.debug("[JWT-CONVERT] No Bearer token found, passing through | id={}", requestId);
             return chain.filter(exchange);
         }
@@ -225,6 +234,7 @@ public class V1JwtConvertFilter implements GlobalFilter, Ordered {
                 .compact();
     }
 
+    @SuppressWarnings("null")
     private Mono<Void> reject(ServerWebExchange exchange, HttpStatus status, String message) {
         ServerHttpResponse response = exchange.getResponse();
         response.setStatusCode(status);

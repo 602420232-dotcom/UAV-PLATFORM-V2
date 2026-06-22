@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
@@ -37,7 +38,8 @@ public class RequestLogFilter implements GlobalFilter, Ordered {
                 .header(REQUEST_ID, requestId)
                 .build();
 
-        String method = request.getMethod().name();
+        HttpMethod httpMethod = request.getMethod();
+        String method = httpMethod != null ? httpMethod.name() : "UNKNOWN";
         String path = request.getURI().getPath();
         String clientIp = getClientIp(request);
         String userAgent = request.getHeaders().getFirst("User-Agent");
@@ -49,8 +51,8 @@ public class RequestLogFilter implements GlobalFilter, Ordered {
                 .doFinally(signalType -> {
                     long startTime = exchange.getAttributeOrDefault(REQUEST_START_TIME, 0L);
                     long duration = Instant.now().toEpochMilli() - startTime;
-                    int statusCode = exchange.getResponse().getStatusCode() != null
-                            ? exchange.getResponse().getStatusCode().value() : 0;
+                    var status = exchange.getResponse().getStatusCode();
+                    int statusCode = status != null ? status.value() : 0;
 
                     log.info("[RESPONSE] id={} | status={} | duration={}ms | signal={}",
                             requestId, statusCode, duration, signalType);
@@ -63,11 +65,16 @@ public class RequestLogFilter implements GlobalFilter, Ordered {
             ip = request.getHeaders().getFirst("X-Real-IP");
         }
         if (ip == null || ip.isEmpty()) {
-            ip = request.getRemoteAddress() != null
-                    ? request.getRemoteAddress().getAddress().getHostAddress()
+            var remoteAddress = request.getRemoteAddress();
+            ip = remoteAddress != null && remoteAddress.getAddress() != null
+                    ? remoteAddress.getAddress().getHostAddress()
                     : "unknown";
         }
-        return ip.split(",")[0].trim();
+        if (ip == null || ip.isEmpty()) {
+            return "unknown";
+        }
+        String[] parts = ip.split(",");
+        return parts.length > 0 ? parts[0].trim() : "unknown";
     }
 
     @Override
