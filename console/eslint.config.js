@@ -75,6 +75,8 @@ export default [
     rules: {
       'vue/multi-word-component-names': 'off',
       'vue/no-v-html': 'warn',
+      'vue/no-deprecated-filter': 'off',
+      'vue/no-reserved-component-names': 'off',
     },
   },
 

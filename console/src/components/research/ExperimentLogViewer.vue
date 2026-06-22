@@ -197,7 +197,7 @@ onMounted(() => {
           @input="handleSearch"
         >
           <template #prefix>
-            <el-icon><Search /></el-icon>
+            <el-icon><SearchIcon /></el-icon>
           </template>
         </el-input>
         <el-tooltip :content="autoScroll ? '暂停自动滚动' : '继续自动滚动'">
@@ -258,9 +258,9 @@ onMounted(() => {
 </template>
 
 <script lang="ts">
-import { Search, Bottom, VideoPause } from '@element-plus/icons-vue'
+import { Search as SearchIcon, Bottom, VideoPause } from '@element-plus/icons-vue'
 export default {
-  components: { Search, Bottom, VideoPause },
+  components: { SearchIcon, Bottom, VideoPause },
 }
 </script>
 
